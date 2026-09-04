@@ -1,0 +1,50 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Node.js
+node_modules/
+dist/
+build/
+coverage/
+.npm/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime data
+uploads/*
+!uploads/.gitkeep
+logs/
+*.log
+
+# Datasets, models, embeddings and generated indexes
+datasets/raw/
+datasets/processed/
+artifacts/
+models/
+*.npy
+*.npz
+*.index
+*.faiss
+*.pt
+*.pth
+
+# Local academic documents may contain personal information
+*.docx
+*.pdf
+

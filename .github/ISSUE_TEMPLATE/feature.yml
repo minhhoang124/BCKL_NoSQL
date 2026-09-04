@@ -1,0 +1,33 @@
+name: Chức năng
+description: Công việc phát triển có kết quả kiểm tra được
+title: "[Feature] "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Mô tả
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Liệt kê các điều kiện để xem công việc là hoàn thành.
+      placeholder: "- [ ] Điều kiện 1"
+    validations:
+      required: true
+  - type: input
+    id: due_date
+    attributes:
+      label: Ngày hoàn thành
+      placeholder: YYYY-MM-DD
+  - type: input
+    id: reviewer
+    attributes:
+      label: Người review
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Phụ thuộc
+
