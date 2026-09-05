@@ -33,6 +33,10 @@ Không commit trực tiếp vào `main` hoặc `develop`. Mọi thay đổi đi 
 
 Xem [quy trình hoàn thành task và đẩy code lên GitHub](docs/git/team-task-delivery-guide.md) để làm thủ công hoặc sử dụng prompt dành cho AI.
 
+Mọi thành viên và AI hỗ trợ phải đọc [bảng phân công và kế hoạch hợp nhất](docs/project/work-assignment.md) trước khi bắt đầu một task.
+
+Mọi thành viên và AI hỗ trợ phải đọc [bảng phân công và kế hoạch hợp nhất](docs/project/work-assignment.md) trước khi bắt đầu một task.
+
 ## Khởi động
 
 Các ứng dụng sẽ được bổ sung trong giai đoạn nền móng. Sao chép `.env.example` thành `.env` và không commit `.env`.
