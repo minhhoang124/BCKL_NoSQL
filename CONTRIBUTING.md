@@ -1,4 +1,6 @@
-# Quy uoc dong gop
+# Quy ước đóng góp
+
+Hướng dẫn chi tiết cho việc bàn giao một task, gồm cả cách làm Git thủ công và cách nhờ AI thực hiện, nằm tại [Quy trình hoàn thành task và đẩy code lên GitHub](docs/git/team-task-delivery-guide.md).
 
 ## Quy trình làm việc
 
@@ -46,4 +48,3 @@ chore(docker): add PostgreSQL service
 - Thay đổi database phải có migration mới và được Hiền review nghiệp vụ.
 - Không sửa migration đã dùng chung; tạo migration tiếp theo.
 - Hợp nhất và chạy luồng end-to-end tối thiểu vào thứ Tư và Chủ Nhật.
-

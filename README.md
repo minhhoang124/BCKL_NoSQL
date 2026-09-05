@@ -31,6 +31,8 @@ uploads/       Dữ liệu upload khi chạy local, không commit
 
 Không commit trực tiếp vào `main` hoặc `develop`. Mọi thay đổi đi qua pull request và tối thiểu một người review.
 
+Xem [quy trình hoàn thành task và đẩy code lên GitHub](docs/git/team-task-delivery-guide.md) để làm thủ công hoặc sử dụng prompt dành cho AI.
+
 ## Khởi động
 
 Các ứng dụng sẽ được bổ sung trong giai đoạn nền móng. Sao chép `.env.example` thành `.env` và không commit `.env`.
@@ -45,4 +47,3 @@ Các ứng dụng sẽ được bổ sung trong giai đoạn nền móng. Sao ch
 - 25/10/2026: đóng băng chức năng.
 - 01/11/2026: bản nộp dự kiến.
 - 08/11/2026: hoàn thành cuối cùng.
-
