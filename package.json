@@ -1,0 +1,19 @@
+{
+  "name": "bckl-thuongmaidientu",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev:fe": "pnpm --dir FE dev",
+    "dev:be": "pnpm --dir BE start:dev",
+    "build": "pnpm --recursive run build",
+    "lint": "pnpm --recursive run lint",
+    "test": "pnpm --recursive run test",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "prisma:format": "pnpm --dir BE exec prisma format",
+    "prisma:validate": "pnpm --dir BE exec prisma validate",
+    "prisma:migrate": "pnpm --dir BE exec prisma migrate dev",
+    "prisma:generate": "pnpm --dir BE exec prisma generate"
+  }
+}

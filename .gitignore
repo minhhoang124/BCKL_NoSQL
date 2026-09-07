@@ -48,3 +48,4 @@ models/
 *.docx
 *.pdf
 
+*.tsbuildinfo

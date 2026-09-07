@@ -1,0 +1,6 @@
+packages:
+  - 'FE'
+  - 'BE'
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
