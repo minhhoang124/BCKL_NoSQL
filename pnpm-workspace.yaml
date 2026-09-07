@@ -3,4 +3,5 @@ packages:
   - 'BE'
 allowBuilds:
   '@prisma/engines': true
+  '@scarf/scarf': false
   prisma: true

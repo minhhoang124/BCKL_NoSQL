@@ -37,6 +37,28 @@ $ pnpm run start:dev
 $ pnpm run start:prod
 ```
 
+Swagger UI is available at `http://localhost:3001/docs` with the default local configuration.
+
+## Authentication and roles
+
+- `POST /auth/register`: create a `USER` or `SELLER` account. `ADMIN` cannot be created publicly.
+- `POST /auth/login`: return an access token and set a refresh token as an HttpOnly cookie.
+- `POST /auth/refresh`: rotate the refresh token and return a new access token.
+- `POST /auth/logout`: revoke the current refresh token and clear its cookie.
+- `GET /auth/me`: return the signed-in user; requires `Authorization: Bearer <accessToken>`.
+- `GET /seller/test`: example endpoint restricted to `SELLER`.
+- `GET /admin/test`: example endpoint restricted to `ADMIN`.
+
+The access token is short-lived. The refresh token is stored only in an HttpOnly cookie, while its SHA-256 hash is stored in PostgreSQL so it can be rotated and revoked.
+
+Copy the root `.env.example` to `.env`, replace both JWT secrets with long random values and keep `.env` out of Git. TTL values are expressed in seconds.
+
+After changing `prisma/schema.prisma`, create a new migration instead of editing a shared migration:
+
+```bash
+$ pnpm --dir BE exec prisma migrate dev --name <migration_name>
+```
+
 ## Running tests
 
 ```bash
