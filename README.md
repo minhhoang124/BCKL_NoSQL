@@ -35,7 +35,7 @@ Xem [quy trình hoàn thành task và đẩy code lên GitHub](docs/git/team-tas
 
 Mọi thành viên và AI hỗ trợ phải đọc [bảng phân công và kế hoạch hợp nhất](docs/project/work-assignment.md) trước khi bắt đầu một task.
 
-Mọi thành viên và AI hỗ trợ phải đọc [bảng phân công và kế hoạch hợp nhất](docs/project/work-assignment.md) trước khi bắt đầu một task.
+Task liên quan sản phẩm, database, Seller, đơn hàng hoặc dataset phải tuân theo [thiết kế miền sản phẩm đa ngành hàng](docs/architecture/product-domain-design.md).
 
 ## Khởi động
 
