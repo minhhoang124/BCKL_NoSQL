@@ -9,17 +9,17 @@
 
 ## Quyết định đã chuẩn hóa
 
-Tài liệu phân công ban đầu minh họa `productId` bằng chuỗi như `P001`. Quyết định tích hợp chính thức của nhóm là:
+Quyết định tích hợp chính thức của nhóm là:
 
 ```json
 {
   "productId": 125,
-  "externalId": "P001"
+  "externalId": "abo:B07ABC123"
 }
 ```
 
 - `productId`: số nguyên do PostgreSQL sinh, dùng xuyên suốt Backend, API, Elasticsearch và FAISS.
-- `externalId`: mã gốc của dataset, có thể null với sản phẩm Seller tạo.
+- `externalId`: mã truy vết tùy chọn dạng `<source>:<source-id>` cho dữ liệu import; prefix phụ thuộc nguồn, còn sản phẩm Seller tạo có giá trị null.
 - `docs/api/ai-service-contract.md` là nguồn chuẩn cho contract hiện hành.
 
 ## Mục tiêu hợp nhất
@@ -31,7 +31,7 @@ Luồng bắt buộc:
 ```text
 Seller tạo sản phẩm
 → Backend lưu PostgreSQL
-→ AI Service sinh embedding và cập nhật FAISS/Elasticsearch
+→ FastAPI Search Service cập nhật Elasticsearch và CLIP/FAISS
 → User tìm sản phẩm bằng từ khóa hoặc hình ảnh
 → User xem chi tiết, thêm giỏ hàng và đặt COD
 → Seller xử lý đơn hàng
@@ -61,8 +61,8 @@ Thời gian: 04/09–13/09/2026.
 
 Công việc:
 
-- Chọn dataset sản phẩm thời trang.
-- Chuẩn hóa 100–200 sản phẩm mẫu.
+- Dùng ABO Electronics làm dataset chính; prototype thời trang cũ chỉ giữ làm bằng chứng thử kỹ thuật, không dùng làm dữ liệu chính hoặc kết quả thực nghiệm cuối.
+- Chuẩn hóa corpus prototype 1.200 sản phẩm điện tử.
 - Dùng CLIP pretrained, chưa fine-tune.
 - Sinh embedding ảnh và thử embedding mô tả.
 - Chuẩn hóa vector, xây FAISS `IndexFlatIP`.
@@ -71,12 +71,12 @@ Công việc:
 
 Bàn giao:
 
-- Dataset mẫu có `productId` thống nhất.
+- Dataset JSONL có `externalId` theo namespace và mapping sang `productId` chính thức sau khi Backend import.
 - Script sinh embedding.
 - FAISS index mẫu và mapping dữ liệu.
 - Luồng ảnh truy vấn → CLIP → FAISS → Top-10 `productId`.
 
-## Giai đoạn 2 AI Service
+## Giai đoạn 2 FastAPI Search Service
 
 Thời gian: 14/09–27/09/2026.
 
@@ -93,6 +93,7 @@ API dự kiến:
 GET    /health
 POST   /search/image
 POST   /search/text
+POST   /search/hybrid
 POST   /index/products
 POST   /index/product
 DELETE /index/product/{productId}
@@ -125,7 +126,7 @@ Thời gian: 12/10–25/10/2026.
 - Đo thời gian phản hồi trung bình.
 - Xuất CSV, biểu đồ và ghi model/tham số/quy trình tái lập.
 
-Bàn giao cuối: AI Service, pipeline dữ liệu, script embedding, cấu hình index, RRF, API, script đánh giá, kết quả thực nghiệm và nội dung chương kỹ thuật.
+Bàn giao cuối: FastAPI Search Service, pipeline dữ liệu, script embedding, cấu hình index, RRF, API, script đánh giá, kết quả thực nghiệm và nội dung chương kỹ thuật.
 
 # Võ Minh Hoàng
 
@@ -149,10 +150,10 @@ Thời gian: 14/09–27/09/2026.
 - Quản lý cửa hàng và cây danh mục cha–con.
 - Thêm, sửa, ẩn sản phẩm; upload nhiều ảnh.
 - Quản lý giá, tồn kho và trạng thái embedding.
-- Gọi AI Service khi sản phẩm thay đổi.
+- Phát outbox/job tới Search Service khi sản phẩm công khai thay đổi.
 - Trang danh sách và chi tiết sản phẩm.
 
-Bàn giao: Seller tạo/cập nhật sản phẩm → PostgreSQL → AI Service → sản phẩm xuất hiện trong tìm kiếm.
+Bàn giao: Seller tạo/cập nhật sản phẩm → PostgreSQL → Search Service → sản phẩm xuất hiện trong tìm kiếm.
 
 ## Giai đoạn 3 Mua hàng và tìm kiếm
 
@@ -160,9 +161,10 @@ Thời gian: 28/09–11/10/2026.
 
 - Giỏ hàng, tổng tiền, đơn hàng và COD.
 - Theo dõi trạng thái; Seller xác nhận, giao và hoàn tất.
+- Chat trực tiếp User-Seller theo thời gian thực, có lịch sử và trạng thái đã đọc.
 - Giao diện tìm từ khóa, bộ lọc, upload ảnh và kết quả RRF.
 
-Bàn giao: User tìm → xem chi tiết → thêm giỏ → đặt COD → Seller xử lý → User xem lịch sử và trạng thái.
+Bàn giao: User tìm → xem chi tiết/chat với Seller → thêm giỏ → đặt COD → Seller xử lý → User xem lịch sử và trạng thái.
 
 ## Giai đoạn 4 Hoàn thiện Web
 
@@ -207,7 +209,7 @@ Thời gian: 28/09–11/10/2026.
 
 - Danh sách User/Seller, khóa/mở tài khoản.
 - Quản lý danh mục, kiểm duyệt và ẩn sản phẩm.
-- Thống kê tổng quan và trạng thái AI/FAISS/Elasticsearch.
+- Thống kê tổng quan và trạng thái Search Service/FAISS/Elasticsearch.
 
 Hoàng tạo cấu trúc/API và review; Hiền trực tiếp hoàn thành module Admin.
 
@@ -215,7 +217,7 @@ Hoàng tạo cấu trúc/API và review; Hiền trực tiếp hoàn thành modul
 
 Thời gian: 12/10–25/10/2026.
 
-- Kiểm thử ba vai trò, phân quyền, giỏ hàng, đơn hàng, trạng thái và tìm kiếm.
+- Kiểm thử ba vai trò, phân quyền, giỏ hàng, đơn hàng, Chat, trạng thái và tìm kiếm.
 - Ghi bug, phân loại mức độ và retest.
 - Tổng hợp thực nghiệm, chụp giao diện và viết phần phân tích/thiết kế/kiểm thử.
 - Chuẩn bị kịch bản demo.
@@ -228,7 +230,7 @@ Bàn giao cuối: SRS, Use Case, ERD, Sequence/Activity Diagram, Admin, dataset/
 
 - React gọi Backend.
 - Backend đọc PostgreSQL.
-- AI nhận ảnh và trả `productId` từ CLIP/FAISS.
+- Search Service nhận ảnh và trả `productId` từ CLIP/FAISS.
 - Kiểm tra ID và cấu trúc API; sửa sai khác trong 21–27/09.
 
 ## 27/09 Hợp nhất sản phẩm và AI
@@ -237,7 +239,7 @@ Seller thêm sản phẩm → Backend lưu PostgreSQL → gọi AI → sinh embe
 
 ## 11/10 Hợp nhất chính
 
-Seller tạo sản phẩm; User tìm bằng chữ/ảnh, xem chi tiết, thêm giỏ và đặt COD; Seller xử lý đơn; Admin quản lý và thống kê. Sau mốc này không thiết kế lại kiến trúc.
+Seller tạo sản phẩm; User tìm bằng chữ/ảnh, xem chi tiết, chat với Seller, thêm giỏ và đặt COD; Seller xử lý đơn; Admin quản lý và thống kê. Sau mốc này không thiết kế lại kiến trúc.
 
 ## 18/10 Kiểm thử tích hợp
 
@@ -253,7 +255,7 @@ Không thêm chức năng lớn, đổi kiến trúc/database/model tùy tiện.
 
 ## 01/11 Bản nộp dự kiến
 
-Phải có source hợp nhất, Docker Compose, migration/seed, dataset mẫu, script tạo embedding/index, AI Service/API docs, thực nghiệm, báo cáo, slide và video demo dự phòng.
+Phải có source hợp nhất, Docker Compose, migration/seed, dataset mẫu, script tạo embedding/index, Search Service/API docs, thực nghiệm, báo cáo, slide và video demo dự phòng.
 
 ## 02–08/11 Dự phòng
 
@@ -261,7 +263,7 @@ Chỉ sửa lỗi, chỉnh báo cáo/trích dẫn, hoàn thiện slide, luyện 
 
 # Quy ước tích hợp
 
-AI Service trả:
+FastAPI Search Service trả:
 
 ```json
 {
@@ -277,16 +279,18 @@ Backend gửi:
 ```json
 {
   "productId": 125,
-  "externalId": "P001",
-  "name": "Áo hoodie nam màu đen",
-  "description": "Áo nỉ có mũ phong cách thể thao",
-  "category": "Hoodie",
-  "brand": "Local Brand",
-  "imageUrls": ["..."]
+  "version": 3,
+  "externalId": "abo:B07ABC123",
+  "name": "Wireless Bluetooth Headphones",
+  "description": "Over-ear wireless headphones",
+  "category": "Headphones",
+  "brand": "Sony",
+  "imageUrls": ["http://backend:3000/uploads/products/125/1.jpg"]
 }
 ```
 
 - `productId` giống nhau trong PostgreSQL, Backend, Elasticsearch và FAISS.
+- FastAPI Search Service quản lý Elasticsearch, CLIP/FAISS và RRF; NestJS gọi `POST /search/hybrid`, sau đó hydrate/kiểm tra dữ liệu hiện hành từ PostgreSQL và giữ thứ tự kết quả hợp lệ.
 - Hợp nhất source ít nhất hai lần mỗi tuần; không để branch tách biệt quá lâu.
 - Mỗi task có người phụ trách, deadline, kết quả kiểm tra được, reviewer và trạng thái.
 - Đạt viết CLIP/embedding/FAISS/Elasticsearch/RRF/thực nghiệm.
@@ -299,6 +303,7 @@ Backend gửi:
 - User, Seller và Admin đăng nhập, sử dụng đúng quyền.
 - Seller quản lý sản phẩm và đơn hàng.
 - User tìm bằng từ khóa/hình ảnh và đặt COD.
+- User và Seller chat trực tiếp, nhận tin gần thời gian thực và xem lại lịch sử.
 - Elasticsearch, CLIP, FAISS và RRF hoạt động.
 - Đo được Precision@K, Recall@K và thời gian phản hồi.
 - Admin quản lý và xem thống kê.

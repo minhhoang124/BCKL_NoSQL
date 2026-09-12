@@ -33,9 +33,14 @@ Không commit trực tiếp vào `main` hoặc `develop`. Mọi thay đổi đi 
 
 Xem [quy trình hoàn thành task và đẩy code lên GitHub](docs/git/team-task-delivery-guide.md) để làm thủ công hoặc sử dụng prompt dành cho AI.
 
-Mọi thành viên và AI hỗ trợ phải đọc [bảng phân công và kế hoạch hợp nhất](docs/project/work-assignment.md) trước khi bắt đầu một task.
+Mọi thành viên và AI hỗ trợ phải đọc:
 
-Task liên quan sản phẩm, database, Seller, đơn hàng hoặc dataset phải tuân theo [thiết kế miền sản phẩm đa ngành hàng](docs/architecture/product-domain-design.md).
+- [Bảng phân công và kế hoạch hợp nhất](docs/project/work-assignment.md) trước khi bắt đầu một task.
+- [Phạm vi triển khai và mức độ hoàn thiện](docs/project/implementation-scope.md) để không nhầm chức năng bắt buộc với hướng phát triển.
+- [Khảo sát và áp dụng nghiệp vụ sàn thương mại điện tử](docs/analysis/marketplace-business-processes.md) để cập nhật SRS, Use Case, ERD, test case và báo cáo.
+- [Thiết kế miền sản phẩm đa ngành hàng](docs/architecture/product-domain-design.md) nếu task liên quan sản phẩm, database, Seller, giỏ hàng, đơn hàng hoặc dataset.
+- [Kế hoạch triển khai Store và Product](docs/architecture/product-implementation-plan.md) nếu task triển khai schema, migration, API, import hoặc đồng bộ tìm kiếm của miền Product.
+- [Thiết kế Chat User-Seller](docs/architecture/chat-domain-design.md) nếu task liên quan Chat, WebSocket hoặc inbox.
 
 ## Khởi động
 
