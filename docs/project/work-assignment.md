@@ -4,7 +4,7 @@
 
 - Đề tài: Hệ thống quản lý sàn thương mại điện tử có tích hợp tìm kiếm sản phẩm bằng hình ảnh.
 - Mã đề tài: CNTT-KLCN201.
-- Thời gian kế hoạch: 04/09/2026–08/11/2026.
+- Thời gian kế hoạch nội bộ ban đầu: 04/09/2026–08/11/2026. Buổi bảo vệ khóa luận dự kiến **tháng 12/2026**; ngày chính xác chưa được ghi trong repo. Các mốc tháng 10–11 là checkpoint/đóng băng dự kiến, không phải lý do chuyển P0/P1 sang hướng phát triển.
 - Thành viên: Nguyễn Cao Dũng Đạt, Võ Minh Hoàng, Nguyễn Quốc Hiền.
 
 ## Quyết định đã chuẩn hóa
@@ -21,6 +21,7 @@ Quyết định tích hợp chính thức của nhóm là:
 - `productId`: số nguyên do PostgreSQL sinh, dùng xuyên suốt Backend, API, Elasticsearch và FAISS.
 - `externalId`: mã truy vết tùy chọn dạng `<source>:<source-id>` cho dữ liệu import; prefix phụ thuộc nguồn, còn sản phẩm Seller tạo có giá trị null.
 - `docs/api/ai-service-contract.md` là nguồn chuẩn cho contract hiện hành.
+- `docs/project/implementation-scope.md` là nguồn chuẩn cho phạm vi phải chạy trước bảo vệ tháng 12 (P0/P1), phạm vi sau bảo vệ để thương mại hóa (P2) và release gates. Hoàng đã xác nhận một tài khoản có thể mua và, sau onboarding Store, bán trong bản bảo vệ; Hiền review nghiệp vụ/migration/Auth, Đạt review khi ảnh hưởng Product/Search. Không coi mục tiêu mới là chức năng đã code.
 
 ## Mục tiêu hợp nhất
 
@@ -148,6 +149,8 @@ Bàn giao: React gọi Backend, Backend kết nối PostgreSQL, đăng ký/đăn
 Thời gian: 14/09–27/09/2026.
 
 - Quản lý cửa hàng và cây danh mục cha–con.
+- Tách đăng ký tài khoản khỏi Seller onboarding: hồ sơ Store, liên hệ, địa chỉ lấy/hoàn hàng, trạng thái chờ Admin duyệt. Trang Store công khai chỉ hiện sản phẩm đủ điều kiện.
+- Lên kế hoạch migration/Auth để một tài khoản mua hàng có thể nộp yêu cầu mở Store và được cấp quyền Seller sau duyệt, vẫn giữ dữ liệu tài khoản cũ; không tự nâng quyền theo email trùng.
 - Thêm, sửa, ẩn sản phẩm; upload nhiều ảnh.
 - Quản lý giá, tồn kho và trạng thái embedding.
 - Phát outbox/job tới Search Service khi sản phẩm công khai thay đổi.
@@ -160,6 +163,7 @@ Bàn giao: Seller tạo/cập nhật sản phẩm → PostgreSQL → Search Serv
 Thời gian: 28/09–11/10/2026.
 
 - Giỏ hàng, tổng tiền, đơn hàng và COD.
+- Hồ sơ/địa chỉ User và snapshot địa chỉ Order; thông báo trong ứng dụng cho các thay đổi đơn, duyệt và hủy quan trọng.
 - Theo dõi trạng thái; Seller xác nhận, giao và hoàn tất.
 - Chat trực tiếp User-Seller theo thời gian thực, có lịch sử và trạng thái đã đọc.
 - Giao diện tìm từ khóa, bộ lọc, upload ảnh và kết quả RRF.
@@ -171,6 +175,7 @@ Bàn giao: User tìm → xem chi tiết/chat với Seller → thêm giỏ → đ
 Thời gian: 12/10–25/10/2026.
 
 - Đánh giá sản phẩm, Dashboard Seller, doanh thu ngày/tháng/quý.
+- Theo phạm vi P1 mới: email verify/reset, một OAuth provider, phone OTP sandbox, VNPay/MoMo sandbox và ReturnRequest/hoàn tiền mô phỏng cơ bản. Tách issue/PR theo dependency; không đưa tất cả vào cùng PR Product hoặc Auth.
 - Search log, click log, responsive và xử lý lỗi.
 - Docker hóa Frontend, Backend, PostgreSQL.
 - Hỗ trợ Hiền tích hợp Admin.
@@ -186,6 +191,7 @@ Phụ trách phân tích, Admin, dữ liệu và kiểm thử.
 Thời gian: 04/09–13/09/2026.
 
 - Hoàn thiện SRS, Use Case, FR và NFR.
+- Đối chiếu luồng hồ sơ/địa chỉ, Seller onboarding, thông báo, identity liên kết và hậu mãi cơ bản khi bản phạm vi mở rộng được review. Ghi riêng `CURRENT` và `TARGET` để báo cáo không nhận nhầm chức năng chưa code.
 - Cùng Hoàng thiết kế ERD.
 - Đặc tả luồng quan trọng và trạng thái đơn hàng.
 - Lập danh sách API.
@@ -208,6 +214,7 @@ Bàn giao: dataset đã kiểm tra, danh sách dữ liệu loại, bộ query, g
 Thời gian: 28/09–11/10/2026.
 
 - Danh sách User/Seller, khóa/mở tài khoản.
+- Admin xét duyệt/từ chối/tạm khóa Store và xử lý yêu cầu hậu mãi cơ bản khi API/ERD tương ứng được chốt với Hoàng.
 - Quản lý danh mục, kiểm duyệt và ẩn sản phẩm.
 - Thống kê tổng quan và trạng thái Search Service/FAISS/Elasticsearch.
 
@@ -218,6 +225,7 @@ Hoàng tạo cấu trúc/API và review; Hiền trực tiếp hoàn thành modul
 Thời gian: 12/10–25/10/2026.
 
 - Kiểm thử ba vai trò, phân quyền, giỏ hàng, đơn hàng, Chat, trạng thái và tìm kiếm.
+- Kiểm thử release gates ở `docs/project/implementation-scope.md`: xác minh/liên kết tài khoản, onboarding Store, snapshot địa chỉ, thông báo và ReturnRequest; kiểm tra seed Admin không nâng quyền User trùng email.
 - Ghi bug, phân loại mức độ và retest.
 - Tổng hợp thực nghiệm, chụp giao diện và viết phần phân tích/thiết kế/kiểm thử.
 - Chuẩn bị kịch bản demo.
@@ -301,8 +309,10 @@ Backend gửi:
 # Tiêu chí hoàn thành cuối cùng
 
 - User, Seller và Admin đăng nhập, sử dụng đúng quyền.
+- User quản lý hồ sơ/địa chỉ; Seller qua onboarding Store và Admin duyệt trước khi mở bán. Xác thực mở rộng P1 chỉ tính đạt khi provider/OTP/reset đã được kiểm thử trên bản tích hợp.
 - Seller quản lý sản phẩm và đơn hàng.
 - User tìm bằng từ khóa/hình ảnh và đặt COD.
+- Có thanh toán sandbox P1, thông báo trong ứng dụng và hậu mãi cơ bản với quyết định/hoàn tiền mô phỏng; không mô tả là thanh toán hoặc hoàn tiền production.
 - User và Seller chat trực tiếp, nhận tin gần thời gian thực và xem lại lịch sử.
 - Elasticsearch, CLIP, FAISS và RRF hoạt động.
 - Đo được Precision@K, Recall@K và thời gian phản hồi.
