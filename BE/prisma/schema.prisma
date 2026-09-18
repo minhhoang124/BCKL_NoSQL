@@ -13,7 +13,9 @@ enum Role {
 }
 
 enum StoreStatus {
+  PENDING
   ACTIVE
+  REJECTED
   SUSPENDED
   CLOSED
 }
@@ -56,17 +58,18 @@ enum SearchOutboxStatus {
 }
 
 model User {
-  id               Int            @id @default(autoincrement())
-  email            String         @unique
-  passwordHash     String
-  fullName         String?
-  role             Role           @default(USER)
-  isActive         Boolean        @default(true)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  store            Store?
-  refreshTokens    RefreshToken[]
-  reviewedProducts Product[]      @relation("ProductReviewer")
+  id                 Int                  @id @default(autoincrement())
+  email              String               @unique
+  passwordHash       String
+  fullName           String?
+  role               Role                 @default(USER)
+  isActive           Boolean              @default(true)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  store              Store?
+  refreshTokens      RefreshToken[]
+  reviewedProducts   Product[]            @relation("ProductReviewer")
+  storeStatusActions StoreStatusHistory[] @relation("StoreStatusActor")
 
   @@map("users")
 }
@@ -86,19 +89,36 @@ model RefreshToken {
 }
 
 model Store {
-  id          Int              @id @default(autoincrement())
-  sellerId    Int              @unique
-  name        String
-  description String?
-  status      StoreStatus      @default(ACTIVE)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  seller      User             @relation(fields: [sellerId], references: [id], onDelete: Restrict)
-  products    Product[]
-  variants    ProductVariant[]
+  id            Int                  @id @default(autoincrement())
+  sellerId      Int                  @unique
+  name          String
+  description   String?
+  status        StoreStatus          @default(PENDING)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  seller        User                 @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  products      Product[]
+  variants      ProductVariant[]
+  statusHistory StoreStatusHistory[]
 
   @@index([status])
   @@map("stores")
+}
+
+model StoreStatusHistory {
+  id         Int          @id @default(autoincrement())
+  storeId    Int
+  fromStatus StoreStatus?
+  toStatus   StoreStatus
+  actorId    Int
+  reason     String?
+  createdAt  DateTime     @default(now())
+  store      Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  actor      User         @relation("StoreStatusActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([storeId, createdAt])
+  @@index([actorId])
+  @@map("store_status_history")
 }
 
 model Category {
