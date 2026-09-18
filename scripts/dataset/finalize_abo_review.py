@@ -22,6 +22,7 @@ OUT_OF_SCOPE = {
     "abo:B07D52SHTY": "Thảm yoga/Pilates, không thuộc phạm vi điện tử.",
     "abo:B07VDBBTFY": "Khung thành bóng đá, không thuộc phạm vi điện tử.",
     "abo:B07JMB83Q3": "Két ngụy trang dạng sách không có chức năng điện tử rõ ràng.",
+    "abo:B07H9QFF82": "Cuộn sợi TPU là vật tư tiêu hao cho máy in 3D, ngoài phạm vi thiết bị điện tử/phụ kiện điện tử của bộ dữ liệu.",
 }
 
 IMAGE_MISMATCH = {
@@ -50,10 +51,10 @@ CATEGORY_FIXES = {
     "abo:B07TPMH44Q": "power_adapter",
 }
 
-# The other 21 prior suggestions need a real Category leaf, not a forced match
+# The remaining 20 prior suggestions need a real Category leaf, not a forced match
 # to one of the seven prototype buckets. Keep proposal blank until agreed.
 CATEGORY_PENDING_REVIEW = {
-    "abo:B000UW91EY": "công tắc điện; cần nhóm electrical/switch",
+    "abo:B000UW91EY": "cảm biến chuyển động Gira Observer 70; chờ xác minh mã listing và nhóm sensor/lighting",
     "abo:B06XT2FR5Q": "cáp USB-C; cần nhóm cable",
     "abo:B07674HN3M": "dây nối điện; cần nhóm electrical/cable",
     "abo:B07674HN3P": "dây nối điện; cần nhóm electrical/cable",
@@ -73,12 +74,17 @@ CATEGORY_PENDING_REVIEW = {
     "abo:B07QYTR5GF": "bóng LED; cần nhóm lighting",
     "abo:B07QZYDYHN": "bóng LED; cần nhóm lighting",
     "abo:B07W42KQ3M": "dây nối điện; cần nhóm electrical/cable",
-    "abo:B07H9QFF82": "vật liệu in 3D; cần nhóm printer consumable",
 }
 
 IMAGE_REVIEW = {
     "abo:B07Z4FGN78": "Hai listing 14.1 và 15.6 inch dùng cùng một ảnh; cần xác minh/đổi ảnh đúng kích thước.",
     "abo:B081VRJBX8": "Hai listing 14.1 và 15.6 inch dùng cùng một ảnh; cần xác minh/đổi ảnh đúng kích thước.",
+}
+
+DESCRIPTION_QA_HOLDS = {
+    "abo:B00LLJ55XG": "Mô tả nguồn nói về đệm hỗ trợ lưng trong khi tên và ảnh là loa Bluetooth; không đưa mô tả này vào Product.",
+    "abo:B00TTC9164": "Mô tả nguồn chỉ có câu 'An Amazon Brand', không có nội dung đặc tả sản phẩm; giữ null để xác minh.",
+    "abo:B01FSGT9D4": "Mô tả nguồn lẫn AA/AAA và thông số bộ sạc chưa được xác minh đúng model; giữ null để rà lại.",
 }
 
 BRAND_PREFIXES = [
@@ -182,6 +188,10 @@ def main() -> None:
         if external_id in IMAGE_REVIEW:
             add_fix(row, "IMAGE_REUSE_NEEDS_CHECK", IMAGE_REVIEW[external_id])
 
+        if external_id in DESCRIPTION_QA_HOLDS:
+            row["proposedDescription"] = ""
+            add_fix(row, "DESCRIPTION_QA_HOLD", DESCRIPTION_QA_HOLDS[external_id])
+
         removal_reason = OUT_OF_SCOPE.get(external_id) or IMAGE_MISMATCH.get(external_id)
         if removal_reason:
             code = "OUT_OF_SCOPE" if external_id in OUT_OF_SCOPE else "IMAGE_TEXT_MISMATCH"
@@ -279,7 +289,7 @@ def main() -> None:
             {
                 "topic": "Category network_security",
                 "finding": "Nguồn đang trộn thiết bị mạng, két điện tử, dây điện, bóng đèn, bộ đổi điện và giá đỡ.",
-                "proposal": "Rà 23 trường hợp: chỉ 2 inverter có đề xuất power_adapter; 21 mục công tắc, cáp/dây, bóng LED, giá đỡ và vật liệu in 3D để trống category đích, chờ ánh xạ Category lá với Hoàng/Đạt.",
+                "proposal": "Rà 23 trường hợp: 2 inverter có đề xuất power_adapter; 20 mã còn chờ Category lá; 1 mã filament đã loại vì ngoài phạm vi thiết bị/phụ kiện điện tử.",
             },
             {
                 "topic": "Category office_display",

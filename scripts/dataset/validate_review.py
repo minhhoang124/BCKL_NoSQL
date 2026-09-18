@@ -17,7 +17,8 @@ assert len(rows) == len(by_id) == 1200
 assert all(r['externalId'].startswith('abo:') for r in rows)
 assert actions == [r for r in rows if r['status'] != 'GIỮ']
 assert not (set(CATEGORY_FIXES) & set(CATEGORY_PENDING_REVIEW))
-assert len(CATEGORY_FIXES) + len(CATEGORY_PENDING_REVIEW) == 23
+assert len(CATEGORY_FIXES) + len(CATEGORY_PENDING_REVIEW) == 22
+assert by_id['abo:B07H9QFF82']['status'] == 'LOẠI'
 assert {r['externalId'] for r in rows if 'CATEGORY_MISMATCH' in r['issueCodes']} == set(CATEGORY_FIXES)
 for external_id in CATEGORY_PENDING_REVIEW:
     row = by_id[external_id]
