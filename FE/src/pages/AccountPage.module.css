@@ -1,0 +1,21 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.profileCard {
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  padding: 2rem;
+  background-color: #fff;
+  margin-top: 1.5rem;
+}
+
+.profileCard h2 {
+  margin-bottom: 1rem;
+}
+
+.profileCard p {
+  margin: 0.5rem 0;
+  color: #555;
+}

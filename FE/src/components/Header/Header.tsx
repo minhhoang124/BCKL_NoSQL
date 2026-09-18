@@ -1,0 +1,71 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/useAuth';
+import { ApiError } from '../../services/apiClient';
+import styles from './Header.module.css';
+
+export function Header() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLogoutError(null);
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      setLogoutError(
+        error instanceof ApiError
+          ? error.message
+          : 'Không thể đăng xuất. Vui lòng kiểm tra kết nối và thử lại.',
+      );
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  return (
+    <header className={styles.header}>
+      <div className={styles.logo}>
+        <Link to="/">BCKL</Link>
+      </div>
+      <div className={styles.search}>
+        <form onSubmit={(e) => e.preventDefault()}>
+          <input type="search" placeholder="Tìm kiếm sản phẩm... (Đang phát triển)" disabled />
+          <button type="submit" disabled>Tìm</button>
+        </form>
+      </div>
+      <nav className={styles.nav}>
+        {user ? (
+          <>
+            <Link to="/account">Tài khoản ({user.fullName || user.email})</Link>
+            {user.role === 'SELLER' && <Link to="/seller">Kênh người bán</Link>}
+            {user.role === 'ADMIN' && <Link to="/admin">Quản trị</Link>}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className={styles.logoutBtn}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Đăng nhập</Link>
+            <Link to="/register" className={styles.registerBtn}>Đăng ký</Link>
+          </>
+        )}
+      </nav>
+      {logoutError && (
+        <p className={styles.logoutError} role="alert">
+          {logoutError}
+        </p>
+      )}
+    </header>
+  );
+}
