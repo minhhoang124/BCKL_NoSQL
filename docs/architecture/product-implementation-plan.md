@@ -78,7 +78,7 @@ Backend bảo đảm mỗi Product tối đa một ảnh chính. Ảnh đại di
 - `moderationStatus`: `NOT_SUBMITTED`, `PENDING`, `APPROVED`, `REJECTED`, `FROZEN`.
 - `SearchOutbox`: target cố định `SEARCH_SERVICE`, operation, `productId`, `version`, payload JSON, trạng thái, số lần thử, thời điểm retry và lỗi rút gọn.
 
-Unique outbox tối thiểu theo `(target, productId, version, operation)`. Thay đổi ảnh hưởng tìm kiếm tăng Product.version và ghi Product + outbox trong cùng transaction. Worker chỉ đánh dấu hoàn tất khi Search Service xác nhận trạng thái index theo contract.
+Unique outbox theo `(target, productId, version)`. Mỗi phiên bản Product chỉ biểu diễn một trạng thái cuối và một operation; không được đồng thời có `UPSERT` và `DELETE` cho cùng phiên bản. Thay đổi ảnh hưởng tìm kiếm tăng Product.version và ghi Product + outbox trong cùng transaction. Worker chỉ đánh dấu hoàn tất khi Search Service xác nhận trạng thái index theo contract.
 
 ## 4. Chiến lược migration an toàn
 

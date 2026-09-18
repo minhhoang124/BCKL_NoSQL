@@ -14,6 +14,7 @@
     "prisma:format": "pnpm --dir BE exec prisma format",
     "prisma:validate": "pnpm --dir BE exec prisma validate",
     "prisma:migrate": "pnpm --dir BE exec prisma migrate dev",
-    "prisma:generate": "pnpm --dir BE exec prisma generate"
+    "prisma:generate": "pnpm --dir BE exec prisma generate",
+    "prisma:seed": "pnpm --dir BE run prisma:seed"
   }
 }

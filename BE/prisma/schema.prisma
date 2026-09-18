@@ -12,23 +12,61 @@ enum Role {
   ADMIN
 }
 
-enum ProductStatus {
+enum StoreStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum CategoryAttributeDataType {
+  TEXT
+  NUMBER
+  BOOLEAN
+  SINGLE_SELECT
+}
+
+enum ProductSellerStatus {
   DRAFT
   ACTIVE
   HIDDEN
 }
 
+enum ProductModerationStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+  FROZEN
+}
+
+enum SearchOutboxTarget {
+  SEARCH_SERVICE
+}
+
+enum SearchOutboxOperation {
+  UPSERT
+  DELETE
+}
+
+enum SearchOutboxStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
 model User {
-  id            Int            @id @default(autoincrement())
-  email         String         @unique
-  passwordHash  String
-  fullName      String?
-  role          Role           @default(USER)
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  products      Product[]
-  refreshTokens RefreshToken[]
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  passwordHash     String
+  fullName         String?
+  role             Role           @default(USER)
+  isActive         Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  store            Store?
+  refreshTokens    RefreshToken[]
+  reviewedProducts Product[]      @relation("ProductReviewer")
 
   @@map("users")
 }
@@ -47,20 +85,274 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-model Product {
-  id          Int           @id @default(autoincrement())
-  externalId  String?       @unique
-  sellerId    Int
+model Store {
+  id          Int              @id @default(autoincrement())
+  sellerId    Int              @unique
   name        String
   description String?
-  price       Decimal       @db.Decimal(12, 2)
-  stock       Int           @default(0)
-  status      ProductStatus @default(DRAFT)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  seller      User          @relation(fields: [sellerId], references: [id])
+  status      StoreStatus      @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  seller      User             @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  products    Product[]
+  variants    ProductVariant[]
 
-  @@index([sellerId])
   @@index([status])
+  @@map("stores")
+}
+
+model Category {
+  id                   Int                           @id @default(autoincrement())
+  parentId             Int?
+  name                 String
+  slug                 String                        @unique
+  isActive             Boolean                       @default(true)
+  createdAt            DateTime                      @default(now())
+  updatedAt            DateTime                      @updatedAt
+  parent               Category?                     @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children             Category[]                    @relation("CategoryTree")
+  products             Product[]
+  attributeDefinitions CategoryAttributeDefinition[]
+
+  @@index([parentId])
+  @@index([isActive])
+  @@map("categories")
+}
+
+model Brand {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+
+  @@index([isActive])
+  @@map("brands")
+}
+
+model Product {
+  id                Int                     @id @default(autoincrement())
+  externalId        String?                 @unique
+  storeId           Int
+  categoryId        Int
+  brandId           Int?
+  name              String
+  description       String?
+  sellerStatus      ProductSellerStatus     @default(DRAFT)
+  moderationStatus  ProductModerationStatus @default(NOT_SUBMITTED)
+  rejectionReason   String?
+  submittedAt       DateTime?
+  reviewedAt        DateTime?
+  reviewedBy        Int?
+  version           Int                     @default(1)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  store             Store                   @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  category          Category                @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  brand             Brand?                  @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  reviewer          User?                   @relation("ProductReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  images            ProductImage[]
+  shippingProfile   ProductShippingProfile?
+  attributeValues   ProductAttributeValue[]
+  optionGroups      ProductOptionGroup[]
+  optionValues      ProductOptionValue[]
+  variants          ProductVariant[]
+  searchOutboxItems SearchOutbox[]
+
+  @@unique([id, storeId])
+  @@index([storeId])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([reviewedBy])
+  @@index([sellerStatus, moderationStatus])
   @@map("products")
+}
+
+model CategoryAttributeDefinition {
+  id            Int                       @id @default(autoincrement())
+  categoryId    Int
+  name          String
+  slug          String
+  dataType      CategoryAttributeDataType
+  isRequired    Boolean                   @default(false)
+  isFilterable  Boolean                   @default(false)
+  allowsCustom  Boolean                   @default(true)
+  sortOrder     Int                       @default(0)
+  isActive      Boolean                   @default(true)
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  category      Category                  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  options       CategoryAttributeOption[]
+  productValues ProductAttributeValue[]
+
+  @@unique([categoryId, slug])
+  @@index([categoryId, isActive])
+  @@map("category_attribute_definitions")
+}
+
+model CategoryAttributeOption {
+  id                    Int                         @id @default(autoincrement())
+  attributeDefinitionId Int
+  value                 String
+  slug                  String
+  sortOrder             Int                         @default(0)
+  isActive              Boolean                     @default(true)
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  attributeDefinition   CategoryAttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Cascade)
+  productValues         ProductAttributeValue[]
+
+  @@unique([attributeDefinitionId, slug])
+  @@unique([id, attributeDefinitionId])
+  @@index([attributeDefinitionId, isActive])
+  @@map("category_attribute_options")
+}
+
+model ProductAttributeValue {
+  id                    Int                         @id @default(autoincrement())
+  productId             Int
+  attributeDefinitionId Int
+  optionId              Int?
+  textValue             String?
+  numberValue           Decimal?                    @db.Decimal(18, 4)
+  booleanValue          Boolean?
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  product               Product                     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeDefinition   CategoryAttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Restrict)
+  option                CategoryAttributeOption?    @relation(fields: [optionId, attributeDefinitionId], references: [id, attributeDefinitionId], onDelete: Restrict)
+
+  @@unique([productId, attributeDefinitionId])
+  @@index([attributeDefinitionId])
+  @@index([optionId])
+  @@map("product_attribute_values")
+}
+
+model ProductOptionGroup {
+  id        Int                  @id @default(autoincrement())
+  productId Int
+  name      String
+  position  Int                  @default(0)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  product   Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  values    ProductOptionValue[]
+
+  @@unique([id, productId])
+  @@unique([productId, name])
+  @@index([productId, position])
+  @@map("product_option_groups")
+}
+
+model ProductOptionValue {
+  id            Int                         @id @default(autoincrement())
+  groupId       Int
+  productId     Int
+  value         String
+  position      Int                         @default(0)
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+  group         ProductOptionGroup          @relation(fields: [groupId, productId], references: [id, productId], onDelete: Cascade)
+  product       Product                     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantLinks  ProductVariantOptionValue[]
+  productImages ProductImage[]
+
+  @@unique([id, groupId, productId])
+  @@unique([id, productId])
+  @@unique([groupId, value])
+  @@index([productId])
+  @@map("product_option_values")
+}
+
+model ProductVariant {
+  id               Int                         @id @default(autoincrement())
+  productId        Int
+  storeId          Int
+  skuCode          String                      @unique
+  sellerSku        String?
+  price            Decimal                     @db.Decimal(12, 2)
+  stock            Int                         @default(0)
+  isActive         Boolean                     @default(true)
+  optionSignature  String
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  product          Product                     @relation(fields: [productId, storeId], references: [id, storeId], onDelete: Cascade)
+  store            Store                       @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  optionValueLinks ProductVariantOptionValue[]
+
+  @@unique([id, productId])
+  @@unique([storeId, sellerSku])
+  @@unique([productId, optionSignature])
+  @@index([productId, isActive])
+  @@index([storeId])
+  @@map("product_variants")
+}
+
+model ProductVariantOptionValue {
+  variantId     Int
+  productId     Int
+  optionGroupId Int
+  optionValueId Int
+  variant       ProductVariant     @relation(fields: [variantId, productId], references: [id, productId], onDelete: Cascade)
+  optionValue   ProductOptionValue @relation(fields: [optionValueId, optionGroupId, productId], references: [id, groupId, productId], onDelete: Cascade)
+
+  @@id([variantId, optionGroupId])
+  @@unique([variantId, optionValueId])
+  @@index([optionValueId, optionGroupId, productId])
+  @@map("product_variant_option_values")
+}
+
+model ProductImage {
+  id                   Int                 @id @default(autoincrement())
+  productId            Int
+  productOptionValueId Int?
+  url                  String
+  sortOrder            Int                 @default(0)
+  isPrimary            Boolean             @default(false)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  product              Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productOptionValue   ProductOptionValue? @relation(fields: [productOptionValueId, productId], references: [id, productId], onDelete: NoAction)
+
+  @@unique([productId, url])
+  @@index([productId, sortOrder])
+  @@index([productOptionValueId, productId])
+  @@map("product_images")
+}
+
+model ProductShippingProfile {
+  productId          Int      @id
+  packageWeightGrams Int?
+  packageLengthCm    Decimal? @db.Decimal(8, 2)
+  packageWidthCm     Decimal? @db.Decimal(8, 2)
+  packageHeightCm    Decimal? @db.Decimal(8, 2)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_shipping_profiles")
+}
+
+model SearchOutbox {
+  id            BigInt                @id @default(autoincrement())
+  target        SearchOutboxTarget    @default(SEARCH_SERVICE)
+  operation     SearchOutboxOperation
+  productId     Int
+  version       Int
+  payload       Json
+  status        SearchOutboxStatus    @default(PENDING)
+  attemptCount  Int                   @default(0)
+  nextAttemptAt DateTime?
+  processedAt   DateTime?
+  lastError     String?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  product       Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([target, productId, version])
+  @@index([status, nextAttemptAt])
+  @@index([productId])
+  @@map("search_outbox")
 }
