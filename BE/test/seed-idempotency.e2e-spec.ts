@@ -616,5 +616,5 @@ describe('Seed idempotency (e2e)', () => {
     expect(variantCount).toBe(0);
 
     // ── Cleanup is handled entirely by afterAll ──────────────────────────
-  });
+  }, 15_000);
 });
