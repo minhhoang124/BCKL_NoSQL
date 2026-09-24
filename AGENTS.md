@@ -3,15 +3,16 @@
 Trước khi sửa code, phải đọc theo thứ tự:
 
 1. `README.md`
-2. `docs/project/work-assignment.md`
-3. `docs/project/implementation-scope.md`
-4. `docs/analysis/marketplace-business-processes.md` nếu task liên quan phân tích nghiệp vụ, SRS, ERD, test case hoặc báo cáo
-5. `CONTRIBUTING.md`
-6. `docs/git/team-task-delivery-guide.md`
-7. `docs/api/ai-service-contract.md` nếu task liên quan sản phẩm hoặc tìm kiếm
-8. `docs/architecture/product-domain-design.md` nếu task liên quan sản phẩm, database, Seller, giỏ hàng, đơn hàng hoặc dataset
-9. `docs/architecture/product-implementation-plan.md` nếu task triển khai schema, migration, API, import hoặc đồng bộ tìm kiếm của miền Product
-10. `docs/architecture/chat-domain-design.md` nếu task liên quan Chat, WebSocket hoặc inbox
+2. `docs/architecture/system-architecture-overview.md`
+3. `docs/project/work-assignment.md`
+4. `docs/project/implementation-scope.md`
+5. `docs/analysis/marketplace-business-processes.md` nếu task liên quan phân tích nghiệp vụ, SRS, ERD, test case hoặc báo cáo
+6. `CONTRIBUTING.md`
+7. `docs/git/team-task-delivery-guide.md`
+8. `docs/api/ai-service-contract.md` nếu task liên quan sản phẩm hoặc tìm kiếm
+9. `docs/architecture/product-domain-design.md` nếu task liên quan sản phẩm, database, Seller, giỏ hàng, đơn hàng hoặc dataset
+10. `docs/architecture/product-implementation-plan.md` nếu task triển khai schema, migration, API, import hoặc đồng bộ tìm kiếm của miền Product
+11. `docs/architecture/chat-domain-design.md` nếu task liên quan Chat, WebSocket hoặc inbox
 
 Quy tắc bắt buộc:
 

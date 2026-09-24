@@ -35,6 +35,7 @@ Xem [quy trình hoàn thành task và đẩy code lên GitHub](docs/git/team-tas
 
 Mọi thành viên và AI hỗ trợ phải đọc:
 
+- [Tổng quan kiến trúc và trạng thái hệ thống](docs/architecture/system-architecture-overview.md) để hiểu thành phần, luồng dữ liệu, phần đã merge và phần còn đang phát triển trước khi đọc code.
 - [Bảng phân công và kế hoạch hợp nhất](docs/project/work-assignment.md) trước khi bắt đầu một task.
 - [Phạm vi triển khai, release gates và mức độ hoàn thiện](docs/project/implementation-scope.md) để không nhầm mục tiêu P0/P1 với chức năng đã có code hoặc hướng phát triển P2. Mở bán/thanh toán production chỉ sau khi các điều kiện vận hành riêng được đáp ứng.
 - [Khảo sát và áp dụng nghiệp vụ sàn thương mại điện tử](docs/analysis/marketplace-business-processes.md) để cập nhật SRS, Use Case, ERD, test case và báo cáo.
