@@ -24,6 +24,27 @@ If you ever modify the `schema.prisma` file, you should manually run:
 $ pnpm --dir BE exec prisma generate
 ```
 
+## Import Product JSONL
+
+Importer chỉ nhận schema JSONL version 1 trong
+`docs/architecture/product-domain-design.md`. Luôn chạy dry-run trước:
+
+```bash
+$ pnpm products:import --input C:/data/abo/products.jsonl --images-root C:/data/abo --store-id 1 --dry-run
+```
+
+Sau khi xử lý hết lỗi category, brand và ảnh, chạy import thật rồi xuất mapping
+cho Search Service:
+
+```bash
+$ pnpm products:import --input C:/data/abo/products.jsonl --images-root C:/data/abo --store-id 1 --create-missing-brands --mapping-output C:/data/abo/external-product-mapping.jsonl
+```
+
+Lệnh chạy lại không tạo Product hoặc ProductImage trùng và không ghi đè
+Product đã được Seller chỉnh sửa. Ảnh nguồn phải dùng đường dẫn tương đối nằm
+trong gói, không phải symlink, và có nội dung JPEG, PNG hoặc WebP hợp lệ. File
+mapping chỉ được ghi khi toàn bộ input không có lỗi.
+
 ## Running the app
 
 ```bash

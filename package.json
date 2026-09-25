@@ -15,6 +15,7 @@
     "prisma:validate": "pnpm --dir BE exec prisma validate",
     "prisma:migrate": "pnpm --dir BE exec prisma migrate dev",
     "prisma:generate": "pnpm --dir BE exec prisma generate",
-    "prisma:seed": "pnpm --dir BE run prisma:seed"
+    "prisma:seed": "pnpm --dir BE run prisma:seed",
+    "products:import": "pnpm --dir BE run products:import --"
   }
 }

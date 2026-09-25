@@ -2,10 +2,18 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { configureApp } from './configure-app.js';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import path from 'node:path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   configureApp(app);
+  app.useStaticAssets(
+    path.resolve(
+      process.env.UPLOAD_ROOT ?? path.resolve(process.cwd(), '../uploads'),
+    ),
+    { prefix: '/uploads/' },
+  );
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('BCKL E-commerce API')

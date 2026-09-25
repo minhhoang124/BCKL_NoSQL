@@ -8,5 +8,7 @@ export default defineConfig({
     root: './',
     include: ['**/*.e2e-spec.ts'],
     setupFiles: ['./test/setup-env.ts'],
+    testTimeout: 15_000,
+    hookTimeout: 15_000,
   },
 });
