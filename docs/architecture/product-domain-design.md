@@ -251,6 +251,8 @@ Trạng thái vòng đời hiển thị có thể suy ra từ:
 
 Mỗi lần gửi duyệt cập nhật `submittedAt`. Mỗi quyết định duyệt cập nhật `reviewedAt`, `reviewedBy` và lý do nếu bị từ chối/đóng băng. Lịch sử kiểm duyệt chi tiết có thể tách thành bảng audit ở giai đoạn triển khai Admin.
 
+Đợt triển khai 25/09/2026 (IN_PROGRESS) bổ sung `ProductStatusHistory` cho quyết định Admin và Seller hide/show: productId, actorId, trạng thái Seller/Moderation trước–sau, version sau thay đổi, reason và createdAt; unique `(productId, version)`. Ghi cùng transaction với Product, không backfill lịch sử chưa từng được lưu. Chi tiết API, điều kiện công khai, race/replay và các giới hạn còn lại ở [Product moderation/public](../api/product-moderation-public-api.md).
+
 Một sản phẩm chỉ công khai khi đồng thời:
 
 - Seller cho phép hiển thị.

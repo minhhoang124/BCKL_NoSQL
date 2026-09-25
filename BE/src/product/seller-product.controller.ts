@@ -38,6 +38,9 @@ import { UpsertProductAttributeValueDto } from './dto/upsert-product-attribute-v
 import { UpsertShippingProfileDto } from './dto/upsert-shipping-profile.dto.js';
 import type { UploadedImage } from './product-image-storage.service.js';
 import { ProductService } from './product.service.js';
+import { ProductLifecycleService } from './product-lifecycle.service.js';
+import { ProductVisibilityDto } from './dto/product-lifecycle.dto.js';
+import { ProductIdPipe } from './product-id.pipe.js';
 
 @ApiTags('seller-products')
 @ApiBearerAuth()
@@ -45,7 +48,20 @@ import { ProductService } from './product.service.js';
 @Roles(Role.SELLER)
 @Controller('seller/products')
 export class SellerProductController {
-  constructor(private readonly products: ProductService) {}
+  constructor(
+    private readonly products: ProductService,
+    private readonly lifecycle: ProductLifecycleService,
+  ) {}
+
+  @ApiOkResponse({ description: 'Ẩn/hiện Product đã duyệt theo version' })
+  @Patch(':productId/visibility')
+  visibility(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('productId', ProductIdPipe) productId: number,
+    @Body() dto: ProductVisibilityDto,
+  ) {
+    return this.lifecycle.visibility(productId, user.userId, dto);
+  }
 
   @ApiCreatedResponse({ description: 'Đã tạo Product DRAFT' })
   @Post()

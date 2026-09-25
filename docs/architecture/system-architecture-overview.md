@@ -2,7 +2,7 @@
 
 Tài liệu này là điểm bắt đầu để thành viên và AI hiểu hệ thống trước khi đọc code hoặc sửa một chức năng. Nội dung trả lời bốn câu hỏi: hệ thống đang giải quyết bài toán gì, các thành phần phối hợp như thế nào, phần nào đã chạy thật, và cần đọc đâu để tiếp tục công việc mà không suy đoán.
 
-Ảnh chụp trạng thái trong tài liệu được đối chiếu với nhánh `develop` và các pull request vào ngày **23/09/2026**. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
+Ảnh chụp trạng thái được cập nhật ngày **25/09/2026**, với `develop` tại `cbc3e40` (PR #18 đã merge). Phần bổ sung trên nhánh `codex/product-moderation-public` được ghi riêng là IN_PROGRESS. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
 
 ## 1. Cách đọc và nguồn chuẩn
 
@@ -148,20 +148,20 @@ PostgreSQL commit thành công
 
 Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn chuẩn cho giá, tồn kho, quyền sở hữu hoặc trạng thái công khai.
 
-## 6. Trạng thái triển khai tại ngày 23/09/2026
+## 6. Trạng thái triển khai tại ngày 25/09/2026
 
 | Miền | Trạng thái | Bằng chứng chính trên `develop` hoặc PR đang mở | Khoảng trống tiếp theo |
 |---|---|---|---|
 | Nền móng workspace và PostgreSQL | `CURRENT` | PR #3; pnpm workspace, NestJS, React, migration, Docker PostgreSQL | Compose toàn hệ thống và hướng dẫn demo hoàn chỉnh |
 | Auth email and password | `CURRENT` | PR #4; register, login, refresh rotation, logout, `/auth/me`, JWT/RBAC test | Profile/address, verify/reset, OAuth, OTP và multi-role mục tiêu |
 | Frontend shell | `CURRENT` | PR #13; router, layout, auth context, route guard, trang khung | Màn hình nghiệp vụ thật cho Store, Product, Cart, Order, Search |
-| Product database schema | `CURRENT` | PR #10; Store, Category, Brand, Product, attribute, option, variant, image, shipping, outbox | API Product và worker search chưa nằm trên `develop` |
+| Product database schema | `CURRENT` | PR #10; Store, Category, Brand, Product, attribute, option, variant, image, shipping, outbox; Seller Product API bổ sung ở PR #18 | Worker Search còn thiếu; lịch sử quyết định Product là migration mới trong nhánh đang làm |
 | Store and Catalog API | `CURRENT` | PR #15; Seller Store lifecycle, Admin review, Category/Brand API, ownership và E2E | Store address/profile đầy đủ và UI Seller/Admin |
 | CI quality gates | `CURRENT` | PR #16, PR #17 và PR #19; seed E2E có timeout phù hợp với fresh CI; workflow kiểm tra các workspace pnpm/FE/BE và Backend E2E | Bổ sung quality gate Python tái lập được cho Search Service gồm Ruff và toàn bộ Pytest; tiếp tục theo dõi độ ổn định khi bộ test tăng |
-| Product draft API and importer | `IN_PROGRESS` | PR #18; draft API, image ingest và JSONL importer idempotent. Lượt smoke trên branch/máy Hoàng đã import 86 Product ở trạng thái DRAFT và xuất mapping 86 cặp `externalId → productId` cho FAISS | Review và merge PR #18; sau đó tái kiểm tra importer trên môi trường tích hợp sạch. 86 Product smoke chưa phải Public Product |
+| Product draft API and importer | `CURRENT` | PR #18 đã merge (`cbc3e40`): draft, option/attribute/variant, image lifecycle, shipping, submit và importer idempotent kiểm tra ảnh hỏng; có Backend E2E. Smoke đã tạo mapping 86 Product DRAFT | 86 Product chưa phải Public Product; private media/signed URL và UI vẫn thiếu |
 | FastAPI Search Service | `IN_PROGRESS` | Draft PR #8; FAISS 86 vector dùng mapping PostgreSQL đã chạy trên máy Hoàng; Elasticsearch 8.19.21, RRF hybrid, dual-index, version/idempotency và retry lỗi một phần đã được smoke test thật | Backend outbox gọi FastAPI, Backend hydrate/filter PostgreSQL trên Web và đánh giá bằng ground truth độc lập |
-| SRS, Use Case and ERD | `IN_PROGRESS` | PR #5 head `3fcca0e`; SRS v3 giữ 37 mã FR, có 13 Use Case và 60 test case ở trạng thái thiết kế; CURRENT/TARGET đã được đối chiếu với schema/API hiện có. D01–D10 đã được Hoàng xác nhận ngày 23/09/2026 tại [phản hồi PR #5](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/5#issuecomment-5795865249) | Hiền cập nhật quyết định vào SRS; Đạt xác nhận phần Search/filter/ảnh ở D04 và D09; không ghi test thiết kế là PASS; cập nhật XMI/VPP/ERD nếu cần, sau đó review và merge PR #5 |
-| Public Product and moderation | `TARGET` | Thiết kế Product đã merge | Controller/service, submit/review/public query, outbox worker và UI |
+| SRS, Use Case and ERD | `CURRENT` (tài liệu) | PR #5 đã merge; SRS v3.1 ở `docs/analysis/hien/srs-v3.md`; 13 Use Case, 60 test case thiết kế. PR #21 bổ sung consensus pilot Search | Test case thiết kế không đồng nghĩa PASS; duy trì truy vết yêu cầu–API–test khi từng PR được nghiệm thu |
+| Public Product and moderation | `IN_PROGRESS` | Nhánh `codex/product-moderation-public`: Admin approve/reject/freeze, Seller hide/show, public list/detail, predicate chung, migration ProductStatusHistory và E2E | Review/merge API, sau đó outbox/worker, media privacy, Admin/Seller/Public UI; chưa đạt luồng end-to-end |
 | Cart, Order, COD and inventory transaction | `TARGET` | Phạm vi và phân tích nghiệp vụ | Schema, migration, API, FE và E2E transaction |
 | Chat User and Seller | `TARGET` | `chat-domain-design.md` | Schema, REST/WebSocket, UI và E2E quyền/reconnect |
 | Review, Admin dashboard and notification | `TARGET` | Phạm vi P0 | Schema/API/UI/test |
@@ -208,7 +208,35 @@ products.jsonl plus image folder
 → rebuild FAISS and Elasticsearch with official productId
 ```
 
-Tại thời điểm ảnh chụp, code luồng này nằm ở PR #18 và chưa được xem là `CURRENT` trên `develop`. Một lượt smoke trên branch/máy Hoàng đã import 86 Product DRAFT, kiểm tra PostgreSQL và xuất mapping 86 cặp cho Đạt rebuild FAISS. Bằng chứng đó xác nhận contract kỹ thuật của importer/mapping, không biến Product thành dữ liệu công khai và không thay thế review/merge PR #18.
+Code importer đã merge qua PR #18. Lượt smoke đã import 86 Product DRAFT, kiểm tra PostgreSQL và xuất mapping 86 cặp cho Đạt rebuild FAISS. Mapping xác nhận ID kỹ thuật; việc công khai từng Product vẫn phải qua hoàn thiện dữ liệu, submit và Admin duyệt.
+
+### 7.3.1 Phần mới: quyết định duyệt và đọc Product công khai
+
+**IN_PROGRESS — 25/09/2026**, chưa tự coi là đã merge. Contract cụ thể ở [Product moderation/public API](../api/product-moderation-public-api.md).
+
+```text
+Seller submit (PR #18) → ACTIVE/PENDING, version N
+→ Admin đọc chi tiết và gửi approve/reject kèm version N
+→ Serializable transaction kiểm tra version/trạng thái/điều kiện bán
+→ Product đổi trạng thái + tăng version + ghi ProductStatusHistory
+→ commit → public list/detail kiểm tra lại PostgreSQL → response chỉ có dữ liệu hiển thị
+```
+
+`ProductLifecycleService` xử lý quyết định và hide/show. `product-public-policy.ts` là nơi đọc quy tắc công khai: Store/account, category và tổ tiên, ảnh, required attributes, kiện hàng và variant hợp lệ. Public list và detail gọi cùng quy tắc để không có chuyện bị ẩn ở danh sách nhưng còn mở được qua URL chi tiết. Giá/tồn kho vẫn thuộc Variant; hàng hết kho được hiển thị với `inStock:false`.
+
+Ví dụ: Admin đang xem version 7, Seller hoặc request khác đã làm Product thành version 8 thì quyết định cho version 7 nhận 409. Admin phải tải lại nội dung. Product và history cùng transaction nên không có tình trạng đổi kết quả duyệt nhưng mất lịch sử. Hai service instance vẫn được bảo vệ bằng version và Serializable; khóa process chỉ bổ trợ việc publish ảnh.
+
+Seller hide chuyển ACTIVE/APPROVED thành HIDDEN/APPROVED. Show chỉ được phép khi APPROVED và đủ điều kiện. Admin freeze chặn Seller tự mở lại. Sửa nội dung APPROVED theo PR #18 đưa về DRAFT/NOT_SUBMITTED, vì thế public ngừng trả ngay dù Search index chưa đồng bộ.
+
+File cần đọc theo thứ tự:
+
+1. `BE/src/product/admin-product.controller.ts`, `public-product.controller.ts` và route visibility ở `seller-product.controller.ts`.
+2. `BE/src/product/product-lifecycle.service.ts`: transaction, phiên bản, lịch sử và phân trang.
+3. `BE/src/product/product-public-policy.ts`: điều kiện hiển thị và dữ liệu được phép trả.
+4. `BE/prisma/schema.prisma` → `ProductStatusHistory`; migration `20260925120000_product_status_history` chỉ thêm bảng, không sửa Product cũ.
+5. `BE/test/product-lifecycle.e2e-spec.ts`: ca thành công, từ chối, race, rollback và public filtering.
+
+**Chưa làm trong đợt này:** phát SearchOutbox/worker, thông báo, media private/signed URL, gỡ FROZEN và UI. Bảng history mới ghi quyết định Admin/hide/show, chưa phải audit toàn bộ nội dung. Public endpoint bảo vệ JSON; bảo vệ file ảnh draft là đầu việc storage riêng. Sau review/merge sẽ làm Search sync rồi giao diện, giữ thứ tự trong kế hoạch Product.
 
 ### 7.4 Tìm kiếm đích
 

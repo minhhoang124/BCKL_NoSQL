@@ -2,6 +2,13 @@
 
 Tài liệu này chuyển thiết kế nghiệp vụ trong `product-domain-design.md` thành kế hoạch code có thể review trước khi tạo migration. Đây là kế hoạch triển khai, chưa phải bằng chứng rằng chức năng đã hoàn thành.
 
+## Cập nhật tiến độ 25/09/2026
+
+- Đợt A và B đã có trên develop; PR #18 (`cbc3e40`) hoàn thành Seller draft/options/attributes/variants/images/shipping/submit và importer.
+- Phần còn lại đợt C đang triển khai trong `codex/product-moderation-public`: Admin review, visibility và public read, kèm migration lịch sử quyết định. Xem [contract và acceptance](../api/product-moderation-public-api.md).
+- Tiếp theo sau review/merge: đợt D transactional outbox/worker và hydrate/filter; phối hợp PR #8 của Đạt. Sau đó triển khai UI Seller/Admin/Public, rồi Auth đa quyền/profile/address và Cart/Order.
+- Các mục “schema hiện tại” phía dưới là baseline lúc lập kế hoạch, không phải mô tả schema develop mới nhất. Trạng thái mới nhất nằm ở [tổng quan kiến trúc](system-architecture-overview.md).
+
 ## 1. Mục tiêu
 
 - Thay schema Product prototype bằng mô hình sàn đa ngành hàng.

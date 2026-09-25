@@ -58,18 +58,19 @@ enum SearchOutboxStatus {
 }
 
 model User {
-  id                 Int                  @id @default(autoincrement())
-  email              String               @unique
-  passwordHash       String
-  fullName           String?
-  role               Role                 @default(USER)
-  isActive           Boolean              @default(true)
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  store              Store?
-  refreshTokens      RefreshToken[]
-  reviewedProducts   Product[]            @relation("ProductReviewer")
-  storeStatusActions StoreStatusHistory[] @relation("StoreStatusActor")
+  id                   Int                    @id @default(autoincrement())
+  email                String                 @unique
+  passwordHash         String
+  fullName             String?
+  role                 Role                   @default(USER)
+  isActive             Boolean                @default(true)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  store                Store?
+  refreshTokens        RefreshToken[]
+  reviewedProducts     Product[]              @relation("ProductReviewer")
+  storeStatusActions   StoreStatusHistory[]   @relation("StoreStatusActor")
+  productStatusActions ProductStatusHistory[] @relation("ProductStatusActor")
 
   @@map("users")
 }
@@ -180,6 +181,7 @@ model Product {
   optionValues      ProductOptionValue[]
   variants          ProductVariant[]
   searchOutboxItems SearchOutbox[]
+  statusHistory     ProductStatusHistory[]
 
   @@unique([id, storeId])
   @@index([storeId])
@@ -188,6 +190,25 @@ model Product {
   @@index([reviewedBy])
   @@index([sellerStatus, moderationStatus])
   @@map("products")
+}
+
+model ProductStatusHistory {
+  id                   Int                     @id @default(autoincrement())
+  productId            Int
+  actorId              Int
+  fromSellerStatus     ProductSellerStatus
+  toSellerStatus       ProductSellerStatus
+  fromModerationStatus ProductModerationStatus
+  toModerationStatus   ProductModerationStatus
+  version              Int
+  reason               String?
+  createdAt            DateTime                @default(now())
+  product              Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  actor                User                    @relation("ProductStatusActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@unique([productId, version])
+  @@index([actorId])
+  @@map("product_status_history")
 }
 
 model CategoryAttributeDefinition {
