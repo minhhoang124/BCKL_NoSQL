@@ -1,8 +1,18 @@
+import { useEffect, useState } from 'react';
+import { ApiError } from '../services/apiClient';
+import { marketplaceApi } from '../services/marketplaceApi';
+import type { Product, Store, StoreStatus } from '../types/marketplace';
+import styles from './Marketplace.module.css';
+
 export function AdminDashboardPage() {
-  return (
-    <div>
-      <h1>Quản trị hệ thống</h1>
-      <p>(Đang phát triển/chờ API)</p>
-    </div>
-  );
+  const [stores, setStores] = useState<Store[]>([]); const [products, setProducts] = useState<Product[]>([]); const [detail, setDetail] = useState<Product | null>(null); const [error, setError] = useState(''); const [message, setMessage] = useState('');
+  const load = () => Promise.all([marketplaceApi.adminStores(), marketplaceApi.reviewQueue()]).then(([storeRows, page]) => { setStores(storeRows); setProducts(page.items); });
+  useEffect(() => { load().catch((e) => setError(e instanceof ApiError ? e.message : 'Không thể tải hàng chờ duyệt.')); }, []);
+  const run = async (work: () => Promise<unknown>, success: string) => { setError(''); setMessage(''); try { await work(); await load(); setDetail(null); setMessage(success); } catch (e) { setError(e instanceof ApiError ? e.message : 'Không thể xử lý quyết định.'); } };
+  const decideStore = (store: Store, status: StoreStatus) => { const reason = window.prompt('Nhập lý do quyết định (bắt buộc):'); if (!reason?.trim()) return; void run(() => marketplaceApi.reviewStore(store.id, status, reason), 'Đã cập nhật Store.'); };
+  const decideProduct = (action: 'approve'|'reject') => { if (!detail?.version) return; const reason = action === 'reject' ? (window.prompt('Lý do từ chối:') ?? undefined) : undefined; if (action === 'reject' && !reason?.trim()) return; void run(() => marketplaceApi.moderateProduct(detail.id, action, detail.version!, reason), action === 'approve' ? 'Đã duyệt sản phẩm.' : 'Đã từ chối sản phẩm.'); };
+  return <div className={styles.page}><div><h1>Trung tâm kiểm duyệt</h1><p>Duyệt Store trước, sau đó xác minh dữ liệu Product và quyết định theo đúng version.</p></div>{error && <p className={styles.error} role="alert">{error}</p>}{message && <p className={styles.success}>{message}</p>}
+    <section className={styles.panel}><h2>Store ({stores.length})</h2><div className={styles.list}>{stores.map((store) => <div className={styles.row} key={store.id}><div><strong>{store.name}</strong><p>{store.seller?.fullName || store.seller?.email} · <span className={styles.badge}>{store.status}</span></p></div><div className={styles.actions}>{store.status === 'PENDING' && <><button onClick={() => decideStore(store, 'ACTIVE')}>Duyệt</button><button className={styles.danger} onClick={() => decideStore(store, 'REJECTED')}>Từ chối</button></>}{store.status === 'ACTIVE' && <button className={styles.danger} onClick={() => decideStore(store, 'SUSPENDED')}>Tạm khóa</button>}{store.status === 'SUSPENDED' && <button onClick={() => decideStore(store, 'ACTIVE')}>Khôi phục</button>}</div></div>)}</div></section>
+    <section className={styles.columns}><div className={styles.panel}><h2>Sản phẩm chờ duyệt ({products.length})</h2><div className={styles.list}>{products.map((product) => <button className={styles.row} key={product.id} onClick={() => marketplaceApi.reviewProduct(product.id).then(setDetail).catch((e) => setError(e instanceof ApiError ? e.message : 'Không thể mở sản phẩm.'))}><strong>#{product.id} · {product.name}</strong><span>v{product.version}</span></button>)}</div></div><aside className={styles.panel}>{detail ? <><h2>{detail.name}</h2><p>{detail.category.name} · {detail.brand?.name ?? 'Không thương hiệu'}</p><p>{detail.description || 'Không có mô tả'}</p><p>{detail.images.length} ảnh · {detail.variants.length} phiên bản · {detail.shippingProfile?.packageWeightGrams ?? 0}g</p><div className={styles.actions}><button onClick={() => decideProduct('approve')}>Duyệt sản phẩm</button><button className={styles.danger} onClick={() => decideProduct('reject')}>Từ chối</button></div></> : <p>Chọn một sản phẩm để kiểm tra.</p>}</aside></section>
+  </div>;
 }

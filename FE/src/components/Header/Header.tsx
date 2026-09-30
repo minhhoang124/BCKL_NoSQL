@@ -9,6 +9,7 @@ export function Header() {
   const navigate = useNavigate();
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = async () => {
     setLogoutError(null);
@@ -34,9 +35,9 @@ export function Header() {
         <Link to="/">BCKL</Link>
       </div>
       <div className={styles.search}>
-        <form onSubmit={(e) => e.preventDefault()}>
-          <input type="search" placeholder="Tìm kiếm sản phẩm... (Đang phát triển)" disabled />
-          <button type="submit" disabled>Tìm</button>
+        <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`); }}>
+          <input aria-label="Tìm sản phẩm" type="search" placeholder="Tìm kiếm sản phẩm..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          <button type="submit">Tìm</button>
         </form>
       </div>
       <nav className={styles.nav}>

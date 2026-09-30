@@ -186,6 +186,19 @@ export class ProductLifecycleService {
   async publicList(query: PublicProductQueryDto) {
     return this.prisma.$transaction(
       async (tx) => {
+        const categories = await tx.category.findMany({
+          select: { id: true, parentId: true, isActive: true },
+        });
+        const categoryIds = query.categoryId
+          ? this.categorySubtreeIds(query.categoryId, categories)
+          : undefined;
+
+        // An unknown category, or a category outside the active tree, has no
+        // public descendants. Return an empty page instead of falling back to
+        // an unfiltered listing.
+        if (query.categoryId && !categoryIds?.length)
+          return { items: [], nextCursor: null };
+
         // Bound DB work to 200 candidates/request. nextCursor can continue an
         // empty page when all candidates fail dynamic required-attribute checks.
         const rows = await tx.product.findMany({
@@ -195,19 +208,23 @@ export class ProductLifecycleService {
             store: { status: 'ACTIVE', seller: { isActive: true } },
             ...(query.afterId ? { id: { gt: query.afterId } } : {}),
             ...(query.storeId ? { storeId: query.storeId } : {}),
-            ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+            ...(categoryIds ? { categoryId: { in: categoryIds } } : {}),
+            ...(query.brandId ? { brandId: query.brandId } : {}),
           },
           include: listingInclude,
           orderBy: { id: 'asc' },
           take: 200,
         });
-        const categories = await tx.category.findMany({
-          select: { id: true, parentId: true, isActive: true },
-        });
         const items: ReturnType<typeof publicProduct>[] = [];
         for (let i = 0; i < rows.length; i++) {
-          if (isPublicListing(rows[i], categories))
-            items.push(publicProduct(rows[i]));
+          if (isPublicListing(rows[i], categories)) {
+            const product = publicProduct(rows[i]);
+            if (
+              query.inStock === undefined ||
+              product.inStock === query.inStock
+            )
+              items.push(product);
+          }
           if (items.length === query.limit)
             return {
               items,
@@ -219,6 +236,40 @@ export class ProductLifecycleService {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
+  }
+
+  private categorySubtreeIds(
+    rootId: number,
+    categories: Array<{
+      id: number;
+      parentId: number | null;
+      isActive: boolean;
+    }>,
+  ): number[] {
+    const nodes = new Map(
+      categories.map((category) => [category.id, category]),
+    );
+    if (!nodes.get(rootId)?.isActive) return [];
+
+    const children = new Map<number, number[]>();
+    for (const category of categories) {
+      if (!category.isActive || category.parentId === null) continue;
+      const siblings = children.get(category.parentId) ?? [];
+      siblings.push(category.id);
+      children.set(category.parentId, siblings);
+    }
+
+    const result: number[] = [];
+    const pending = [rootId];
+    const visited = new Set<number>();
+    while (pending.length) {
+      const id = pending.pop()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      result.push(id);
+      pending.push(...(children.get(id) ?? []));
+    }
+    return result;
   }
 
   async publicDetail(productId: number) {

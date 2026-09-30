@@ -14,7 +14,7 @@ Cơ sở nghiệp vụ: SRS v3.1 `FR-PRD-02`, `FR-PRD-03`, `AC-PRD-02/03` và `p
 | `POST /admin/products/:id/reject` | ADMIN | `{version,reason}`; chỉ PENDING → REJECTED |
 | `POST /admin/products/:id/freeze` | ADMIN | `{version,reason}`; chỉ APPROVED → FROZEN, kể cả Seller đang ẩn |
 | `PATCH /seller/products/:id/visibility` | SELLER sở hữu Store | `{version,sellerStatus:"ACTIVE" hoặc "HIDDEN"}`; chỉ Product APPROVED, hiện trạng không phải DRAFT |
-| `GET /products` | Guest | `limit`, `afterId`, `categoryId?` (đúng category), `storeId?`; `{items,nextCursor}` |
+| `GET /products` | Guest | `limit`, `afterId`, `categoryId?` (category đã chọn và toàn bộ nhánh con hoạt động), `storeId?`, `brandId?`, `inStock?`; `{items,nextCursor}` |
 | `GET /products/:id` | Guest | Chi tiết theo cùng predicate với list; không đủ điều kiện trả 404 |
 
 `version` là số nguyên >=1 lấy từ màn hình chi tiết đang xem. Không tự lấy version mới rồi duyệt thay nội dung người dùng chưa xem. `reason` sau trim dài 1–1000 ký tự. Body thừa/sai kiểu bị ValidationPipe từ chối. Quyền JWT vẫn theo Role đơn hiện hành; multi-role được triển khai bằng PR riêng.
@@ -39,7 +39,17 @@ Visibility gửi cùng trạng thái với version hiện hành trả kết qu�
 - required attributes trực tiếp của category lá có giá trị đúng kiểu; option lựa chọn phải hoạt động, giá trị false/0 hợp lệ;
 - ít nhất một variant active, giá >0, tổ hợp đầy đủ theo option groups của Product.
 
-Stock=0 vẫn public, response có `inStock:false`. Mua được phải kiểm tra lại đúng variant và số lượng tại checkout (chưa có trong đợt này). Chưa có filter giá/stock/Search mới trong API này.
+Stock=0 vẫn public, response có `inStock:false`. Mua được phải kiểm tra lại đúng variant và số lượng tại checkout (chưa có trong đợt này). Chưa có filter giá trong API này.
+
+### Bổ sung PR #24 — lọc trước phân trang (IN_PROGRESS, 29/09/2026)
+
+- `categoryId`: áp dụng theo cây danh mục. Chọn danh mục cha lấy Product thuộc chính danh mục đó và mọi danh mục con đang hoạt động; Product công khai vẫn bắt buộc nằm ở category lá hợp lệ. Cách hiểu này thống nhất với `categoryIds` của hybrid search, nên cùng một lựa chọn không đổi nghĩa khi người dùng thêm hoặc xóa từ khóa. Category không tồn tại hoặc không hoạt động trả trang rỗng, không được vô tình bỏ bộ lọc.
+- `brandId`: số nguyên 1–2147483647; lọc chính xác trong truy vấn PostgreSQL cùng category/store/cursor.
+- `inStock`: query string chỉ nhận `true` hoặc `false`; giá trị khác trả 400. Bỏ tham số để lấy cả còn hàng và hết hàng. `true` yêu cầu ít nhất một variant hoạt động, giá >0, tổ hợp option hợp lệ và stock >0. `false` yêu cầu không có variant bán hợp lệ nào còn kho; Product vẫn phải đủ điều kiện public.
+- Kiểm tra stock dùng cùng các variant được trả trong public response, trước khi đếm đủ `limit`. Variant inactive hoặc thiếu option dù còn kho không làm Product thành còn hàng.
+- Giữ giới hạn 200 candidate/request và cursor ID tăng dần; trang rỗng có `nextCursor` chưa phải cuối dữ liệu. Frontend dùng nút tải thêm, giữ nguyên bộ lọc đã áp dụng khi gửi `afterId`. Không lọc brand/stock cục bộ trên 24 kết quả đầu.
+- Ví dụ: `GET /products?limit=24&categoryId=2&brandId=3&inStock=true`.
+- Không đổi schema/migration hoặc contract FastAPI. Bằng chứng: `BE/test/public-product-filters.e2e-spec.ts`, `FE/src/pages/HomePage.test.tsx`, `FE/src/services/marketplaceApi.test.ts`.
 
 Public response dùng allowlist: id, tên/mô tả, Store id/name, category, brand, ảnh, thuộc tính, option groups, các variant hợp lệ, minPrice/maxPrice và inStock. Giá là chuỗi Decimal; không trả externalId, thông tin tài khoản, sellerSku, SKU nội bộ, reviewer, reason hay history. Header `Cache-Control: no-store` tránh response listing đã ẩn được cache thông thường.
 

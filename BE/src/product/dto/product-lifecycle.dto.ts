@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
@@ -57,6 +58,20 @@ export class ProductPageDto {
 }
 
 export class PublicProductQueryDto extends ProductPageDto {
+  @ApiPropertyOptional({ minimum: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(2147483647)
+  brandId?: number;
+
+  @ApiPropertyOptional({ description: 'true: có variant bán hợp lệ còn kho; false: hết kho' })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' ? true : value === 'false' ? false : value)
+  @IsBoolean()
+  inStock?: boolean;
+
   @ApiPropertyOptional({ minimum: 1 })
   @IsOptional()
   @Type(() => Number)
