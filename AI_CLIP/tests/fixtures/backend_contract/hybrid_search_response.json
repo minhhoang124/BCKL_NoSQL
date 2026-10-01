@@ -1,0 +1,10 @@
+{
+  "query": {
+    "type": "hybrid_text",
+    "text": "tai nghe bluetooth chống ồn"
+  },
+  "items": [
+    {"productId": 125, "rank": 1, "score": 0.0325}
+  ],
+  "responseTimeMs": 132
+}

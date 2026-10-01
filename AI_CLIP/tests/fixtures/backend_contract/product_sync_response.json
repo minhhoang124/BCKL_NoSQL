@@ -1,0 +1,10 @@
+{
+  "productId": 125,
+  "version": 4,
+  "operation": "UPSERT",
+  "outcome": "APPLIED",
+  "indexes": {
+    "elasticsearch": {"status": "SUCCEEDED", "version": 4},
+    "faiss": {"status": "SUCCEEDED", "version": 4}
+  }
+}

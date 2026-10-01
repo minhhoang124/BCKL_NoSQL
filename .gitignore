@@ -36,6 +36,9 @@ logs/
 datasets/raw/
 datasets/processed/
 artifacts/
+!AI_CLIP/artifacts/
+AI_CLIP/artifacts/*
+!AI_CLIP/artifacts/.gitkeep
 models/
 *.npy
 *.npz

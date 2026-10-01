@@ -114,3 +114,35 @@ jobs:
 
       - name: Run Backend E2E tests
         run: pnpm --dir BE test:e2e
+
+  ai-python-checks:
+    name: AI Service - Ruff and Pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HF_HUB_OFFLINE: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: AI_CLIP/requirements.txt
+
+      - name: Install AI Service dependencies
+        working-directory: AI_CLIP
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run Ruff
+        working-directory: AI_CLIP
+        run: python -m ruff check app tests
+
+      - name: Run Pytest
+        working-directory: AI_CLIP
+        run: python -m pytest -q
