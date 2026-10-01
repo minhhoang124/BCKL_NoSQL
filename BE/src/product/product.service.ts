@@ -14,6 +14,10 @@ import {
   StoreStatus,
 } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
+import {
+  isTransactionConflict,
+  waitForTransactionRetry,
+} from './transaction-conflict.js';
 import { PrismaService } from '../prisma.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { CreateProductOptionGroupDto } from './dto/create-product-option-group.dto.js';
@@ -27,6 +31,8 @@ import {
   ProductImageStorageService,
   type UploadedImage,
 } from './product-image-storage.service.js';
+import { SearchOutboxService } from '../search/search-outbox.service.js';
+import { listingInclude } from './product-public-policy.js';
 
 const productInclude = {
   category: { select: { id: true, name: true, slug: true } },
@@ -67,6 +73,7 @@ export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly imageStorage: ProductImageStorageService,
+    private readonly outbox: SearchOutboxService,
   ) {}
 
   async createDraft(sellerId: number, dto: CreateProductDto) {
@@ -124,28 +131,17 @@ export class ProductService {
       dto.brandId === undefined ? product.brandId : dto.brandId,
     );
 
-    const updated = await this.prisma.product.updateMany({
-      where: {
-        id: product.id,
-        storeId: product.storeId,
-        version: product.version,
-      },
-      data: {
+    await this.runSerializable(async (tx) => {
+      await this.incrementVersion(tx, product, {
         ...(dto.categoryId !== undefined ? { categoryId: dto.categoryId } : {}),
         ...(dto.brandId !== undefined ? { brandId: dto.brandId } : {}),
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.description !== undefined
           ? { description: this.normalizeOptionalText(dto.description) }
           : {}),
-        ...this.getReviewResetData(product.moderationStatus),
-        version: { increment: 1 },
-      },
+      });
     });
-    if (updated.count === 0) {
-      throw new ConflictException(
-        'Sản phẩm vừa được cập nhật bởi yêu cầu khác',
-      );
-    }
+
     return this.getMine(sellerId, productId);
   }
 
@@ -541,17 +537,23 @@ export class ProductService {
   }
 
   async submit(sellerId: number, productId: number) {
+    return this.imageStorage.withProductImageLock(productId, () =>
+      this.submitLocked(sellerId, productId),
+    );
+  }
+
+  private async submitLocked(sellerId: number, productId: number) {
     await this.getWritableStore(sellerId);
     const product = await this.getOwnedEditableProduct(sellerId, productId);
     const [
-      primaryImage,
+      productImages,
       sellableVariant,
       shippingProfile,
       requiredDefinitions,
     ] = await Promise.all([
-      this.prisma.productImage.findFirst({
-        where: { productId, isPrimary: true },
-        select: { id: true },
+      this.prisma.productImage.findMany({
+        where: { productId },
+        select: { id: true, url: true, isPrimary: true },
       }),
       this.prisma.productVariant.findFirst({
         where: { productId, isActive: true, price: { gt: 0 } },
@@ -604,7 +606,16 @@ export class ProductService {
       requiredValues.map((value) => [value.attributeDefinitionId, value]),
     );
     const missing: string[] = [];
-    if (!primaryImage) missing.push('ảnh chính');
+    const primaryImage = productImages.find((image) => image.isPrimary);
+    if (!primaryImage) {
+      missing.push('ảnh chính');
+    } else {
+      const published = await Promise.all(
+        productImages.map((image) => this.imageStorage.isPublished(image.url)),
+      );
+      if (published.some((exists) => !exists))
+        missing.push('file ảnh đã tải lên hợp lệ');
+    }
     if (!sellableVariant) missing.push('variant đang bán có giá hợp lệ');
     if (!shippingProfile?.packageWeightGrams)
       missing.push('khối lượng kiện hàng');
@@ -688,14 +699,56 @@ export class ProductService {
     image: { id: number; url: string; isPrimary: boolean },
     previousPrimaryImageId: number | null,
   ) {
-    await this.runSerializable(async (tx) => {
-      const [currentImage, currentProduct] = await Promise.all([
-        tx.productImage.findUnique({ where: { id: image.id } }),
-        tx.product.findUnique({ where: { id: product.id } }),
-      ]);
-      if (!currentImage || currentImage.url !== image.url || !currentProduct) {
+    const maxAttempts = 3;
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      try {
+        await this.runImagePublishCompensation(
+          product,
+          image,
+          previousPrimaryImageId,
+        );
         return;
+      } catch (error: unknown) {
+        if (
+          error instanceof BadRequestException ||
+          error instanceof ConflictException ||
+          error instanceof NotFoundException
+        ) {
+          throw error;
+        }
+        if (attempt < maxAttempts - 1) {
+          await waitForTransactionRetry(attempt);
+          continue;
+        }
+        this.logger.error(
+          `IMAGE_COMPENSATION_FAILED product=${product.id} attempts=${maxAttempts}`,
+        );
+        throw error;
       }
+    }
+  }
+
+  private async runImagePublishCompensation(
+    product: ProductImageMutationSnapshot,
+    image: { id: number; url: string; isPrimary: boolean },
+    previousPrimaryImageId: number | null,
+  ) {
+    await this.runSerializable(async (tx) => {
+      const currentImage = await tx.productImage.findUnique({
+        where: { id: image.id },
+      });
+      const currentProduct = await tx.product.findUnique({
+        where: { id: product.id },
+      });
+      // Another successful compensation already removed this exact image.
+      if (!currentImage) return;
+      if (!currentProduct)
+        throw new ConflictException('Sản phẩm không còn tồn tại');
+      if (
+        currentImage.productId !== product.id ||
+        currentImage.url !== image.url
+      )
+        throw new ConflictException('Ảnh bồi hoàn không khớp sản phẩm');
 
       const hasSubsequentMutation =
         currentProduct.version !== product.version + 1;
@@ -733,24 +786,51 @@ export class ProductService {
       }
 
       if (hasSubsequentMutation) {
-        await tx.product.update({
-          where: { id: product.id },
-          data: { version: { increment: 1 } },
+        const updated = await tx.product.updateMany({
+          where: { id: product.id, version: currentProduct.version },
+          data: {
+            version: { increment: 1 },
+          },
         });
-        return;
+        if (!updated.count) {
+          throw new ConflictException(
+            'Sản phẩm đã thay đổi trong quá trình bồi hoàn',
+          );
+        }
+      } else {
+        const updated = await tx.product.updateMany({
+          where: { id: product.id, version: currentProduct.version },
+          data: {
+            sellerStatus: product.sellerStatus,
+            moderationStatus: product.moderationStatus,
+            rejectionReason: product.rejectionReason,
+            submittedAt: product.submittedAt,
+            reviewedAt: product.reviewedAt,
+            reviewedBy: product.reviewedBy,
+            version: { increment: 1 },
+          },
+        });
+        if (!updated.count) {
+          throw new ConflictException(
+            'Sản phẩm đã thay đổi trong quá trình bồi hoàn',
+          );
+        }
       }
-      await tx.product.updateMany({
-        where: { id: product.id, version: product.version + 1 },
-        data: {
-          sellerStatus: product.sellerStatus,
-          moderationStatus: product.moderationStatus,
-          rejectionReason: product.rejectionReason,
-          submittedAt: product.submittedAt,
-          reviewedAt: product.reviewedAt,
-          reviewedBy: product.reviewedBy,
-          version: product.version,
-        },
+
+      const fullProduct = await tx.product.findUniqueOrThrow({
+        where: { id: product.id },
+        include: listingInclude,
       });
+      const categories = await tx.category.findMany({
+        select: { id: true, parentId: true, isActive: true },
+      });
+
+      await this.outbox.writeOutboxEvent(
+        tx,
+        fullProduct,
+        categories,
+        fullProduct.version,
+      );
     });
   }
 
@@ -762,7 +842,8 @@ export class ProductService {
       version: number;
       moderationStatus: ProductModerationStatus;
     },
-  ) {
+    extraData?: Prisma.ProductUncheckedUpdateManyInput,
+  ): Promise<number> {
     const changed = await tx.product.updateMany({
       where: {
         id: product.id,
@@ -770,6 +851,7 @@ export class ProductService {
         version: product.version,
       },
       data: {
+        ...extraData,
         ...this.getReviewResetData(product.moderationStatus),
         version: { increment: 1 },
       },
@@ -779,6 +861,11 @@ export class ProductService {
         'Sản phẩm vừa được cập nhật bởi yêu cầu khác',
       );
     }
+    const newVersion = product.version + 1;
+    if (product.moderationStatus === ProductModerationStatus.APPROVED) {
+      await this.outbox.writeDeleteEvent(tx, product.id, newVersion);
+    }
+    return newVersion;
   }
 
   private getReviewResetData(
@@ -938,18 +1025,18 @@ export class ProductService {
   private async runSerializable<T>(
     operation: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
       try {
         return await this.prisma.$transaction(operation, {
           isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
         });
       } catch (error: unknown) {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === 'P2034' &&
-          attempt < 2
-        ) {
-          continue;
+        if (isTransactionConflict(error)) {
+          if (attempt < 4) {
+            await waitForTransactionRetry(attempt);
+            continue;
+          }
+          throw new ConflictException('Không thể hoàn tất cập nhật đồng thời');
         }
         throw error;
       }

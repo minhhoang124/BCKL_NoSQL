@@ -7,6 +7,7 @@ Tài liệu này chuyển thiết kế nghiệp vụ trong `product-domain-desig
 - Đợt A và B đã có trên develop; PR #18 (`cbc3e40`) hoàn thành Seller draft/options/attributes/variants/images/shipping/submit và importer.
 - Phần còn lại đợt C đang triển khai trong `codex/product-moderation-public`: Admin review, visibility và public read, kèm migration lịch sử quyết định. Xem [contract và acceptance](../api/product-moderation-public-api.md).
 - Tiếp theo sau review/merge: đợt D transactional outbox/worker và hydrate/filter; phối hợp PR #8 của Đạt. Sau đó triển khai UI Seller/Admin/Public, rồi Auth đa quyền/profile/address và Cart/Order.
+- Nhánh PR #23 đang bổ sung reconciliation và image repair. Durable reconciliation job/checkpoint, lease, retry/backoff và runtime image-repair worker đã có trên branch nhưng vẫn là `IN_PROGRESS` cho tới khi review/merge; contract Pydantic bất biến từ PR #8 vẫn là dependency riêng.
 - Các mục “schema hiện tại” phía dưới là baseline lúc lập kế hoạch, không phải mô tả schema develop mới nhất. Trạng thái mới nhất nằm ở [tổng quan kiến trúc](system-architecture-overview.md).
 
 ## 1. Mục tiêu

@@ -12,6 +12,7 @@ import { configureApp } from '../src/configure-app.js';
 import { PrismaService } from '../src/prisma.service.js';
 import { ProductImageStorageService } from '../src/product/product-image-storage.service.js';
 import { ProductLifecycleService } from '../src/product/product-lifecycle.service.js';
+import { SearchOutboxService } from '../src/search/search-outbox.service.js';
 import { vi } from 'vitest';
 
 describe('Product moderation and public visibility (e2e)', () => {
@@ -240,10 +241,12 @@ describe('Product moderation and public visibility (e2e)', () => {
     const first = new ProductLifecycleService(
       prisma,
       new ProductImageStorageService(),
+      new SearchOutboxService(prisma),
     );
     const second = new ProductLifecycleService(
       prisma,
       new ProductImageStorageService(),
+      new SearchOutboxService(prisma),
     );
     const results = await Promise.allSettled([
       first.moderate(id, adminId, version, 'APPROVED'),

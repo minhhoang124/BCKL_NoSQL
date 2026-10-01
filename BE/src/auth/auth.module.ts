@@ -7,14 +7,17 @@ import { AuthService } from './auth.service.js';
 import { JwtStrategy } from './jwt.strategy.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { RolesGuard } from './guards/roles.guard.js';
+import { SearchModule } from '../search/search.module.js';
+import { AdminAccountController } from './admin-account.controller.js';
 
 @Module({
   imports: [
     DatabaseModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),
+    SearchModule,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, AdminAccountController],
   providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
   exports: [AuthService, JwtAuthGuard, RolesGuard],
 })

@@ -1,7 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { createHash, randomUUID } from 'node:crypto';
 import { constants } from 'node:fs';
-import { copyFile, mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  copyFile,
+  mkdir,
+  rename,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 
@@ -94,6 +101,28 @@ export class ProductImageStorageService {
 
   async discard(receipt: StoredProductImage): Promise<void> {
     await rm(receipt.stagedPath, { force: true });
+  }
+
+  /** Verifies that a managed image URL has a published file on storage. */
+  async isPublished(url: string): Promise<boolean> {
+    const absolutePath = this.resolveManagedPath(url);
+    try {
+      await access(absolutePath, constants.F_OK);
+      return true;
+    } catch (error: unknown) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false;
+      throw error;
+    }
+  }
+
+  /** Returns false for remote/legacy URLs without touching the filesystem. */
+  isManagedUrl(url: string): boolean {
+    try {
+      this.resolveManagedPath(url);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async stageDeletion(url: string): Promise<StagedProductImageDeletion | null> {

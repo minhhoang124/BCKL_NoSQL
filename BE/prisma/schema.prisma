@@ -57,6 +57,22 @@ enum SearchOutboxStatus {
   FAILED
 }
 
+enum SearchReconciliationScope {
+  ALL
+  STORE
+  CATEGORY
+  BRAND
+  SELLER
+}
+
+enum SearchReconciliationStatus {
+  PENDING
+  PROCESSING
+  FAILED
+  SUCCEEDED
+  DEAD
+}
+
 model User {
   id                   Int                    @id @default(autoincrement())
   email                String                 @unique
@@ -396,4 +412,23 @@ model SearchOutbox {
   @@index([status, nextAttemptAt])
   @@index([productId])
   @@map("search_outbox")
+}
+
+model SearchReconciliationJob {
+  id              BigInt                     @id @default(autoincrement())
+  scope           SearchReconciliationScope
+  scopeId         Int?
+  status          SearchReconciliationStatus @default(PENDING)
+  cursorProductId Int?
+  attemptCount    Int                        @default(0)
+  nextAttemptAt   DateTime?                  @default(now())
+  leaseExpiresAt  DateTime?
+  completedAt     DateTime?
+  lastError       String?
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([scope, scopeId, createdAt])
+  @@map("search_reconciliation_jobs")
 }

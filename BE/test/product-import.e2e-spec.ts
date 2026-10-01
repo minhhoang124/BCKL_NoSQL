@@ -685,7 +685,7 @@ describe('Seller Product API and JSONL importer (e2e)', () => {
         where: { id: productId },
         select: { version: true },
       }),
-    ).resolves.toEqual({ version: 1 });
+    ).resolves.toEqual({ version: 3 });
 
     const transactionSpy = vi
       .spyOn(prisma, '$transaction')

@@ -9,6 +9,7 @@ import { Prisma, Role } from '@prisma/client';
 import { compare, hash } from 'bcryptjs';
 import { createHash, randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
+import { SearchReconciliationService } from '../search/search-reconciliation.service.js';
 import type {
   AuthenticatedUser,
   JwtPayload,
@@ -37,6 +38,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly searchReconciliation: SearchReconciliationService,
   ) {
     this.accessTtl = this.readPositiveInteger('JWT_ACCESS_TTL_SECONDS', 900);
     this.refreshTtl = this.readPositiveInteger(
@@ -157,6 +159,33 @@ export class AuthService {
     });
     if (!user?.isActive) throw new UnauthorizedException();
     return user;
+  }
+
+  async updateAccountStatus(userId: number, isActive: boolean) {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: { id: true, role: true, isActive: true },
+      });
+      if (existing.isActive === isActive) {
+        return { ...existing, searchReconciliation: null };
+      }
+      const user = await tx.user.update({
+        where: { id: userId },
+        data: { isActive },
+        select: publicUserSelect,
+      });
+      const job =
+        existing.role === Role.SELLER
+          ? await this.searchReconciliation.enqueueSeller(tx, userId)
+          : null;
+      return {
+        ...user,
+        searchReconciliation: job
+          ? { jobId: job.id.toString(), status: job.status }
+          : null,
+      };
+    });
   }
 
   getRefreshCookieOptions() {

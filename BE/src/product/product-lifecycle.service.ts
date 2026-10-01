@@ -23,12 +23,18 @@ import {
   listingProblems,
   publicProduct,
 } from './product-public-policy.js';
+import { SearchOutboxService } from '../search/search-outbox.service.js';
+import {
+  isTransactionConflict,
+  waitForTransactionRetry,
+} from './transaction-conflict.js';
 
 @Injectable()
 export class ProductLifecycleService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly images: ProductImageStorageService,
+    private readonly outbox: SearchOutboxService,
   ) {}
 
   async reviewQueue(query: ProductPageDto) {
@@ -76,8 +82,9 @@ export class ProductLifecycleService {
   ) {
     // Same process lock as image publish/compensation prevents approval of an
     // uploaded image whose publish is still in flight. DB version is authoritative.
-    return this.images.withProductImageLock(productId, () =>
-      this.transaction(async (tx) => {
+    return this.images.withProductImageLock(productId, async () => {
+      // Product, history and immutable outbox commit or roll back together.
+      return this.transaction(async (tx) => {
         const product = await tx.product.findUnique({
           where: { id: productId },
           include: listingInclude,
@@ -92,13 +99,13 @@ export class ProductLifecycleService {
           throw new ConflictException(
             'Trạng thái không cho phép quyết định này',
           );
+        let cats: { id: number; parentId: number | null; isActive: boolean }[] =
+          [];
         if (decision === 'APPROVED') {
-          const problems = listingProblems(
-            product,
-            await tx.category.findMany({
-              select: { id: true, parentId: true, isActive: true },
-            }),
-          );
+          cats = await tx.category.findMany({
+            select: { id: true, parentId: true, isActive: true },
+          });
+          const problems = listingProblems(product, cats);
           if (problems.length)
             throw new BadRequestException(problems.join('; '));
         }
@@ -122,9 +129,22 @@ export class ProductLifecycleService {
           decision,
           reason,
         );
+        // Snapshot reflects the version committed with this outbox event.
+        const productSnapshot = {
+          ...product,
+          moderationStatus: decision,
+          rejectionReason: reason ?? null,
+          version: product.version + 1,
+        };
+        await this.outbox.writeOutboxEvent(
+          tx,
+          productSnapshot,
+          cats,
+          productSnapshot.version,
+        );
         return tx.product.findUniqueOrThrow({ where: { id: productId } });
-      }),
-    );
+      });
+    });
   }
 
   async visibility(
@@ -132,8 +152,9 @@ export class ProductLifecycleService {
     sellerId: number,
     dto: ProductVisibilityDto,
   ) {
-    return this.images.withProductImageLock(productId, () =>
-      this.transaction(async (tx) => {
+    return this.images.withProductImageLock(productId, async () => {
+      // Product, history and immutable outbox commit or roll back together.
+      return this.transaction(async (tx) => {
         const product = await tx.product.findFirst({
           where: { id: productId, store: { sellerId } },
           include: listingInclude,
@@ -148,19 +169,21 @@ export class ProductLifecycleService {
           product.sellerStatus === 'DRAFT'
         )
           throw new ForbiddenException('Chỉ ẩn/hiện sản phẩm đã duyệt');
+        if (product.sellerStatus === dto.sellerStatus)
+          return tx.product.findUniqueOrThrow({ where: { id: productId } });
+        // HIDE emits DELETE without a category table scan.
+        const cats =
+          dto.sellerStatus === 'ACTIVE'
+            ? await tx.category.findMany({
+                select: { id: true, parentId: true, isActive: true },
+              })
+            : [];
         // Hiding is allowed even when the Store is suspended; showing is not.
         if (dto.sellerStatus === 'ACTIVE') {
-          const problems = listingProblems(
-            product,
-            await tx.category.findMany({
-              select: { id: true, parentId: true, isActive: true },
-            }),
-          );
+          const problems = listingProblems(product, cats);
           if (problems.length)
             throw new BadRequestException(problems.join('; '));
         }
-        if (product.sellerStatus === dto.sellerStatus)
-          return tx.product.findUniqueOrThrow({ where: { id: productId } });
         const updated = await tx.product.updateMany({
           where: {
             id: productId,
@@ -178,9 +201,20 @@ export class ProductLifecycleService {
           dto.sellerStatus,
           product.moderationStatus,
         );
+        const productSnapshot = {
+          ...product,
+          sellerStatus: dto.sellerStatus,
+          version: dto.version + 1,
+        };
+        await this.outbox.writeOutboxEvent(
+          tx,
+          productSnapshot,
+          cats,
+          productSnapshot.version,
+        );
         return tx.product.findUniqueOrThrow({ where: { id: productId } });
-      }),
-    );
+      });
+    });
   }
 
   async publicList(query: PublicProductQueryDto) {
@@ -320,7 +354,7 @@ export class ProductLifecycleService {
   private async transaction<T>(
     work: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 5; attempt++) {
       try {
         return await this.prisma.$transaction(work, {
           isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
@@ -334,11 +368,11 @@ export class ProductLifecycleService {
             'Phiên bản đã có lịch sử xử lý; tải lại sản phẩm',
           );
         }
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === 'P2034'
-        ) {
-          if (attempt < 2) continue;
+        if (isTransactionConflict(error)) {
+          if (attempt < 4) {
+            await waitForTransactionRetry(attempt);
+            continue;
+          }
           throw new ConflictException(
             'Cập nhật đồng thời; vui lòng tải lại sản phẩm',
           );

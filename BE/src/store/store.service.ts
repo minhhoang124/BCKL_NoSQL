@@ -7,13 +7,17 @@ import {
 } from '@nestjs/common';
 import { Prisma, StoreStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service.js';
+import { SearchReconciliationService } from '../search/search-reconciliation.service.js';
 import { CreateStoreDto } from './dto/create-store.dto.js';
 import { ReviewStoreDto } from './dto/review-store.dto.js';
 import { UpdateStoreDto } from './dto/update-store.dto.js';
 
 @Injectable()
 export class StoreService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly searchReconciliationService: SearchReconciliationService,
+  ) {}
 
   async createForSeller(sellerId: number, dto: CreateStoreDto) {
     try {
@@ -144,7 +148,7 @@ export class StoreService {
       throw new BadRequestException('Mọi quyết định duyệt Store phải có lý do');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const store = await tx.store.findUnique({ where: { id: storeId } });
       if (!store) throw new NotFoundException('Không tìm thấy Store');
       if (!this.isAllowedAdminTransition(store.status, dto.status)) {
@@ -170,8 +174,25 @@ export class StoreService {
           reason,
         },
       });
-      return tx.store.findUniqueOrThrow({ where: { id: store.id } });
+      const updatedStore = await tx.store.findUniqueOrThrow({
+        where: { id: store.id },
+      });
+      const reconciliationJob =
+        dto.status === StoreStatus.SUSPENDED ||
+        dto.status === StoreStatus.ACTIVE
+          ? await this.searchReconciliationService.enqueueStore(tx, store.id)
+          : null;
+      return { updatedStore, reconciliationJob };
     });
+    return {
+      ...result.updatedStore,
+      searchReconciliation: result.reconciliationJob
+        ? {
+            jobId: result.reconciliationJob.id.toString(),
+            status: result.reconciliationJob.status,
+          }
+        : null,
+    };
   }
 
   private isAllowedAdminTransition(from: StoreStatus, to: StoreStatus) {

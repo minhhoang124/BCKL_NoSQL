@@ -1,6 +1,6 @@
 # Backend–Search Service API contract
 
-Trạng thái: **contract Hoàng–Đạt đã thống nhất; phần tích hợp end-to-end đang thực hiện**. Tài liệu này mô tả giao tiếp giữa NestJS Backend và FastAPI Search Service. PR #8 đã triển khai và kiểm thử độc lập các endpoint đơn lẻ, đồng bộ Elasticsearch–FAISS, version/idempotency, retry lỗi một phần và tìm kiếm hybrid RRF. Backend outbox, hydrate PostgreSQL và giao diện Web vẫn chưa được kiểm thử xuyên suốt, vì vậy chưa được coi là luồng tích hợp hoàn chỉnh.
+Trạng thái: **contract Hoàng–Đạt đã thống nhất; Search Service PR #8 đã merge**. Tài liệu này mô tả giao tiếp giữa NestJS Backend và FastAPI Search Service. PR #8 đã triển khai và kiểm thử các endpoint, đồng bộ Elasticsearch–FAISS, version/idempotency, retry lỗi một phần và hybrid RRF. PR #23 đã có bằng chứng tích hợp local Backend outbox–FastAPI–hydrate; CI xuyên dịch vụ và giao diện Web vẫn là các bước nghiệm thu riêng.
 
 PostgreSQL là nguồn chuẩn của Product, Variant, giá, tồn kho và trạng thái công khai. FastAPI quản lý Elasticsearch, CLIP/FAISS và RRF như các chỉ mục/phép xếp hạng phụ trợ. Backend không gọi Elasticsearch trực tiếp; Backend gọi Search Service, sau đó đọc lại PostgreSQL để loại sản phẩm không còn hợp lệ và giữ thứ tự kết quả còn lại.
 
@@ -143,7 +143,7 @@ Response:
 }
 ```
 
-`score` của hybrid là **điểm RRF**, không phải cosine similarity. Rank của từng nhánh nên lưu trong search log/debug để phục vụ thực nghiệm, chưa bắt buộc trả cho frontend. PR #8 đã triển khai endpoint này; phần còn thiếu là kiểm thử end-to-end qua Backend và đánh giá bằng ground truth độc lập.
+`score` của hybrid là **điểm RRF**, không phải cosine similarity. Rank của từng nhánh nên lưu trong search log/debug để phục vụ thực nghiệm, chưa bắt buộc trả cho frontend. PR #8 đã triển khai endpoint này; PR #23 có kiểm chứng local qua Backend, còn CI xuyên dịch vụ và đánh giá bằng ground truth độc lập vẫn là bước riêng.
 
 Kết quả tìm kiếm công khai trả `productId` dạng number cùng thứ tự và điểm xếp hạng, không trả dữ liệu Product/giá/tồn kho từ index như nguồn chuẩn. Ví dụ cấu trúc kết quả hiện có cho `/search/image` và `/search/text`:
 
@@ -173,5 +173,26 @@ FastAPI giới hạn timeout tải ảnh và Elasticsearch trong khoảng `(0, 6
 FastAPI không tự retry thao tác ghi Elasticsearch. Backend sở hữu retry outbox:
 chỉ retry lỗi tạm thời/HTTP 503 với nguyên event; không retry HTTP 400/422/409 và
 không tạo version mới chỉ để thử lại. Contract test trong PR #8 chứng minh phía
-FastAPI nhận/trả đúng schema; test Backend dùng cùng fixture hoặc test HTTP xuyên
-dịch vụ vẫn là điều kiện riêng để chốt tích hợp end-to-end.
+FastAPI nhận/trả đúng schema; PR #23 kiểm tra nghiêm response và có bằng chứng HTTP
+xuyên dịch vụ local. Việc tự dựng toàn bộ chuỗi này trong CI vẫn là điều kiện riêng.
+
+## Bằng chứng tích hợp Backend–Search Service
+
+Ngày 28/09/2026, PR #23 được kiểm chứng local trên PostgreSQL riêng,
+Elasticsearch 8.19.21 index cô lập và FastAPI từ PR #8. Luồng chạy thật là:
+
+```text
+Product mutation → SearchOutbox → SearchSync worker
+→ FastAPI → Elasticsearch + FAISS
+→ POST /search/hybrid → PostgreSQL hydrate
+```
+
+Các trạng thái `approve v4 → UPSERT`, `hide v5 → DELETE`, `show v6 → UPSERT`
+và `freeze v7 → DELETE` đều tạo outbox `SUCCEEDED` ở lần thử đầu. Backend trả
+Product sau approve/show và loại Product sau hide/freeze; trạng thái cuối không
+còn document Elasticsearch hoặc vector FAISS của Product thử nghiệm. Test hai
+service còn bao phủ NOOP, STALE, VERSION_CONFLICT và retry phần index còn thiếu.
+
+Đây là bằng chứng tích hợp local có kiểm soát, không phải kết quả đánh giá chất
+lượng tìm kiếm. CI vẫn chưa tự dựng toàn bộ PostgreSQL–Backend–FastAPI–Elasticsearch
+và Web Search/Precision–Recall thuộc các bước nghiệm thu riêng.

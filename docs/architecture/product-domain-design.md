@@ -163,6 +163,8 @@ Trường tối thiểu:
 - `version`: tăng khi thay đổi dữ liệu cần đồng bộ tìm kiếm.
 - `createdAt`, `updatedAt`
 
+Khi Product đang `APPROVED`, mọi mutation nội dung có ảnh hưởng tới listing công khai (nội dung cơ bản, ảnh, Variant hoặc shipping) phải thực hiện nguyên tử: hạ về `DRAFT/NOT_SUBMITTED`, tăng `version` và tạo DELETE SearchOutbox trong cùng transaction. Không cập nhật dữ liệu trước rồi phát sự kiện theo kiểu best-effort sau commit.
+
 Không lưu `color`, `size`, `price`, `stock` cố định trong Product.
 
 ### 4.4 ProductImage

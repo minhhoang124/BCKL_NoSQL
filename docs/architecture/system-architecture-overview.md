@@ -2,7 +2,7 @@
 
 Tài liệu này là điểm bắt đầu để thành viên và AI hiểu hệ thống trước khi đọc code hoặc sửa một chức năng. Nội dung trả lời bốn câu hỏi: hệ thống đang giải quyết bài toán gì, các thành phần phối hợp như thế nào, phần nào đã chạy thật, và cần đọc đâu để tiếp tục công việc mà không suy đoán.
 
-Ảnh chụp trạng thái được cập nhật ngày **25/09/2026**, với `develop` tại `cbc3e40` (PR #18 đã merge). Phần bổ sung trên nhánh `codex/product-moderation-public` được ghi riêng là IN_PROGRESS. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
+Ảnh chụp trạng thái được cập nhật ngày **28/09/2026**, với `develop` tại `c97b6ee` (PR #22 đã merge). Phần Search Service và đồng bộ Search trên PR #8/#23 vẫn được ghi riêng là IN_PROGRESS. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
 
 ## 1. Cách đọc và nguồn chuẩn
 
@@ -152,20 +152,20 @@ PostgreSQL commit thành công
 
 Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn chuẩn cho giá, tồn kho, quyền sở hữu hoặc trạng thái công khai.
 
-## 6. Trạng thái triển khai tại ngày 25/09/2026
+## 6. Trạng thái triển khai tại ngày 28/09/2026
 
 | Miền | Trạng thái | Bằng chứng chính trên `develop` hoặc PR đang mở | Khoảng trống tiếp theo |
 |---|---|---|---|
 | Nền móng workspace và PostgreSQL | `CURRENT` | PR #3; pnpm workspace, NestJS, React, migration, Docker PostgreSQL | Compose toàn hệ thống và hướng dẫn demo hoàn chỉnh |
 | Auth email and password | `CURRENT` | PR #4; register, login, refresh rotation, logout, `/auth/me`, JWT/RBAC test | Profile/address, verify/reset, OAuth, OTP và multi-role mục tiêu |
 | Frontend shell | `CURRENT` | PR #13; router, layout, auth context, route guard, trang khung | Màn hình nghiệp vụ thật cho Store, Product, Cart, Order, Search |
-| Product database schema | `CURRENT` | PR #10; Store, Category, Brand, Product, attribute, option, variant, image, shipping, outbox; Seller Product API bổ sung ở PR #18 | Worker Search còn thiếu; lịch sử quyết định Product là migration mới trong nhánh đang làm |
+| Product database schema | `CURRENT` | PR #10; Store, Category, Brand, Product, attribute, option, variant, image, shipping, outbox; Seller Product API ở PR #18 và lịch sử quyết định ở PR #22 | Worker Search nằm ở PR #23; Cart/Order schema chưa có |
 | Store and Catalog API | `CURRENT` | PR #15; Seller Store lifecycle, Admin review, Category/Brand API, ownership và E2E | Store address/profile đầy đủ và UI Seller/Admin |
-| CI quality gates | `CURRENT` | PR #16, PR #17 và PR #19; seed E2E có timeout phù hợp với fresh CI; workflow kiểm tra các workspace pnpm/FE/BE và Backend E2E | Bổ sung quality gate Python tái lập được cho Search Service gồm Ruff và toàn bộ Pytest; tiếp tục theo dõi độ ổn định khi bộ test tăng |
+| CI quality gates | `CURRENT` | PR #16, PR #17 và PR #19; seed E2E có timeout phù hợp với fresh CI; workflow kiểm tra các workspace pnpm/FE/BE và Backend E2E. PR #8 đã bổ sung job Ruff/Pytest nhưng chưa merge | Merge quality gate Python cùng Search Service; tiếp tục theo dõi độ ổn định khi bộ test tăng |
 | Product draft API and importer | `CURRENT` | PR #18 đã merge (`cbc3e40`): draft, option/attribute/variant, image lifecycle, shipping, submit và importer idempotent kiểm tra ảnh hỏng; có Backend E2E. Smoke đã tạo mapping 86 Product DRAFT | 86 Product chưa phải Public Product; private media/signed URL và UI vẫn thiếu |
-| FastAPI Search Service | `IN_PROGRESS` | Draft PR #8; FAISS 86 vector dùng mapping PostgreSQL đã chạy trên máy Hoàng; Elasticsearch 8.19.21, RRF hybrid, dual-index, version/idempotency và retry lỗi một phần đã được smoke test thật | Backend outbox gọi FastAPI, Backend hydrate/filter PostgreSQL trên Web và đánh giá bằng ground truth độc lập |
+| FastAPI Search Service | `IN_PROGRESS` | Draft PR #8; FAISS 86 vector dùng mapping PostgreSQL đã chạy trên máy Hoàng; Elasticsearch 8.19.21, RRF hybrid, dual-index, version/idempotency và retry lỗi một phần đã được smoke test thật. Integration local với Backend PR #23 đạt ngày 28/09 | Review/merge PR #8/#23, Web Search và đánh giá bằng ground truth độc lập |
 | SRS, Use Case and ERD | `CURRENT` (tài liệu) | PR #5 đã merge; SRS v3.1 ở `docs/analysis/hien/srs-v3.md`; 13 Use Case, 60 test case thiết kế. PR #21 bổ sung consensus pilot Search | Test case thiết kế không đồng nghĩa PASS; duy trì truy vết yêu cầu–API–test khi từng PR được nghiệm thu |
-| Public Product and moderation | `IN_PROGRESS` | Nhánh `codex/product-moderation-public`: Admin approve/reject/freeze, Seller hide/show, public list/detail, predicate chung, migration ProductStatusHistory và E2E | Review/merge API, sau đó outbox/worker, media privacy, Admin/Seller/Public UI; chưa đạt luồng end-to-end |
+| Public Product and moderation | `CURRENT` | PR #22 (`c97b6ee`): Admin approve/reject/freeze, Seller hide/show, public list/detail, predicate chung, ProductStatusHistory và E2E | Outbox/worker ở PR #23; media privacy và Admin/Seller/Public UI vẫn thiếu |
 | Cart, Order, COD and inventory transaction | `TARGET` | Phạm vi và phân tích nghiệp vụ | Schema, migration, API, FE và E2E transaction |
 | Chat User and Seller | `TARGET` | `chat-domain-design.md` | Schema, REST/WebSocket, UI và E2E quyền/reconnect |
 | Review, Admin dashboard and notification | `TARGET` | Phạm vi P0 | Schema/API/UI/test |
@@ -326,6 +326,43 @@ Rủi ro và giả định
 ```
 
 Trước khi bàn giao, đưa nội dung cần giữ vào PR/tài liệu chính thức và xóa file tạm khỏi staged files.
+
+## 9.1. Search sync — trạng thái PR #23 ngày 26/09/2026
+
+**IN_PROGRESS, chưa đủ điều kiện merge.** PR #22 đã merge; PR #23 đang sửa theo review của Hiền và Đạt. Không hiểu việc có worker là đã hoàn thiện toàn bộ đồng bộ tìm kiếm.
+
+Luồng đã chỉnh trong nhánh PR #23:
+
+1. Admin duyệt/từ chối/đóng băng hoặc Seller ẩn/hiện: Product tăng version, lịch sử trạng thái và SearchOutbox được ghi **trong cùng Serializable transaction**. Ghi outbox thất bại thì toàn bộ quyết định rollback; không còn ghi best-effort sau commit.
+2. UPSERT chứa categoryId, categoryName, categoryPathIds lấy từ cây category PostgreSQL, brandId/brandName nullable, attributes dạng danh sách chuỗi và giá dạng chuỗi. DELETE giữ productId/version của event.
+3. Worker lấy event tới hạn, tăng attemptCount khi claim. attemptCount đồng thời là fencing token: worker cũ không được ghi đè kết quả của worker đã thu hồi lease. updatedAt là mốc lease 60 giây; HTTP timeout 10 giây. Event không bị sửa payload/reset attempt khi upsert lại cùng version.
+4. HTTP 200 chỉ được công nhận khi phản hồi khớp productId/version/operation và outcome/index status hợp lệ. HTTP 409 và lỗi HTTP vĩnh viễn được lưu FAILED + processedAt khác null, không tự retry. Lỗi mạng/5xx retry sau 30s, 120s, 300s, 900s, tối đa 3600s. Không tự mở lại lỗi terminal bằng cách sửa payload cùng version.
+5. Hydrate kiểm tra lại điều kiện public, category/brand và giá/tồn kho trên **cùng một Variant**, loại ID trùng, giữ thứ tự tương đối và giới hạn topK. Giới hạn gửi AI: topK ≤ 50, candidateK ≤ 150, candidateK ≥ topK, minPrice ≤ maxPrice.
+6. Seller sửa nội dung, ảnh, Variant hoặc shipping của Product đã APPROVED: Product được hạ về DRAFT/NOT_SUBMITTED, tăng version và ghi DELETE SearchOutbox trong cùng transaction. Nếu ghi outbox thất bại thì mutation rollback.
+7. Upload ảnh áp dụng khóa theo Product cho tới khi publish/compensation kết thúc. Nếu publish file thất bại, compensation xóa bản ghi ảnh mới, khôi phục ảnh chính, tăng version theo chiều tiến và ghi event SearchOutbox tương ứng. Compensation retry tối đa 3 lần; Product còn bản ghi ảnh thiếu file sẽ bị chặn submit để không duyệt dữ liệu hỏng.
+8. Reconciliation quét Product theo cursor, đọc lại canonical state trong transaction Serializable và ghi `version + outbox` nguyên tử với optimistic version check. Fan-out không còn dựa vào Promise trong memory: Store, Category, Brand, Seller eligibility và category-attribute rule tạo `SearchReconciliationJob` trong cùng transaction với parent mutation. Worker claim bằng attempt fencing + lease, lưu cursor sau từng page, retry có exponential backoff và chuyển `DEAD` sau 8 lần. API trả kèm job ID/status để không mô tả invalidation là đã hoàn tất khi mới được chấp nhận.
+9. Image repair chỉ xử lý URL thuộc managed uploads, dùng khóa theo Product, bỏ bản ghi thiếu file, khôi phục ảnh chính và tăng version nguyên tử. Nếu Product đang APPROVED, repair hạ về DRAFT/NOT_SUBMITTED và phát DELETE để bắt buộc duyệt lại. `ProductImageRepairWorker` là runtime path: cron chạy mỗi phút, chống hai lượt chạy chồng trong cùng tiến trình và áp dụng exponential backoff tối đa một giờ khi một lượt có lỗi. Từng Product được cô lập lỗi nên một Product hỏng không dừng cả batch; E2E tắt cron theo thời gian và gọi đúng entry point `runBatch()` của worker. Khóa hiện là khóa trong một process; khi triển khai nhiều Backend replica phải thay bằng distributed lock hoặc database lease.
+
+### Dependency và search invalidation
+
+| Mutation | Ảnh hưởng | Cơ chế |
+|---|---|---|
+| Product content/status/image | payload hoặc public eligibility | Product version + SearchOutbox trong cùng transaction |
+| Variant price/stock/active/options | min/max price, inStock hoặc eligibility | Product version + SearchOutbox trong cùng transaction |
+| Shipping weight | public eligibility | Product version + SearchOutbox trong cùng transaction |
+| Store ACTIVE/SUSPENDED | public eligibility của toàn Store | Durable job `STORE` |
+| Seller account isActive | public eligibility của toàn Seller | Durable job `SELLER` |
+| Category name/parent/isActive | path, category name hoặc eligibility của cây con | Durable job `CATEGORY` |
+| Brand name/isActive | brand payload hoặc eligibility | Durable job `BRAND` |
+| Required/active/type/custom rule của category attribute | eligibility hoặc attribute payload | Durable job `CATEGORY` |
+
+Mỗi job chỉ xác định phạm vi cần quét, không chứa snapshot Product. Khi xử lý, worker đọc lại PostgreSQL; vì vậy mutation mới hơn trong thời gian chờ luôn thắng. Elasticsearch và FAISS tiếp tục là derived index.
+
+Kiểm thử E2E tắt cron và chỉ cho worker lấy event thuộc fixture của test; không gửi event dataset demo sang AI. PostgreSQL vẫn là nguồn chuẩn. Retry transaction nhận cả Prisma P2034 và lỗi serialization/deadlock từ pg adapter, tối đa 5 lần có backoff; không hạ isolation để tránh conflict.
+
+**Còn phải làm trước khi chốt toàn bộ Search sync:** durable reconciliation đã có checkpoint, lease, fencing và retry trên branch nhưng vẫn chờ review/merge; kiểm thử crash/recovery hiện mô phỏng trong E2E, chưa chạy nhiều Backend process thật. Contract được đối chiếu trực tiếp với Pydantic models ở PR #8 head `333b330`; PR #8 vẫn Draft nên Hoàng–Đạt phải review thay đổi contract trước khi merge. Luồng tích hợp Backend–FastAPI–Elasticsearch–FAISS–hydrate đã chạy local ngày 28/09/2026; Web end-to-end, CI xuyên dịch vụ tự dựng môi trường và đánh giá chất lượng tìm kiếm độc lập vẫn còn thiếu.
+
+Bộ E2E dùng chung PostgreSQL và biến môi trường `UPLOAD_ROOT`, vì vậy các file E2E chạy tuần tự (`fileParallelism: false`). Đây là cô lập môi trường kiểm thử, không phải giới hạn xử lý đồng thời của ứng dụng production.
 
 ## 10. Definition of Done rút gọn
 
