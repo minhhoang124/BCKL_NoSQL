@@ -2,7 +2,7 @@
 
 Tài liệu này là điểm bắt đầu để thành viên và AI hiểu hệ thống trước khi đọc code hoặc sửa một chức năng. Nội dung trả lời bốn câu hỏi: hệ thống đang giải quyết bài toán gì, các thành phần phối hợp như thế nào, phần nào đã chạy thật, và cần đọc đâu để tiếp tục công việc mà không suy đoán.
 
-Ảnh chụp trạng thái được cập nhật ngày **03/10/2026**, với `develop` tại `cff5b3c` (PR #8, #23 và #24 đã merge). Search Service và Backend Search sync là CURRENT ở mức code/test đã tích hợp; điều này không đồng nghĩa toàn bộ Web Search hoặc đánh giá chất lượng đã hoàn thành. Schema/migration Cart–Order–Inventory trên PR #26 vẫn là IN_PROGRESS, chưa merge; API checkout và state machine Order chưa triển khai. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
+Ảnh chụp trạng thái được cập nhật ngày **03/10/2026**, với `develop` tại `08f165e` (PR #8, #23 và #24 đã merge). Search Service và Backend Search sync là CURRENT ở mức code/test đã tích hợp; điều này không đồng nghĩa toàn bộ Web Search hoặc đánh giá chất lượng đã hoàn thành. Schema/migration nền Cart–Order–Inventory đã merge qua PR #26 là CURRENT ở mức cấu trúc dữ liệu; Address/Cart API, checkout, state machine Order và Frontend chưa triển khai. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
 
 ## 1. Cách đọc và nguồn chuẩn
 
@@ -166,7 +166,7 @@ Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn c
 | FastAPI Search Service và Backend Search sync | `CURRENT` | PR #8 và #23 đã merge: Elasticsearch, CLIP/FAISS, RRF, dual-index, version/idempotency, transactional outbox, worker, durable reconciliation và PostgreSQL hydrate/filter; integration local đã đạt | Hoàn thiện Web Search và đánh giá chất lượng bằng ground truth độc lập ở PR #25 |
 | SRS, Use Case and ERD | `CURRENT` (tài liệu) | PR #5 đã merge; SRS v3.1 ở `docs/analysis/hien/srs-v3.md`; 13 Use Case, 60 test case thiết kế. PR #21 bổ sung consensus pilot Search | Test case thiết kế không đồng nghĩa PASS; duy trì truy vết yêu cầu–API–test khi từng PR được nghiệm thu |
 | Public Product and moderation | `CURRENT` | PR #22 và #23: Admin approve/reject/freeze, Seller hide/show, public list/detail, predicate chung, ProductStatusHistory, SearchOutbox/reconciliation và E2E | Media privacy và Admin/Seller/Public UI đầy đủ vẫn thiếu |
-| Cart, Order, COD and inventory transaction | `IN_PROGRESS` | PR #26: schema/migration nền cho Address, Cart, Checkout, Order snapshot, Payment COD và StockMovement đã được review; chưa merge vào `develop` | Sau khi merge schema: triển khai API checkout transaction cạnh tranh kho, state machine, FE và E2E end-to-end |
+| Cart–Order–Inventory foundation | `CURRENT` (schema/migration) | PR #26 đã merge tại 08f165e: Address, Cart, Checkout, Order snapshot, Payment COD và StockMovement | Address/Cart API, checkout transaction, state machine, FE và E2E luồng mua hàng chưa triển khai; district nullable cần migration mới |
 | Chat User and Seller | `TARGET` | `chat-domain-design.md` | Schema, REST/WebSocket, UI và E2E quyền/reconnect |
 | Review, Admin dashboard and notification | `TARGET` | Phạm vi P0 | Schema/API/UI/test |
 | Verify/reset, OAuth, OTP, payment sandbox and returns | `TARGET P1` | `implementation-scope.md` | Chỉ triển khai sau dependency P0 tương ứng ổn định |
@@ -270,7 +270,11 @@ Hoàng và Đạt đã thống nhất version, UPSERT/DELETE, filter, image URL 
 
 ### 7.5 Checkout đích
 
-Cart tham chiếu `variantId`. Khi checkout, Backend phải đọc lại Product/Variant, giá và tồn kho; tạo Order và OrderItem snapshot, trừ kho và ghi lịch sử trong transaction. Client không gửi giá cuối cùng để Backend tin trực tiếp. Giỏ nhiều Store được tách thành Order theo Store. PR #26 đang bổ sung schema/migration nền; API checkout transaction và state machine vẫn là bước tiếp theo, chưa được mô tả là đã hoàn thành.
+**Bản thiết kế TARGET ở PR #27, sửa ngày 03/10/2026:** xem [Cart–Order–Inventory API contract](../api/cart-order-inventory-api-contract.md). P0 checkout chỉ lấy các dòng đang trong giỏ Buyer với quantity khớp; Order command dùng key/hash và bản ghi PostgreSQL để replay không trừ/hoàn kho hai lần. Audit hủy dùng cột và history riêng; Buyer hoặc job D07 hoàn tất đơn theo SRS v3.1, còn giao hàng là luồng mô phỏng của Admin/adapter. Các bảng/cột bổ sung cần migration mới sau review; chưa có API hoặc bằng chứng nghiệm thu luồng này. Không dùng tài liệu v0.5 để đổi ngược actor của SRS hiện hành.
+
+Cart tham chiếu `variantId`. Khi checkout, Backend phải đọc lại Product/Variant, giá và tồn kho; tạo Order và OrderItem snapshot, trừ kho và ghi lịch sử trong transaction. Client không gửi giá cuối cùng để Backend tin trực tiếp. Giỏ nhiều Store được tách thành Order theo Store. PR #26 đã merge vào develop tại `08f165e` ngày 03/10/2026, chỉ hoàn thành schema/migration nền; API Address/Cart, checkout transaction, state machine và Frontend vẫn chưa được nhận là đã triển khai.
+
+Contract #27 bổ sung danh tính lần giao bền vững: delivered/failed phải khớp attempt hiện hành; tối đa 3 retry, tổng 4 attempt theo SRS. Đây vẫn là thiết kế cần review, không phải code hoặc cột đã tồn tại trong schema #26. Quy tắc Address/Cart và địa chỉ hành chính cần review riêng trước implementation.
 
 ### 7.6 Chat đích
 
@@ -406,6 +410,7 @@ Hai lệnh Python trên đã được job `ai-python-checks` thực thi trên Gi
 - Cart, Order và Inventory: [`cart-order-inventory-design.md`](cart-order-inventory-design.md)
 - Chat domain: [`chat-domain-design.md`](chat-domain-design.md)
 - Backend and AI contract: [`../api/ai-service-contract.md`](../api/ai-service-contract.md)
+- Cart–Order–Inventory API contract: [`../api/cart-order-inventory-api-contract.md`](../api/cart-order-inventory-api-contract.md)
 - Quy trình Git: [`../git/team-task-delivery-guide.md`](../git/team-task-delivery-guide.md)
 - Dataset QA: [`../data-quality/README.md`](../data-quality/README.md)
 - Test and ground truth: [`../testing/README.md`](../testing/README.md)
