@@ -2,7 +2,7 @@
 
 Tài liệu này là điểm bắt đầu để thành viên và AI hiểu hệ thống trước khi đọc code hoặc sửa một chức năng. Nội dung trả lời bốn câu hỏi: hệ thống đang giải quyết bài toán gì, các thành phần phối hợp như thế nào, phần nào đã chạy thật, và cần đọc đâu để tiếp tục công việc mà không suy đoán.
 
-Ảnh chụp trạng thái được cập nhật ngày **28/09/2026**, với `develop` tại `c97b6ee` (PR #22 đã merge). Phần Search Service và đồng bộ Search trên PR #8/#23 vẫn được ghi riêng là IN_PROGRESS. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
+Ảnh chụp trạng thái được cập nhật ngày **03/10/2026**, với `develop` tại `cff5b3c` (PR #8, #23 và #24 đã merge). Search Service và Backend Search sync là CURRENT ở mức code/test đã tích hợp; điều này không đồng nghĩa toàn bộ Web Search hoặc đánh giá chất lượng đã hoàn thành. Schema/migration Cart–Order–Inventory trên PR #26 vẫn là IN_PROGRESS, chưa merge; API checkout và state machine Order chưa triển khai. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
 
 ## 1. Cách đọc và nguồn chuẩn
 
@@ -67,7 +67,7 @@ Frontend không được tự quyết định quyền, giá, tồn kho, trạng 
 
 ### 3.2 Backend NestJS
 
-**Bổ sung PR #24 — IN_PROGRESS, 29/09/2026:** bộ lọc listing `categoryId`/`brandId`/`inStock` được xử lý ở PostgreSQL và policy public trước khi đủ số kết quả một trang. `categoryId` có nghĩa là category đã chọn cùng toàn bộ nhánh con hoạt động, thống nhất với hybrid search khi người dùng nhập từ khóa. `inStock` chỉ tính variant bán hợp lệ; frontend dùng `nextCursor` để tải tiếp, kể cả sau trang rỗng. Xem [contract public listing](../api/product-moderation-public-api.md). Không đổi schema hoặc contract Search Service.
+**CURRENT — PR #24 đã merge:** bộ lọc listing `categoryId`/`brandId`/`inStock` được xử lý ở PostgreSQL và policy public trước khi đủ số kết quả một trang. `categoryId` có nghĩa là category đã chọn cùng toàn bộ nhánh con hoạt động, thống nhất với hybrid search khi người dùng nhập từ khóa. `inStock` chỉ tính variant bán hợp lệ; frontend dùng `nextCursor` để tải tiếp, kể cả sau trang rỗng. Xem [contract public listing](../api/product-moderation-public-api.md). Không đổi schema hoặc contract Search Service.
 
 Form Product tại `FE/src/pages/SellerDashboardPage.tsx` dùng state cho tên/mô tả/category/brand: chọn Product nào nạp đúng dữ liệu Product đó, lỗi lưu giữ nguyên form, lưu thành công mới reset. Khóa thao tác trong khi request đang chạy ngăn gửi trùng. Nếu đã lưu nhưng reload danh sách lỗi, UI báo rõ đã lưu để tránh hiểu nhầm cần tạo lại. Listing/detail bỏ qua response cũ khi đổi truy vấn/Product. Các thay đổi này chưa đồng nghĩa hoàn thành toàn bộ UI Seller hoặc gate G-LISTING.
 
@@ -106,7 +106,7 @@ FastAPI chỉ trả `productId`, điểm và thứ hạng. NestJS phải đọc 
 
 Docker Compose trên `develop` hiện khởi động PostgreSQL. Frontend, Backend và Search Service chưa được đóng gói đầy đủ trong Compose chung.
 
-Workflow `repository-checks` hiện kiểm tra fresh install bằng pnpm, whitespace, Docker Compose config, Prisma schema/migration/seed, lint, unit test và build của các workspace Node/Frontend/Backend, cùng Backend E2E trên PostgreSQL. Workflow này chưa cài Python và chưa chạy Ruff hoặc Pytest cho `AI_CLIP/`; vì vậy CI xanh hiện tại không phải bằng chứng quality gate của Search Service. CI xanh là điều kiện cần nhưng không thay thế kiểm thử luồng người dùng.
+Workflow `repository-checks` hiện kiểm tra fresh install bằng pnpm, whitespace, Docker Compose config, Prisma schema/migration/seed, lint, unit test và build của các workspace Node/Frontend/Backend, cùng Backend E2E trên PostgreSQL. Cùng workflow CI có job `ai-python-checks` (hiển thị `AI Service - Ruff and Pytest`), dùng Python 3.12 và chạy Ruff/Pytest cho `AI_CLIP/`; job này đã merge qua PR #8. Hai job xanh chứng minh các bộ kiểm tra tương ứng đã đạt, nhưng chưa thay thế CI xuyên dịch vụ thật hoặc kiểm thử luồng người dùng trên Web.
 
 ## 4. Bản đồ repository
 
@@ -152,21 +152,21 @@ PostgreSQL commit thành công
 
 Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn chuẩn cho giá, tồn kho, quyền sở hữu hoặc trạng thái công khai.
 
-## 6. Trạng thái triển khai tại ngày 28/09/2026
+## 6. Trạng thái triển khai tại ngày 03/10/2026
 
 | Miền | Trạng thái | Bằng chứng chính trên `develop` hoặc PR đang mở | Khoảng trống tiếp theo |
 |---|---|---|---|
 | Nền móng workspace và PostgreSQL | `CURRENT` | PR #3; pnpm workspace, NestJS, React, migration, Docker PostgreSQL | Compose toàn hệ thống và hướng dẫn demo hoàn chỉnh |
 | Auth email and password | `CURRENT` | PR #4; register, login, refresh rotation, logout, `/auth/me`, JWT/RBAC test | Profile/address, verify/reset, OAuth, OTP và multi-role mục tiêu |
 | Frontend shell | `CURRENT` | PR #13; router, layout, auth context, route guard, trang khung | Màn hình nghiệp vụ thật cho Store, Product, Cart, Order, Search |
-| Product database schema | `CURRENT` | PR #10; Store, Category, Brand, Product, attribute, option, variant, image, shipping, outbox; Seller Product API ở PR #18 và lịch sử quyết định ở PR #22 | Worker Search nằm ở PR #23; Cart/Order schema chưa có |
+| Product database schema | `CURRENT` | PR #10, #18 và #22; Store, catalog, Product/Variant, thuộc tính, ảnh, shipping, importer và lịch sử quyết định | Media private/signed URL và UI Seller/Admin đầy đủ vẫn thiếu |
 | Store and Catalog API | `CURRENT` | PR #15; Seller Store lifecycle, Admin review, Category/Brand API, ownership và E2E | Store address/profile đầy đủ và UI Seller/Admin |
-| CI quality gates | `CURRENT` | PR #16, PR #17 và PR #19; seed E2E có timeout phù hợp với fresh CI; workflow kiểm tra các workspace pnpm/FE/BE và Backend E2E. PR #8 đã bổ sung job Ruff/Pytest nhưng chưa merge | Merge quality gate Python cùng Search Service; tiếp tục theo dõi độ ổn định khi bộ test tăng |
+| CI quality gates | `CURRENT` | PR #16, #17, #19 và #8; CI kiểm tra pnpm/FE/BE, Backend E2E và job Python Ruff/Pytest cho Search Service | Tiếp tục theo dõi độ ổn định và bổ sung kiểm thử trình duyệt khi UI nghiệp vụ hoàn thiện |
 | Product draft API and importer | `CURRENT` | PR #18 đã merge (`cbc3e40`): draft, option/attribute/variant, image lifecycle, shipping, submit và importer idempotent kiểm tra ảnh hỏng; có Backend E2E. Smoke đã tạo mapping 86 Product DRAFT | 86 Product chưa phải Public Product; private media/signed URL và UI vẫn thiếu |
-| FastAPI Search Service | `IN_PROGRESS` | Draft PR #8; FAISS 86 vector dùng mapping PostgreSQL đã chạy trên máy Hoàng; Elasticsearch 8.19.21, RRF hybrid, dual-index, version/idempotency và retry lỗi một phần đã được smoke test thật. Integration local với Backend PR #23 đạt ngày 28/09 | Review/merge PR #8/#23, Web Search và đánh giá bằng ground truth độc lập |
+| FastAPI Search Service và Backend Search sync | `CURRENT` | PR #8 và #23 đã merge: Elasticsearch, CLIP/FAISS, RRF, dual-index, version/idempotency, transactional outbox, worker, durable reconciliation và PostgreSQL hydrate/filter; integration local đã đạt | Hoàn thiện Web Search và đánh giá chất lượng bằng ground truth độc lập ở PR #25 |
 | SRS, Use Case and ERD | `CURRENT` (tài liệu) | PR #5 đã merge; SRS v3.1 ở `docs/analysis/hien/srs-v3.md`; 13 Use Case, 60 test case thiết kế. PR #21 bổ sung consensus pilot Search | Test case thiết kế không đồng nghĩa PASS; duy trì truy vết yêu cầu–API–test khi từng PR được nghiệm thu |
-| Public Product and moderation | `CURRENT` | PR #22 (`c97b6ee`): Admin approve/reject/freeze, Seller hide/show, public list/detail, predicate chung, ProductStatusHistory và E2E | Outbox/worker ở PR #23; media privacy và Admin/Seller/Public UI vẫn thiếu |
-| Cart, Order, COD and inventory transaction | `TARGET` | Phạm vi và phân tích nghiệp vụ | Schema, migration, API, FE và E2E transaction |
+| Public Product and moderation | `CURRENT` | PR #22 và #23: Admin approve/reject/freeze, Seller hide/show, public list/detail, predicate chung, ProductStatusHistory, SearchOutbox/reconciliation và E2E | Media privacy và Admin/Seller/Public UI đầy đủ vẫn thiếu |
+| Cart, Order, COD and inventory transaction | `IN_PROGRESS` | PR #26: schema/migration nền cho Address, Cart, Checkout, Order snapshot, Payment COD và StockMovement đã được review; chưa merge vào `develop` | Sau khi merge schema: triển khai API checkout transaction cạnh tranh kho, state machine, FE và E2E end-to-end |
 | Chat User and Seller | `TARGET` | `chat-domain-design.md` | Schema, REST/WebSocket, UI và E2E quyền/reconnect |
 | Review, Admin dashboard and notification | `TARGET` | Phạm vi P0 | Schema/API/UI/test |
 | Verify/reset, OAuth, OTP, payment sandbox and returns | `TARGET P1` | `implementation-scope.md` | Chỉ triển khai sau dependency P0 tương ứng ổn định |
@@ -216,7 +216,7 @@ Code importer đã merge qua PR #18. Lượt smoke đã import 86 Product DRAFT,
 
 ### 7.3.1 Phần mới: quyết định duyệt và đọc Product công khai
 
-**IN_PROGRESS — 25/09/2026**, chưa tự coi là đã merge. Contract cụ thể ở [Product moderation/public API](../api/product-moderation-public-api.md).
+**CURRENT — PR #22 đã merge.** Contract cụ thể ở [Product moderation/public API](../api/product-moderation-public-api.md).
 
 ```text
 Seller submit (PR #18) → ACTIVE/PENDING, version N
@@ -240,7 +240,7 @@ File cần đọc theo thứ tự:
 4. `BE/prisma/schema.prisma` → `ProductStatusHistory`; migration `20260925120000_product_status_history` chỉ thêm bảng, không sửa Product cũ.
 5. `BE/test/product-lifecycle.e2e-spec.ts`: ca thành công, từ chối, race, rollback và public filtering.
 
-**Chưa làm trong đợt này:** phát SearchOutbox/worker, thông báo, media private/signed URL, gỡ FROZEN và UI. Bảng history mới ghi quyết định Admin/hide/show, chưa phải audit toàn bộ nội dung. Public endpoint bảo vệ JSON; bảo vệ file ảnh draft là đầu việc storage riêng. Sau review/merge sẽ làm Search sync rồi giao diện, giữ thứ tự trong kế hoạch Product.
+**Chưa làm trong đợt này:** thông báo, media private/signed URL, gỡ FROZEN và UI đầy đủ. Bảng history mới ghi quyết định Admin/hide/show, chưa phải audit toàn bộ nội dung. Public endpoint bảo vệ JSON; bảo vệ file ảnh draft là đầu việc storage riêng. SearchOutbox, worker và durable reconciliation đã merge qua PR #23.
 
 ### 7.4 Tìm kiếm đích
 
@@ -266,11 +266,11 @@ sequenceDiagram
     BE-->>FE: Results preserving valid rank order
 ```
 
-Hoàng và Đạt đã thống nhất version, UPSERT/DELETE, filter, image URL theo môi trường, lỗi và retry trong `docs/api/ai-service-contract.md` thuộc Draft PR #8. Endpoint đơn, đồng bộ Elasticsearch–FAISS và tìm kiếm hybrid đã được triển khai và smoke test độc lập, nhưng chưa merge vào `develop`. Phần chưa đạt là E2E `Backend SearchOutbox → FastAPI Search Service → PostgreSQL hydrate/filter → React Web` và đánh giá chất lượng bằng bộ ground truth độc lập.
+Hoàng và Đạt đã thống nhất version, UPSERT/DELETE, filter, image URL theo môi trường, lỗi và retry trong `docs/api/ai-service-contract.md`. PR #8 và #23 đã merge: Search Service, SearchOutbox/worker, reconciliation và PostgreSQL hydrate/filter đều đã có code và kiểm thử. Phần chưa đạt là trải nghiệm Web Search hoàn chỉnh và đánh giá chất lượng bằng bộ ground truth độc lập.
 
 ### 7.5 Checkout đích
 
-Cart tham chiếu `variantId`. Khi checkout, Backend phải đọc lại Product/Variant, giá và tồn kho; tạo Order và OrderItem snapshot, trừ kho và ghi lịch sử trong transaction. Client không gửi giá cuối cùng để Backend tin trực tiếp. Giỏ nhiều Store được tách thành Order theo Store. Đây là `TARGET`, chưa có trên `develop`.
+Cart tham chiếu `variantId`. Khi checkout, Backend phải đọc lại Product/Variant, giá và tồn kho; tạo Order và OrderItem snapshot, trừ kho và ghi lịch sử trong transaction. Client không gửi giá cuối cùng để Backend tin trực tiếp. Giỏ nhiều Store được tách thành Order theo Store. PR #26 đang bổ sung schema/migration nền; API checkout transaction và state machine vẫn là bước tiếp theo, chưa được mô tả là đã hoàn thành.
 
 ### 7.6 Chat đích
 
@@ -327,11 +327,11 @@ Rủi ro và giả định
 
 Trước khi bàn giao, đưa nội dung cần giữ vào PR/tài liệu chính thức và xóa file tạm khỏi staged files.
 
-## 9.1. Search sync — trạng thái PR #23 ngày 26/09/2026
+## 9.1. Search sync — trạng thái sau merge PR #8/#23 ngày 03/10/2026
 
-**IN_PROGRESS, chưa đủ điều kiện merge.** PR #22 đã merge; PR #23 đang sửa theo review của Hiền và Đạt. Không hiểu việc có worker là đã hoàn thiện toàn bộ đồng bộ tìm kiếm.
+**CURRENT — PR #8 và #23 đã merge vào `develop`.** PR #22 đã cung cấp Product moderation/public; PR #23 bổ sung transactional outbox, worker, durable reconciliation, runtime image repair và PostgreSQL hydrate/filter. Luồng tích hợp local đã được kiểm chứng theo [contract Backend–Search Service](../api/ai-service-contract.md#bằng-chứng-tích-hợp-backendsearch-service). Không hiểu việc có worker hoặc CI xanh là đã hoàn thiện toàn bộ trải nghiệm tìm kiếm trên Web hay đạt chất lượng retrieval.
 
-Luồng đã chỉnh trong nhánh PR #23:
+Luồng đã có trên `develop` sau PR #23:
 
 1. Admin duyệt/từ chối/đóng băng hoặc Seller ẩn/hiện: Product tăng version, lịch sử trạng thái và SearchOutbox được ghi **trong cùng Serializable transaction**. Ghi outbox thất bại thì toàn bộ quyết định rollback; không còn ghi best-effort sau commit.
 2. UPSERT chứa categoryId, categoryName, categoryPathIds lấy từ cây category PostgreSQL, brandId/brandName nullable, attributes dạng danh sách chuỗi và giá dạng chuỗi. DELETE giữ productId/version của event.
@@ -360,7 +360,14 @@ Mỗi job chỉ xác định phạm vi cần quét, không chứa snapshot Produ
 
 Kiểm thử E2E tắt cron và chỉ cho worker lấy event thuộc fixture của test; không gửi event dataset demo sang AI. PostgreSQL vẫn là nguồn chuẩn. Retry transaction nhận cả Prisma P2034 và lỗi serialization/deadlock từ pg adapter, tối đa 5 lần có backoff; không hạ isolation để tránh conflict.
 
-**Còn phải làm trước khi chốt toàn bộ Search sync:** durable reconciliation đã có checkpoint, lease, fencing và retry trên branch nhưng vẫn chờ review/merge; kiểm thử crash/recovery hiện mô phỏng trong E2E, chưa chạy nhiều Backend process thật. Contract được đối chiếu trực tiếp với Pydantic models ở PR #8 head `333b330`; PR #8 vẫn Draft nên Hoàng–Đạt phải review thay đổi contract trước khi merge. Luồng tích hợp Backend–FastAPI–Elasticsearch–FAISS–hydrate đã chạy local ngày 28/09/2026; Web end-to-end, CI xuyên dịch vụ tự dựng môi trường và đánh giá chất lượng tìm kiếm độc lập vẫn còn thiếu.
+**Đã merge:** durable reconciliation có checkpoint (mốc tiếp tục xử lý), lease (quyền xử lý có thời hạn), fencing (chặn worker cũ ghi đè) và retry. Contract hiện hành nằm tại `docs/api/ai-service-contract.md`, được đối chiếu với Pydantic models và contract tests trong `AI_CLIP/`; PR #8 không còn Draft. Luồng tích hợp Backend–FastAPI–Elasticsearch–FAISS–hydrate đã chạy local ngày 28/09/2026. Thay đổi contract tiếp theo vẫn phải được Hoàng–Đạt review, không tự thay đổi chỉ vì hai PR đã merge.
+
+**Khoảng trống còn lại, không nhận là đã hoàn thành:**
+
+- Hoàn thiện và nghiệm thu Web Search end-to-end cho các kiểu truy vấn; PR #24 đã cung cấp listing/filter và UI nền, chưa đủ để chốt toàn bộ gate G-DISCOVERY.
+- Đánh giá chất lượng bằng ground truth độc lập. Công cụ/workflow ở PR #25 còn đang mở; chỉ công bố Precision/Recall sau khi nhãn và bằng chứng đánh giá đủ điều kiện, không dùng self-match ảnh catalog làm kết quả chất lượng.
+- Tự dựng toàn bộ chuỗi PostgreSQL–Backend–FastAPI–Elasticsearch trong CI. Các job Backend E2E và AI Ruff/Pytest hiện chạy riêng, không phải bằng chứng CI xuyên dịch vụ.
+- Kiểm chứng crash/recovery bằng nhiều Backend process thật; E2E hiện mô phỏng phục hồi. Khóa image publish/repair còn trong một process; trước khi chạy nhiều replica cần distributed lock hoặc database lease (khóa dùng chung/quyền xử lý ở DB), cùng test cạnh tranh tương ứng.
 
 Bộ E2E dùng chung PostgreSQL và biến môi trường `UPLOAD_ROOT`, vì vậy các file E2E chạy tuần tự (`fileParallelism: false`). Đây là cô lập môi trường kiểm thử, không phải giới hạn xử lý đồng thời của ứng dụng production.
 
@@ -387,7 +394,7 @@ ruff check app tests
 pytest
 ```
 
-Hai lệnh Python trên hiện chưa được workflow GitHub Actions thực thi. Cho tới khi PR liên quan bổ sung quality gate Python, người bàn giao phải ghi bằng chứng chạy local và không dùng check xanh của `repository-checks` để kết luận code `AI_CLIP/` đã được kiểm tra. Chỉ chạy các lệnh phù hợp với task, nhưng phải ghi rõ lệnh nào chưa chạy và lý do.
+Hai lệnh Python trên đã được job `ai-python-checks` thực thi trên GitHub Actions từ PR #8. Người bàn giao phải đối chiếu đúng head và kết quả của cả `repository-checks` lẫn `AI Service - Ruff and Pytest`; chỉ check Backend xanh không đủ để kết luận code AI đạt. CI chưa tự dựng luồng xuyên dịch vụ hoặc đánh giá Precision/Recall. Chỉ chạy các lệnh phù hợp với task, nhưng phải ghi rõ lệnh nào chưa chạy và lý do.
 
 ## 11. Chỉ mục tài liệu chi tiết
 
@@ -396,6 +403,7 @@ Hai lệnh Python trên hiện chưa được workflow GitHub Actions thực thi
 - Nghiệp vụ sàn: [`../analysis/marketplace-business-processes.md`](../analysis/marketplace-business-processes.md)
 - Product domain: [`product-domain-design.md`](product-domain-design.md)
 - Kế hoạch triển khai Product: [`product-implementation-plan.md`](product-implementation-plan.md)
+- Cart, Order và Inventory: [`cart-order-inventory-design.md`](cart-order-inventory-design.md)
 - Chat domain: [`chat-domain-design.md`](chat-domain-design.md)
 - Backend and AI contract: [`../api/ai-service-contract.md`](../api/ai-service-contract.md)
 - Quy trình Git: [`../git/team-task-delivery-guide.md`](../git/team-task-delivery-guide.md)
