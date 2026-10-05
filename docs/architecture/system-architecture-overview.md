@@ -2,7 +2,7 @@
 
 Tài liệu này là điểm bắt đầu để thành viên và AI hiểu hệ thống trước khi đọc code hoặc sửa một chức năng. Nội dung trả lời bốn câu hỏi: hệ thống đang giải quyết bài toán gì, các thành phần phối hợp như thế nào, phần nào đã chạy thật, và cần đọc đâu để tiếp tục công việc mà không suy đoán.
 
-Ảnh chụp trạng thái được cập nhật ngày **03/10/2026**, với `develop` tại `c0a7d48` (PR #8, #23, #24, #26 và contract #27 đã merge). Search Service và Backend Search sync là CURRENT ở mức code/test đã tích hợp; điều này không đồng nghĩa toàn bộ Web Search hoặc đánh giá chất lượng đã hoàn thành. Schema/migration nền Cart–Order–Inventory đã merge qua PR #26 là CURRENT ở mức cấu trúc dữ liệu; Address/Cart API, checkout, state machine Order và Frontend chưa có trên develop. Address API đang IN_PROGRESS trên nhánh riêng, xem mục 7.5.1. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
+Ảnh chụp trạng thái được cập nhật ngày **05/10/2026**, với `develop` tại `efd86a3` (PR #8, #23, #24, #26, contract #27 và Address #30 đã merge). Search Service và Backend Search sync là CURRENT ở mức code/test đã tích hợp; điều này không đồng nghĩa toàn bộ Web Search hoặc đánh giá chất lượng đã hoàn thành. Schema/migration nền Cart–Order–Inventory và Address Backend là CURRENT ở phạm vi tương ứng; Cart #31 đã đồng bộ Address/develop nhưng vẫn IN_PROGRESS chờ kiểm thử/re-review/merge. Checkout, state machine Order và Buyer UI chưa nghiệm thu. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
 
 ## 1. Cách đọc và nguồn chuẩn
 
@@ -152,7 +152,7 @@ PostgreSQL commit thành công
 
 Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn chuẩn cho giá, tồn kho, quyền sở hữu hoặc trạng thái công khai.
 
-## 6. Trạng thái triển khai tại ngày 03/10/2026
+## 6. Trạng thái triển khai tại ngày 05/10/2026
 
 | Miền | Trạng thái | Bằng chứng chính trên `develop` hoặc PR đang mở | Khoảng trống tiếp theo |
 |---|---|---|---|
@@ -166,9 +166,10 @@ Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn c
 | FastAPI Search Service và Backend Search sync | `CURRENT` | PR #8 và #23 đã merge: Elasticsearch, CLIP/FAISS, RRF, dual-index, version/idempotency, transactional outbox, worker, durable reconciliation và PostgreSQL hydrate/filter; integration local đã đạt | Hoàn thiện Web Search và đánh giá chất lượng bằng ground truth độc lập ở PR #25 |
 | SRS, Use Case and ERD | `CURRENT` (tài liệu) | PR #5 đã merge; SRS v3.1 ở `docs/analysis/hien/srs-v3.md`; 13 Use Case, 60 test case thiết kế. PR #21 bổ sung consensus pilot Search | Test case thiết kế không đồng nghĩa PASS; duy trì truy vết yêu cầu–API–test khi từng PR được nghiệm thu |
 | Public Product and moderation | `CURRENT` | PR #22 và #23: Admin approve/reject/freeze, Seller hide/show, public list/detail, predicate chung, ProductStatusHistory, SearchOutbox/reconciliation và E2E | Media privacy và Admin/Seller/Public UI đầy đủ vẫn thiếu |
-| Cart–Order–Inventory foundation | `CURRENT` (schema/migration) | PR #26 đã merge tại 08f165e: Address, Cart, Checkout, Order snapshot, Payment COD và StockMovement | Address/Cart API, checkout transaction, state machine, FE và E2E luồng mua hàng chưa triển khai; district nullable cần migration mới |
+| Cart–Order–Inventory foundation | `CURRENT` (schema/migration) | PR #26 tại 08f165e; migration mới district nullable qua #30 tại efd86a3 | Checkout transaction, state machine, FE và E2E luồng mua hàng chưa triển khai; Cart API ở #31 chưa merge |
+| Buyer Cart API | `IN_PROGRESS` | Nhánh `codex/buyer-cart-api` đã sync develop `efd86a3` sau #30: GET/PUT/DELETE, Variant/public policy, Decimal, privacy, transaction/rate-limit và E2E | Re-review/merge bản tích hợp hai API, Buyer Cart UI và Checkout; chưa đạt G-CHECKOUT |
 | Chat User and Seller | `TARGET` | `chat-domain-design.md` | Schema, REST/WebSocket, UI và E2E quyền/reconnect |
-| Buyer Address API | `IN_PROGRESS` | Nhánh codex/buyer-address-api: CRUD/default/DTO/ownership, migration district nullable, unit/HTTP E2E; mục 7.5.1 | Review/merge và Buyer UI thật; chưa đạt gate G-ACCOUNT/G-CHECKOUT |
+| Buyer Address API | `CURRENT` (Backend) | PR #30 đã merge tại efd86a3: CRUD/default/DTO/ownership, migration district nullable, unit/HTTP E2E; mục 7.5.1 | Buyer UI thật và kiểm thử luồng tích hợp; chưa đạt gate G-ACCOUNT/G-CHECKOUT |
 | Review, Admin dashboard and notification | `TARGET` | Phạm vi P0 | Schema/API/UI/test |
 | Verify/reset, OAuth, OTP, payment sandbox and returns | `TARGET P1` | `implementation-scope.md` | Chỉ triển khai sau dependency P0 tương ứng ổn định |
 
@@ -271,15 +272,27 @@ Hoàng và Đạt đã thống nhất version, UPSERT/DELETE, filter, image URL 
 
 ### 7.5 Checkout đích
 
-**Bản thiết kế TARGET ở PR #27, sửa ngày 03/10/2026:** xem [Cart–Order–Inventory API contract](../api/cart-order-inventory-api-contract.md). P0 checkout chỉ lấy các dòng đang trong giỏ Buyer với quantity khớp; Order command dùng key/hash và bản ghi PostgreSQL để replay không trừ/hoàn kho hai lần. Audit hủy dùng cột và history riêng; Buyer hoặc job D07 hoàn tất đơn theo SRS v3.1, còn giao hàng là luồng mô phỏng của Admin/adapter. Các bảng/cột bổ sung cần migration mới sau review; chưa có API hoặc bằng chứng nghiệm thu luồng này. Không dùng tài liệu v0.5 để đổi ngược actor của SRS hiện hành.
+**Contract đã review và merge ở PR #27 (`c0a7d48`), 03/10/2026; Checkout vẫn TARGET:** xem [Cart–Order–Inventory API contract](../api/cart-order-inventory-api-contract.md). P0 checkout chỉ lấy các dòng đang trong giỏ Buyer với quantity khớp; Order command dùng key/hash và bản ghi PostgreSQL để replay không trừ/hoàn kho hai lần. Audit hủy dùng cột và history riêng; Buyer hoặc job D07 hoàn tất đơn theo SRS v3.1, còn giao hàng là luồng mô phỏng của Admin/adapter. Các bảng/cột bổ sung cần migration mới trước API; chưa có bằng chứng nghiệm thu Checkout. Không dùng tài liệu v0.5 để đổi ngược actor của SRS hiện hành.
 
-Cart tham chiếu `variantId`. Khi checkout, Backend phải đọc lại Product/Variant, giá và tồn kho; tạo Order và OrderItem snapshot, trừ kho và ghi lịch sử trong transaction. Client không gửi giá cuối cùng để Backend tin trực tiếp. Giỏ nhiều Store được tách thành Order theo Store. PR #26 đã merge vào develop tại `08f165e` ngày 03/10/2026, chỉ hoàn thành schema/migration nền; API Address/Cart, checkout transaction, state machine và Frontend vẫn chưa được nhận là đã triển khai.
+Cart tham chiếu `variantId`. Khi checkout, Backend phải đọc lại Product/Variant, giá và tồn kho; tạo Order và OrderItem snapshot, trừ kho và ghi lịch sử trong transaction. Client không gửi giá cuối cùng để Backend tin trực tiếp. Một request/key tạo một Checkout chung, một Order mỗi Store; toàn nhóm commit/rollback nguyên tử. Schema/migration nền #26 tại `08f165e` và Address Backend #30 tại `efd86a3` đã merge. Cart #31 đã có API trên branch nhưng chưa merge; checkout transaction, state machine và Frontend vẫn chưa được nhận là đã triển khai.
 
-Contract #27 bổ sung danh tính lần giao bền vững: delivered/failed phải khớp attempt hiện hành; tối đa 3 retry, tổng 4 attempt theo SRS. Đây vẫn là thiết kế cần review, không phải code hoặc cột đã tồn tại trong schema #26. Quy tắc Address/Cart và địa chỉ hành chính cần review riêng trước implementation.
+Contract #27 bổ sung danh tính lần giao bền vững: delivered/failed phải khớp attempt hiện hành; tối đa 3 retry, tổng 4 attempt theo SRS. Đây là thiết kế đã được duyệt, không phải code hoặc cột đã tồn tại trong schema #26. Quy tắc Address/Cart và địa chỉ hành chính đã chốt trong contract; Address API #30 đã merge, Cart API dưới đây chờ re-review/merge bản tích hợp.
 
-### 7.5.1 Address API — IN_PROGRESS, nhánh codex/buyer-address-api
+### 7.5.2 Buyer Cart API — IN_PROGRESS, cập nhật tích hợp 05/10/2026
 
-Contract Address đã duyệt trong #27. Nhánh implementation thêm `AddressModule` và năm route tại `/me/addresses`: GET/POST, PATCH/DELETE `/:addressId`, PUT `/:addressId/default`. Chưa merge hoặc có UI thật thì chưa nhận là CURRENT/DONE. Cart và Checkout chưa được triển khai trong nhánh này.
+Nhánh `codex/buyer-cart-api` tạo từ `develop` tại `c0a7d48`, đã đồng bộ `develop efd86a3` sau khi Address #30 merge. Bản tích hợp giữ cả AddressModule/CartModule, cấu hình Address + Cart và migration district nullable đã merge; không tạo migration mới, không sửa migration cũ, Auth hay FastAPI. `GET /cart`, `PUT /cart/items/:variantId` và `DELETE /cart/items/:variantId` phục vụ USER active; actor lấy từ JWT, không nhận userId/cartId từ client.
+
+Luồng PUT: guard JWT/role → giới hạn request → kiểm tra quantity → Serializable transaction khóa User → đọc Product/Variant/category và policy public hiện hành → kiểm tra đúng Variant, ownership và kho → tạo Cart lười/đặt quantity tuyệt đối → đọc response giỏ trong cùng transaction → commit. Gửi lại cùng quantity không cộng thêm hoặc đổi updatedAt của dòng; không giữ/trừ kho, không tạo Order/movement/outbox hay tăng Product.version. Checkout sau này phải kiểm tra lại mọi điều kiện và cam kết kho riêng.
+
+GET dùng RepeatableRead — các lần đọc trong một request thấy cùng ảnh chụp database — để tránh lấy Product ở thời điểm này nhưng category ở thời điểm khác. Tổng tiền dùng Prisma.Decimal, trả chuỗi hai số thập phân. `lineCount` đếm dòng, `totalQuantity` cộng mọi quantity, `purchasableSubtotal` chỉ cộng món mua được. Product không còn public trả bốn trường tối thiểu ở `unavailableItems`; Variant không hợp lệ của Product vẫn public không lộ giá/option/stock riêng. Thiếu/hết kho vẫn hiện thông tin bán công khai nhưng không cộng tổng.
+
+Khóa User ở PostgreSQL tuần tự hóa ghi giỏ giữa nhiều instance, không chỉ một process. Serialization/deadlock retry tối đa 5 lần với backoff; hết retry trả 409 CART_WRITE_CONFLICT. GET/PUT/DELETE dùng chung rate bucket 60 request/phút/User, có Retry-After khi 429; limiter in-memory chỉ bảo vệ một instance. Không tuyên bố đây là cơ chế chống lạm dụng đa replica.
+
+Đọc code: `BE/src/cart/cart.controller.ts` → `cart.dto.ts`/`cart-http.ts`/`cart-rate-limit.guard.ts` → `cart.service.ts` → `product-public-policy.ts` → `Cart`/`CartItem` trong schema. Bằng chứng và cách chạy ở [Cart API verification](../testing/cart-api-verification.md). Frontend Cart, Checkout/COD/Order và multi-role chưa thuộc PR này; `G-CHECKOUT` chưa DONE.
+
+### 7.5.1 Address API — CURRENT ở Backend, PR #30 đã merge ngày 05/10/2026
+
+Contract Address đã duyệt trong #27. PR #30 đã merge tại `efd86a3`, thêm `AddressModule` và năm route tại `/me/addresses`: GET/POST, PATCH/DELETE `/:addressId`, PUT `/:addressId/default`. CURRENT chỉ ở phạm vi Backend có code/test; chưa có Buyer UI/bằng chứng luồng người dùng nên G-ACCOUNT/G-CHECKOUT chưa DONE. Cart #31 đang được tích hợp, Checkout vẫn TARGET.
 
 Luồng: JWT đọc User active → guard USER → DTO trim/validate và từ chối trường thừa → service lọc ownership → transaction PostgreSQL → response chỉ có địa chỉ của actor. Error filter chỉ áp dụng route Address, không đổi lỗi API cũ. GET không cache dữ liệu cá nhân.
 

@@ -10,6 +10,7 @@ import { StoreModule } from './store/store.module.js';
 import { ProductModule } from './product/product.module.js';
 import { SearchModule } from './search/search.module.js';
 import { AddressModule } from './address/address.module.js';
+import { CartModule } from './cart/cart.module.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AddressModule } from './address/address.module.js';
     ProductModule,
     SearchModule,
     AddressModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,6 +1,6 @@
 # Buyer Address API — hướng dẫn kiểm thử và bàn giao
 
-Ngày 03/10/2026. Trạng thái IN_PROGRESS trên `codex/buyer-address-api`, chưa merge/không phải gate G-ACCOUNT hoặc G-CHECKOUT DONE. Nguồn yêu cầu: [contract đã duyệt #27](../api/cart-order-inventory-api-contract.md#3-useraddress-api).
+Ngày 03/10/2026; cập nhật 05/10/2026: PR #30 đã merge tại `efd86a3`, CURRENT ở phạm vi Backend; chưa có Buyer UI nên không phải gate G-ACCOUNT hoặc G-CHECKOUT DONE. Nguồn yêu cầu: [contract đã duyệt #27](../api/cart-order-inventory-api-contract.md#3-useraddress-api).
 
 ## Phạm vi
 
@@ -60,4 +60,4 @@ E2E có log lỗi được inject cố ý cho ca rollback/timeout; không coi đ
 - P0 lưu địa danh chuỗi, không có API địa giới/hard-code danh mục cũ.
 - Không đụng giá/kho/version/SearchOutbox. Giỏ không giữ kho; Checkout phải tái kiểm tra khi triển khai.
 - Lock theo User bảo vệ DB writes theo giao thức, không là rate limiter hoặc chứng minh tải production/multi-process.
-- Sau review/merge: triển khai Cart theo contract, rồi Checkout/COD/Order; UI Address/Cart vẫn cần xác nhận phân công riêng của Hiền.
+- #30 đã merge; #31 đang sync/test/re-review Cart cùng Address, sau đó tới Checkout/COD/Order. Hiền đã [xác nhận nhận CODE Buyer Address/Cart ngày 04/10 trên #29](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#issuecomment-5978048696); chưa coi UI đã hoàn thành hoặc lịch đã cam kết.

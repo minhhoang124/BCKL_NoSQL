@@ -28,7 +28,8 @@ export type CategoryNode = {
   isActive: boolean;
 };
 
-function displayVariants(product: ListingProduct) {
+// Cart must validate the selected Variant using exactly the public-listing rule.
+export function displayVariants(product: ListingProduct) {
   return product.variants.filter(
     (variant) =>
       variant.isActive &&
