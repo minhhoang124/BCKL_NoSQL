@@ -1,6 +1,6 @@
 # Cart–Order–Inventory API contract
 
-Ngày: 03/10/2026. Trạng thái: **TARGET, bản sửa theo review PR #27; chờ xác nhận trước khi code API**.
+Ngày: 03/10/2026. Trạng thái: **Contract đã review/merge qua PR #27 tại c0a7d48; implementation TARGET/IN_PROGRESS theo từng miền**. Address API đang triển khai trên nhánh `codex/buyer-address-api`, chưa merge; Cart/Checkout/Order API và Buyer UI chưa được nghiệm thu.
 
 Tài liệu này khóa contract nghiệp vụ cho Address, Cart, Checkout, Order, COD và Inventory của bản khóa luận. Contract dựa trên SRS v3.1 và schema/migration nền ở PR #26. Việc có schema hoặc tài liệu này **không đồng nghĩa chức năng đã hoàn thành**. Chỉ chuyển sang CURRENT sau khi PR #26 merge, API/Frontend/E2E chạy trên `develop` và release gate tương ứng đạt.
 
@@ -518,6 +518,7 @@ Response có `cancellation` và timeline có cấu trúc theo mục 7.2; ví d�
 | 404 | `ADDRESS_NOT_FOUND` | Không tìm thấy address trong phạm vi actor |
 | 409 | `DEFAULT_ADDRESS_CANNOT_BE_UNSET` | Không bỏ mặc định bằng PATCH |
 | 409 | `ADDRESS_LIMIT_REACHED` | Đã đủ giới hạn 20 địa chỉ/User |
+| 409 | `ADDRESS_WRITE_CONFLICT` | Retry hữu hạn cho xung đột ghi địa chỉ đã hết; client tải lại và thử lại thao tác |
 | 404 | `CART_ITEM_NOT_FOUND` | Cart không có Variant đó |
 | 409 | `CART_CHANGED` | Quantity request không khớp giỏ hiện hành |
 | 404 | `ORDER_NOT_FOUND` | Không tìm thấy Order trong phạm vi actor |

@@ -9,6 +9,7 @@ import { CatalogModule } from './catalog/catalog.module.js';
 import { StoreModule } from './store/store.module.js';
 import { ProductModule } from './product/product.module.js';
 import { SearchModule } from './search/search.module.js';
+import { AddressModule } from './address/address.module.js';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SearchModule } from './search/search.module.js';
     CatalogModule,
     ProductModule,
     SearchModule,
+    AddressModule,
   ],
   controllers: [AppController],
   providers: [AppService],

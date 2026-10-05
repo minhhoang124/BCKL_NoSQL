@@ -2,7 +2,7 @@
 
 Tài liệu này là điểm bắt đầu để thành viên và AI hiểu hệ thống trước khi đọc code hoặc sửa một chức năng. Nội dung trả lời bốn câu hỏi: hệ thống đang giải quyết bài toán gì, các thành phần phối hợp như thế nào, phần nào đã chạy thật, và cần đọc đâu để tiếp tục công việc mà không suy đoán.
 
-Ảnh chụp trạng thái được cập nhật ngày **03/10/2026**, với `develop` tại `08f165e` (PR #8, #23 và #24 đã merge). Search Service và Backend Search sync là CURRENT ở mức code/test đã tích hợp; điều này không đồng nghĩa toàn bộ Web Search hoặc đánh giá chất lượng đã hoàn thành. Schema/migration nền Cart–Order–Inventory đã merge qua PR #26 là CURRENT ở mức cấu trúc dữ liệu; Address/Cart API, checkout, state machine Order và Frontend chưa triển khai. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
+Ảnh chụp trạng thái được cập nhật ngày **03/10/2026**, với `develop` tại `c0a7d48` (PR #8, #23, #24, #26 và contract #27 đã merge). Search Service và Backend Search sync là CURRENT ở mức code/test đã tích hợp; điều này không đồng nghĩa toàn bộ Web Search hoặc đánh giá chất lượng đã hoàn thành. Schema/migration nền Cart–Order–Inventory đã merge qua PR #26 là CURRENT ở mức cấu trúc dữ liệu; Address/Cart API, checkout, state machine Order và Frontend chưa có trên develop. Address API đang IN_PROGRESS trên nhánh riêng, xem mục 7.5.1. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
 
 ## 1. Cách đọc và nguồn chuẩn
 
@@ -168,6 +168,7 @@ Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn c
 | Public Product and moderation | `CURRENT` | PR #22 và #23: Admin approve/reject/freeze, Seller hide/show, public list/detail, predicate chung, ProductStatusHistory, SearchOutbox/reconciliation và E2E | Media privacy và Admin/Seller/Public UI đầy đủ vẫn thiếu |
 | Cart–Order–Inventory foundation | `CURRENT` (schema/migration) | PR #26 đã merge tại 08f165e: Address, Cart, Checkout, Order snapshot, Payment COD và StockMovement | Address/Cart API, checkout transaction, state machine, FE và E2E luồng mua hàng chưa triển khai; district nullable cần migration mới |
 | Chat User and Seller | `TARGET` | `chat-domain-design.md` | Schema, REST/WebSocket, UI và E2E quyền/reconnect |
+| Buyer Address API | `IN_PROGRESS` | Nhánh codex/buyer-address-api: CRUD/default/DTO/ownership, migration district nullable, unit/HTTP E2E; mục 7.5.1 | Review/merge và Buyer UI thật; chưa đạt gate G-ACCOUNT/G-CHECKOUT |
 | Review, Admin dashboard and notification | `TARGET` | Phạm vi P0 | Schema/API/UI/test |
 | Verify/reset, OAuth, OTP, payment sandbox and returns | `TARGET P1` | `implementation-scope.md` | Chỉ triển khai sau dependency P0 tương ứng ổn định |
 
@@ -275,6 +276,18 @@ Hoàng và Đạt đã thống nhất version, UPSERT/DELETE, filter, image URL 
 Cart tham chiếu `variantId`. Khi checkout, Backend phải đọc lại Product/Variant, giá và tồn kho; tạo Order và OrderItem snapshot, trừ kho và ghi lịch sử trong transaction. Client không gửi giá cuối cùng để Backend tin trực tiếp. Giỏ nhiều Store được tách thành Order theo Store. PR #26 đã merge vào develop tại `08f165e` ngày 03/10/2026, chỉ hoàn thành schema/migration nền; API Address/Cart, checkout transaction, state machine và Frontend vẫn chưa được nhận là đã triển khai.
 
 Contract #27 bổ sung danh tính lần giao bền vững: delivered/failed phải khớp attempt hiện hành; tối đa 3 retry, tổng 4 attempt theo SRS. Đây vẫn là thiết kế cần review, không phải code hoặc cột đã tồn tại trong schema #26. Quy tắc Address/Cart và địa chỉ hành chính cần review riêng trước implementation.
+
+### 7.5.1 Address API — IN_PROGRESS, nhánh codex/buyer-address-api
+
+Contract Address đã duyệt trong #27. Nhánh implementation thêm `AddressModule` và năm route tại `/me/addresses`: GET/POST, PATCH/DELETE `/:addressId`, PUT `/:addressId/default`. Chưa merge hoặc có UI thật thì chưa nhận là CURRENT/DONE. Cart và Checkout chưa được triển khai trong nhánh này.
+
+Luồng: JWT đọc User active → guard USER → DTO trim/validate và từ chối trường thừa → service lọc ownership → transaction PostgreSQL → response chỉ có địa chỉ của actor. Error filter chỉ áp dụng route Address, không đổi lỗi API cũ. GET không cache dữ liệu cá nhân.
+
+Mọi write khóa hàng `users` của actor bằng `SELECT ... FOR UPDATE` trước đọc/count địa chỉ, kể cả User chưa có địa chỉ. READ COMMITTED đọc dữ liệu mới sau khi chờ khóa; vì tất cả write Address tuân thủ cùng khóa, hai service instance không tạo hai default hoặc vượt giới hạn 20. Partial unique index vẫn bảo vệ tối đa một default tại DB. Đổi default bỏ cờ cũ và đặt cờ mới cùng transaction; lỗi rollback cả hai. Xóa default chọn địa chỉ cũ nhất `(createdAt,id)`; xóa cuối cho phép không có default. Đây không phải khóa trong memory; những writer mới vào bảng Address phải dùng cùng giao thức. Retry chỉ serialization/deadlock, tối đa 5 lần có backoff; không retry mọi lỗi DB.
+
+Migration mới `20261003140000_nullable_address_district` chỉ bỏ NOT NULL ở `user_addresses.district` và `orders.districtSnapshot`; không sửa migration #26 hoặc dữ liệu/snapshot cũ. Province/ward bắt buộc, district nullable. `ADDRESS_MAX_PER_USER` mặc định 20. PATCH bỏ field giữ nguyên, null chỉ xóa optional; default không unset bằng PATCH. Address không sửa Product/version/outbox, giá/kho hoặc snapshot Order.
+
+Đọc code theo thứ tự: `BE/src/address/address.controller.ts` → `address.dto.ts`/`address-http.ts` → `address.service.ts` → migration mới → `BE/test/address.e2e-spec.ts`. Xem [hướng dẫn kiểm thử và bàn giao Address](../testing/address-api-verification.md) để biết bằng chứng và giới hạn.
 
 ### 7.6 Chat đích
 

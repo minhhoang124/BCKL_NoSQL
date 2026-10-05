@@ -473,7 +473,7 @@ model UserAddress {
   recipientName String
   phone         String
   province      String
-  district      String
+  district      String?
   ward          String
   addressLine   String
   postalCode    String?
@@ -540,7 +540,7 @@ model Order {
   recipientNameSnapshot String
   phoneSnapshot         String
   provinceSnapshot      String
-  districtSnapshot      String
+  districtSnapshot      String?
   wardSnapshot          String
   addressLineSnapshot   String
   postalCodeSnapshot    String?
