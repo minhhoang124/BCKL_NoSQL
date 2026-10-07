@@ -1,6 +1,8 @@
 # Cart–Order–Inventory API contract
 
-Ngày: 03/10/2026; cập nhật tích hợp 05/10/2026. Trạng thái: **contract đã review và merge qua PR #27 (`c0a7d48`); Address Backend đã merge qua #30 (`efd86a3`); Cart API IN_PROGRESS trên nhánh `codex/buyer-cart-api` sau đồng bộ develop**. Checkout/Order vẫn TARGET; API riêng không đủ để gọi luồng mua hàng hoặc Buyer UI đã hoàn thành.
+Contract PR #27 đã review/merge tại develop `c0a7d48` ngày 03/10/2026. Cập nhật 05/10: Address #30 đã merge tại `efd86a3` (CURRENT ở lớp Backend); Cart Backend #31 đã merge tại `6663fab` (CURRENT ở lớp Backend). Checkout/Order TARGET; Buyer UI chưa nghiệm thu.
+
+Q1–Q7 trong [quyết định triển khai Checkout/COD](checkout-cod-implementation-proposal.md) đã được Hiền chấp thuận tại [review head 222f52f ngày 05/10](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#pullrequestreview-5412360700). Bản cập nhật này đưa các quyết định vào nguồn contract chuẩn để re-review #29 trước code. **ACCEPTED_BY_HIEN ở mức thiết kế; runtime TARGET, toàn bộ CHK/QCHK NOT_RUN.** Không coi việc chấp thuận lựa chọn là approve head mới hoặc chức năng đã chạy.
 
 Tài liệu này khóa contract nghiệp vụ cho Address, Cart, Checkout, Order, COD và Inventory của bản khóa luận. Contract dựa trên SRS v3.1 và schema/migration nền ở PR #26. Việc có schema hoặc tài liệu này **không đồng nghĩa chức năng đã hoàn thành**. Chỉ chuyển sang CURRENT sau khi PR #26 merge, API/Frontend/E2E chạy trên `develop` và release gate tương ứng đạt.
 
@@ -203,7 +205,53 @@ Preview không giữ kho và không tạo Order. Request:
 }
 ```
 
-Response nhóm theo Store, trả giá hiện hành, phí vận chuyển mô phỏng do Backend tính, tổng và các lỗi theo item. Preview thành công không bảo đảm checkout sau đó sẽ thành công; checkout luôn kiểm tra lại.
+Request preview/create: 1–50 dòng; quantity integer 1–99, ID positive PostgreSQL Int; reject duplicate variantId và trường thừa cả envelope/item, không truncate hoặc tự gộp dòng. Request rỗng trả 400 EMPTY_CHECKOUT; các vi phạm DTO khác trả 400 VALIDATION_ERROR. Body tối đa 64 KiB **sau giải nén**, kể cả chunked input; vượt trả 413 REQUEST_TOO_LARGE trước controller/DB write. Route parser phải giới hạn trong lúc đọc body, không đặt middleware sau global parser đã đọc hết; không thay giới hạn upload ảnh/API khác.
+
+expectedUnitPrice là chuỗi tiền dương **nguyên đồng VND**, chuẩn hóa về hai số lẻ `.00` trước hash/so sánh. Định dạng DTO/Swagger v1: `^[1-9][0-9]*(?:\.00)?$`, sau đó kiểm bound; không nhận JSON float, zero, khoảng trắng, leading zero, phần lẻ khác 0, số âm hay scientific notation. Ví dụ `"1290000"` và `"1290000.00"` cùng canonical `"1290000.00"`. Tính mọi phép nhân/cộng/trừ bằng Decimal, không Number/parseFloat; kiểm lineTotal, từng Order và toàn Checkout trước DB. Bound nguyên đồng của Decimal(14,2) là 999999999999.00; vượt trả 400 VALIDATION_ERROR với `details.reason="MONEY_LIMIT_EXCEEDED"`. Giá bán dương, fee/discount không âm, discount không vượt tổng trước giảm.
+
+Preview đọc snapshot nhất quán, không giữ kho hoặc ghi Checkout/Order/Payment/movement/version/outbox. Nó không bảo đảm create sau đó còn đúng giá/kho. Lỗi DTO/Auth/ownership hoặc Cart trả 4xx: address ngoài actor 404 ADDRESS_NOT_FOUND; thiếu dòng 404 CART_ITEM_NOT_FOUND; quantity lệch 409 CART_CHANGED; self-purchase 409 SELF_PURCHASE_FORBIDDEN.
+
+Sau khi request/ownership/Cart hợp lệ, lỗi theo dòng trả HTTP 200, canCheckout=false. Ưu tiên mã: VARIANT_NOT_AVAILABLE → INSUFFICIENT_STOCK → PRICE_CHANGED; mỗi dòng chỉ báo lỗi ưu tiên cao nhất. Create vẫn trả 409 tương ứng và rollback toàn nhóm. Non-public Product/Variant chỉ trả `{variantId,quantity,errors:["VARIANT_NOT_AVAILABLE"]}` trong unavailableItems cấp gốc, không name/image/options/Store/Brand/giá hay lý do moderation. Dòng public hợp lệ hoặc thiếu kho/giá đổi nằm trong groups, chỉ các trường allowlist dưới; không serialize toàn Prisma object.
+
+Allowlist response P0: canCheckout boolean, paymentProvider="COD", currency="VND", shippingMode="DEMO_ZERO_V1", groups array, unavailableItems array, totals object hoặc null. Store chỉ có id/name; item có variantId/quantity/expectedUnitPrice/unitPrice/lineTotal/errors (mảng code). Group có Store/items và subtotal/shippingFee/discountTotal/total. Có bất kỳ lỗi dòng nào → totals=null; group có lỗi → cả bốn tổng của group là null. Group không lỗi có thể giữ tổng nhưng không được dùng làm tổng thanh toán một phần. Các field tiền không null là chuỗi Decimal hai số lẻ; mảng rỗng vẫn có mặt. Field display bổ sung cần review allowlist/DTO/Swagger trước code, không suy diễn từ Cart response.
+
+Ví dụ thiết kế đủ điều kiện (không phải response đã chạy):
+
+```json
+{
+  "canCheckout": true,
+  "paymentProvider": "COD",
+  "currency": "VND",
+  "shippingMode": "DEMO_ZERO_V1",
+  "groups": [{
+    "store": {"id": 8, "name": "Cửa hàng mẫu"},
+    "items": [{"variantId": 125, "quantity": 2, "expectedUnitPrice": "1290000.00", "unitPrice": "1290000.00", "lineTotal": "2580000.00", "errors": []}],
+    "subtotal": "2580000.00", "shippingFee": "0.00", "discountTotal": "0.00", "total": "2580000.00"
+  }],
+  "unavailableItems": [],
+  "totals": {"subtotal": "2580000.00", "shippingFee": "0.00", "discountTotal": "0.00", "total": "2580000.00"}
+}
+```
+
+Ví dụ thiết kế khi giá public đổi và một dòng không còn public:
+
+```json
+{
+  "canCheckout": false,
+  "paymentProvider": "COD",
+  "currency": "VND",
+  "shippingMode": "DEMO_ZERO_V1",
+  "groups": [{
+    "store": {"id": 8, "name": "Cửa hàng mẫu"},
+    "items": [{"variantId": 125, "quantity": 2, "expectedUnitPrice": "1290000.00", "unitPrice": "1390000.00", "lineTotal": "2780000.00", "errors": ["PRICE_CHANGED"]}],
+    "subtotal": null, "shippingFee": null, "discountTotal": null, "total": null
+  }],
+  "unavailableItems": [{"variantId": 126, "quantity": 1, "errors": ["VARIANT_NOT_AVAILABLE"]}],
+  "totals": null
+}
+```
+
+Giá mới chỉ để Buyer xác nhận lại; không tự thay expectedUnitPrice. UI không hiện nút đặt hàng với tổng một phần khi canCheckout=false. Preview không trả địa chỉ đầy đủ, UI dùng Address đã chọn, Order mới lưu snapshot khi create.
 
 ### 5.1.1 Quan hệ với giỏ hàng — P0 chỉ checkout từ Cart
 
@@ -213,6 +261,10 @@ Response nhóm theo Store, trả giá hiện hành, phí vận chuyển mô ph�
 - P0 chưa hỗ trợ buy-now bỏ qua giỏ. Nút “Mua ngay” nếu có phải lưu số lượng qua Cart API rồi đi qua checkout như trên; API buy-now độc lập cần contract sau.
 - Replay Checkout đã COMPLETED được nhận diện **trước** kiểm tra giỏ/địa chỉ hiện hành: giỏ đã xóa, địa chỉ sửa/xóa hoặc giá thay đổi không được làm mất khả năng nhận lại đơn cũ. Vẫn xác thực tài khoản và ownership, đối chiếu hash của request gốc.
 - Checkout mới đọc Cart trong Serializable transaction. Hai key khác nhau cùng mua một dòng hoặc sửa Cart song song phải được tuần tự hóa: chỉ một checkout tiêu thụ dòng; request kia đọc lại sau retry và nhận lỗi giỏ nếu dòng đã bị mua/thay đổi. Không cho đủ stock trở thành lý do tạo hai đơn từ cùng dòng đã tiêu thụ.
+
+### 5.1.2 Shipping policy P0 — DEMO_ZERO_V1
+
+Preview/create dùng chung policy cố định shippingFee="0.00" cho mỗi Store, lưu giá này vào Order; discountTotal="0.00" vì voucher ngoài P0. UI ghi “Vận chuyển mô phỏng — phí demo 0đ”, không hứa miễn phí vận chuyển thực tế. Không expose config phí khác làm tổng tăng từ preview sang create mà Buyer chưa xác nhận. Muốn dùng phí khác phải review quote/version hoặc field xác nhận phí, cập nhật request/canonical hash/contract tương ứng trước code; không thêm phí động vào hash v1 hiện hành.
 
 ### 5.2 Tạo checkout
 
@@ -264,7 +316,9 @@ Response `201 Created` lần đầu hoặc `200 OK` khi replay đúng request đ
 5. Chuẩn hóa giá chuỗi về Decimal hai chữ số.
 6. Serialize JSON theo một thuật toán ổn định rồi SHA-256.
 
-Canonicalization v1: serialize UTF-8 JSON object với key sắp xếp đệ quy, không khoảng trắng; giữ thứ tự array sau khi sắp item; ID/quantity là integer, tiền là chuỗi Decimal hai chữ số. Hash gồm buyerId, addressId, paymentProvider và từng variantId/quantity/expectedUnitPrice đã chuẩn hóa; không gồm địa chỉ hiện hành, giá hiện hành hoặc Cart snapshot. Lưu requestHash và hashVersion=1; thay thuật toán phải có tương thích replay, không tính lại hash bản ghi cũ bằng thuật toán mới. `hashVersion` cần migration bổ sung trước code API, không sửa migration PR #26.
+Canonicalization v1: serialize UTF-8 JSON object với key sắp xếp đệ quy, không khoảng trắng; giữ thứ tự array sau khi sắp item; ID/quantity là integer, tiền là chuỗi Decimal hai chữ số. Hash gồm buyerId, addressId, paymentProvider và từng variantId/quantity/expectedUnitPrice đã chuẩn hóa; không gồm địa chỉ hiện hành, giá hiện hành hoặc Cart snapshot. New Checkout ghi requestHash và hashVersion=1 tường minh; thay thuật toán phải có tương thích replay, không tính lại hash bản ghi cũ bằng thuật toán mới.
+
+Migration mới thêm hashVersion nullable **không default/backfill 1 cho dữ liệu cũ**; không sửa migration PR #26. Trước migration audit số Checkout theo status/phiên bản và bằng chứng thuật toán/request gốc, không log raw key/PII, không nhận “không có legacy” khi chưa query. Backfill chỉ khi chứng minh được nguồn/thuật toán; không hash Order hiện hành thay request gốc. Legacy/hashVersion null hoặc phiên bản không hỗ trợ/thiếu bằng chứng trả 409 CHECKOUT_LEGACY_REVIEW_REQUIRED; giữ nguyên key/đơn/kho, không tạo Checkout mới theo key cũ hoặc fallback v1.
 
 Không đưa timestamp, request ID hoặc thứ tự item ban đầu vào hash.
 
@@ -279,13 +333,13 @@ Semantics:
 
 ### 5.4 Transaction checkout
 
-Isolation: `Serializable`, kèm retry có giới hạn cho lỗi serialization/deadlock; đề xuất tối đa 3 lần với jitter. Mỗi lần retry đọc lại canonical state.
+Isolation: `Serializable`, tối đa **3 attempts kể cả lần đầu**, chỉ retry serialization/deadlock đã phân loại; không retry validation/ownership/PRICE_CHANGED hoặc mọi lỗi unique. Mỗi attempt đọc lại canonical state, backoff/jitter và thời gian chờ khóa/transaction/deadline tổng hữu hạn. Giá trị timeout/backoff cụ thể phải cấu hình và kiểm thử trong PR implementation; không hạ isolation hoặc lặp vô hạn. Hết cạnh tranh → STOCK_CONFLICT; cùng key chưa có kết quả trong thời gian chờ → CHECKOUT_IN_PROGRESS. Khóa hàng Buyer theo cơ chế Cart; cập nhật Variant theo ID tăng dần để giảm deadlock.
 
 Trong một transaction:
 
 1. Kiểm tra Buyer đang hoạt động; tính hash từ request đã validate.
-2. Tạo/đọc Checkout theo `(buyerId,idempotencyKey)` và kiểm tra hash.
-3. Nếu Checkout đã COMPLETED, trả nhóm Order cũ mà không kiểm tra lại Cart/giá/address. Nếu là checkout mới, kiểm tra address thuộc Buyer, từng Variant có trong Cart của Buyer và quantity khớp; đọc lại Variant → Product → Store và policy public.
+2. Đọc Checkout theo `(buyerId,idempotencyKey)` dưới khóa Buyer; phân loại hashVersion/legacy trước khi so hash bằng phiên bản hỗ trợ. Chỉ khi không có Checkout của key đó mới đi nhánh tạo mới; không xóa/ghi đè Checkout không đủ bằng chứng.
+3. Nếu Checkout đã COMPLETED và hashVersion/receipt hợp lệ, trả receipt gốc mục 5.5 mà không kiểm tra lại Cart/giá/address. Nếu là checkout mới, kiểm tra address thuộc Buyer, từng Variant có trong Cart của Buyer và quantity khớp; đọc lại Variant → Product → Store và policy public.
 4. Chặn self-purchase.
 5. So sánh `expectedUnitPrice`; có thay đổi thì rollback với `PRICE_CHANGED`.
 6. Cập nhật từng Variant bằng điều kiện `stock >= quantity`; số dòng cập nhật khác 1 là `INSUFFICIENT_STOCK`.
@@ -293,12 +347,32 @@ Trong một transaction:
 8. Tạo OrderItem snapshot và Payment COD.
 9. Ghi `StockMovement(CHECKOUT_DECREMENT)` cho từng OrderItem.
 10. Ghi history ban đầu `null → PENDING_CONFIRMATION`.
-11. Đánh dấu Checkout COMPLETED.
+11. Lưu receiptVersion=1/receiptJson allowlist và đánh dấu Checkout COMPLETED cùng transaction.
 12. Xóa đúng CartItem đã mua; CartItem khác giữ nguyên.
 
 Khi stock thay đổi, gom các Product bị ảnh hưởng, đọc lại dữ liệu canonical và tăng Product.version + tạo đúng một SearchOutbox theo trạng thái public cuối trong cùng transaction. Đây là biến động kho do giao dịch, **không** phải Seller sửa nội dung nên không tự hạ Product APPROVED về DRAFT. Dùng cơ chế outbox hiện có; không đổi contract FastAPI. Hoàn kho do cancel cũng áp dụng quy tắc này; replay không tăng version/phát outbox lần hai.
 
 Không gọi email, WebSocket, Search, payment provider hoặc shipping provider trong transaction. Notification được phát sau commit bằng cơ chế bền vững ở PR riêng.
+
+### 5.5 Receipt bất biến và tra cứu sau timeout
+
+Migration mới thêm receiptVersion/receiptJson nullable để giữ legacy; new Checkout hashVersion=1 COMPLETED phải có receiptVersion=1 và receipt hợp lệ, bảo vệ bằng constraint DB phù hợp và runtime shape validation. Không sửa migration cũ hoặc đoán receipt legacy từ Order hiện hành. Constraint SQL cụ thể cần Hiền review trong PR migration.
+
+Receipt v1 lưu chính allowlist của response mục 5.2: checkoutId/status=COMPLETED/orders, thứ tự orders ổn định theo storeId; mỗi Order có id/orderNumber/storeId/status ban đầu/payment{provider,status,amount,currency}/total. Không lưu replayed: Backend thêm false cho lần tạo, true cho replay/lookup. Không chứa raw key/hash/JWT/địa chỉ hoặc Prisma row. Ghi receipt cùng Checkout/Order/Item/Payment/history/stock/movement/Cart/outbox trong một transaction. Seller/Payment thay đổi về sau không sửa receipt; GET Order riêng trả state hiện hành. New-version receipt thiếu/hỏng/không hỗ trợ trả HTTP 500 an toàn, log checkoutId/requestId không dump receipt/PII, không tái dựng tùy tiện hoặc đặt thêm đơn. Legacy thiếu bằng chứng xử lý 409 CHECKOUT_LEGACY_REVIEW_REQUIRED. P0 không TTL/xóa receipt sớm hoặc reset key.
+
+`GET /checkouts/by-key` nhận JWT USER/active và Idempotency-Key ở **header** đúng format mục 2.1; không body/query key, Cache-Control:no-store. Query `(buyerId,key)` trong phạm vi actor, không đòi Cart/address còn tồn tại, không ghi stock/version/outbox hoặc reset Checkout:
+
+| Tình huống | HTTP và kết quả |
+|---|---|
+| COMPLETED, hashVersion/receipt được hỗ trợ | 200 receipt gốc mục 5.2, replayed=true; không có mutation |
+| Không có trong scope actor, kể cả key thuộc Buyer khác | 404 CHECKOUT_NOT_FOUND, không tiết lộ tồn tại ngoài scope |
+| PENDING nhìn thấy được | 409 CHECKOUT_IN_PROGRESS + Retry-After, không tự tạo lại |
+| Legacy/unknown hashVersion, thiếu bằng chứng | 409 CHECKOUT_LEGACY_REVIEW_REQUIRED, giữ nguyên dữ liệu |
+| New-version receipt hỏng/thiếu | 500 an toàn, không dựng lại hoặc đặt đơn |
+
+Create một transaction nên PENDING chưa commit không visible; không thêm transaction PENDING riêng chỉ để lookup. PENDING cũ phải audit; không polling vô hạn. Header key phải được che cả ở app/proxy/error log; không đưa vào URL.
+
+**404 không chứng minh create trước đó chưa commit.** UI giữ nguyên body/key qua timeout, tự đối chiếu/retry tối đa **3 lần tổng cộng** có backoff/Retry-After, không tạo key mới; hết giới hạn hiển thị “chưa xác định, kiểm tra lại” và cho kiểm tra thủ công. Persistence intent/key phía UI cần review riêng, không lưu JWT/địa chỉ vào URL. Chỉ dùng key mới sau lỗi nghiệp vụ chắc chắn không tạo đơn và Buyer thay intent. Receipt thành công chỉ chứng minh tạo đơn; tracking dùng GET Order khi API đó có.
 
 ## 6. Buyer Order API
 
@@ -511,7 +585,9 @@ Response có `cancellation` và timeline có cấu trúc theo mục 7.2; ví d�
 | HTTP | Code | Ý nghĩa |
 |---:|---|---|
 | 400 | `VALIDATION_ERROR` | Body/query/header sai định dạng |
+| 400 | `VALIDATION_ERROR` với `details.reason="MONEY_LIMIT_EXCEEDED"` | Giá/line/Order/toàn Checkout vượt bound Decimal(14,2); MONEY_LIMIT_EXCEEDED không là top-level code |
 | 400 | `EMPTY_CHECKOUT` | Không có item để checkout |
+| 413 | `REQUEST_TOO_LARGE` | Body preview/create vượt 64 KiB sau giải nén; không DB write |
 | 401 | `UNAUTHORIZED` | Thiếu/hết hạn token |
 | 403 | `FORBIDDEN` | Role không được phép |
 | 409 | `SELF_PURCHASE_FORBIDDEN` | Buyer mua hàng của Store mình |
@@ -523,12 +599,14 @@ Response có `cancellation` và timeline có cấu trúc theo mục 7.2; ví d�
 | 409 | `CART_CHANGED` | Quantity request không khớp giỏ hiện hành |
 | 409 | `CART_WRITE_CONFLICT` | Cart hết 5 lần retry serialization/deadlock; client tải lại giỏ và thử lại, không cộng quantity |
 | 404 | `ORDER_NOT_FOUND` | Không tìm thấy Order trong phạm vi actor |
+| 404 | `CHECKOUT_NOT_FOUND` | Lookup không có Checkout trong phạm vi Buyer; không chứng minh create cũ chưa commit |
 | 409 | `VARIANT_NOT_AVAILABLE` | Variant/Product/Store không còn bán |
 | 409 | `INSUFFICIENT_STOCK` | Tồn kho không đủ tại checkout |
 | 409 | `PRICE_CHANGED` | Giá canonical khác giá User đã xác nhận |
 | 400 | `IDEMPOTENCY_KEY_REQUIRED` | Thiếu header checkout hoặc Order command |
 | 409 | `IDEMPOTENCY_CONFLICT` | Cùng key nhưng payload khác |
 | 409 | `CHECKOUT_IN_PROGRESS` | Request cùng key đang được xử lý |
+| 409 | `CHECKOUT_LEGACY_REVIEW_REQUIRED` | Legacy/unknown hashVersion hoặc thiếu bằng chứng replay; không tạo lại hay sửa đơn/kho/key |
 | 409 | `ORDER_COMMAND_IN_PROGRESS` | Order command cùng key chưa có kết quả commit trong thời gian chờ |
 | 409 | `INVALID_ORDER_TRANSITION` | Chuyển trạng thái không hợp lệ |
 | 409 | `ORDER_CANNOT_CANCEL` | Order đã qua trạng thái được hủy |
@@ -538,7 +616,7 @@ Response có `cancellation` và timeline có cấu trúc theo mục 7.2; ví d�
 | 409 | `STALE_DELIVERY_ATTEMPT` | Attempt/tracking không khớp lần giao hiện hành |
 | 429 | `RATE_LIMITED` | Vượt giới hạn request theo cấu hình |
 
-Policy P0: ID không tồn tại hoặc nằm ngoài ownership của Buyer/Seller đều trả 404 ADDRESS_NOT_FOUND/ORDER_NOT_FOUND qua query đã lọc actor; không truy vấn người khác rồi trả khác biệt 403. Sai role ở guard vẫn 403 FORBIDDEN. Không replay command trước kiểm tra phạm vi actor.
+Policy P0: ID/key không tồn tại hoặc nằm ngoài ownership của Buyer/Seller đều trả 404 ADDRESS_NOT_FOUND/ORDER_NOT_FOUND/CHECKOUT_NOT_FOUND qua query đã lọc actor; không truy vấn người khác rồi trả khác biệt 403. Sai role ở guard vẫn 403 FORBIDDEN. Không replay trước kiểm tra actor active/role/ownership. Mã VARIANT_NOT_AVAILABLE/INSUFFICIENT_STOCK/PRICE_CHANGED là errors của preview HTTP 200, nhưng 409 khi create; không lộ giá hoặc nội dung non-public trong details. Receipt mới hỏng trả server error 500 an toàn, không quy lỗi cho Buyer hoặc trả SQL/receipt.
 
 ## 11. Rate limit, an toàn và vận hành
 
@@ -547,13 +625,16 @@ Giới hạn nằm trong cấu hình, không hard-code vào controller. Giá tr�
 - Cart read/write: 60 request/phút/User.
 
 - Checkout preview: 20 request/phút/User.
-- Checkout create: 5 request/phút/User, nhưng retry cùng Idempotency-Key vẫn phải nhận kết quả idempotent thay vì tạo đơn mới.
+- Checkout create: ingress 60 request/phút/User **gồm replay**, thêm quota 5 intent mới/phút/User. Chỉ key thuộc actor/hashVersion/receipt hợp lệ và hash cùng request mới là replay không tiêu quota intent mới. Key mới/giả không bypass; attempt mua mới thất bại vẫn tính quota, internal transaction retry không tính lại. Hash khác → IDEMPOTENCY_CONFLICT; legacy được phân loại theo mục 5.3 trước suy diễn hash v1.
+- Checkout lookup: bucket riêng 20 request/phút/User.
 - Order command: 20 request/phút/actor.
 - Admin list/filter: 60 request/phút/Admin.
 
-Cart dùng chung một bucket GET/PUT/DELETE theo User; 429 RATE_LIMITED có Retry-After. Limiter in-memory P0 chỉ bảo vệ một instance, không tuyên bố bảo vệ đa replica; cần shared store khi triển khai nhiều instance.
+Cart dùng chung một bucket GET/PUT/DELETE theo User; mọi 429 RATE_LIMITED có Retry-After. Limiter in-memory P0 chỉ bảo vệ một instance, không tuyên bố bảo vệ đa replica; cần shared store khi triển khai nhiều instance. Unique/khóa DB chống đơn đôi vẫn bảo vệ đa instance, không đồng nghĩa quota memory dùng chung. Replay vượt ingress cap vẫn 429, client giữ key/body để thử lại hoặc lookup; không hứa retry vô hạn luôn 200.
 
-Thêm giới hạn kích thước body, số item checkout và quantity. Log chỉ ghi request ID, actor ID, order/checkout ID, command, kết quả và latency; không log JWT, địa chỉ đầy đủ, số điện thoại đầy đủ hoặc idempotency key nguyên văn. Có thể log hash rút gọn của key để đối chiếu.
+Key lookup trước transaction chỉ tối ưu quota/replay, không là nguồn bảo vệ cạnh tranh. Transaction phải đọc lại Checkout dưới khóa Buyer trước Cart/address; phân loại đúng unique buyer/key, không coi mọi P2002 là replay. Body/DTO/Auth phải được bảo vệ theo pipeline thật, không bỏ guard vì có key. Route parsing/body size và deadline/backoff của mục 5 phải có test, không chỉ cấu hình trên giấy.
+
+Giới hạn Checkout: 50 dòng, quantity 1–99, body 64 KiB sau giải nén như mục 5.1. Log chỉ ghi request ID, actor ID, order/checkout ID, command, kết quả và latency; không log JWT, địa chỉ đầy đủ, số điện thoại đầy đủ hoặc idempotency key nguyên văn. Có thể log hash rút gọn của key để đối chiếu.
 
 Order number phải sinh an toàn khi cạnh tranh và có unique database; không dùng số lượng bản ghi hiện tại để tạo số tiếp theo. Mọi lỗi transaction trả response hữu hạn; retry Backend có giới hạn, không loop vô hạn.
 
@@ -613,10 +694,16 @@ Order number phải sinh an toàn khi cạnh tranh và có unique database; khô
 | Database | Movement gắn sai Variant/OrderItem | Composite FK từ chối |
 | Database | History gắn OrderCommand của Order khác | Composite FK từ chối; không tạo audit sai Order |
 | Database | Giá có phần lẻ hoặc total sai | Check constraint từ chối |
-| Rate limit | Spam checkout vượt ngưỡng | 429 nhưng request đã commit trước đó vẫn replay đúng |
+| Rate limit | Spam checkout vượt ngưỡng | Key mới vượt quota trả 429; replay thật không tiêu quota mới nhưng vẫn chịu ingress cap; giữ body/key, Retry-After |
 | Recovery | Mất response sau commit rồi retry | Trả đúng Order cũ, không trừ kho lần hai |
+| Preview | Public lỗi giá/kho hoặc non-public | 200 canCheckout=false, totals/group lỗi null; privacy/priority đúng; không DB write |
+| Limits | 0/50/51 dòng, quantity 1/99/100, duplicate/extra, chunked/compressed >64 KiB | Reject đúng code; không truncate hoặc ghi DB; upload/API khác không bị đổi limit |
+| Money | Unit/line/Store/toàn Checkout vượt Decimal bound | 400 VALIDATION_ERROR, details.reason=MONEY_LIMIT_EXCEEDED; Decimal không float |
+| Legacy | hashVersion null/lạ và không đủ provenance | 409 CHECKOUT_LEGACY_REVIEW_REQUIRED; không backfill đoán, không đơn mới theo key cũ |
+| Receipt | Order/Payment đổi sau create; lỗi lưu hoặc corrupt receipt | Replay receipt gốc; lỗi lưu rollback, corrupt mới 500 an toàn không tái dựng/đặt lại |
+| Lookup | Cross-owner/404 trước commit/timeout sau commit | 404 no leak; không mutation, no-store; UI giữ body/key và đối chiếu hữu hạn tối đa 3 lần |
 
-Test transaction phải chạy với ít nhất hai Prisma client/connection độc lập để mô phỏng cạnh tranh thật; không dùng một Promise tuần tự rồi gọi đó là race test.
+Các ca Checkout trên và CHK/QCHK trong checklist đều **NOT_RUN**; contract/approval tài liệu không là bằng chứng test. Test transaction phải chạy với ít nhất hai Prisma client/connection độc lập để mô phỏng cạnh tranh thật; không dùng một Promise tuần tự rồi gọi đó là race test.
 
 ## 13. Acceptance criteria và thứ tự triển khai
 
@@ -628,6 +715,9 @@ Test transaction phải chạy với ít nhất hai Prisma client/connection đ�
 - Chưa đánh dấu `G-CHECKOUT` hoàn thành.
 
 ### Đợt B — Checkout transaction + COD
+
+- Sau #31 merge và head đồng bộ #29 được re-review: audit Checkout legacy, migration mới hashVersion/receiptVersion/receiptJson (nullable, không guessed backfill), constraint phù hợp; preview/create/lookup theo mục 5.
+- Đồng bộ DTO/Swagger và bảng HTTP/details reason mục 10; body/parser, Decimal overflow, hai tầng quota, receipt/legacy/timeout có QCHK-* trước nghiệm thu. Không sửa FastAPI contract hoặc nhận runtime DONE từ approval tài liệu.
 
 - Preview và create với Idempotency-Key/requestHash.
 - Multi-Store all-or-nothing, snapshot, conditional stock decrement, Payment COD và movement.
@@ -653,13 +743,13 @@ Chỉ khi Đợt A–D có trên `develop`, CI xanh, có dữ liệu demo và E2
 
 ### Đối chiếu thực tế và điểm chưa chốt trong lượt sửa 03/10
 
-Giới hạn 20 địa chỉ/99 quantity/3 retry là cấu hình nhóm chọn theo phạm vi/SRS, không tuyên bố là chính sách chung của các sàn. Giỏ không giữ kho: PUT kiểm tra kho không đảm bảo lần checkout sau còn hàng. Tổng giỏ mua được không thay tổng subset chọn tại checkout hoặc phí vận chuyển cuối.
+Giới hạn 20 địa chỉ/99 quantity là cấu hình nhóm chọn theo phạm vi/SRS, không tuyên bố là chính sách chung của các sàn. Giao lại tối đa 3 lần (4 lần giao tổng) khác transaction Checkout tối đa 3 attempts kể cả lần đầu; không dùng chung counter. Giỏ không giữ kho: PUT kiểm tra kho không đảm bảo lần checkout sau còn hàng. Tổng giỏ mua được không thay tổng subset chọn tại checkout hoặc phí vận chuyển cuối.
 
-Nguồn [Shopee về địa chỉ hành chính mới](https://help.shopee.vn/portal/4/article/197479) cho thấy phải hỗ trợ địa chỉ hiện hành, không ép mô hình tỉnh–huyện–xã cũ. Schema #26 đã merge vẫn bắt buộc district; quyết định đã chốt là province/ward bắt buộc, district nullable, migration mới cho UserAddress.district và Order.districtSnapshot trước API. Lượt này chỉ ghi thiết kế, chưa áp dụng migration. Không tạo placeholder district giả.
+Nguồn [Shopee về địa chỉ hành chính mới](https://help.shopee.vn/portal/4/article/197479) dùng để đối chiếu thiết kế địa chỉ, không ép mô hình tỉnh–huyện–xã cũ. Tại review 03/10, schema #26 còn bắt buộc district nên nhóm yêu cầu migration mới, không placeholder giả. **Cập nhật 05/10:** #30 đã merge migration district nullable cho cả UserAddress/Order snapshot tại efd86a3; province/ward bắt buộc, district optional, Address Backend CURRENT. Đoạn lịch sử không có nghĩa migration này còn chưa thực hiện.
 
 Nguồn [Shopee quản lý địa chỉ](https://help.shopee.vn/portal/4/article/79433) và [TikTok Shop vận chuyển](https://seller-vn.tiktok.com/university/essay?knowledge_id=8974899868518160) chỉ dùng đối chiếu nghiệp vụ công khai; không suy ra transaction, giới hạn retry hay contract kỹ thuật nội bộ của các sàn. Truy cập 03/10/2026.
 
-Hiền đã xác nhận Address validation/PATCH, USER single-role, Cart DTO/reason/rate-limit nêu ở mục 3/4/11. Chỉ trạng thái approval toàn PR còn chờ re-review; không để các lựa chọn này là câu hỏi mở. Phân công Buyer UI Address/Cart được Hoàng đề xuất ở #29, trạng thái PROPOSED/PENDING_HIEN_CONFIRMATION; nếu Hiền chưa nhận thì Hoàng vẫn giữ theo phân công gốc. Không sửa schema/code trong lượt tài liệu.
+Hiền đã xác nhận Address validation/PATCH, USER single-role, Cart DTO/reason/rate-limit nêu ở mục 3/4/11; contract #27 đã merge. Hoàng giao Hiền CODE Buyer UI Address/Cart ngày 04/10 và Hiền đã [xác nhận nhận task trên PR #29](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#issuecomment-5978048696), trạng thái CONFIRMED_BY_HIEN. Chưa có cam kết lịch cụ thể hoặc bằng chứng UI hoàn thành. Nội dung mới ở #29 cần re-review; không sửa schema/code trong lượt tài liệu.
 
 Hiền review:
 
@@ -689,3 +779,19 @@ Hoàng review triển khai:
 | Review Address/Cart #29 | Default không unset; 20 địa chỉ/99 quantity; count/subtotal/privacy và PUT kiểm tra kho | Boundary/default/stock/privacy; DTO chi tiết còn cần review |
 
 Đây là **test matrix cần triển khai**, không phải kết quả test API đã PASS. Reviewer xác nhận các lựa chọn kỹ thuật trước migration/API. Idempotency = gửi lại không thực hiện nghiệp vụ lần hai; receipt = bản ghi kết quả lệnh; requestHash = dấu kiểm tra nội dung; snapshot = bản chụp dữ liệu tại một thời điểm; Serializable = transaction có kết quả tương đương xử lý tuần tự, có thể cần retry khi cạnh tranh.
+
+### 14.2 Truy vết review Checkout/COD ngày 05/10 — thiết kế đã chấp thuận
+
+Nguồn: [Hiền review head 222f52f trên PR #29](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#pullrequestreview-5412360700). Q1–Q7 là ACCEPTED_BY_HIEN ở mức quyết định; head đồng bộ contract này còn cần re-review. Không là runtime CURRENT, không thay bằng chứng triển khai hoặc tự đổi SRS cho khớp code.
+
+| Quyết định | Nguồn field/HTTP/quy tắc chuẩn | Test implementation bổ sung — NOT_RUN |
+|---|---|---|
+| Q1 preview/privacy | 5.1/5.1.1, errors theo dòng/4xx toàn request, totals null | QCHK-01 |
+| Q2 phí demo | 5.1.2, DEMO_ZERO_V1, không fee config khác P0 | QCHK-02 |
+| Q3 bounds/tiền | 5.1/10/11, 50 dòng/99/64 KiB/Decimal trước DB | QCHK-03…05 |
+| Q4 rate/retry | 5.4/11, hai quota/3 attempts/guard và khóa DB | QCHK-06…07/12 |
+| Q5 legacy | 5.3/10, nullable audit, không đoán backfill/tạo lại | QCHK-08 |
+| Q6 receipt | 5.2/5.4/5.5, cùng transaction/bất biến/corrupt an toàn | QCHK-09…10 |
+| Q7 mất response | 5.5/10/11, lookup header/ownership/no-store/404 không kết luận commit | QCHK-11…12 |
+
+QCHK-* tại [quyết định Checkout/COD](checkout-cod-implementation-proposal.md); CHK-01…19 và CHK-S01…04 tại [readiness](../architecture/checkout-cod-backend-readiness.md), đều NOT_RUN. Deadline/backoff cụ thể, SQL constraints và persistence intent của UI phải được kiểm chứng ở PR implementation, không suy ra đã có từ contract. Đạt review các invariants stock/version/outbox/index theo bốn ca Search, không mở rộng API FastAPI trong lượt này.

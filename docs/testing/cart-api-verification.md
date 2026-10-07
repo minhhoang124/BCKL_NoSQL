@@ -1,6 +1,6 @@
 # Buyer Cart API — kiểm chứng và bàn giao
 
-Ngày 03/10/2026; cập nhật tích hợp 05/10/2026. Branch `codex/buyer-cart-api`, base ban đầu `c0a7d48` (PR #27), đã sync `develop efd86a3` sau khi Address #30 merge. Trạng thái **IN_PROGRESS**, chờ re-review/merge; Backend API không đồng nghĩa hoàn thành giao diện hoặc gate G-CHECKOUT.
+Ngày 03/10/2026; cập nhật tích hợp 05/10/2026. Branch `codex/buyer-cart-api`, base ban đầu `c0a7d48` (PR #27), đã sync `develop efd86a3` sau khi Address #30 merge. PR #31 đã được người dùng merge tại `6663fab` ngày 05/10: **CURRENT ở Backend**; Backend API không đồng nghĩa hoàn thành giao diện hoặc gate G-CHECKOUT.
 
 ## Phạm vi và nguyên tắc
 
@@ -71,7 +71,7 @@ CI GitHub là kiểm tra riêng sau push, không suy ra xanh từ kết quả lo
 - Local E2E/migrate deploy/status **NOT_RUN** trong lượt này vì Docker engine chưa chạy. CI có PostgreSQL 17 riêng, chạy migrations và toàn Backend E2E; kết quả phải xem đúng head mới, không lấy 135/135 cũ làm bằng chứng bản tích hợp.
 - Kiểm tra bổ sung `tsc --noEmit --incremental false` trên toàn BE **FAIL** do lỗi nền: PrismaConfig.earlyAccess, import `supertest/types`, assertion ReconciliationStats.locked và thiếu declaration seed-demo-user.mjs. Đã tái hiện cùng nhóm lỗi trên worktree Address trước tích hợp; build Backend theo cấu hình hiện hành vẫn PASS. Không sửa ngoài phạm vi hoặc tuyên bố toàn repo type-check sạch.
 
-Kết quả CI và re-review head mới được ghi tại PR #31. Không tự merge.
+[CI head 979ef58](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/actions/runs/37256392693) đã SUCCESS cả hai checks: 122 unit, 158 Backend E2E (31 Cart/22 Address), 129 Python. Hiền APPROVE đúng head, người dùng merge #31 tại `6663fab`; agent không tự merge. Đây là bằng chứng API, không phải Checkout/UI đã chạy.
 
 ## Giới hạn / bước tiếp
 
@@ -79,4 +79,4 @@ Kết quả CI và re-review head mới được ghi tại PR #31. Không tự m
 - GET/PUT phản ánh snapshot trong transaction, không hứa Product/giá/kho bất biến sau response; UI phải tải lại và Checkout revalidate.
 - Ảnh dùng URL công khai đã lưu và policy hiện có; không kiểm tra filesystem/đổi storage trong Cart. Private-media là task riêng.
 - Cart GET toàn giỏ theo contract P0; giới hạn tổng số dòng/pagination/performance tải lớn cần chốt trước vận hành production, không tự thêm rule cắt giỏ.
-- Chưa Frontend/browser evidence, chưa đặt COD/Order/giữ kho. Khi Address/Cart merge mới triển khai Checkout preview/create, snapshot và transaction chống bán vượt kho.
+- Chưa Frontend/browser evidence, chưa đặt COD/Order/giữ kho. Address/Cart đã merge; sau contract Checkout #29 được re-review, triển khai preview/create/lookup, snapshot và transaction chống bán vượt kho.

@@ -175,6 +175,7 @@ Nếu một mục P2 được chọn làm điểm cộng, phải có issue, acce
 | Phạm vi | Người chính | Phối hợp/review |
 |---|---|---|
 | Database, API, User/Seller, Cart/Order/COD, Chat | Hoàng | Hiền review nghiệp vụ và test |
+| Buyer UI Address/Cart — CODE hai màn, Hoàng giao và [Hiền xác nhận ngày 04/10/2026](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#issuecomment-5978048696) | Hiền | Hoàng review và tích hợp; không chuyển Buyer Checkout/Order hoặc toàn bộ FE; lịch cụ thể chưa chốt |
 | Hồ sơ/địa chỉ, Seller onboarding, IdentityProvider, email/OTP sandbox | Hoàng | Hiền review luồng/xác minh, test và an toàn tài khoản |
 | Hậu mãi cơ bản, Payment sandbox, thông báo | Hoàng | Hiền đặc tả SRS/ERD/Use Case, test và Admin xử lý |
 | SRS, Use Case, ERD, Admin, test case, dataset QA | Hiền | Hoàng review khả năng triển khai |

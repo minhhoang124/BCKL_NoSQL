@@ -25,6 +25,14 @@ Quyết định tích hợp chính thức của nhóm là:
 
 ## Mục tiêu hợp nhất
 
+### Điều chỉnh phân công ngày 03–04/10/2026
+
+**CONFIRMED_BY_HIEN — cập nhật ngày 05/10/2026:** Hoàng giao Hiền trực tiếp CODE hai màn Buyer UI Address/Cart ngày 04/10 để chia tải ngoài Admin, không chỉ review mockup. Hiền đã [xác nhận nhận task ngày 04/10 trên PR #29](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#issuecomment-5978048696). Không chuyển toàn bộ Frontend sang Hiền. Hoàng giữ Backend Address/Cart, Checkout/COD/Order, Buyer UI Checkout/Order, Seller UI, Chat và tích hợp. Đạt giữ AI/Search/thực nghiệm. Hiền giữ phân tích/SRS/QA và Admin. Chưa có cam kết lịch cụ thể hoặc bằng chứng hai màn UI hoàn thành.
+
+Hiền đã xác nhận tách Address và Cart thành các PR riêng, không gộp Admin #28; có thể chuẩn bị layout/state trước, chỉ nối API thật sau khi Backend tương ứng (#30/#31) merge vào develop. Thứ tự/lịch giữa Admin và hai màn mới còn cần cập nhật, không coi lời nhận task hoặc approval tài liệu là bằng chứng đã code/cam kết thời hạn. Nếu thiếu thời gian, báo lại để nhóm điều chỉnh, không âm thầm bỏ phần Admin hoặc nghiệm thu. Contract #27 đã duyệt/merge; cập nhật 05/10: Address #30 đã merge tại efd86a3, Hiền có thể bắt đầu nối Address API; Cart Backend #31 đã merge tại 6663fab, Hiền có thể nối cả Address và Cart API trên develop. UI mock phải có nhãn và không được coi là bằng chứng tích hợp, không tự đổi Backend contract.
+
+Phạm vi file, dependencies, acceptance và lịch checkpoint đề xuất ở [Phân công tăng tốc Address/Cart và tích hợp](../project/address-cart-delivery-assignment-2026-10-03.md). Thời hạn trong tài liệu là checkpoint đề xuất, không phải cam kết thay các thành viên. Checklist cho bước Backend tiếp theo ở [Checkout/COD readiness](../architecture/checkout-cod-backend-readiness.md).
+
 Ba thành viên phát triển ba phần có thể chạy và kiểm thử độc lập, sau đó hợp nhất thành một website thương mại điện tử hoàn chỉnh.
 
 Luồng bắt buộc:
