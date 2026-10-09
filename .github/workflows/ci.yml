@@ -106,6 +106,9 @@ jobs:
       - name: Lint workspaces
         run: pnpm lint
 
+      - name: Typecheck Backend source, tests and Prisma config
+        run: pnpm --dir BE typecheck
+
       - name: Run unit tests
         run: pnpm test
 

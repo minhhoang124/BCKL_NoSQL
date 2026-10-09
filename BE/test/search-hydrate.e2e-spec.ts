@@ -8,7 +8,7 @@ import { access, mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import request from 'supertest';
-import type { App } from 'supertest/types';
+import type { App } from './http-test-types.js';
 import { vi } from 'vitest';
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import { AppModule } from '../src/app.module.js';
@@ -1170,16 +1170,28 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       });
       expect(beforeEvents).toHaveLength(0);
 
+      const beforeDraft = await prisma.product.findUniqueOrThrow({
+        where: { id: draftId },
+      });
+
       // Run reconciliation
       const result = await reconService.reconcileAll();
-      expect(result.locked).toBeFalsy();
+      expect(result.failed).toBe(0);
+      expect(result.skipped).toBeGreaterThanOrEqual(1);
       expect(result.scanned).toBeGreaterThan(0);
+      expect(result.created + result.skipped + result.failed).toBe(
+        result.scanned,
+      );
 
       // Verify no DELETE or UPSERT outbox event was generated for this draft
       const afterEvents = await prisma.searchOutbox.findMany({
         where: { productId: draftId },
       });
       expect(afterEvents).toHaveLength(0);
+      const afterDraft = await prisma.product.findUniqueOrThrow({
+        where: { id: draftId },
+      });
+      expect(afterDraft).toEqual(beforeDraft);
     });
 
     it('reconciles out-of-sync approved product and is idempotent on subsequent runs', async () => {

@@ -5,7 +5,7 @@ import { Test } from '@nestjs/testing';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import request from 'supertest';
-import type { App } from 'supertest/types';
+import type { App } from './http-test-types.js';
 import { vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/configure-app.js';

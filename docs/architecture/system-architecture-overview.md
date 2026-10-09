@@ -108,6 +108,18 @@ Docker Compose trên `develop` hiện khởi động PostgreSQL. Frontend, Backe
 
 Workflow `repository-checks` hiện kiểm tra fresh install bằng pnpm, whitespace, Docker Compose config, Prisma schema/migration/seed, lint, unit test và build của các workspace Node/Frontend/Backend, cùng Backend E2E trên PostgreSQL. Cùng workflow CI có job `ai-python-checks` (hiển thị `AI Service - Ruff and Pytest`), dùng Python 3.12 và chạy Ruff/Pytest cho `AI_CLIP/`; job này đã merge qua PR #8. Hai job xanh chứng minh các bộ kiểm tra tương ứng đã đạt, nhưng chưa thay thế CI xuyên dịch vụ thật hoặc kiểm thử luồng người dùng trên Web.
 
+**Bổ sung IN_PROGRESS — 09/10/2026, nhánh `codex/backend-typecheck-fix`:**
+CI thêm bước `pnpm --dir BE typecheck` để kiểm tra kiểu TypeScript cho cả source,
+test và cấu hình Prisma. Build Nest chỉ biên dịch `src`, còn Vitest chạy test
+không thay thế kiểm tra kiểu toàn bộ; trước đây 13 lỗi kiểu ở test/config có
+thể tồn tại dù build/test xanh. Bản sửa bỏ cấu hình Prisma đã hết hiệu lực, dùng
+kiểu HTTP server suy ra từ API công khai của Supertest, khai báo kiểu chính xác
+cho seed JavaScript và thay assertion (điều kiện kiểm chứng) `locked` lỗi thời
+bằng kiểm tra thống kê, Product nháp không đổi và không phát sự kiện outbox.
+Không thay schema, API, mức cô lập giao dịch hoặc contract FastAPI.
+Đây là củng cố chất lượng, không phải chức
+năng nghiệp vụ mới; chưa gọi là CURRENT cho tới khi review/merge.
+
 ## 4. Bản đồ repository
 
 | Vị trí | Trách nhiệm | Đọc khi nào |

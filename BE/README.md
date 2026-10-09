@@ -82,6 +82,27 @@ $ pnpm --dir BE exec prisma migrate dev --name <migration_name>
 
 ## Running tests
 
+From the repository root, check all Backend TypeScript (including tests and
+`prisma.config.ts`) with:
+
+```bash
+pnpm --dir BE typecheck
+```
+
+This generates Prisma Client and runs `tsc --noEmit -p tsconfig.json` without
+changing the database. `nest build` only compiles application source, and Vitest
+transpiles tests without a full type check; neither replaces this command. CI
+runs it separately before unit tests/build. Keep strict checking enabled.
+
+HTTP E2E tests use `test/http-test-types.ts`, which derives the server type from
+Supertest's public callable API rather than importing an internal package path.
+The native JavaScript seed helper has `prisma/seed-demo-user.d.mts` as its type
+declaration; update it together with the helper if its inputs/result change.
+
+The commands below are run from `BE/`. E2E requires PostgreSQL: use a dedicated
+test database with current migrations, not the demo database. Check that local
+`BE/.env` does not override the test `DATABASE_URL` (see `test/setup-env.ts`).
+
 ```bash
 # unit tests
 $ pnpm run test
