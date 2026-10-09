@@ -2,7 +2,7 @@
 
 Tài liệu này là điểm bắt đầu để thành viên và AI hiểu hệ thống trước khi đọc code hoặc sửa một chức năng. Nội dung trả lời bốn câu hỏi: hệ thống đang giải quyết bài toán gì, các thành phần phối hợp như thế nào, phần nào đã chạy thật, và cần đọc đâu để tiếp tục công việc mà không suy đoán.
 
-Ảnh chụp trạng thái được cập nhật ngày **05/10/2026**, với `develop` tại `6663fab` (PR #8, #23, #24, #26, contract #27, Address #30 và Cart #31 đã merge). Search Service và Backend Search sync là CURRENT ở mức code/test đã tích hợp; điều này không đồng nghĩa toàn bộ Web Search hoặc đánh giá chất lượng đã hoàn thành. Schema nền Cart–Order–Inventory và Address Backend là CURRENT ở lớp tương ứng. Cart Backend #31 đã merge tại `6663fab`, CURRENT ở lớp Backend; Checkout, state machine Order và Buyer UI vẫn TARGET. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
+Ảnh chụp trạng thái được cập nhật ngày **08/10/2026**, với baseline tích hợp `develop c6e0ba1` (PR #8, #23, #24, #26, contract #27, Address #30, Cart #31 và thiết kế Checkout #29 đã merge). Search Service và Backend Search sync là CURRENT ở mức code/test đã tích hợp; điều này không đồng nghĩa toàn bộ Web Search hoặc đánh giá chất lượng đã hoàn thành. Schema nền Cart–Order–Inventory, Address và Cart Backend là CURRENT ở lớp tương ứng. PR #36 trên `codex/checkout-cod` bổ sung nền hash/receipt v1, preview/lookup và API tạo đơn COD nguyên tử (mục 7.5.6), IN_PROGRESS, gửi review/chưa merge. Checkout end-to-end, state machine Order và Buyer UI vẫn chưa nghiệm thu. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
 
 ## 1. Cách đọc và nguồn chuẩn
 
@@ -164,7 +164,7 @@ PostgreSQL commit thành công
 
 Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn chuẩn cho giá, tồn kho, quyền sở hữu hoặc trạng thái công khai.
 
-## 6. Trạng thái triển khai tại ngày 05/10/2026
+## 6. Trạng thái triển khai tại ngày 08/10/2026
 
 | Miền | Trạng thái | Bằng chứng chính trên `develop` hoặc PR đang mở | Khoảng trống tiếp theo |
 |---|---|---|---|
@@ -180,6 +180,7 @@ Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn c
 | Public Product and moderation | `CURRENT` | PR #22 và #23: Admin approve/reject/freeze, Seller hide/show, public list/detail, predicate chung, ProductStatusHistory, SearchOutbox/reconciliation và E2E | Media privacy và Admin/Seller/Public UI đầy đủ vẫn thiếu |
 | Cart–Order–Inventory foundation | `CURRENT` (schema/migration) | PR #26 tại 08f165e và contract #27 tại c0a7d48 đã merge | Checkout transaction, state machine, FE và E2E luồng mua hàng chưa triển khai |
 | Buyer Cart API | `CURRENT` (Backend) | #31 đã merge tại 6663fab, GET/PUT/DELETE/DTO/privacy/rate limit, unit và E2E Address/Cart cùng hai app instance | Buyer Cart UI và Checkout/COD chưa nghiệm thu; chưa đạt G-CHECKOUT |
+| Checkout v1 + preview/lookup + create COD | `IN_PROGRESS` | PR #36 nền hash/receipt, hai API đọc và POST /checkouts với Order/stock/Cart/Payment/ledger/outbox cùng transaction, mục 7.5.4–7.5.6 | Cần review và CI head COD mới; chưa merge hoặc có Buyer UI/Order lifecycle/dual-index integration; G-CHECKOUT chưa DONE |
 | Chat User and Seller | `TARGET` | `chat-domain-design.md` | Schema, REST/WebSocket, UI và E2E quyền/reconnect |
 | Buyer Address API | `CURRENT` (Backend) | #30 đã merge tại efd86a3: CRUD/default/DTO/ownership, migration district nullable, unit/HTTP E2E; mục 7.5.1 | Buyer UI thật và bằng chứng tích hợp; chưa đạt gate G-ACCOUNT/G-CHECKOUT toàn luồng |
 | Review, Admin dashboard and notification | `TARGET` | Phạm vi P0 | Schema/API/UI/test |
@@ -290,7 +291,7 @@ Cart tham chiếu variantId. Checkout đọc lại canonical Product/Variant, gi
 
 Contract đã chốt province/ward bắt buộc, district nullable; delivered/failed phải khớp attempt hiện hành, tối đa 3 retry (4 attempt tổng). Các quyết định này đã review, không nhận API/test runtime là hoàn thành.
 
-**Điều phối/readiness:** Hoàng giữ Backend Address/Cart → Checkout/COD/Order và Buyer UI Checkout/Order. Hoàng giao Hiền CODE hai màn Buyer Address/Cart ngày 04/10; Hiền đã [xác nhận nhận task trên PR #29](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#issuecomment-5978048696) (**CONFIRMED_BY_HIEN**), không chỉ review. Hiền tách hai PR UI ngoài Admin #28, nối API thật sau Backend tương ứng merge vào develop. Chưa có cam kết lịch cụ thể hoặc bằng chứng UI hoàn thành. Xem [phân công tăng tốc](../project/address-cart-delivery-assignment-2026-10-03.md), [checklist Address/Cart](address-cart-backend-readiness.md) và [checklist Checkout/COD](checkout-cod-backend-readiness.md). Nội dung mới ở #29 cần re-review; approval head cũ không chứng minh UI đã làm.
+**Điều phối/readiness:** Hoàng giữ Backend Address/Cart → Checkout/COD/Order và Buyer UI Checkout/Order. Hoàng giao Hiền CODE hai màn Buyer Address/Cart ngày 04/10; Hiền đã [xác nhận nhận task trên PR #29](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#issuecomment-5978048696) (**CONFIRMED_BY_HIEN**), không chỉ review. Hiền tách hai PR UI ngoài Admin #28, nối API thật sau Backend tương ứng merge vào develop. Chưa có cam kết lịch cụ thể hoặc bằng chứng UI hoàn thành. Xem [phân công tăng tốc](../project/address-cart-delivery-assignment-2026-10-03.md), [checklist Address/Cart](address-cart-backend-readiness.md) và [checklist Checkout/COD](checkout-cod-backend-readiness.md). #29 đã được re-review và merge như mục 7.5.3; approval thiết kế không chứng minh UI đã làm.
 
 ### 7.5.1 Address API — CURRENT ở lớp Backend, PR #30 đã merge
 
@@ -322,7 +323,72 @@ Khóa User ở PostgreSQL tuần tự hóa ghi giỏ giữa nhiều instance, kh
 
 Cập nhật review 05/10: một request/key tạo đúng **một Checkout chung, một Order mỗi Store**, tất cả tham chiếu cùng Checkout và commit/rollback nguyên tử. Checklist gồm 19 ca Checkout và bốn ca tích hợp Search bổ sung, đều **NOT_RUN**; giữ event retry bất biến và xác minh hai index. Hydrate PostgreSQL ngăn trả dữ liệu không còn hợp lệ nhưng không tự bù ứng viên bị index cũ bỏ sót, nên không hứa tìm kiếm đầy đủ tức thời. Hoàn kho 0 → dương kiểm thử ở PR Order sau này.
 
-[Quyết định triển khai Checkout/COD ngày 05/10](../api/checkout-cod-implementation-proposal.md) cụ thể hóa bảy điểm: preview, phí ship demo, giới hạn dữ liệu/tiền, rate-limit và replay, hash legacy, receipt bất biến, tra kết quả sau timeout. Hiền đã chấp thuận Q1–Q7 tại [review head 222f52f](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#pullrequestreview-5412360700): **ACCEPTED_BY_HIEN — DESIGN/TARGET**, toàn bộ CHK/QCHK NOT_RUN. Contract chuẩn đã đồng bộ để re-review head mới #29 trước code. Dependency Cart đã merge; sau head đồng bộ #29 được re-review, bước tiếp theo là audit legacy và migration mới hashVersion/receiptVersion/receiptJson, rồi preview/create/lookup; chưa có route/runtime Checkout, không đổi TARGET thành CURRENT.
+[Quyết định triển khai Checkout/COD ngày 05/10](../api/checkout-cod-implementation-proposal.md) cụ thể hóa bảy điểm: preview, phí ship demo, giới hạn dữ liệu/tiền, rate-limit và replay, hash legacy, receipt bất biến, tra kết quả sau timeout. Hiền đã chấp thuận Q1–Q7; Đạt đã [approve phần Search ở head 6cbaeb1](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#pullrequestreview-5439915734). #29 đã được người dùng merge tại `c6e0ba1` ngày 07/10. Thiết kế đã được duyệt không có nghĩa toàn bộ runtime đã hoàn thành: PR #36 có nền hash/receipt và preview/lookup chỉ đọc như các mục sau; create COD và CHK/QCHK toàn luồng vẫn chưa nghiệm thu.
+
+### 7.5.4 Phần mới ngày 08/10 — nền Checkout v1, IN_PROGRESS
+
+Mục 7.5.4–7.5.5 ghi nhận hai bước trước ở head `38fda70`. Phần tạo đơn COD mới trong working tree cùng branch được mô tả tại 7.5.6; không diễn giải giới hạn “chưa có create” của hai bước trước thành trạng thái code mới nhất.
+
+Đây là bước nhỏ đầu tiên sau thiết kế #29, không phải Checkout API hoàn chỉnh. [Bằng chứng và cách kiểm tra nền Checkout](../testing/checkout-foundation-verification.md) ghi rõ môi trường riêng, test mới và phần chưa làm.
+
+| Thành phần/biến | Dùng để làm gì | Quy tắc cần nhớ |
+|---|---|---|
+| `Checkout.requestHash` | Dấu SHA-256 của yêu cầu đặt hàng đã chuẩn hóa | Gồm Buyer/address/provider/items; không gồm key hoặc dữ liệu giỏ/giá hiện hành |
+| `Checkout.hashVersion` | Phiên bản cách chuẩn hóa/hash yêu cầu | Request mới dùng 1; dữ liệu cũ để null, không đoán/backfill |
+| `Checkout.receiptVersion` / `receiptJson` | Phiên bản và biên nhận kết quả tạo đơn ban đầu | Không dựng lại từ Order/Payment hiện hành; không lưu địa chỉ/key/token |
+| `Product.version` | Phiên bản dữ liệu sản phẩm gửi Search | Khác hoàn toàn `hashVersion`; nền này chưa thay Product hoặc phát outbox |
+
+Luồng helper hiện có: input chưa tin cậy → reject trường thừa/ID/quantity/provider sai → chuẩn hóa tiền nguyên đồng bằng Decimal → sort item và JSON key → hash v1. Khi đọc Checkout đã có: kiểm ownership → kiểm hashVersion → so hash nếu là replay tạo đơn → phân loại PENDING/COMPLETED → validate receipt allowlist → trả bản sao receipt gốc. Lookup chỉ đọc đã gọi helper như mục 7.5.5; **chưa có service tạo đơn**. Khi nối create phải đọc lại Checkout dưới khóa Buyer trong transaction, không coi lookup trước transaction là chống race.
+
+Migration mới `20261007100000_checkout_hash_receipt` chỉ thêm ba cột nullable, check constraint và trigger chặn UPDATE làm đổi biên nhận/identity của Checkout v1 đã COMPLETED. Row legacy giữ nguyên status/hash/key/thời gian và các cột mới null. Constraint SQL kiểm provenance/shape cơ bản; helper runtime kiểm đầy đủ allowlist, ID, status, tiền và thứ tự Store. Không sửa migration đã merge, không tự xóa key/receipt hoặc backfill theo Order hiện hành.
+
+Đọc code: `BE/prisma/schema.prisma` model Checkout → migration mới → `checkout-money.ts` → `checkout-request.ts` → `checkout-receipt.ts` → `checkout-replay.ts` trong `BE/src/checkout/` → hai unit specs và `BE/test/checkout-receipt-migration.e2e-spec.ts`.
+
+Bước kế tiếp sau preview/lookup bên dưới: create COD với Stock/Order/Payment/movement/Cart/receipt/version/outbox commit hoặc rollback cùng nhau; vẫn giữ APPROVED khi chỉ đổi kho. Không gọi FastAPI trong transaction. Không đổi `CURRENT` hay tick toàn bộ CHK/QCHK chỉ vì các helper/schema/read tests đạt.
+
+### 7.5.5 Phần mới ngày 08/10 — preview và tra biên nhận, IN_PROGRESS
+
+Tiếp nối **trên cùng PR #36**, không xếp chồng feature branch và không triển khai create ngầm. `CheckoutModule` nối `AppModule`; `configureApp` đăng ký CORS trước parser giới hạn Checkout, đồng thời giữ parser JSON mặc định cho Auth/Address/Cart và các route cũ. [Bằng chứng và hướng dẫn kiểm tra hai API](../testing/checkout-read-api-verification.md) ghi kết quả, lỗi phát hiện/sửa và giới hạn.
+
+**Xem trước:** `POST /checkout/preview` → JWT/role USER → quota riêng 20/phút/Buyer → chuẩn hóa input strict → PostgreSQL RepeatableRead READ ONLY → kiểm tài khoản lại trong snapshot → địa chỉ thuộc Buyer → tập con giỏ và quantity khớp → policy public Product/Variant hiện hành → nhóm Store/tính Decimal → response, không ghi dữ liệu. Snapshot = bản đọc nhất quán trong một lần gọi; nó không hứa giá/kho còn đúng khi người dùng đặt hàng sau đó. PostgreSQL chặn write ở chính transaction đọc, có thời hạn statement/lock/transaction.
+
+| Trường | Nghĩa và nguồn | Khi không hợp lệ |
+|---|---|---|
+| `addressId` | ID địa chỉ Buyer đã chọn, từ sổ địa chỉ PostgreSQL | Sai ownership/không tồn tại cùng 404 |
+| `variantId` / `quantity` | Phiên bản hàng và số lượng đang ở giỏ chính Buyer | Thiếu dòng 404, quantity lệch 409; không tự mua ngoài giỏ |
+| `expectedUnitPrice` | Chuỗi giá Buyer xác nhận; không phải nguồn tính tiền | So với giá Variant hiện hành; lệch trả PRICE_CHANGED |
+| `unitPrice` / `lineTotal` | Giá hiện hành và giá nhân quantity, Decimal | Kiểm tràn, không tính bằng float |
+| `unavailableItems` | Dòng Product/Variant không còn công khai | Chỉ ID, quantity, mã lỗi; không lộ tên/giá/Store/nội dung nháp |
+| `groups` / `totals` | Nhóm mỗi Store và tổng toàn lần mua dự kiến | Group lỗi có bốn tổng null; bất kỳ lỗi dòng nào làm totals null |
+| `canCheckout` | Tất cả điều kiện đọc hiện tại hợp lệ | false không được đặt bằng tổng một phần; create sau này vẫn kiểm lại |
+| `shippingMode` | DEMO_ZERO_V1: phí vận chuyển mô phỏng 0đ, giảm giá 0đ | Không phải cam kết miễn phí vận chuyển thật |
+
+**Tra biên nhận:** `GET /checkouts/by-key`, key chỉ trong header `Idempotency-Key`, không query/body → JWT/USER → quota lookup riêng → READ ONLY snapshot, đọc Checkout theo Buyer/key → helper kiểm phiên bản/receipt → trả biên nhận gốc `replayed:true`. Không tra Cart/địa chỉ hoặc dựng lại từ Order/Payment hiện hành; giỏ/địa chỉ đã xóa không làm mất biên nhận. PENDING trả 409 + Retry-After; legacy null/khác v1 yêu cầu rà thủ công; receipt hỏng trả 500 an toàn. 404 không chứng minh request tạo đơn cũ chưa commit. API create chưa có nên E2E lookup dùng fixture receipt đã ghi trong DB, **không** nhận đó là bằng chứng mua hàng thật.
+
+**Bảo vệ:** body POST Checkout tối đa 64 KiB sau giải nén, kể cả chunked/gzip và alias hoa/thường/dấu slash cuối; chặn trước xử lý nghiệp vụ. GET lookup từ chối body có framing Content-Length/Transfer-Encoding, không dựa vào adapter có parse GET hay không. Hai API trả `Cache-Control:no-store`; lỗi không echo body/key/token/PII. Quota hiện trong memory từng Backend instance, không phải rate limit dùng chung nhiều replica; cấu hình riêng trong `.env.example`. Chưa có quota/create replay, khóa mua hàng hoặc retry trừ kho trong phần này.
+
+Đọc code: `checkout-read.controller.ts`/`checkout-read.dto.ts` → `checkout-http.ts`/`checkout-read-rate.guard.ts` → `checkout-read.service.ts` → policy `product-public-policy.ts` và helper tiền/receipt → `checkout-read.e2e-spec.ts`. Kiểm thử toàn Backend 213 unit + 223 E2E đạt trên DB riêng; 41 ca HTTP mới và 17 unit mới. Full typecheck vẫn còn 13 diagnostics baseline, không nhận toàn repo sạch lỗi kiểu dữ liệu. Chưa có Frontend Checkout hoặc bằng chứng stock → outbox → AI; G-CHECKOUT chưa DONE.
+
+### 7.5.6 Bổ sung ngày 08/10 — API tạo đơn COD nguyên tử, IN_PROGRESS
+
+`POST /checkouts` được bổ sung trên branch `codex/checkout-cod`, gửi review trong PR #36; chưa merge hoặc nghiệm thu end-to-end. Contract không đổi: JWT USER đang hoạt động, header `Idempotency-Key`, body giống preview. 201 cho lần tạo mới; 200 với `replayed:true` khi trả biên nhận cũ.
+
+Luồng: parser JSON 64 KiB → JWT/role → quota ingress → validate/hash v1 → Serializable transaction → khóa hàng Buyer (cùng khóa Address/Cart) → kiểm tài khoản và đọc Checkout theo Buyer/key → replay trước kiểm giỏ/địa chỉ → quota intent mới → kiểm địa chỉ → khóa các Product theo ID tăng dần → kiểm giỏ/quantity/ownership và policy/giá/kho canonical → Decimal kiểm toàn bộ tổng → tạo Checkout → trừ Variant có điều kiện stock >= quantity theo ID tăng dần → tạo một Order mỗi Store, OrderItem snapshot, Payment COD UNPAID, StockMovement âm và history ban đầu → tăng một version mỗi Product, ghi một SearchOutbox từ listing cuối → xóa đúng dòng giỏ đã mua → validate/lưu receipt v1 và COMPLETED → commit.
+
+Mọi thao tác ghi ở trên dùng **cùng transaction client**. Lỗi outbox, receipt hoặc bất cứ bước DB nào hoàn tác đơn/kho/version/giỏ/biên nhận toàn nhóm. Auto-increment sequence có thể có khoảng trống sau rollback; không phải đơn bị mất. Không gọi FastAPI/email/provider trong transaction. Stock-only không hạ APPROVED; hết kho vẫn UPSERT với inStock=false nếu listing còn hợp lệ. Worker Search xử lý event sau commit; chưa có bằng chứng Checkout → Elasticsearch/FAISS thật trong lượt này.
+
+| Thành phần/biến mới | Ý nghĩa | Cách kiểm soát |
+|---|---|---|
+| CheckoutCreateService | Điều phối giao dịch mua hàng, không thay Order state machine | `create` nhận diện replay; `purchase` chỉ ghi qua tx |
+| Idempotency-Key + requestHash | Mã một ý định mua và dấu kiểm nội dung | Cùng Buyer/key/hash trả receipt gốc; khác hash 409; không reset key legacy |
+| skuSnapshot/optionSnapshot | SKU nội bộ và nhãn option lúc mua | Option lưu `{groupId,groupName,valueId,value}`; không tra lại catalog để sửa đơn cũ |
+| quantityDelta/balanceAfter | Số lượng giảm và số dư kho ngay sau giảm | Một movement CHECKOUT_DECREMENT/OrderItem, cùng transaction |
+| Product.version/SearchOutbox | Phiên bản listing sau thay kho và công việc gửi index | Một lần/Product/checkout, payload/version canonical; replay không tăng thêm |
+| CheckoutCreateRate | Chống spam theo User, trong memory mỗi instance | 60 ingress gồm replay + 5 intent mới/phút; retry transaction không đếm thêm |
+
+Khóa/unique DB bảo vệ nhiều app instance; quota memory không phải quota dùng chung nhiều replica. Retry tối đa ba attempts, chỉ serialization/deadlock; có backoff 25/50 ms cộng jitter 0–24 ms, statement 2s, lock 1s, transaction 5s, chờ pool 2s, deadline tổng 22s mặc định (cấu hình `.env.example`). Lỗi raw-query Prisma P2010 có thể bọc SQLSTATE 40001/40P01 trong driverAdapterError.cause; chỉ hai mã này được retry. Lock/statement/transaction timeout trả CHECKOUT_IN_PROGRESS có Retry-After, không retry vô hạn. CORS cho browser đọc Retry-After; mọi response Checkout no-store, không dump key/token/địa chỉ/SQL.
+
+Đọc: `checkout-create.controller.ts` → `checkout-create-rate.ts` → `checkout-request.ts` → `checkout-create.service.ts` → public policy/outbox/receipt helpers → `BE/test/checkout-create.e2e-spec.ts`. Kết quả và giới hạn ở [COD API verification](../testing/checkout-cod-api-verification.md). Chưa có Order read/confirm/cancel/hoàn kho/vận chuyển, Buyer Checkout UI hoặc notification bền vững; G-CHECKOUT/G-FULFILMENT vẫn chưa DONE.
 
 ### 7.6 Chat đích
 

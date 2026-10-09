@@ -2,7 +2,11 @@
 
 Ngày: 04/10/2026; cập nhật review ngày 05/10/2026. Chủ trì: Hoàng; Hiền review nghiệp vụ/test, Đạt review stock → outbox → index. **PREPARATION/TARGET: không có API Checkout mới trong PR tài liệu này.**
 
+Cập nhật triển khai 08/10: #29 đã merge tại `c6e0ba1`; PR #36 đang IN_PROGRESS với nền hash/receipt và hai API preview/lookup chỉ đọc. [Bằng chứng hiện tại](../testing/checkout-read-api-verification.md) tách khỏi checklist thiết kế lịch sử bên dưới. Create COD/stock/outbox và CHK/QCHK toàn luồng chưa chạy; không tick chúng bằng test preview hoặc fixture receipt.
+
 ## 1. Nguồn chuẩn và baseline đã rà
+
+Cập nhật 08/10: create COD được bổ sung sau preview/lookup trên cùng branch PR #36, gửi review/chưa merge. Xem [kiểm chứng COD](../testing/checkout-cod-api-verification.md) và [kiến trúc mục 7.5.6](system-architecture-overview.md). Checklist bên dưới giữ nguyên trạng thái thiết kế lịch sử; không dùng nó thay báo cáo test mới hoặc nhận toàn luồng/UI đã hoàn thành.
 
 - [SRS v3.1](../analysis/hien/srs-v3.md): FR-CAR-01, FR-CHK-01, FR-PAY-01, FR-ORD-01, FR-CAN-01, D06/D07.
 - [Contract #27 đã merge](../api/cart-order-inventory-api-contract.md): mục 5, 10–13; chuẩn hóa hash/replay, subset giỏ, COD và transaction.

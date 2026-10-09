@@ -1,12 +1,14 @@
 # Cart–Order–Inventory API contract
 
-Contract PR #27 đã review/merge tại develop `c0a7d48` ngày 03/10/2026. Cập nhật 05/10: Address #30 đã merge tại `efd86a3` (CURRENT ở lớp Backend); Cart Backend #31 đã merge tại `6663fab` (CURRENT ở lớp Backend). Checkout/Order TARGET; Buyer UI chưa nghiệm thu.
+Contract PR #27 đã review/merge tại develop `c0a7d48` ngày 03/10/2026. Address #30 đã merge tại `efd86a3` (CURRENT ở lớp Backend); Cart Backend #31 đã merge tại `6663fab` (CURRENT ở lớp Backend). Cập nhật 08/10: PR #36 có nền Checkout v1 + preview/lookup và create COD nguyên tử, IN_PROGRESS/gửi review/chưa merge. Order lifecycle và Buyer UI chưa nghiệm thu. Xem [bằng chứng hai API đọc](../testing/checkout-read-api-verification.md) và [kiểm chứng COD](../testing/checkout-cod-api-verification.md); không đổi quy tắc nghiệp vụ của contract trong đợt này.
 
-Q1–Q7 trong [quyết định triển khai Checkout/COD](checkout-cod-implementation-proposal.md) đã được Hiền chấp thuận tại [review head 222f52f ngày 05/10](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#pullrequestreview-5412360700). Bản cập nhật này đưa các quyết định vào nguồn contract chuẩn để re-review #29 trước code. **ACCEPTED_BY_HIEN ở mức thiết kế; runtime TARGET, toàn bộ CHK/QCHK NOT_RUN.** Không coi việc chấp thuận lựa chọn là approve head mới hoặc chức năng đã chạy.
+Q1–Q7 trong [quyết định triển khai Checkout/COD](checkout-cod-implementation-proposal.md) đã được Hiền chấp thuận tại [review head 222f52f ngày 05/10](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#pullrequestreview-5412360700); #29 đã merge tại `c6e0ba1` ngày 07/10. **ACCEPTED_BY_HIEN ở mức thiết kế; preview/lookup và create COD IN_PROGRESS; CHK/QCHK toàn luồng chưa nghiệm thu.** Test API từng phần không chuyển toàn bộ gate sang PASS. Không coi việc chấp thuận thiết kế là approve head implementation mới.
 
 Tài liệu này khóa contract nghiệp vụ cho Address, Cart, Checkout, Order, COD và Inventory của bản khóa luận. Contract dựa trên SRS v3.1 và schema/migration nền ở PR #26. Việc có schema hoặc tài liệu này **không đồng nghĩa chức năng đã hoàn thành**. Chỉ chuyển sang CURRENT sau khi PR #26 merge, API/Frontend/E2E chạy trên `develop` và release gate tương ứng đạt.
 
 ## 1. Nguyên tắc và phạm vi
+
+**Cập nhật implementation 08/10:** branch `codex/checkout-cod` của PR #36 bổ sung `POST /checkouts` COD transaction theo mục 5.2–5.5, gửi review/chưa merge; trạng thái IN_PROGRESS. Các nhãn TARGET/NOT_RUN trong bảng thiết kế lịch sử không là bảng kết quả mới; đối chiếu [kiểm chứng API COD](../testing/checkout-cod-api-verification.md). Order lifecycle, UI và CHK-S* dual-index vẫn chưa nghiệm thu. Không thay đổi quy tắc contract trong lượt này.
 
 - PostgreSQL là nguồn chuẩn cho Product, Variant, giá, tồn kho, Cart, Order và Payment.
 - Cart luôn tham chiếu `variantId`; không giữ giá hoặc giữ chỗ tồn kho.
