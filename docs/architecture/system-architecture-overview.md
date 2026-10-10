@@ -2,7 +2,7 @@
 
 Tài liệu này là điểm bắt đầu để thành viên và AI hiểu hệ thống trước khi đọc code hoặc sửa một chức năng. Nội dung trả lời bốn câu hỏi: hệ thống đang giải quyết bài toán gì, các thành phần phối hợp như thế nào, phần nào đã chạy thật, và cần đọc đâu để tiếp tục công việc mà không suy đoán.
 
-Ảnh chụp trạng thái được cập nhật ngày **10/10/2026**, baseline tích hợp `develop bed88a0`: #39 TypeScript, #36 Checkout COD và #37 danh sách đơn Buyer/Seller đã merge, cùng các nền Product/Search/Address/Cart và contract #27/#29. Search Service, Backend Search sync, API Checkout và Order list là CURRENT ở lớp Backend/code-test đã tích hợp, không đồng nghĩa toàn bộ luồng Web hoặc đánh giá chất lượng đã hoàn thành. #38 OrderCommand/audit vẫn IN_PROGRESS/chưa merge; Checkout end-to-end, state machine Order và Buyer UI chưa nghiệm thu. Kiến trúc và quyết định bền vững được duy trì tại đây; trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
+Ảnh chụp trạng thái được cập nhật ngày **10/10/2026**, baseline tích hợp `develop 27e083b`: #39 TypeScript, #36 Checkout COD, #37 danh sách đơn và #38 OrderCommand/audit đã merge, cùng các nền Product/Search/Address/Cart và contract #27/#29. Search Service, Backend Search sync, API Checkout, Order list và nền audit là CURRENT ở lớp Backend/code-test đã tích hợp, không đồng nghĩa toàn bộ luồng Web hoặc đánh giá chất lượng đã hoàn thành. #42 detail/#43 Seller preparation/#44 hủy COD đều đã được Hiền approve, chưa merge khi kiểm tra; C4.0 DeliveryAttempt đang trên nhánh riêng. Checkout end-to-end, state machine Order và Buyer UI chưa nghiệm thu. Trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
 
 **Đồng bộ #38 sau merge #37:** giữ cả CheckoutModule/OrderModule, guard body Order GET trước parser Checkout/default JSON, cookie và CORS Retry-After, đồng thời giữ writer audit BUYER và kiểm thử replay nhiều Store của #38. Mục 7.5.4–7.5.5 là bằng chứng lịch sử; mục 7.5.6–7.5.7 mô tả Backend đã merge. Detail/command/hoàn kho/delivery chưa có; kết quả kiểm thử sau đồng bộ được ghi riêng, không dùng kết quả cũ hai branch thay bằng chứng tích hợp mới.
 
@@ -290,7 +290,7 @@ Hoàng và Đạt đã thống nhất version, UPSERT/DELETE, filter, image URL 
 
 **Contract đã review/merge; Checkout Backend CURRENT, Order lifecycle TARGET:** #27 đã merge tại c0a7d48; #36 Checkout Backend đã merge tại a2561c1 ngày 09/10. Xem [Cart–Order–Inventory API contract](../api/cart-order-inventory-api-contract.md). Checkout chỉ lấy dòng trong giỏ Buyer với quantity khớp. Order command đích dùng key/hash và receipt PostgreSQL để replay không hoàn kho hai lần; audit hủy dùng cột/history riêng; Buyer hoặc job D07 hoàn tất theo SRS v3.1, vận chuyển mô phỏng Admin/adapter. Các command này chưa triển khai trên branch list, không đổi actor theo tài liệu v0.5.
 
-Cart tham chiếu variantId. Checkout đọc lại canonical Product/Variant, giá/kho, tạo Order snapshot một Store mỗi Order và cập nhật kho/history/outbox cùng transaction. Schema #26, Address #30, Cart #31 và Checkout.hashVersion/receipt migration #36 đã merge. OrderCommand/audit ở #38 và DeliveryAttempt chưa merge; state machine/Frontend toàn luồng chưa nghiệm thu, không sửa migration cũ.
+Cart tham chiếu variantId. Checkout đọc lại canonical Product/Variant, giá/kho, tạo Order snapshot một Store mỗi Order và cập nhật kho/history/outbox cùng transaction. Schema #26, Address #30, Cart #31, Checkout.hashVersion/receipt #36 và OrderCommand/audit #38 đã merge. DeliveryAttempt còn ở nhánh C4.0; state machine/Frontend toàn luồng chưa nghiệm thu, không sửa migration cũ.
 
 Contract đã chốt province/ward bắt buộc, district nullable; delivered/failed phải khớp attempt hiện hành, tối đa 3 retry (4 attempt tổng). Các quyết định này đã review, không nhận API/test runtime là hoàn thành.
 
@@ -403,21 +403,37 @@ Projection là tập trường được chọn để trả: id/orderNumber/statu
 
 Đọc `BE/src/order/order-list.controller.ts` → `order-list.http.ts` → `order-list-rate.guard.ts` → `order-list.service.ts` → Order/Payment/Store trong schema → E2E. [Order list verification](../testing/order-list-api-verification.md) giữ bằng chứng lịch sử 08/10 (166 unit/190 E2E) và bản kết hợp 09/10: **270 unit + 293 E2E PASS**, full TypeScript/lint/build/Prisma validate đạt. Hai ca mới tạo COD qua HTTP thật rồi đọc Buyer/Seller list, gồm hai Store, kiểm privacy/ownership và replay không đổi DB. Guard Order GET body đặt trước JSON parser Checkout/default để giữ lỗi an toàn. Chưa có browser/UI hoặc API detail/command; test Backend không chuyển G-CHECKOUT/G-FULFILMENT sang DONE.
 
-API detail còn thiếu migration canonical audit hủy/timeline. Không suy diễn actor từ role hiện tại, không thay snapshot từ dữ liệu Product/address mới. [Order readiness](order-read-backend-readiness.md) ghi schema gap, quy tắc legacy cần review và checklist migration/detail/command. OrderCommand, DeliveryAttempt, cancel/hoàn kho, notification và UI là bước riêng; G-FULFILMENT chưa DONE.
+Nền canonical audit hủy/timeline đã có ở #38; API detail trên #42 chưa merge. Không suy diễn actor từ role hiện tại, không thay snapshot từ dữ liệu Product/address mới. [Order readiness](order-read-backend-readiness.md) ghi audit lịch sử và checklist; trạng thái mới xem [command readiness](order-command-backend-readiness.md). DeliveryAttempt, cancel/hoàn kho, notification và UI là các bước riêng; G-FULFILMENT chưa DONE.
 
-### 7.5.8 OrderCommand/audit ngày 09/10 — IN_PROGRESS ở nền database
+### 7.5.8 OrderCommand/audit ngày 09/10 — CURRENT ở nền database sau merge #38
 
 [Readiness Order detail, vòng đời và hoàn kho](order-command-backend-readiness.md) đối chiếu contract #27/SRS v3.1, Checkout #36 và list #37 đã merge; baseline tích hợp `bed88a0`. Kết quả [SQL audit chỉ đọc](../testing/order-legacy-readiness-audit.sql) trước T0 là lịch sử: DB demo `klcn_ecommerce` có 7 migration và dừng SCHEMA_NOT_READY; hai DB test rỗng sau cleanup. Đợt sửa #38 không chạy lại hoặc thay đổi DB demo; không suy “legacy sạch” từ bảng chưa tồn tại hoặc DB test rỗng.
 
-Branch `codex/order-command-readiness` bổ sung migration `20261009090000_order_command_audit_foundation`: OrderCommand unique theo actorScope/key, receipt (kết quả lệnh đã lưu) không sửa sau thành công, kiểm tra lúc commit không để PROCESSING tồn tại ngoài transaction; history liên kết đúng Order bằng FK ghép và tối đa một history/command. Audit mới nullable giữ nguyên legacy, không suy actor từ role hiện tại. FK actor history đổi từ SET NULL sang RESTRICT để giữ định danh lịch sử. Đây là nền dữ liệu, chưa có endpoint claim/replay/state machine và chưa merge.
+Migration #38 `20261009090000_order_command_audit_foundation` đã merge: OrderCommand unique theo actorScope/key, receipt (kết quả lệnh đã lưu) không sửa sau thành công, kiểm tra lúc commit không để PROCESSING tồn tại ngoài transaction; history liên kết đúng Order bằng FK ghép và tối đa một history/command. Audit mới nullable giữ nguyên legacy, không suy actor từ role hiện tại. FK actor history đổi từ SET NULL sang RESTRICT để giữ định danh lịch sử. Đây là nền dữ liệu; endpoint detail/preparation/cancel ở các PR riêng chưa merge.
 
 [Bằng chứng kiểm thử nền Order](../testing/order-command-foundation-verification.md) giữ số liệu T0 lịch sử và kết quả mới ngày 10/10 sau đồng bộ #37 tại `bed88a0`: **377 unit (19 suite) + 331 E2E (20 suite) PASS**, lint/build/Prisma/full TypeScript đạt. Full E2E gồm 37 ca schema/upgrade và 71 ca Checkout create + Order list trên cùng DB test riêng. Không thao tác DB demo. Trigger không thay service authorization, validation receipt, transition matrix hoặc transaction hoàn kho/outbox.
 
 Sửa blocker tích hợp của Hiền: `CheckoutCreateService.purchase` ghi `OrderStatusHistory.actorId=buyerId` và `actorType=BUYER` trong cùng transaction tạo COD/Payment/kho/outbox/receipt. `actorType` mô tả vai trò lúc tạo đơn, không lấy role hiện hành để đoán lịch sử. Replay dùng receipt đã commit nên không thêm history/đơn hoặc tăng version/trừ kho. E2E kiểm audit một Store, nhiều Store và replay qua hai app độc lập; test trước sửa tái hiện actorType=null. Không backfill legacy, không thay SQL/checksum migration audit đã áp dụng. API detail, Seller command, cancel/hoàn kho và delivery vẫn NOT_RUN.
 
-Bước tiếp theo: chờ review/CI head #38 sau đồng bộ các nền đã merge → detail snapshot → Seller command → hủy/hoàn kho → delivery/complete mô phỏng → UI. Không lấy User.role hiện tại đoán actor lịch sử, không tạo Payment giả khi GET và không sửa migration đã merge. Quyết định legacy cần Hiền review trước backfill/siết ràng buộc; G-FULFILMENT vẫn chưa DONE.
+Bước tiếp theo: tích hợp #42 detail snapshot/#43 Seller command/#44 hủy COD sau review → delivery/complete mô phỏng → UI. Không lấy User.role hiện tại đoán actor lịch sử, không tạo Payment giả khi GET và không sửa migration đã merge. Quyết định legacy cần Hiền review trước backfill/siết ràng buộc; G-FULFILMENT vẫn chưa DONE.
 
 Chuẩn bị thêm trong lúc chờ review 09/10: `BE/src/order/order-command-request.ts` chuẩn hóa payload/ID/key và SHA-256 request; `order-command-policy.ts` kiểm tra ma trận Seller confirm/packing/ready và Buyer/Seller cancel đã chốt. **PREPARATORY CODE, chưa nối controller/service transaction.** Xem mục 9 của readiness để hiểu biến và thứ tự guard → ownership → receipt/replay → canonical state → transaction. 107 unit test mới không thay bằng chứng hoàn kho, cạnh tranh hoặc replay HTTP; không nâng Order lên CURRENT/DONE.
+### 7.5.10 C4.0 — danh tính lần giao, IN_PROGRESS trên nhánh riêng
+
+Nhánh `codex/order-delivery-foundation` từ develop `27e083b`, không xếp trên code
+Order chưa merge. [Thiết kế và giải nghĩa trường](order-delivery-foundation.md)
+→ `DeliveryAttempt`/hai counter của Order trong Prisma → migration mới
+`20261010100000_order_delivery_attempt_foundation` →
+`BE/test/order-delivery-foundation.e2e-spec.ts`.
+
+Order chưa giao/legacy có counter null/null; không đoán lần giao cũ. Danh tính là
+`(orderId,deliveryAttempt)` với vận đơn bất biến; được dùng lại vận đơn giữa lần
+giao. FK ghép và trigger cuối giao dịch giữ đủ chuỗi 1..current, counter chỉ tăng
+từng lần; 3 lần giao lại tương ứng tối đa 4 lần tổng. Test schema/upgrade không
+thay API kiểm tra late callback, actor, state, Payment hoặc replay. Chưa có endpoint
+ship/failed/retry/delivered/complete hoặc job auto-complete trong đợt này;
+[verification](../testing/order-delivery-foundation-verification.md) ghi bằng chứng thực tế.
+
 ### 7.6 Chat đích
 
 Một Conversation duy nhất cho cặp User-Store; Product chỉ là ngữ cảnh tùy chọn. Tin nhắn được commit vào PostgreSQL trước khi phát WebSocket. `clientMessageId` chống gửi trùng, read state chỉ tiến về phía trước và Backend kiểm tra membership ở cả REST lẫn socket. Đây là `TARGET`; chi tiết ở `chat-domain-design.md`.

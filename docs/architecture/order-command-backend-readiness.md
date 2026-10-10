@@ -25,7 +25,7 @@ Tình trạng review ở trên là ảnh chụp lúc kiểm tra; kiểm tra lạ
 | OrderStatusHistory | Baseline có actorId/fromStatus/toStatus/reason; branch T0 thêm audit nullable, commandId và dữ liệu lần giao | Writer/reader mới phải dùng audit có cấu trúc; chưa tự backfill legacy |
 | Cancellation | Branch T0 thêm cancelledById/type, reasonCode/text nullable, giữ cancellationReason cũ | Service phải ghi đủ audit theo contract 7.2; không ghép JSON vào reason cũ |
 | OrderCommand | Branch T0 có schema/migration, unique scope/key, composite FK, receipt bất biến và kiểm tra lúc commit | Chưa có service/API claim/replay/authorization hoặc state machine |
-| DeliveryAttempt | Chưa có | Lần giao hiện hành, tracking, 3 lần giao lại = tối đa 4 lần tổng |
+| DeliveryAttempt | C4.0 có schema/migration trên nhánh riêng; chưa merge/API | Lần giao hiện hành, tracking, 3 lần giao lại = tối đa 4 lần tổng |
 | StockMovement | Decrement/restore, unique item/type, FK đúng Variant | Service hoàn kho cùng transaction; không coi unique movement là đủ thay OrderCommand |
 | Checkout #36 + sửa tương thích #38 | Tạo history đầu fromStatus=null, pending, actorId=buyerId, actorType=BUYER trong transaction tạo COD | Replay không thêm history; không đặt default BUYER cho mọi history hoặc tự backfill lịch sử |
 
@@ -96,6 +96,11 @@ Giao thức khóa phải đối chiếu toàn bộ writer hiện có trước co
 ### C4 — vận chuyển mô phỏng và hoàn tất
 
 Migration DeliveryAttempt/counters mới và API Admin/adapter theo 8.1. Không giao Seller quyền tự mark-delivered/complete. failed/delivered phải khớp attempt hiện hành; tracking đơn độc không đủ. DELIVERY_FAILED không tự hoàn kho; chỉ confirm-returned có bằng chứng và restockable=true. Buyer hoặc job SYSTEM hoàn tất theo D07 sau DELIVERED, COD đã PAID; job thực sự chạy, không chỉ có test gọi service trực tiếp.
+
+Cập nhật 10/10: [C4.0](order-delivery-foundation.md) tách nền danh tính và migration
+expand-only từ develop `27e083b`, không phụ thuộc code chưa merge #42/#43/#44.
+Xem [verification](../testing/order-delivery-foundation-verification.md); các ca
+delivery/complete HTTP ở mục 6 vẫn NOT_RUN, không đổi thành DONE vì có bảng mới.
 
 C2–C4 chưa code/chưa test trong task này. VNPay/MoMo sandbox, refund P1 và UI Buyer Checkout/Order vẫn là các task riêng, không bỏ khỏi phạm vi bảo vệ.
 

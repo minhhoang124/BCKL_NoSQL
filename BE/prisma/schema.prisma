@@ -574,6 +574,9 @@ model Order {
   cancelledAt            DateTime?
   deliveredAt            DateTime?
   completedAt            DateTime?
+  // Both null until the first recorded shipment; legacy attempts are not guessed.
+  currentDeliveryAttempt Int?
+  retryCount             Int?
   createdAt              DateTime             @default(now())
   updatedAt              DateTime             @updatedAt
   checkout               Checkout             @relation(fields: [checkoutId, buyerId], references: [id, buyerId], onDelete: Restrict)
@@ -584,6 +587,8 @@ model Order {
   statusHistory          OrderStatusHistory[]
   cancelledBy            User?                @relation("OrderCancelledBy", fields: [cancelledById], references: [id], onDelete: Restrict)
   commands               OrderCommand[]
+  deliveryAttempts       DeliveryAttempt[]    @relation("OrderDeliveryAttempts")
+  currentAttempt         DeliveryAttempt?     @relation("OrderCurrentDeliveryAttempt", fields: [id, currentDeliveryAttempt], references: [orderId, deliveryAttempt], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([id, storeId])
   @@unique([checkoutId, storeId])
@@ -592,6 +597,21 @@ model Order {
   @@index([checkoutId])
   @@index([cancelledById])
   @@map("orders")
+}
+
+// Immutable identity. Outcomes belong to Order/OrderStatusHistory, not a
+// second mutable state machine here. A tracking number may be reused on retry.
+model DeliveryAttempt {
+  id                Int      @id @default(autoincrement())
+  orderId           Int
+  deliveryAttempt   Int
+  trackingReference String   @db.VarChar(100)
+  createdAt         DateTime @default(now())
+  order             Order    @relation("OrderDeliveryAttempts", fields: [orderId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  currentForOrders  Order[]  @relation("OrderCurrentDeliveryAttempt")
+
+  @@unique([orderId, deliveryAttempt])
+  @@map("delivery_attempts")
 }
 
 model OrderItem {
