@@ -67,6 +67,19 @@ Thư mục `FE/` chứa ứng dụng React, TypeScript và Vite. React Router đ
 
 Frontend không được tự quyết định quyền, giá, tồn kho, trạng thái duyệt hay trạng thái đơn. Nó hiển thị dữ liệu và gửi command; Backend xác thực lại mọi quy tắc nghiệp vụ.
 
+**IN_PROGRESS — bảo vệ phiên Frontend ngày 10/10/2026:** bản sửa trên
+`codex/frontend-session-isolation` từ `develop f267399`, chưa merge; độc lập
+với UI Address/Cart của Hiền. `apiClient` ghi nhớ chủ tài khoản và
+`authSessionVersion` (số thế hệ phiên, tăng khi đăng nhập/đăng xuất, không tăng
+khi xoay token cùng phiên). Mỗi request chụp số này lúc gửi. Phản hồi 401 cũ
+không được refresh/retry sau khi đổi phiên; refresh trả về tài khoản khác cũng
+không được dùng để gửi lại dữ liệu. Refresh cũ bị hủy và kiểm tra thế hệ trước
+cập nhật token; lỗi cũ không xóa phiên mới. `AuthProvider` kiểm tra lại thế hệ
+trước cập nhật User hoặc hoàn tất logout. Cùng phiên vẫn chia sẻ một refresh
+và retry tối đa một lần. Đây là kiểm tra phía client, không thay JWT/ownership
+Backend, không hoàn tác request đã được server chấp nhận, không tự đồng bộ
+giao diện giữa các tab. Xem [test và giới hạn](../testing/frontend-session-isolation-verification.md).
+
 ### 3.2 Backend NestJS
 
 **CURRENT — PR #24 đã merge:** bộ lọc listing `categoryId`/`brandId`/`inStock` được xử lý ở PostgreSQL và policy public trước khi đủ số kết quả một trang. `categoryId` có nghĩa là category đã chọn cùng toàn bộ nhánh con hoạt động, thống nhất với hybrid search khi người dùng nhập từ khóa. `inStock` chỉ tính variant bán hợp lệ; frontend dùng `nextCursor` để tải tiếp, kể cả sau trang rỗng. Xem [contract public listing](../api/product-moderation-public-api.md). Không đổi schema hoặc contract Search Service.
