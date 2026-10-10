@@ -23,6 +23,7 @@ describe('COD create HTTP + real PostgreSQL transactions (two app instances)', (
   let buyerId: number;
   let token: string;
   let sellerId: number;
+  let sellerToken: string;
   let storeId: number;
   let categoryId: number;
   let cartId: number;
@@ -132,7 +133,9 @@ describe('COD create HTTP + real PostgreSQL transactions (two app instances)', (
     otherApp = await start();
     prisma = app.get(PrismaService);
     otherPrisma = otherApp.get(PrismaService);
-    sellerId = (await user(Role.SELLER)).id;
+    const sellerActor = await user(Role.SELLER);
+    sellerId = sellerActor.id;
+    sellerToken = sellerActor.token;
     storeId = (
       await prisma.store.create({
         data: { sellerId, name: `${marker}-store`, status: 'ACTIVE' },
@@ -218,6 +221,130 @@ describe('COD create HTTP + real PostgreSQL transactions (two app instances)', (
       }),
     };
   }
+  it('integrates Cart/preview/create COD with Buyer and Seller lists without read mutations', async () => {
+    const cart = await request(app.getHttpServer())
+      .get('/cart')
+      .set('Authorization', token)
+      .expect(200);
+    expect(cart.body.totalQuantity).toBe(2);
+    const preview = await request(app.getHttpServer())
+      .post('/checkout/preview')
+      .set('Authorization', token)
+      .send(input)
+      .expect(200);
+    expect(preview.body.canCheckout).toBe(true);
+    const created = await post().expect(201);
+    const committed = await state();
+    const order = created.body.orders[0];
+    for (const [path, bearer, instance] of [
+      ['/orders', token, app],
+      ['/seller/orders', sellerToken, otherApp],
+    ] as const) {
+      const listed = await request(instance.getHttpServer())
+        .get(path)
+        .set('Authorization', bearer)
+        .expect(200);
+      expect(listed.headers['cache-control']).toBe('no-store');
+      const row = listed.body.items.find(
+        (item: { id: number }) => item.id === order.id,
+      );
+      expect(row).toMatchObject({
+        id: order.id,
+        orderNumber: order.orderNumber,
+        status: 'PENDING_CONFIRMATION',
+        store: { id: storeId, name: `${marker}-store` },
+        total: '20000.00',
+        payment: {
+          provider: 'COD',
+          status: 'UNPAID',
+          amount: '20000.00',
+          currency: 'VND',
+          paidAt: null,
+        },
+      });
+      expect(JSON.stringify(listed.body)).not.toMatch(
+        /Snapshot address|0901234567|idempotencyKey|requestHash|buyerId|checkoutId/,
+      );
+    }
+    expect(await state()).toEqual(committed);
+    await post(input, key, token, otherApp).expect(200);
+    expect(await state()).toEqual(committed);
+  });
+
+  it('a multi-Store COD checkout is visible only to its Buyer and each owning Seller', async () => {
+    const secondSeller = await user(Role.SELLER);
+    const secondStore = await prisma.store.create({
+      data: {
+        sellerId: secondSeller.id,
+        name: `${marker}-second-store`,
+        status: 'ACTIVE',
+      },
+    });
+    const secondVariant = await variant(secondStore.id, '25000.00', 3);
+    await add(secondVariant.variant.id);
+    const multi = {
+      ...input,
+      items: [
+        ...input.items,
+        {
+          variantId: secondVariant.variant.id,
+          quantity: 1,
+          expectedUnitPrice: '25000.00',
+        },
+      ],
+    };
+    const created = await post(multi).expect(201);
+    expect(created.body.orders).toHaveLength(2);
+    const committed = await state();
+    const buyerList = await request(otherApp.getHttpServer())
+      .get('/orders')
+      .set('Authorization', token)
+      .expect(200);
+    expect(
+      buyerList.body.items
+        .map((item: { id: number }) => item.id)
+        .sort((a: number, b: number) => a - b),
+    ).toEqual(
+      created.body.orders
+        .map((item: { id: number }) => item.id)
+        .sort((a: number, b: number) => a - b),
+    );
+    const sellerList = await request(app.getHttpServer())
+      .get('/seller/orders')
+      .set('Authorization', sellerToken)
+      .expect(200);
+    expect(
+      sellerList.body.items.some(
+        (item: { store: { id: number } }) => item.store.id === secondStore.id,
+      ),
+    ).toBe(false);
+    expect(
+      sellerList.body.items.some(
+        (item: { id: number }) =>
+          item.id ===
+          created.body.orders.find(
+            (item: { storeId: number }) => item.storeId === storeId,
+          ).id,
+      ),
+    ).toBe(true);
+    const secondList = await request(otherApp.getHttpServer())
+      .get('/seller/orders')
+      .set('Authorization', secondSeller.token)
+      .expect(200);
+    expect(secondList.body.items).toHaveLength(1);
+    expect(secondList.body.items[0]).toMatchObject({
+      store: { id: secondStore.id },
+      total: '25000.00',
+    });
+    const stranger = await user();
+    const strangerList = await request(app.getHttpServer())
+      .get('/orders')
+      .set('Authorization', stranger.token)
+      .expect(200);
+    expect(strangerList.body).toEqual({ items: [], nextCursor: null });
+    expect(await state()).toEqual(committed);
+  });
+
   it('creates COD snapshots, ledger/history/receipt/outbox and removes only selected cart lines', async () => {
     const unselected = await variant();
     await add(unselected.variant.id);

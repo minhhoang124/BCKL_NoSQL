@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import { configureOrderListHttp } from './order/order-list.http.js';
 import { registerCheckoutParser } from './checkout/checkout-http.js';
 
 export function configureApp(app: INestApplication): void {
@@ -8,6 +9,8 @@ export function configureApp(app: INestApplication): void {
     credentials: true,
     exposedHeaders: ['Retry-After'],
   });
+  // Reject unsupported Order GET bodies before any JSON parser is registered.
+  configureOrderListHttp(app);
   // After CORS (so browser clients can read safe parser errors), before Nest's
   // default body parser; only Checkout POST routes use the 64 KiB limit.
   registerCheckoutParser(app);

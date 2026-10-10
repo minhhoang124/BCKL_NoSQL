@@ -11,6 +11,7 @@ import { ProductModule } from './product/product.module.js';
 import { SearchModule } from './search/search.module.js';
 import { AddressModule } from './address/address.module.js';
 import { CartModule } from './cart/cart.module.js';
+import { OrderModule } from './order/order.module.js';
 import { CheckoutModule } from './checkout/checkout.module.js';
 
 @Module({
@@ -28,6 +29,7 @@ import { CheckoutModule } from './checkout/checkout.module.js';
     SearchModule,
     AddressModule,
     CartModule,
+    OrderModule,
     CheckoutModule,
   ],
   controllers: [AppController],

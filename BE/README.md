@@ -80,13 +80,21 @@ After changing `prisma/schema.prisma`, create a new migration instead of editing
 $ pnpm --dir BE exec prisma migrate dev --name <migration_name>
 ```
 
-## Buyer Checkout COD (working branch, not yet merged)
+## Order list (working branch, not yet merged)
+
+- `GET /orders`: active USER, own orders only.
+- `GET /seller/orders`: active SELLER, own Store orders only, including history for suspended Stores.
+- Filters: exact `status`, `limit` (default 20, max 50), `afterId` (positive PostgreSQL Int), descending ID cursor. No body or extra query fields.
+- Summary only; no shipping PII, detail/timeline or Order command in this step. Payment can be null for legacy data; never invented during GET. Hiền approved this projection/legacy behavior at PR #37 head e6f4427; integration changes need re-review.
+- Read-only PostgreSQL snapshot, no stock/outbox writes. Per-instance `ORDER_LIST_RATE_PER_MINUTE=60`, 429 Retry-After. See [architecture and next steps](../docs/architecture/order-read-backend-readiness.md) and [verification](../docs/testing/order-list-api-verification.md).
+
+## Buyer Checkout COD (merged in PR #36)
 
 - `POST /checkout/preview`: read-only quote; does not reserve stock.
 - `POST /checkouts`: USER JWT + `Idempotency-Key` header, same body as preview. One Order per Store, atomic stock/Cart/Payment/history/receipt/SearchOutbox transaction. First create: 201; exact replay: 200.
 - `GET /checkouts/by-key`: receipt lookup with the key in a header, never URL. Keep original key/body after a timeout; 404 does not prove an earlier create did not commit.
 - Shipping is **DEMO_ZERO_V1**, 0 VND, not real free shipping. COD starts UNPAID. Order fulfilment/cancellation and Buyer UI are separate work.
-- See [contract](../docs/api/cart-order-inventory-api-contract.md), [architecture](../docs/architecture/system-architecture-overview.md#756-bổ-sung-ngày-0810--api-tạo-đơn-cod-nguyên-tử-in_progress) and [verification](../docs/testing/checkout-cod-api-verification.md). Timeouts and per-instance quotas are documented in the root `.env.example`; don't copy real secrets into documentation.
+- See [contract](../docs/api/cart-order-inventory-api-contract.md), [architecture](../docs/architecture/system-architecture-overview.md) and [verification](../docs/testing/checkout-cod-api-verification.md). Timeouts and per-instance quotas are documented in the root `.env.example`; don't copy real secrets into documentation.
 
 ## Running tests
 

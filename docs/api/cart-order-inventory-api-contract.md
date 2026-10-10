@@ -1,14 +1,14 @@
 # Cart–Order–Inventory API contract
 
-Contract PR #27 đã review/merge tại develop `c0a7d48` ngày 03/10/2026. Address #30 đã merge tại `efd86a3` (CURRENT ở lớp Backend); Cart Backend #31 đã merge tại `6663fab` (CURRENT ở lớp Backend). Cập nhật 08/10: PR #36 có nền Checkout v1 + preview/lookup và create COD nguyên tử, IN_PROGRESS/gửi review/chưa merge. Order lifecycle và Buyer UI chưa nghiệm thu. Xem [bằng chứng hai API đọc](../testing/checkout-read-api-verification.md) và [kiểm chứng COD](../testing/checkout-cod-api-verification.md); không đổi quy tắc nghiệp vụ của contract trong đợt này.
+Contract PR #27 đã review/merge tại develop `c0a7d48` ngày 03/10/2026. Address #30 đã merge tại `efd86a3` (CURRENT ở lớp Backend); Cart Backend #31 đã merge tại `6663fab` (CURRENT ở lớp Backend). Cập nhật 09/10: #36 đã merge tại `a2561c1`, nền Checkout v1 + preview/lookup và create COD nguyên tử CURRENT ở Backend. Order lifecycle và Buyer UI chưa nghiệm thu. Xem [bằng chứng hai API đọc](../testing/checkout-read-api-verification.md) và [kiểm chứng COD](../testing/checkout-cod-api-verification.md); không đổi quy tắc nghiệp vụ của contract trong đợt này.
 
-Q1–Q7 trong [quyết định triển khai Checkout/COD](checkout-cod-implementation-proposal.md) đã được Hiền chấp thuận tại [review head 222f52f ngày 05/10](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#pullrequestreview-5412360700); #29 đã merge tại `c6e0ba1` ngày 07/10. **ACCEPTED_BY_HIEN ở mức thiết kế; preview/lookup và create COD IN_PROGRESS; CHK/QCHK toàn luồng chưa nghiệm thu.** Test API từng phần không chuyển toàn bộ gate sang PASS. Không coi việc chấp thuận thiết kế là approve head implementation mới.
+Q1–Q7 trong [quyết định triển khai Checkout/COD](checkout-cod-implementation-proposal.md) đã được Hiền chấp thuận tại [review head 222f52f ngày 05/10](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#pullrequestreview-5412360700); #29 đã merge tại `c6e0ba1` ngày 07/10. **ACCEPTED_BY_HIEN ở mức thiết kế; preview/lookup và create COD CURRENT ở Backend sau merge #36; CHK/QCHK toàn luồng chưa nghiệm thu.** Test API từng phần không chuyển toàn bộ gate sang PASS. Không coi việc chấp thuận thiết kế là approve head implementation mới.
 
 Tài liệu này khóa contract nghiệp vụ cho Address, Cart, Checkout, Order, COD và Inventory của bản khóa luận. Contract dựa trên SRS v3.1 và schema/migration nền ở PR #26. Việc có schema hoặc tài liệu này **không đồng nghĩa chức năng đã hoàn thành**. Chỉ chuyển sang CURRENT sau khi PR #26 merge, API/Frontend/E2E chạy trên `develop` và release gate tương ứng đạt.
 
 ## 1. Nguyên tắc và phạm vi
 
-**Cập nhật implementation 08/10:** branch `codex/checkout-cod` của PR #36 bổ sung `POST /checkouts` COD transaction theo mục 5.2–5.5, gửi review/chưa merge; trạng thái IN_PROGRESS. Các nhãn TARGET/NOT_RUN trong bảng thiết kế lịch sử không là bảng kết quả mới; đối chiếu [kiểm chứng API COD](../testing/checkout-cod-api-verification.md). Order lifecycle, UI và CHK-S* dual-index vẫn chưa nghiệm thu. Không thay đổi quy tắc contract trong lượt này.
+**Cập nhật implementation 09/10:** PR #36 bổ sung `POST /checkouts` COD transaction theo mục 5.2–5.5 đã merge; CURRENT ở Backend. Các nhãn TARGET/NOT_RUN trong bảng thiết kế lịch sử không là bảng kết quả mới; đối chiếu [kiểm chứng API COD](../testing/checkout-cod-api-verification.md). Order lifecycle, UI và CHK-S* dual-index vẫn chưa nghiệm thu toàn luồng; kết quả phối hợp riêng phải đối chiếu artifact/test đúng phiên bản. Không thay đổi quy tắc contract trong lượt này.
 
 - PostgreSQL là nguồn chuẩn cho Product, Variant, giá, tồn kho, Cart, Order và Payment.
 - Cart luôn tham chiếu `variantId`; không giữ giá hoặc giữ chỗ tồn kho.
@@ -519,6 +519,8 @@ Cả delivered/failed yêu cầu deliveryAttempt integer và trackingReference k
 Không trả password hash, refresh token, email/phone tài khoản không cần thiết, internal SKU ngoài đúng actor, idempotency key hoặc dữ liệu Order của actor khác.
 
 ## 9. Order response tối thiểu
+
+**Bổ sung triển khai 08/10, cập nhật review 09/10:** branch `codex/order-list-api` triển khai riêng hai API danh sách bằng summary projection, không phải toàn bộ response detail bên dưới. Hiền đã chốt tại [review PR #37 head e6f4427](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/37): list gồm id/orderNumber/status/store/total/payment/createdAt/updatedAt, `payment:null` khi legacy thiếu Payment và quota đọc 60/phút/actor/instance cho demo. [Order đọc — readiness](../architecture/order-read-backend-readiness.md#2-projection-danh-sách--đã-review-tại-e6f4427) ghi chi tiết. Sau merge #36/#39, bản tích hợp mới cần re-review; approval cũ không bao gồm integration. Snapshot/cancellation/timeline và quy tắc command vẫn là đích bắt buộc, không bị cắt bỏ để khớp API list. List không ghi dữ liệu hay suy đoán audit còn thiếu.
 
 ```json
 {
