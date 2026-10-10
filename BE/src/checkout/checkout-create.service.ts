@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, Role } from '@prisma/client';
+import { OrderActorType, Prisma, Role } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
 import {
@@ -421,6 +421,7 @@ export class CheckoutCreateService {
           fromStatus: null,
           toStatus: 'PENDING_CONFIRMATION',
           actorId: buyerId,
+          actorType: OrderActorType.BUYER,
         },
       });
       receipt.orders.push({

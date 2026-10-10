@@ -397,7 +397,12 @@ describe('COD create HTTP + real PostgreSQL transactions (two app instances)', (
       optionSnapshot: [],
     });
     expect(order.statusHistory).toMatchObject([
-      { fromStatus: null, toStatus: 'PENDING_CONFIRMATION', actorId: buyerId },
+      {
+        fromStatus: null,
+        toStatus: 'PENDING_CONFIRMATION',
+        actorId: buyerId,
+        actorType: 'BUYER',
+      },
     ]);
     const after = await state();
     expect(after.cart.map((row) => row.variantId)).toEqual([
@@ -1100,5 +1105,42 @@ describe('COD create HTTP + real PostgreSQL transactions (two app instances)', (
       await blocker;
     }
     await post().expect(201);
+  });
+  it('records Buyer audit for every Store and replay on another instance does not duplicate history', async () => {
+    const seller = await user(Role.SELLER);
+    const store = await prisma.store.create({
+      data: { sellerId: seller.id, name: `${marker}-audit`, status: 'ACTIVE' },
+    });
+    const second = await variant(store.id, '7000.00');
+    await add(second.variant.id);
+    input.items.push({
+      variantId: second.variant.id,
+      quantity: 1,
+      expectedUnitPrice: '7000',
+    });
+    const first = await post().expect(201);
+    const orderIds = first.body.orders.map((order: { id: number }) => order.id);
+    expect(orderIds).toHaveLength(2);
+    const histories = () =>
+      prisma.orderStatusHistory.findMany({
+        where: { orderId: { in: orderIds } },
+        orderBy: { orderId: 'asc' },
+      });
+    const before = await histories();
+    expect(before).toHaveLength(2);
+    for (const history of before) {
+      expect(history).toMatchObject({
+        actorId: buyerId,
+        actorType: 'BUYER',
+        fromStatus: null,
+        toStatus: 'PENDING_CONFIRMATION',
+        commandId: null,
+      });
+    }
+    const committed = await state();
+    const replay = await post(input, key, token, otherApp).expect(200);
+    expect(replay.body).toEqual({ ...first.body, replayed: true });
+    expect(await histories()).toEqual(before);
+    expect(await state()).toEqual(committed);
   });
 });

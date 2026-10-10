@@ -81,6 +81,18 @@ enum PaymentProvider {
   MOMO
 }
 
+enum OrderActorType {
+  BUYER
+  SELLER
+  ADMIN
+  SYSTEM
+}
+
+enum OrderCommandStatus {
+  PROCESSING
+  SUCCEEDED
+}
+
 enum PaymentStatus {
   UNPAID
   PENDING
@@ -134,6 +146,8 @@ model User {
   checkouts            Checkout[]
   orders               Order[]                @relation("OrderBuyer")
   orderStatusActions   OrderStatusHistory[]   @relation("OrderStatusActor")
+  cancelledOrders      Order[]                @relation("OrderCancelledBy")
+  orderCommands        OrderCommand[]         @relation("OrderCommandActor")
 
   @@map("users")
 }
@@ -534,42 +548,49 @@ model Checkout {
 }
 
 model Order {
-  id                    Int                  @id @default(autoincrement())
-  orderNumber           String               @unique
-  checkoutId            Int
-  buyerId               Int
-  storeId               Int
-  status                OrderStatus          @default(PENDING_CONFIRMATION)
-  recipientNameSnapshot String
-  phoneSnapshot         String
-  provinceSnapshot      String
-  districtSnapshot      String?
-  wardSnapshot          String
-  addressLineSnapshot   String
-  postalCodeSnapshot    String?
-  deliveryNoteSnapshot  String?
-  subtotal              Decimal              @db.Decimal(14, 2)
-  shippingFee           Decimal              @db.Decimal(14, 2)
-  discountTotal         Decimal              @default(0) @db.Decimal(14, 2)
-  total                 Decimal              @db.Decimal(14, 2)
-  cancellationReason    String?
-  cancelledAt           DateTime?
-  deliveredAt           DateTime?
-  completedAt           DateTime?
-  createdAt             DateTime             @default(now())
-  updatedAt             DateTime             @updatedAt
-  checkout              Checkout             @relation(fields: [checkoutId, buyerId], references: [id, buyerId], onDelete: Restrict)
-  buyer                 User                 @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Restrict)
-  store                 Store                @relation(fields: [storeId], references: [id], onDelete: Restrict)
-  items                 OrderItem[]
-  payment               Payment?
-  statusHistory         OrderStatusHistory[]
+  id                     Int                  @id @default(autoincrement())
+  orderNumber            String               @unique
+  checkoutId             Int
+  buyerId                Int
+  storeId                Int
+  status                 OrderStatus          @default(PENDING_CONFIRMATION)
+  recipientNameSnapshot  String
+  phoneSnapshot          String
+  provinceSnapshot       String
+  districtSnapshot       String?
+  wardSnapshot           String
+  addressLineSnapshot    String
+  postalCodeSnapshot     String?
+  deliveryNoteSnapshot   String?
+  subtotal               Decimal              @db.Decimal(14, 2)
+  shippingFee            Decimal              @db.Decimal(14, 2)
+  discountTotal          Decimal              @default(0) @db.Decimal(14, 2)
+  total                  Decimal              @db.Decimal(14, 2)
+  cancellationReason     String?
+  cancelledById          Int?
+  cancelledByType        OrderActorType?
+  cancellationReasonCode String?              @db.VarChar(64)
+  cancellationReasonText String?              @db.VarChar(500)
+  cancelledAt            DateTime?
+  deliveredAt            DateTime?
+  completedAt            DateTime?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  checkout               Checkout             @relation(fields: [checkoutId, buyerId], references: [id, buyerId], onDelete: Restrict)
+  buyer                  User                 @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Restrict)
+  store                  Store                @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  items                  OrderItem[]
+  payment                Payment?
+  statusHistory          OrderStatusHistory[]
+  cancelledBy            User?                @relation("OrderCancelledBy", fields: [cancelledById], references: [id], onDelete: Restrict)
+  commands               OrderCommand[]
 
   @@unique([id, storeId])
   @@unique([checkoutId, storeId])
   @@index([buyerId, createdAt])
   @@index([storeId, status, createdAt])
   @@index([checkoutId])
+  @@index([cancelledById])
   @@map("orders")
 }
 
@@ -616,19 +637,57 @@ model Payment {
 }
 
 model OrderStatusHistory {
-  id         Int          @id @default(autoincrement())
-  orderId    Int
-  fromStatus OrderStatus?
-  toStatus   OrderStatus
-  actorId    Int?
-  reason     String?
-  createdAt  DateTime     @default(now())
-  order      Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  actor      User?        @relation("OrderStatusActor", fields: [actorId], references: [id], onDelete: SetNull)
+  id                Int             @id @default(autoincrement())
+  orderId           Int
+  fromStatus        OrderStatus?
+  toStatus          OrderStatus
+  actorId           Int?
+  actorType         OrderActorType?
+  commandId         Int?            @unique
+  reason            String?
+  reasonCode        String?         @db.VarChar(64)
+  reasonText        String?         @db.VarChar(500)
+  restockable       Boolean?
+  receiptReference  String?         @db.VarChar(100)
+  trackingReference String?         @db.VarChar(100)
+  deliveryAttempt   Int?
+  createdAt         DateTime        @default(now())
+  order             Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  actor             User?           @relation("OrderStatusActor", fields: [actorId], references: [id], onDelete: Restrict)
+  command           OrderCommand?   @relation(fields: [commandId, orderId], references: [id, orderId], onDelete: Restrict)
 
   @@index([orderId, createdAt])
   @@index([actorId])
   @@map("order_status_history")
+}
+
+// A PROCESSING claim must become SUCCEEDED in its creating transaction.
+// Migration SQL enforces this at commit and freezes a completed receipt.
+model OrderCommand {
+  id             Int                  @id @default(autoincrement())
+  orderId        Int
+  actorScope     String               @db.VarChar(64)
+  actorType      OrderActorType
+  actorId        Int?
+  idempotencyKey String               @db.VarChar(128)
+  command        String               @db.VarChar(32)
+  requestHash    String               @db.VarChar(64)
+  hashVersion    Int
+  status         OrderCommandStatus   @default(PROCESSING)
+  responseStatus Int?
+  resultSnapshot Json?
+  createdAt      DateTime             @default(now())
+  completedAt    DateTime?
+  order          Order                @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  actor          User?                @relation("OrderCommandActor", fields: [actorId], references: [id], onDelete: Restrict)
+  // Unique commandId on history limits this inverse relation to one row.
+  history        OrderStatusHistory[]
+
+  @@unique([id, orderId])
+  @@unique([actorScope, idempotencyKey])
+  @@index([orderId, createdAt])
+  @@index([actorId])
+  @@map("order_commands")
 }
 
 model StockMovement {
