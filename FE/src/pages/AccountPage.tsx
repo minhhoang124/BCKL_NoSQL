@@ -1,4 +1,5 @@
 import { useAuth } from '../contexts/useAuth';
+import { Link } from 'react-router-dom';
 import styles from './AccountPage.module.css';
 
 export function AccountPage() {
@@ -15,6 +16,7 @@ export function AccountPage() {
         <p>Vai trò: {user.role}</p>
         <p>ID: #{user.id}</p>
         <p>Trạng thái: {user.isActive ? 'Hoạt động' : 'Đã khóa'}</p>
+        {user.role === 'USER' && user.isActive && <p><Link to="/account/addresses">Quản lý địa chỉ nhận hàng</Link></p>}
       </div>
     </div>
   );

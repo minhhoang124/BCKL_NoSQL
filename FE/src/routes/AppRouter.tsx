@@ -4,6 +4,7 @@ import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { AccountPage } from '../pages/AccountPage';
+import { AddressBookPage } from '../pages/AddressBookPage';
 import { ProductDetailPage } from '../pages/ProductDetailPage';
 import { SellerDashboardPage } from '../pages/SellerDashboardPage';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
@@ -26,6 +27,16 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <AccountPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Routes - Buyer addresses */}
+        <Route
+          path="/account/addresses"
+          element={
+            <ProtectedRoute allowedRoles={['USER']}>
+              <AddressBookPage />
             </ProtectedRoute>
           }
         />
