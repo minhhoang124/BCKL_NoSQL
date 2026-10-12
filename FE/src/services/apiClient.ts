@@ -26,9 +26,11 @@ export const setOnAuthFailure = (callback: (() => void) | null) => {
 
 export class ApiError extends Error {
   public status?: number;
-  constructor(message: string, status?: number) {
+  public code?: string;
+  constructor(message: string, status?: number, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
     this.name = 'ApiError';
   }
 }
@@ -50,8 +52,10 @@ function assertSession(version: number) {
 async function parseResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const message = Array.isArray(data.message) ? data.message.join(', ') : data.message;
-    throw new ApiError(message || `Yêu cầu thất bại (${response.status})`, response.status);
+    const envelope = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+    const message = Array.isArray(envelope.message) ? envelope.message.join(', ') : envelope.message;
+    throw new ApiError(typeof message === 'string' && message ? message : `Yêu cầu thất bại (${response.status})`,
+      response.status, typeof envelope.code === 'string' ? envelope.code : undefined);
   }
   return data as T;
 }
@@ -73,7 +77,9 @@ export function refreshSession(version = authSessionVersion): Promise<SessionRes
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        signal: controller.signal,
+        // Keep session-change cancellation AND a bound for stalled refreshes.
+        // A timeout is not proof that a preceding business write rolled back.
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]),
       });
       const session = await parseResponse<SessionResponse>(response);
       assertSession(version);

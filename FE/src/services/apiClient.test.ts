@@ -21,9 +21,55 @@ const address = { recipientName: 'A private address', phone: '0900000000', provi
 const createAddress = () => fetchApi<{ id: number }>('/me/addresses', { method: 'POST', body: JSON.stringify(address) });
 
 beforeEach(() => { setOnAuthFailure(null); setAccessToken('a-old', 1); });
-afterEach(() => { setOnAuthFailure(null); setAccessToken(null); vi.unstubAllGlobals(); });
+afterEach(() => { setOnAuthFailure(null); setAccessToken(null); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('API session isolation', () => {
+  it('preserves the Backend business error code without retrying the write', async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(json({ message: 'Giá đã thay đổi', code: 'PRICE_CHANGED' }, 409));
+    vi.stubGlobal('fetch', fetch);
+    await expect(fetchApi('/checkouts', { method: 'POST', body: '{}' })).rejects.toMatchObject({
+      status: 409, code: 'PRICE_CHANGED', message: 'Giá đã thay đổi',
+    });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([null, { message: null, code: { unsafe: true } }])('handles malformed error envelopes safely (%j)', async body => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(json(body, 503)));
+    await expect(fetchApi('/checkout/preview', { method: 'POST', body: '{}' })).rejects.toMatchObject({
+      status: 503, code: undefined, message: 'Yêu cầu thất bại (503)',
+    });
+  });
+
+  it('bounds stalled shared refresh and never replays the write after timeout', async () => {
+    const timeout = new AbortController();
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(timeout.signal);
+    const started = deferred<void>();
+    const fetch = vi.fn().mockResolvedValueOnce(json({}, 401)).mockImplementationOnce((_url, options: RequestInit) => {
+      started.resolve();
+      return new Promise<Response>((_resolve, reject) => options.signal!.addEventListener('abort',
+        () => reject(options.signal!.reason), { once: true }));
+    });
+    vi.stubGlobal('fetch', fetch);
+    const result = expect(createAddress()).rejects.toMatchObject({ name: 'TimeoutError' });
+    await started.promise;
+    expect(timeoutSpy).toHaveBeenCalledWith(15000);
+    timeout.abort(new DOMException('Refresh timed out', 'TimeoutError'));
+    await result;
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(getAccessToken()).toBeNull();
+  });
+
+  it('retains business error codes on the one permitted same-session retry', async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(json({}, 401))
+      .mockResolvedValueOnce(json(session(1, 'a-new')))
+      .mockResolvedValueOnce(json({ message: 'Đang đối chiếu', code: 'CHECKOUT_IN_PROGRESS' }, 409));
+    vi.stubGlobal('fetch', fetch);
+    await expect(fetchApi('/checkouts', { method: 'POST', body: '{}' })).rejects.toMatchObject({
+      status: 409, code: 'CHECKOUT_IN_PROGRESS',
+    });
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
   it.each(['POST', 'PATCH', 'PUT', 'DELETE', 'GET'])('never refreshes/replays a delayed %s 401 under B', async method => {
     const delayed = deferred<Response>();
     const fetch = vi.fn().mockReturnValueOnce(delayed.promise);

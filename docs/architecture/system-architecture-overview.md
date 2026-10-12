@@ -594,3 +594,24 @@ Hai lệnh Python trên đã được job `ai-python-checks` thực thi trên Gi
 - PR merge làm thay đổi mức triển khai phải cập nhật mục 6 trong cùng PR hoặc PR docs ngay sau đó.
 - Tài liệu `TARGET` không được tự đổi thành `CURRENT`; phải có link commit/PR, test và kết quả tích hợp.
 - Các ví dụ dữ liệu không được chứa secret, đường dẫn máy cá nhân hoặc dataset lớn.
+
+## 13. Chuẩn bị client Checkout — 12/10/2026, IN_PROGRESS
+
+Nhánh `codex/checkout-client-readiness` từ develop `dc52d92` (Address #49 và
+Auth #52 đã merge) bổ sung nhỏ ở `FE/src/services/apiClient.ts`, không lấy
+code Cart #50 hoặc Order chưa merge làm dependency. `ApiError.code` giữ mã
+lỗi nghiệp vụ dạng chuỗi do Backend trả: UI có thể phân biệt PRICE_CHANGED,
+INSUFFICIENT_STOCK và CHECKOUT_IN_PROGRESS thay vì suy đoán từ câu thông báo.
+Envelope lỗi null/không hợp lệ dùng thông báo HTTP an toàn; code không phải
+chuỗi bị bỏ. Client không tự quyết định giá/kho hoặc commit/rollback.
+
+Shared refresh dùng cả tín hiệu hủy khi đổi thế hệ phiên và timeout 15 giây.
+Giữ nguyên kiểm tra chủ tài khoản, thế hệ phiên, single-flight và tối đa một
+lần gửi lại sau 401 của #52. Request nghiệp vụ vẫn phải có timeout riêng ở
+adapter Checkout/Order; giới hạn refresh không tự giới hạn mọi HTTP request.
+Timeout/mất mạng không chứng minh mutation trước đó rollback, không cho phép
+xóa ý định mua hoặc tạo idempotency key mới. UI phải giữ payload/key cũ để tra
+biên nhận/gửi lại có kiểm soát.
+
+Đây là nền client đang trên PR riêng, chưa là Checkout UI runtime hay DONE
+G-CHECKOUT. Xem [kiểm chứng client](../testing/checkout-client-readiness-verification.md).
