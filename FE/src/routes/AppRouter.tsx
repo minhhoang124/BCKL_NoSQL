@@ -4,6 +4,7 @@ import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { AccountPage } from '../pages/AccountPage';
+import { CartPage } from '../pages/CartPage';
 import { AddressBookPage } from '../pages/AddressBookPage';
 import { ProductDetailPage } from '../pages/ProductDetailPage';
 import { SellerDashboardPage } from '../pages/SellerDashboardPage';
@@ -30,6 +31,8 @@ export function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/cart" element={<ProtectedRoute allowedRoles={['USER']}><CartPage /></ProtectedRoute>} />
 
         {/* Protected Routes - Buyer addresses */}
         <Route

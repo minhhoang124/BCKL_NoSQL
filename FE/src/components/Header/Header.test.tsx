@@ -17,6 +17,7 @@ vi.mock('../../contexts/useAuth', () => ({
       email: 'user@example.com',
       fullName: 'Demo User',
       role: 'USER',
+      isActive: true,
     },
     logout: logoutMock,
   }),
@@ -36,6 +37,10 @@ afterEach(() => {
 });
 
 describe('Header logout', () => {
+  it('links active Buyer to the agreed Cart route', () => {
+    render(<MemoryRouter><Header /></MemoryRouter>);
+    expect(screen.getByRole('link', { name: 'Giỏ hàng' })).toHaveAttribute('href', '/cart');
+  });
   it('keeps the authenticated UI and shows an error when server logout fails', async () => {
     logoutMock.mockRejectedValueOnce(new ApiError('Máy chủ chưa thể đăng xuất', 503));
 

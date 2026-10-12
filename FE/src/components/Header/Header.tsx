@@ -44,6 +44,7 @@ export function Header() {
         {user ? (
           <>
             <Link to="/account">Tài khoản ({user.fullName || user.email})</Link>
+            {user.role === 'USER' && user.isActive && <Link to="/cart">Giỏ hàng</Link>}
             {user.role === 'SELLER' && <Link to="/seller">Kênh người bán</Link>}
             {user.role === 'ADMIN' && <Link to="/admin">Quản trị</Link>}
             <button

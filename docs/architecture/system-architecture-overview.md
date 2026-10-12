@@ -67,8 +67,8 @@ Thư mục `FE/` chứa ứng dụng React, TypeScript và Vite. React Router đ
 
 Frontend không được tự quyết định quyền, giá, tồn kho, trạng thái duyệt hay trạng thái đơn. Nó hiển thị dữ liệu và gửi command; Backend xác thực lại mọi quy tắc nghiệp vụ.
 
-**IN_PROGRESS — bảo vệ phiên Frontend ngày 10/10/2026:** bản sửa trên
-`codex/frontend-session-isolation` từ `develop f267399`, chưa merge; độc lập
+**CURRENT — bảo vệ phiên Frontend, #52 đã merge tại `fc52c8c` ngày 10/10/2026:** bản sửa trên
+`codex/frontend-session-isolation` từ `develop f267399`; độc lập
 với UI Address/Cart của Hiền. `apiClient` ghi nhớ chủ tài khoản và
 `authSessionVersion` (số thế hệ phiên, tăng khi đăng nhập/đăng xuất, không tăng
 khi xoay token cùng phiên). Mỗi request chụp số này lúc gửi. Phản hồi 401 cũ
@@ -79,6 +79,16 @@ trước cập nhật User hoặc hoàn tất logout. Cùng phiên vẫn chia s�
 và retry tối đa một lần. Đây là kiểm tra phía client, không thay JWT/ownership
 Backend, không hoàn tác request đã được server chấp nhận, không tự đồng bộ
 giao diện giữa các tab. Xem [test và giới hạn](../testing/frontend-session-isolation-verification.md).
+
+**Cập nhật Address/Cart ngày 11/10/2026:** #49 Address đã merge tại `dc52d92`:
+route `/account/addresses`, link từ Account, CRUD/default qua API Backend, guard
+USER active và bỏ dữ liệu/response cũ khi đổi Buyer. #50 Cart vẫn đang ở PR riêng;
+nhánh được đồng bộ với nền Address và Auth đã merge. Conflict `AppRouter.tsx`
+được giải quyết bằng giữ cả hai import/route và guard USER, không bỏ Address
+để thêm Cart. Cart gọi GET/PUT/DELETE, không giữ kho hoặc tạo đơn; link
+`/checkout?variantId=...` chỉ là điểm bàn giao cho Checkout của Hoàng. Test
+điều hướng chung dùng mock service, không thay bằng chứng browser/PostgreSQL
+hoặc nghiệm thu G-CHECKOUT. Xem [bằng chứng Cart](../testing/buyer-cart-ui-verification.md).
 
 ### 3.2 Backend NestJS
 
