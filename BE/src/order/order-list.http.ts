@@ -71,7 +71,7 @@ export function configureOrderListHttp(app: INestApplication) {
   app.use((request: Request, response: Response, next: () => void) => {
     if (
       request.method === 'GET' &&
-      /^\/(?:seller\/)?orders\/?$/i.test(request.path)
+      /^\/(?:seller\/)?orders(?:\/[^/]+)?\/?$/i.test(request.path)
     ) {
       response.setHeader('Cache-Control', 'no-store');
       try {
@@ -80,7 +80,7 @@ export function configureOrderListHttp(app: INestApplication) {
         response.status(400).json({
           statusCode: 400,
           code: 'VALIDATION_ERROR',
-          message: 'GET danh sách đơn không nhận body.',
+          message: 'GET đơn hàng không nhận body.',
         });
         return;
       }
@@ -107,10 +107,10 @@ export class OrderListExceptionFilter implements ExceptionFilter {
       403: ['FORBIDDEN', 'Bạn không có quyền thực hiện thao tác này.'],
     };
     if (status >= 500)
-      this.logger.error('Order list failed; internal details withheld.');
+      this.logger.error('Order read failed; internal details withheld.');
     const [code, message] = errors[status] ?? [
       'INTERNAL_ERROR',
-      'Không thể đọc danh sách đơn hàng.',
+      'Không thể đọc đơn hàng.',
     ];
     response.status(status).json({ statusCode: status, code, message });
   }

@@ -1,5 +1,7 @@
 # Chuẩn bị Order detail, vòng đời đơn và hoàn kho
 
+**Cập nhật sau merge #38 ngày 10/10:** nền audit/OrderCommand là CURRENT trên develop 27e083b. Kết quả post-merge: 377 unit/331 E2E PASS trên DB test riêng; không đổi migration hoặc DB demo. API detail IN_PROGRESS trên `codex/order-detail-api`, xem [contract](../api/order-detail-read-contract.md) và [kiểm thử](../testing/order-detail-api-verification.md). Những câu “chưa merge” và T1–T6 bên dưới là ảnh chụp trước merge; không phải yêu cầu tiếp tục chờ #38. Command runtime/hoàn kho/delivery/UI vẫn chưa hoàn thành.
+
 Ngày rà: **10/10/2026**. Baseline tích hợp hiện tại: `origin/develop bed88a0` sau merge #36 Checkout, #39 TypeScript và #37 Order list. Các mục 3, 7, 8 và phần kết quả cũ ở mục 9 là bằng chứng lịch sử trước đồng bộ, không phải trạng thái dependency hiện tại.
 Trạng thái: **IN_PROGRESS — có migration nền OrderCommand/audit và test database trên branch; chưa có API Order mới, chưa merge**.
 

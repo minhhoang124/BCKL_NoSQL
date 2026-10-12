@@ -1,5 +1,7 @@
 # Order đọc — triển khai danh sách và checklist phần chi tiết
 
+**Cập nhật 10/10 sau merge:** #37 đã merge tại bed88a0; #38 nền audit/OrderCommand đã merge tại 27e083b. Các phần gap/migration bên dưới là ảnh chụp lịch sử trước merge, không còn là dependency chờ. Detail được triển khai riêng trên `codex/order-detail-api`; xem [contract chi tiết](../api/order-detail-read-contract.md) và [test mới](../testing/order-detail-api-verification.md). Không nhận approval list là approval detail; legacy Payment/audit/options và quota chung cần review trong PR mới. Không audit hoặc backfill DB demo trong task.
+
 Khởi tạo 08/10/2026 từ `develop c6e0ba1`; cập nhật 09/10 sau khi merge `develop a2561c1` vào branch `codex/order-list-api` bằng merge thông thường. #36 Checkout và #39 TypeScript đã merge; #37 vẫn **IN_PROGRESS/chưa merge**. Hiền đã approve projection/quota/legacy ở head `e6f4427`; bản tích hợp mới cần re-review, không dùng approval cũ thay review head mới. Hoàng triển khai; Hiền review nghiệp vụ/response/legacy. Đạt theo dõi ranh giới Search, không nhận thêm task viết Order API.
 
 Nguồn yêu cầu: SRS v3.1 `docs/analysis/hien/srs-v3.md`, FR-ORD-01; [contract](../api/cart-order-inventory-api-contract.md) mục 2.3, 6–11; [thiết kế nền](cart-order-inventory-design.md); phạm vi G-CHECKOUT/G-FULFILMENT. Không đổi SRS để nhận phần thiếu thành đã làm.

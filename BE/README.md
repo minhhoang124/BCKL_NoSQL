@@ -80,13 +80,21 @@ After changing `prisma/schema.prisma`, create a new migration instead of editing
 $ pnpm --dir BE exec prisma migrate dev --name <migration_name>
 ```
 
-## Order list (working branch, not yet merged)
+## Order list (merged in PR #37)
 
 - `GET /orders`: active USER, own orders only.
 - `GET /seller/orders`: active SELLER, own Store orders only, including history for suspended Stores.
 - Filters: exact `status`, `limit` (default 20, max 50), `afterId` (positive PostgreSQL Int), descending ID cursor. No body or extra query fields.
 - Summary only; no shipping PII, detail/timeline or Order command in this step. Payment can be null for legacy data; never invented during GET. Hiền approved this projection/legacy behavior at PR #37 head e6f4427; integration changes need re-review.
 - Read-only PostgreSQL snapshot, no stock/outbox writes. Per-instance `ORDER_LIST_RATE_PER_MINUTE=60`, 429 Retry-After. See [architecture and next steps](../docs/architecture/order-read-backend-readiness.md) and [verification](../docs/testing/order-list-api-verification.md).
+
+## Order detail (working branch, not yet merged)
+
+- `GET /orders/:orderId` for the active USER Buyer; `GET /seller/orders/:orderId` for the active SELLER owning the Order's Store. Foreign and absent Orders both return 404 ORDER_NOT_FOUND.
+- Positive PostgreSQL Int path only; no query/body. Exact Decimal strings, purchased item/address snapshots, current Payment and chronologically ordered history. No raw Checkout/OrderCommand receipts, keys/hashes or Buyer profile. Buyer cannot see Seller/Admin actor IDs.
+- Missing legacy Payment = null; unknown audit fields = null; malformed options fail with safe 500, never replaced from current catalog. These detail choices need their own reviewer approval.
+- List/detail share the same per-actor read quota (`ORDER_LIST_RATE_PER_MINUTE`), READ ONLY RepeatableRead and no-store protection. No migration or command API in this step.
+- [Detailed contract and field glossary](../docs/api/order-detail-read-contract.md); [verification](../docs/testing/order-detail-api-verification.md). Seller confirm/packing/cancel/delivery are still separate work.
 
 ## Buyer Checkout COD (merged in PR #36)
 

@@ -5,6 +5,8 @@ import { DatabaseModule } from '../database.module.js';
 import { OrderListController } from './order-list.controller.js';
 import { OrderListService } from './order-list.service.js';
 import { OrderListRateGuard } from './order-list-rate.guard.js';
+import { OrderDetailController } from './order-detail.controller.js';
+import { OrderDetailService } from './order-detail.service.js';
 
 @Module({
   imports: [
@@ -12,7 +14,7 @@ import { OrderListRateGuard } from './order-list-rate.guard.js';
     DatabaseModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
-  controllers: [OrderListController],
-  providers: [OrderListService, OrderListRateGuard],
+  controllers: [OrderListController, OrderDetailController],
+  providers: [OrderListService, OrderDetailService, OrderListRateGuard],
 })
 export class OrderModule {}

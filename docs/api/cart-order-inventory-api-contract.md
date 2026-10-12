@@ -520,6 +520,8 @@ Không trả password hash, refresh token, email/phone tài khoản không cần
 
 ## 9. Order response tối thiểu
 
+**Bổ sung triển khai detail 10/10/2026, cần review PR mới:** nền #38 đã merge tại 27e083b. `GET /orders/:orderId` và `GET /seller/orders/:orderId` trên branch `codex/order-detail-api` dùng response mục này; `items[].options` là string[] lấy nhãn từ snapshot, không trả JSON thô. Detail Payment legacy thiếu = null; cancellation/history chưa biết giữ trường canonical null, không suy đoán/backfill; snapshot options hỏng trả 500 an toàn. Buyer ẩn actorId Seller/Admin/unknown; Seller chỉ actor allowlist đúng Order theo 7.2. List/detail dùng chung quota đọc 60/phút/actor/instance. Xem [contract detail và các lựa chọn legacy cần reviewer duyệt](order-detail-read-contract.md); approval list không bao trùm detail. Command runtime vẫn chưa có, không nâng G-FULFILMENT lên DONE.
+
 **Bổ sung triển khai 08/10, cập nhật review 09/10:** branch `codex/order-list-api` triển khai riêng hai API danh sách bằng summary projection, không phải toàn bộ response detail bên dưới. Hiền đã chốt tại [review PR #37 head e6f4427](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/37): list gồm id/orderNumber/status/store/total/payment/createdAt/updatedAt, `payment:null` khi legacy thiếu Payment và quota đọc 60/phút/actor/instance cho demo. [Order đọc — readiness](../architecture/order-read-backend-readiness.md#2-projection-danh-sách--đã-review-tại-e6f4427) ghi chi tiết. Sau merge #36/#39, bản tích hợp mới cần re-review; approval cũ không bao gồm integration. Snapshot/cancellation/timeline và quy tắc command vẫn là đích bắt buộc, không bị cắt bỏ để khớp API list. List không ghi dữ liệu hay suy đoán audit còn thiếu.
 
 ```json

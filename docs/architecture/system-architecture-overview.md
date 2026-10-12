@@ -2,9 +2,9 @@
 
 Tài liệu này là điểm bắt đầu để thành viên và AI hiểu hệ thống trước khi đọc code hoặc sửa một chức năng. Nội dung trả lời bốn câu hỏi: hệ thống đang giải quyết bài toán gì, các thành phần phối hợp như thế nào, phần nào đã chạy thật, và cần đọc đâu để tiếp tục công việc mà không suy đoán.
 
-Ảnh chụp trạng thái được cập nhật ngày **10/10/2026**, baseline tích hợp `develop 27e083b`: #39 TypeScript, #36 Checkout COD, #37 danh sách đơn và #38 OrderCommand/audit đã merge, cùng các nền Product/Search/Address/Cart và contract #27/#29. Search Service, Backend Search sync, API Checkout, Order list và nền audit là CURRENT ở lớp Backend/code-test đã tích hợp, không đồng nghĩa toàn bộ luồng Web hoặc đánh giá chất lượng đã hoàn thành. #42 detail/#43 Seller preparation/#44 hủy COD đều đã được Hiền approve, chưa merge khi kiểm tra; C4.0 DeliveryAttempt đang trên nhánh riêng. Checkout end-to-end, state machine Order và Buyer UI chưa nghiệm thu. Trạng thái PR mới nhất vẫn phải kiểm tra trên GitHub.
+Ảnh chụp trạng thái ngày **12/10/2026**, đồng bộ `develop 41450b4` sau merge #53. #39/#36/#37/#38 và nền DeliveryAttempt #45, Auth #52, Address UI #49, API client #53 đã merge. #42 detail/#43 Seller preparation đã được Hiền approve ở head cũ, đang đồng bộ để kiểm thử lại; chưa merge. #50 Cart/#54 Checkout Web còn riêng; Checkout end-to-end và G-FULFILMENT chưa nghiệm thu. Những mục lịch sử dưới đây giữ baseline/thời điểm của từng đợt, không phải toàn bộ trạng thái mới nhất.
 
-**Đồng bộ #38 sau merge #37:** giữ cả CheckoutModule/OrderModule, guard body Order GET trước parser Checkout/default JSON, cookie và CORS Retry-After, đồng thời giữ writer audit BUYER và kiểm thử replay nhiều Store của #38. Mục 7.5.4–7.5.5 là bằng chứng lịch sử; mục 7.5.6–7.5.7 mô tả Backend đã merge. Detail/command/hoàn kho/delivery chưa có; kết quả kiểm thử sau đồng bộ được ghi riêng, không dùng kết quả cũ hai branch thay bằng chứng tích hợp mới.
+**Đồng bộ #38 sau merge #37:** giữ cả CheckoutModule/OrderModule, guard body Order GET trước parser Checkout/default JSON, cookie và CORS Retry-After, đồng thời giữ writer audit BUYER và kiểm thử replay nhiều Store của #38. Nền #38 đã merge tại 27e083b, không còn phải chờ schema để làm detail. Mục 7.5.4–7.5.5 là bằng chứng lịch sử; mục 7.5.6–7.5.8 mô tả Backend/nền database đã merge; mục 7.5.9 ghi detail mới chưa merge. Command/hoàn kho/delivery chưa có; không dùng kết quả cũ hai branch thay bằng chứng tích hợp mới.
 
 ## 1. Cách đọc và nguồn chuẩn
 
@@ -205,7 +205,9 @@ Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn c
 | Public Product and moderation | `CURRENT` | PR #22 và #23: Admin approve/reject/freeze, Seller hide/show, public list/detail, predicate chung, ProductStatusHistory, SearchOutbox/reconciliation và E2E | Media privacy và Admin/Seller/Public UI đầy đủ vẫn thiếu |
 | Cart–Order–Inventory foundation | `CURRENT` (schema/migration) | PR #26 tại 08f165e và contract #27 tại c0a7d48 đã merge | Checkout Backend đã có qua #36; state machine, FE và nghiệm thu E2E luồng mua hàng còn thiếu |
 | Buyer Cart API | `CURRENT` (Backend) | #31 đã merge tại 6663fab, GET/PUT/DELETE/DTO/privacy/rate limit, unit và E2E Address/Cart cùng hai app instance | Buyer Cart UI và Checkout/COD chưa nghiệm thu; chưa đạt G-CHECKOUT |
-| Buyer/Seller Order list | `CURRENT` (Backend) | PR #37 đã merge tại bed88a0; hai GET list summary, cursor/status/ownership/READ ONLY; mục 7.5.7 | Chưa detail/command/hoàn kho/UI; audit #38 chưa merge |
+| Buyer/Seller Order list | `CURRENT` (Backend) | PR #37 đã merge tại bed88a0; hai GET list summary, cursor/status/ownership/READ ONLY; mục 7.5.7 | Detail IN_PROGRESS; command/hoàn kho/UI chưa có; audit #38 đã merge |
+| OrderCommand/audit foundation | `CURRENT` (database/helpers) | PR #38 merge tại 27e083b; unique/receipt/audit/typed BUYER writer; mục 7.5.8 | Không phải command API runtime |
+| Buyer/Seller Order detail | `IN_PROGRESS` | Branch codex/order-detail-api; snapshot/privacy/readonly, mục 7.5.9 | Chờ review riêng legacy/quota/response và tích hợp UI |
 | Checkout v1 + preview/lookup + create COD | `CURRENT` (Backend) | PR #36 đã merge tại a2561c1, nền hash/receipt, hai API đọc và POST /checkouts với Order/stock/Cart/Payment/ledger/outbox cùng transaction, mục 7.5.4–7.5.6 | Buyer UI/Order lifecycle và nghiệm thu toàn luồng vẫn thiếu; G-CHECKOUT chưa DONE |
 | Chat User and Seller | `TARGET` | `chat-domain-design.md` | Schema, REST/WebSocket, UI và E2E quyền/reconnect |
 | Buyer Address API | `CURRENT` (Backend) | #30 đã merge tại efd86a3: CRUD/default/DTO/ownership, migration district nullable, unit/HTTP E2E; mục 7.5.1 | Buyer UI thật và bằng chứng tích hợp; chưa đạt gate G-ACCOUNT/G-CHECKOUT toàn luồng |
@@ -313,7 +315,7 @@ Hoàng và Đạt đã thống nhất version, UPSERT/DELETE, filter, image URL 
 
 **Contract đã review/merge; Checkout Backend CURRENT, Order lifecycle TARGET:** #27 đã merge tại c0a7d48; #36 Checkout Backend đã merge tại a2561c1 ngày 09/10. Xem [Cart–Order–Inventory API contract](../api/cart-order-inventory-api-contract.md). Checkout chỉ lấy dòng trong giỏ Buyer với quantity khớp. Order command đích dùng key/hash và receipt PostgreSQL để replay không hoàn kho hai lần; audit hủy dùng cột/history riêng; Buyer hoặc job D07 hoàn tất theo SRS v3.1, vận chuyển mô phỏng Admin/adapter. Các command này chưa triển khai trên branch list, không đổi actor theo tài liệu v0.5.
 
-Cart tham chiếu variantId. Checkout đọc lại canonical Product/Variant, giá/kho, tạo Order snapshot một Store mỗi Order và cập nhật kho/history/outbox cùng transaction. Schema #26, Address #30, Cart #31, Checkout.hashVersion/receipt #36 và OrderCommand/audit #38 đã merge. DeliveryAttempt còn ở nhánh C4.0; state machine/Frontend toàn luồng chưa nghiệm thu, không sửa migration cũ.
+Cart tham chiếu variantId. Checkout đọc lại canonical Product/Variant, giá/kho, tạo Order snapshot một Store mỗi Order và cập nhật kho/history/outbox cùng transaction. Schema #26, Address #30, Cart #31, Checkout.hashVersion/receipt #36 và OrderCommand/audit #38 đã merge. Nền DeliveryAttempt #45 đã merge, API giao hàng vẫn ở PR riêng; state machine/Frontend toàn luồng chưa nghiệm thu, không sửa migration cũ.
 
 Contract đã chốt province/ward bắt buộc, district nullable; delivered/failed phải khớp attempt hiện hành, tối đa 3 retry (4 attempt tổng). Các quyết định này đã review, không nhận API/test runtime là hoàn thành.
 
@@ -418,7 +420,7 @@ Khóa/unique DB bảo vệ nhiều app instance; quota memory không phải quot
 
 ### 7.5.7 Buyer/Seller Order list — CURRENT ở Backend sau merge #37 ngày 10/10
 
-Sau Cart/Checkout, Buyer cần xem các đơn của mình, Seller cần thấy công việc của Store. #37 đã merge tại `bed88a0` ngày 10/10 sau review và kiểm thử tích hợp #36/#39. `GET /orders` và `GET /seller/orders` chỉ là danh sách tóm tắt, chưa là toàn bộ miền Order. Nền audit #38 đang review riêng, chưa merge.
+Sau Cart/Checkout, Buyer cần xem các đơn của mình, Seller cần thấy công việc của Store. #37 đã merge tại `bed88a0` ngày 10/10 sau review và kiểm thử tích hợp #36/#39. `GET /orders` và `GET /seller/orders` chỉ là danh sách tóm tắt, chưa là toàn bộ miền Order. Nền audit #38 đã merge tại `27e083b`; detail review riêng ở mục 7.5.9.
 
 Luồng: chặn body GET trước JSON parser → JWT đọc User hiện hành → guard role và quota → kiểm status/limit/afterId → RepeatableRead READ ONLY → kiểm lại tài khoản → SQL lọc buyerId hoặc Store.sellerId → lấy limit+1 theo id giảm dần → allowlist summary/tiền Decimal string/nextCursor → no-store. Store bị khóa vẫn xem lịch sử nếu Seller active; không dùng predicate Product public cho đơn cũ. Không ghi Order/Payment/kho/version/outbox khi đọc.
 
@@ -438,10 +440,18 @@ Migration #38 `20261009090000_order_command_audit_foundation` đã merge: OrderC
 
 Sửa blocker tích hợp của Hiền: `CheckoutCreateService.purchase` ghi `OrderStatusHistory.actorId=buyerId` và `actorType=BUYER` trong cùng transaction tạo COD/Payment/kho/outbox/receipt. `actorType` mô tả vai trò lúc tạo đơn, không lấy role hiện hành để đoán lịch sử. Replay dùng receipt đã commit nên không thêm history/đơn hoặc tăng version/trừ kho. E2E kiểm audit một Store, nhiều Store và replay qua hai app độc lập; test trước sửa tái hiện actorType=null. Không backfill legacy, không thay SQL/checksum migration audit đã áp dụng. API detail, Seller command, cancel/hoàn kho và delivery vẫn NOT_RUN.
 
-Bước tiếp theo: tích hợp #42 detail snapshot/#43 Seller command/#44 hủy COD sau review → delivery/complete mô phỏng → UI. Không lấy User.role hiện tại đoán actor lịch sử, không tạo Payment giả khi GET và không sửa migration đã merge. Quyết định legacy cần Hiền review trước backfill/siết ràng buộc; G-FULFILMENT vẫn chưa DONE.
+Bước tiếp theo sau merge #38: detail snapshot → Seller command → hủy/hoàn kho → delivery/complete mô phỏng → UI. Không lấy User.role hiện tại đoán actor lịch sử, không tạo Payment giả khi GET và không sửa migration đã merge. Quyết định legacy cần Hiền review trước backfill/siết ràng buộc; G-FULFILMENT vẫn chưa DONE. Phần NOT_RUN detail trong kết quả nền phía trên là ảnh chụp trước đợt 7.5.9, không phải trạng thái mới của branch detail.
 
 Chuẩn bị thêm trong lúc chờ review 09/10: `BE/src/order/order-command-request.ts` chuẩn hóa payload/ID/key và SHA-256 request; `order-command-policy.ts` kiểm tra ma trận Seller confirm/packing/ready và Buyer/Seller cancel đã chốt. **PREPARATORY CODE, chưa nối controller/service transaction.** Xem mục 9 của readiness để hiểu biến và thứ tự guard → ownership → receipt/replay → canonical state → transaction. 107 unit test mới không thay bằng chứng hoàn kho, cạnh tranh hoặc replay HTTP; không nâng Order lên CURRENT/DONE.
-### 7.5.10 C4.0 — danh tính lần giao, IN_PROGRESS trên nhánh riêng
+### 7.5.9 API chi tiết đơn Buyer/Seller — IN_PROGRESS ngày 10/10
+
+Branch `codex/order-detail-api` dựa trên develop `27e083b`; không sửa schema, migration #38 hoặc contract FastAPI. Hai API `GET /orders/:orderId` và `GET /seller/orders/:orderId` kiểm tra ownership bằng SQL, đọc snapshot hàng/địa chỉ và Payment/history hiện hành trong RepeatableRead READ ONLY. Buyer không thấy ID Seller/Admin; Seller chỉ đọc Store mình, không trả profile Buyer hoặc command/key/hash/receipt nội bộ. Store SUSPENDED vẫn đọc lịch sử nếu account active. Chặn GET body trước parser, query thừa/ID sai trả 400, ngoài quyền hoặc không tồn tại cùng 404, no-store trên cả lỗi.
+
+`options` là string[] nhãn lúc mua, chuyển từ snapshot canonical hoặc giữ string[] legacy; không trả JSON thô. Payment thiếu trả null; audit chưa biết giữ null, không đoán role từ User hiện hành. Snapshot options hỏng trả 500 an toàn, không lấy catalog mới thay thế. Các quyết định legacy và quota list/detail chung cần review riêng, không coi approval #37 bao trùm detail. Quota đọc hiện là 60/phút/actor/instance; timeout statement 2s, pool 2s, transaction 5s. Đọc [contract chi tiết và giải thích từng trường](../api/order-detail-read-contract.md) và [bằng chứng test](../testing/order-detail-api-verification.md).
+
+Mới có Backend/API đang review, chưa nối UI; confirm/packing/cancel/hoàn kho/delivery/complete runtime chưa có. G-CHECKOUT/G-FULFILMENT chưa DONE. Kết quả test READ ONLY/snapshot không thay nghiệm thu quy trình bán hàng toàn hệ thống.
+
+### 7.5.10 C4.0 — nền danh tính lần giao đã merge qua #45
 
 Nhánh `codex/order-delivery-foundation` từ develop `27e083b`, không xếp trên code
 Order chưa merge. [Thiết kế và giải nghĩa trường](order-delivery-foundation.md)
@@ -453,8 +463,8 @@ Order chưa giao/legacy có counter null/null; không đoán lần giao cũ. Dan
 `(orderId,deliveryAttempt)` với vận đơn bất biến; được dùng lại vận đơn giữa lần
 giao. FK ghép và trigger cuối giao dịch giữ đủ chuỗi 1..current, counter chỉ tăng
 từng lần; 3 lần giao lại tương ứng tối đa 4 lần tổng. Test schema/upgrade không
-thay API kiểm tra late callback, actor, state, Payment hoặc replay. Chưa có endpoint
-ship/failed/retry/delivered/complete hoặc job auto-complete trong đợt này;
+thay API kiểm tra late callback, actor, state, Payment hoặc replay. Đây là bằng chứng lịch sử của đợt nền; API
+ship/failed/retry/delivered/complete và job auto-complete đang ở các PR riêng;
 [verification](../testing/order-delivery-foundation-verification.md) ghi bằng chứng thực tế.
 
 ### 7.6 Chat đích

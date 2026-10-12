@@ -409,7 +409,7 @@ describe('Buyer/Seller Order lists (real PostgreSQL, read-only fixtures)', () =>
     expect(response.body).toEqual({
       statusCode: 500,
       code: 'INTERNAL_ERROR',
-      message: 'Không thể đọc danh sách đơn hàng.',
+      message: 'Không thể đọc đơn hàng.',
     });
     expect(response.headers['cache-control']).toBe('no-store');
   });
@@ -453,7 +453,7 @@ describe('Buyer/Seller Order lists (real PostgreSQL, read-only fixtures)', () =>
     });
     expect(readOnly).toBe('on');
   });
-  it('has Swagger for only list APIs, not unimplemented detail/commands', () => {
+  it('has Swagger for list and detail APIs, not unimplemented commands', () => {
     const document = SwaggerModule.createDocument(
       app,
       new DocumentBuilder().addBearerAuth().build(),
@@ -462,7 +462,7 @@ describe('Buyer/Seller Order lists (real PostgreSQL, read-only fixtures)', () =>
     expect(document.paths['/seller/orders']?.get?.security).toEqual([
       { bearer: [] },
     ]);
-    expect(document.paths['/orders/{orderId}']).toBeUndefined();
+    expect(document.paths['/orders/{orderId}']?.get).toBeDefined();
     expect(document.paths['/orders/{orderId}/cancel']).toBeUndefined();
   });
   it('rate limit includes Retry-After and per-actor isolation', async () => {
