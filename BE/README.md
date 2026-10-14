@@ -104,6 +104,22 @@ $ pnpm --dir BE exec prisma migrate dev --name <migration_name>
 - Shipping is **DEMO_ZERO_V1**, 0 VND, not real free shipping. COD starts UNPAID. Order fulfilment/cancellation and Buyer UI are separate work.
 - See [contract](../docs/api/cart-order-inventory-api-contract.md), [architecture](../docs/architecture/system-architecture-overview.md) and [verification](../docs/testing/checkout-cod-api-verification.md). Timeouts and per-instance quotas are documented in the root `.env.example`; don't copy real secrets into documentation.
 
+## Seller preparation commands (C2 branch, not yet merged)
+
+- Active SELLER, own existing Order only: `POST /seller/orders/:orderId/confirm`,
+  `/start-packing`, `/ready-to-ship`, each with JSON `{}` and `Idempotency-Key`.
+- Transitions: PENDING_CONFIRMATION → CONFIRMED → PACKING → READY_TO_SHIP.
+  These routes never mark delivered/completed or cancel/refund.
+- Hoàng confirmed active Sellers may process existing Orders in ACTIVE or
+  SUSPENDED Stores; new selling/checkout permissions are not broadened.
+- HTTP 200 after atomic Order/history/OrderCommand commit; exact retry returns
+  original receipt. No Payment/stock/snapshot/Product version/outbox write.
+- Safe body parser (8 KiB after decompression), per-actor ingress quota,
+  bounded DB waiting/retry; see [C2 contract](../docs/api/seller-order-command-contract.md)
+  and [verification](../docs/testing/seller-order-command-api-verification.md).
+- Detail #42 is a separate PR; after merging it, sync and retest the combined
+  checkout rather than treating separate branch results as integrated proof.
+
 ## Running tests
 
 From the repository root, check all Backend TypeScript (including tests and

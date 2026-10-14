@@ -178,3 +178,28 @@ Nguồn là contract đã merge mục 2.1, 6, 7.1 và 7.2, không đặt thêm q
 5. Unique DB + Serializable + retry hữu hạn bảo vệ cạnh tranh giữa nhiều process; helper/hash **không tự bảo vệ concurrency**. Sau commit mới trả response.
 
 107 unit test mới kiểm tra ma trận trạng thái, payload/ID/key/lý do, hash Unicode và tính bất biến. Chưa chứng minh receipt replay HTTP, cancellation restore, lost response, concurrency hay rollback toàn giao dịch. Các gate này vẫn NOT_RUN; G-FULFILMENT chưa DONE.
+
+## 10. Cập nhật sau merge #38 và runtime chuẩn bị đơn C2 — 10/10
+
+Các mục 1–9 giữ bằng chứng và quyết định tại thời điểm chuẩn bị nền. #38 đã
+merge tại develop **27e083b**, có writer Checkout history BUYER và audit nền;
+không còn chờ migration đó để làm API detail/command. Detail #42 đang review
+riêng. Không backfill dữ liệu demo hoặc sửa migration đã merge.
+
+`codex/seller-order-commands` triển khai ba command confirm/start-packing/
+ready-to-ship, dùng helper v1 + receipt strict + Order/history cùng transaction.
+Hoàng chốt Seller active được xử lý đơn cũ trong Store SUSPENDED, không mở bán
+mới; ghi trong [contract C2](../api/seller-order-command-contract.md) để Hiền review.
+
+ActorScope/key được khóa bằng User row trong PostgreSQL trước Store/Order/
+Payment, bảo vệ cùng key ở nhiều Order và nhiều process. Replay kiểm quyền
+hiện hành rồi trả resultSnapshot gốc trước kiểm state/Payment; key mới ở state
+đích không bị nhận nhầm là replay. Lỗi history/receipt hoàn tác tất cả, không
+persist PROCESSING ngoài transaction. Giới hạn retry/wait/quota có tài liệu.
+
+[Verification C2](../testing/seller-order-command-api-verification.md): **411
+unit/385 E2E PASS** trên branch từ develop27e083b, trong đó 34 unit/54 E2E mới.
+Gồm HTTP Checkout COD → ba command, restart/replay, hai app cạnh tranh key,
+khóa DB thực và lỗi SQL ở history/receipt; không lấy kết quả test #42 chưa merge
+cộng vào branch C2. C2 chưa merge/nghiệm thu Web; hủy/hoàn kho, delivery,
+notification và UI còn NOT_RUN, G-FULFILMENT chưa DONE.
