@@ -1,6 +1,9 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
-**Trạng thái mới nhất 15/10/2026:** develop đã merge #44 tại `2ed3ee5`, có API đọc đơn #42, Seller chuẩn bị #43 và hủy COD/hoàn kho #44. Nhánh #46 ghép thêm giao mô phỏng, chưa merge. Kiểm mới trên nhánh kết hợp: 535 unit, 511 Backend E2E, 122 FE PASS; 2 ca mới đi từ Checkout COD thật qua Seller tới delivery/replay và kiểm hủy muộn. [Báo cáo sau #44](../testing/pr46-post-pr44-integration-2026-10-15.md). Không ghép #47/#48/#54/#55 chưa merge; G-FULFILMENT/Web vẫn chưa nghiệm thu.
+**Đồng bộ #47 sau merge #46 ngày 15/10/2026:** nền develop `11a0da7` đã có #42/#43/#44/#46. C4.2 xác nhận hàng quay về vẫn IN_PROGRESS trên nhánh #47; giữ đầy đủ list/detail/Seller/cancel/delivery/returned và parser tương ứng. Các số kiểm thử cũ bên dưới là bằng chứng lịch sử, không thay kết quả head tích hợp. Web/G-FULFILMENT chưa nghiệm thu.
+
+**Đợt kiểm thử PR #47 ngày 14/10/2026:** giữ baseline head ac7d003 trên nền f267399 để bổ sung test C4.2. Develop đã có #43 tại 515f68a nhưng chưa sync vào nhánh này; không lấy kết quả nhánh riêng thay nghiệm thu bản kết hợp. Không sửa service/schema/contract nghiệp vụ; C4.2/Web/G-FULFILMENT vẫn IN_PROGRESS. Các snapshot trước đây giữ ngày/baseline riêng.
+**Lịch sử kiểm thử #46 trước merge:** develop đã merge #44 tại `2ed3ee5`, có API đọc đơn #42, Seller chuẩn bị #43 và hủy COD/hoàn kho #44. Nhánh #46 ghép thêm giao mô phỏng, chưa merge. Kiểm mới trên nhánh kết hợp: 535 unit, 511 Backend E2E, 122 FE PASS; 2 ca mới đi từ Checkout COD thật qua Seller tới delivery/replay và kiểm hủy muộn. [Báo cáo sau #44](../testing/pr46-post-pr44-integration-2026-10-15.md). Không ghép #47/#48/#54/#55 chưa merge; G-FULFILMENT/Web vẫn chưa nghiệm thu.
 
 **Bằng chứng lịch sử PR #44 ngày 14/10/2026 (đã merge ngày 15/10 tại 2ed3ee5):** nền kiểm thử khi đó `develop 515f68a` sau merge Seller preparation #43; giữ API detail #42 và C3 hủy COD/hoàn kho trên nhánh #44.
 OrderModule giữ list/detail/confirm/packing/ready/cancel, SearchModule và guard; parser GET → Seller command → cancellation → Checkout/default. #42/#43 CURRENT ở Backend, C3 vẫn IN_PROGRESS/chưa merge. Giữ nền #45/#49/#50/#52/#53; không ghép delivery/complete chưa merge. [Bằng chứng 13/10](../testing/pr44-post-pr42-integration-2026-10-13.md) là lịch sử, không thay test cạnh tranh HTTP head mới; toàn luồng Web chưa nghiệm thu.
@@ -216,7 +219,7 @@ Elasticsearch và FAISS có thể xây lại. Không dùng chúng làm nguồn c
 | Buyer/Seller Order detail | `CURRENT` (Backend) | #42 đã merge tại ad1771b; snapshot/privacy/readonly, mục 7.5.11 | UI và toàn luồng fulfillment chưa nghiệm thu |
 | C3 hủy COD/hoàn kho | `CURRENT` (Backend) | #44 merge tại 2ed3ee5, mục 7.5.9 | UI và Search xuyên dịch vụ trên head mới chưa nghiệm thu |
 | Seller chuẩn bị đơn C2 | `CURRENT` (Backend) | #43 merge tại 515f68a; confirm/start-packing/ready-to-ship, mục 7.5.12 | Delivery/complete/UI chưa nghiệm thu |
-| Admin delivery simulation C4.1 | `IN_PROGRESS` | Nhánh #46 đồng bộ 2ed3ee5, mục 7.5.13 | Chờ kiểm thử/re-review head tích hợp, chưa Web |
+| Admin delivery simulation C4.1 | `CURRENT` (Backend) | #46 merge tại 11a0da7; mục 7.5.13 | Chưa nghiệm thu Web/toàn luồng |
 | Checkout v1 + preview/lookup + create COD | `CURRENT` (Backend) | PR #36 đã merge tại a2561c1, nền hash/receipt, hai API đọc và POST /checkouts với Order/stock/Cart/Payment/ledger/outbox cùng transaction, mục 7.5.4–7.5.6 | Buyer UI/Order lifecycle và nghiệm thu toàn luồng vẫn thiếu; G-CHECKOUT chưa DONE |
 | Chat User and Seller | `TARGET` | `chat-domain-design.md` | Schema, REST/WebSocket, UI và E2E quyền/reconnect |
 | Buyer Address API | `CURRENT` (Backend) | #30 đã merge tại efd86a3: CRUD/default/DTO/ownership, migration district nullable, unit/HTTP E2E; mục 7.5.1 | Buyer UI thật và bằng chứng tích hợp; chưa đạt gate G-ACCOUNT/G-CHECKOUT toàn luồng |
@@ -246,6 +249,19 @@ sequenceDiagram
 ```
 
 Trạng thái hiện tại vẫn dùng một `Role` cho mỗi User. Yêu cầu cùng tài khoản vừa mua vừa bán là `TARGET` và cần migration/Auth/UI/test riêng; không được mô tả là đã hoạt động.
+
+### Bổ sung C4.2 — hàng giao thất bại quay về (IN_PROGRESS)
+
+Đồng bộ 15/10 trên `develop 11a0da7` sau #46. Luồng mới được kiểm qua HTTP:
+Cart → Checkout COD → Seller confirm/packing/ready → Admin ship/delivery-failed
+→ Seller confirm-returned → Buyer/Seller GET detail. Chỉ bước nhận hàng quay về
+mới hoàn kho; replay cùng key không hoàn hai lần. Catalog/ảnh/địa chỉ vẫn là
+fixture có nhãn, không phải nghiệm thu Web, ảnh được phục vụ hay ES/FAISS.
+Kết quả head tích hợp xem [báo cáo sau #46](../testing/pr47-post-pr46-integration-2026-10-15.md).
+
+[Kiểm thử bổ sung 14/10](../testing/pr47-returned-regression-2026-10-14.md) kiểm Product APPROVED có hai Variant hết kho → hoàn 2/3 đúng từng dòng nhưng một version/UPSERT; exact DELETE khi Store/Category invalid, restore cũ/version overflow rollback và account/role bị thu hồi sau receipt thật. Production service không đổi. 20 return E2E và 372 full E2E PASS trên database QA riêng; không chứng minh API #46, serving ảnh hoặc ES/FAISS/Web đã chạy.
+
+Nhánh `codex/order-returned-confirmation` bổ sung hai command Seller/Admin `confirm-returned` theo [contract](../api/order-returned-command-contract.md). Không cộng kho ngay khi DELIVERY_FAILED. Khi xác nhận hàng đã quay về và bán lại được, giao dịch ghi ledger hoàn kho, Variant.stock, Product.version/SearchOutbox, Order/Payment CANCELLED, history và receipt bền vững cùng nhau. Hàng hỏng/mất không tăng kho; LOST chỉ Admin. Replay dùng receipt gốc, không hoàn hai lần. Chưa có UI/toàn luồng và không thay thế ReturnRequest/refund P1.
 
 ### 7.2 Store hiện tại
 
@@ -533,9 +549,9 @@ Hai API `GET /orders/:orderId` và `GET /seller/orders/:orderId` đã merge tạ
 
 Đồng bộ #44 giữ detail/Seller preparation/cancel, kiểm tra snapshot/Payment/timeline sau cạnh tranh và payload Search đầy đủ. #43 đã merge và confirm-vs-cancel HTTP đã chạy trong đợt 14/10; UI và G-FULFILMENT chưa DONE. Không dùng test API/database thay bằng chứng toàn luồng Web.
 
-### 7.5.13 C4.1 — API giao mô phỏng, IN_PROGRESS trên nhánh riêng
+### 7.5.13 C4.1 — API giao mô phỏng, CURRENT Backend sau merge #46
 
-Branch `codex/order-delivery-commands` đã sync develop 2ed3ee5 sau #44;
+PR #46 đã merge tại develop `11a0da7`; trước đó branch đã sync 2ed3ee5 sau #44;
 giữ #42/#43/#44/#45 đã merge. Hoàng code, Hiền review nghiệp vụ.
 [Contract C4.1](../api/order-delivery-command-contract.md) →
 `order-delivery.controller.ts`/`order-delivery.http.ts` →

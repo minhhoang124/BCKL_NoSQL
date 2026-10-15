@@ -17,6 +17,12 @@ import { SellerOrderCommandService } from './seller-order-command.service.js';
 import { SellerOrderCommandRateGuard } from './seller-order-command-rate.guard.js';
 import { OrderDetailController } from './order-detail.controller.js';
 import { OrderDetailService } from './order-detail.service.js';
+import {
+  AdminReturnedController,
+  SellerReturnedController,
+} from './order-returned.controller.js';
+import { OrderReturnedService } from './order-returned.service.js';
+import { OrderReturnedRateGuard } from './order-returned-rate.guard.js';
 
 @Module({
   imports: [
@@ -31,6 +37,8 @@ import { OrderDetailService } from './order-detail.service.js';
     OrderDeliveryController,
     OrderCancellationController,
     SellerOrderCommandController,
+    AdminReturnedController,
+    SellerReturnedController,
   ],
   providers: [
     OrderListService,
@@ -42,6 +50,8 @@ import { OrderDetailService } from './order-detail.service.js';
     OrderCancellationRateGuard,
     SellerOrderCommandService,
     SellerOrderCommandRateGuard,
+    OrderReturnedService,
+    OrderReturnedRateGuard,
   ],
 })
 export class OrderModule {}
