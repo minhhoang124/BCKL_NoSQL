@@ -104,7 +104,7 @@ $ pnpm --dir BE exec prisma migrate dev --name <migration_name>
 - Shipping is **DEMO_ZERO_V1**, 0 VND, not real free shipping. COD starts UNPAID. Order fulfilment/cancellation and Buyer UI are separate work.
 - See [contract](../docs/api/cart-order-inventory-api-contract.md), [architecture](../docs/architecture/system-architecture-overview.md) and [verification](../docs/testing/checkout-cod-api-verification.md). Timeouts and per-instance quotas are documented in the root `.env.example`; don't copy real secrets into documentation.
 
-## Seller preparation commands (C2 branch, not yet merged)
+## Seller preparation commands (C2 merged through #43)
 
 - Active SELLER, own existing Order only: `POST /seller/orders/:orderId/confirm`,
   `/start-packing`, `/ready-to-ship`, each with JSON `{}` and `Idempotency-Key`.
@@ -117,12 +117,24 @@ $ pnpm --dir BE exec prisma migrate dev --name <migration_name>
 - Safe body parser (8 KiB after decompression), per-actor ingress quota,
   bounded DB waiting/retry; see [C2 contract](../docs/api/seller-order-command-contract.md)
   and [verification](../docs/testing/seller-order-command-api-verification.md).
-- Detail #42 is a separate PR; after merging it, sync and retest the combined
-  checkout rather than treating separate branch results as integrated proof.
+- Detail #42 and cancellation #44 are merged. This branch adds delivery;
+  combined regression is required, not just separate branch results.
 
 ## Running tests
 
-### C3 cancellation (branch scope, not yet merged)
+### Admin delivery simulation (C4.1 working branch)
+
+ADMIN JWT + Idempotency-Key; four POST commands: /admin/orders/:orderId/ship,
+delivery-failed, retry-delivery and mark-delivered. Strict JSON, 8 KiB inflated
+body, 20 requests/Admin/minute/instance. Replay uses the original durable receipt.
+3 retries = 4 total attempts. Failed does not restore stock; delivered sets COD
+PAID atomically, never COMPLETED. Not a real carrier or payment settlement.
+See [contract](../docs/api/order-delivery-command-contract.md) and
+[verification](../docs/testing/order-delivery-command-verification.md).
+Legacy SHIPPING/FAILED without canonical attempt identity is rejected, not guessed.
+No new migration; #45 foundation is already merged.
+
+### C3 cancellation (merged through #44)
 
 `POST /orders/:orderId/cancel` (USER) and
 `POST /seller/orders/:orderId/cancel` (SELLER) accept JSON reasonCode/reasonText

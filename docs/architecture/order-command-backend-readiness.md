@@ -26,7 +26,7 @@ Tình trạng review ở trên là ảnh chụp lúc kiểm tra; kiểm tra lạ
 | OrderStatusHistory | Baseline có actorId/fromStatus/toStatus/reason; branch T0 thêm audit nullable, commandId và dữ liệu lần giao | Writer/reader mới phải dùng audit có cấu trúc; chưa tự backfill legacy |
 | Cancellation | Branch T0 thêm cancelledById/type, reasonCode/text nullable, giữ cancellationReason cũ | Service phải ghi đủ audit theo contract 7.2; không ghép JSON vào reason cũ |
 | OrderCommand | Branch T0 có schema/migration, unique scope/key, composite FK, receipt bất biến và kiểm tra lúc commit | Chưa có service/API claim/replay/authorization hoặc state machine |
-| DeliveryAttempt | C4.0 có schema/migration trên nhánh riêng; chưa merge/API | Lần giao hiện hành, tracking, 3 lần giao lại = tối đa 4 lần tổng |
+| DeliveryAttempt | #45 đã merge develop f267399; C4.1 API ở nhánh riêng | Lần giao hiện hành, tracking, 3 lần giao lại = tối đa 4 lần tổng |
 | StockMovement | Decrement/restore, unique item/type, FK đúng Variant | Service hoàn kho cùng transaction; không coi unique movement là đủ thay OrderCommand |
 | Checkout #36 + sửa tương thích #38 | Tạo history đầu fromStatus=null, pending, actorId=buyerId, actorType=BUYER trong transaction tạo COD | Replay không thêm history; không đặt default BUYER cho mọi history hoặc tự backfill lịch sử |
 
@@ -101,7 +101,10 @@ Migration DeliveryAttempt/counters mới và API Admin/adapter theo 8.1. Không 
 Cập nhật 10/10: [C4.0](order-delivery-foundation.md) tách nền danh tính và migration
 expand-only từ develop `27e083b`, không phụ thuộc code chưa merge #42/#43/#44.
 Xem [verification](../testing/order-delivery-foundation-verification.md); các ca
-delivery/complete HTTP ở mục 6 vẫn NOT_RUN, không đổi thành DONE vì có bảng mới.
+Foundation #45 đã merge develop f267399. API C4.1 ship/failed/retry/delivered
+đang trên nhánh riêng; xem [contract](../api/order-delivery-command-contract.md)
+và [verification](../testing/order-delivery-command-verification.md).
+Complete/job/Web ở mục6 vẫn NOT_RUN, không đổi thành DONE vì có bảng mới.
 
 C2–C4 chưa code/chưa test trong task này. VNPay/MoMo sandbox, refund P1 và UI Buyer Checkout/Order vẫn là các task riêng, không bỏ khỏi phạm vi bảo vệ.
 
@@ -227,3 +230,22 @@ thắng thì confirm bị chặn, mỗi item hoàn đúng một lần, một ver
 Product. Đọc detail/audit và replay receipt của bên thắng phải nhất quán. Test
 packing-vs-Seller-cancel phải tuân thủ trạng thái nguồn đã chốt. UI, delivery và
 G-FULFILMENT chưa nghiệm thu; bằng chứng cũ các mục 10/11 giữ thời điểm riêng.
+
+## 13. C4.1 — bằng chứng lịch sử ngày 10/10, cập nhật tích hợp 15/10
+
+Develop f267399 đã có DeliveryAttempt foundation. Nhánh riêng
+codex/order-delivery-commands có bốn ADMIN POST ship/failed/retry/delivered,
+không lấy code #42/#43/#44 chưa merge. Serializable OrderCommand/Order/attempt/
+Payment/history/receipt atomic, active Admin recheck dưới khóa, replay gốc,
+stale attempt409, 3 giao lại=4 tổng, failure không kho/outbox.
+Không cần chờ Đạt cho review shipping; Hiền review nghiệp vụ và response v1.
+
+[Contract C4.1](../api/order-delivery-command-contract.md),
+[verification](../testing/order-delivery-command-verification.md):77 unit mới,
+21 E2E HTTP/PostgreSQL thật; toàn Backend454unit/373E2E PASS,
+typecheck/lint/build/Prisma validate/diff PASS. Hai app/restart/khóa DB/fault SQL
+chứng minh replay/concurrency/rollback riêng C4.1, không full-flow/Web.
+C4.2 returned/stock, C4.3 Buyer complete+job và tích hợp Seller/detail/hủy/UI
+vẫn NOT_RUN; G-FULFILMENT chưa DONE.
+
+Cập nhật 15/10: #43/#44 đã merge vào develop 2ed3ee5. #46 giữ đủ read, Seller, cancel và delivery trên cùng ứng dụng; cần HTTP Checkout thật → ba bước Seller → giao/failed/retry/delivered và kiểm snapshot/Payment/history/replay. Parser/guard không được mất khi đồng bộ. Returned #47 và completion #48 chưa ghép; Web và G-FULFILMENT vẫn chưa nghiệm thu.

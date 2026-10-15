@@ -5,6 +5,9 @@ import { DatabaseModule } from '../database.module.js';
 import { OrderListController } from './order-list.controller.js';
 import { OrderListService } from './order-list.service.js';
 import { OrderListRateGuard } from './order-list-rate.guard.js';
+import { OrderDeliveryController } from './order-delivery.controller.js';
+import { OrderDeliveryService } from './order-delivery.service.js';
+import { OrderDeliveryRateGuard } from './order-delivery-rate.guard.js';
 import { SearchModule } from '../search/search.module.js';
 import { OrderCancellationController } from './order-cancellation.controller.js';
 import { OrderCancellationService } from './order-cancellation.service.js';
@@ -25,6 +28,7 @@ import { OrderDetailService } from './order-detail.service.js';
   controllers: [
     OrderListController,
     OrderDetailController,
+    OrderDeliveryController,
     OrderCancellationController,
     SellerOrderCommandController,
   ],
@@ -32,6 +36,8 @@ import { OrderDetailService } from './order-detail.service.js';
     OrderListService,
     OrderDetailService,
     OrderListRateGuard,
+    OrderDeliveryService,
+    OrderDeliveryRateGuard,
     OrderCancellationService,
     OrderCancellationRateGuard,
     SellerOrderCommandService,

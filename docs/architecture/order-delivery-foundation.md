@@ -1,7 +1,9 @@
 # C4.0 — nền danh tính lần giao hàng mô phỏng
 
 Ngày: 10/10/2026. Nền: develop `27e083b` (#38 đã merge).
-**IN_PROGRESS**: schema/migration và kiểm thử PostgreSQL, chưa có API giao hàng.
+**CURRENT ở nền database** sau người dùng merge #45 ngày10/10 tại develop f267399:
+Hiền APPROVED head60248ef, CI xanh. Schema/test foundation không phải nghiệm thu
+giao hàng toàn luồng. API C4.1 đang ở [nhánh riêng](../api/order-delivery-command-contract.md).
 Không phụ thuộc code chưa merge ở #42/#43/#44; không sửa contract FastAPI.
 
 ## 1. Yêu cầu dẫn đường
