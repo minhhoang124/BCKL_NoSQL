@@ -1,6 +1,35 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
-**Đồng bộ #48 ngày 15/10/2026:** nền develop `5d17d4f` đã merge #42/#43/#44/#46/#47. Giữ list/detail/Seller/cancel/delivery/returned và thêm Buyer complete/D07 trên nhánh #48 (IN_PROGRESS). Migration completion giữ nguyên; không lấy #54/#55 chưa merge. Các đoạn ngày cũ dưới đây là lịch sử, không thay bằng chứng tích hợp mới. Web/G-FULFILMENT chưa nghiệm thu.
+**Đồng bộ #54 ngày 15/10/2026:** nền develop `541d15b` đã merge Cart #50, client #53 và Order #42/#43/#44/#46/#47/#48. Conflict chỉ kiến trúc, giữ cả Checkout và các luồng Order. Mã FE Checkout không đổi so với `2d30ef0`; #48 đã merge chính thức; #55 chưa merge không được ghép vào. #54 vẫn Draft/IN_PROGRESS; bằng chứng browser/live 12/10 bên dưới là lịch sử, chưa phải rerun browser trên head mới.
+
+**Lịch sử đồng bộ PR #54 ngày 12/10/2026:** nền `develop d4d1884` sau merge Cart #50.
+Giữ route Cart đã merge và route Checkout đang review; giữ toàn bộ bản sửa khôi phục ý định mua, giá/kho và bằng chứng trình duyệt. Checkout #54 vẫn IN_PROGRESS, không nối thêm Order UI trong đợt đồng bộ.
+Những mục ảnh chụp 10/10 phía dưới là lịch sử, không thay trạng thái mới này.
+
+**IN_PROGRESS — sửa review #54 ngày 12/10:** Checkout giữ nền/chữ sáng riêng
+trong module để không kế thừa heading/control khó đọc từ dark theme global.
+Đã đồng bộ client #53 và Cart #50 head 10e7400 (Cart chưa merge).
+4 ca live HTTP/PostgreSQL chạy lại đạt. Sau đó browser Chrome thật đã kiểm
+desktop 1440/mobile 390, sáng/tối: 4/4 scenario đạt, gồm login/cookie,
+Address → selected Cart → preview → COD, lỗi giá/kho và reload/replay sau
+mất response. Có 18 ảnh và đối chiếu PostgreSQL QA. Follow-up sửa riêng UX
+Checkout: empty state chỉ sau GET thành công, tóm tắt địa chỉ đầy đủ, tải lại
+giá/kho sau từ chối; reload lỗi khóa dữ liệu cũ, không bỏ pending key/body.
+Không đổi contract/schema, không dispatch Search
+hoặc nối Order UI. Giữ Draft chờ re-review và dependency #50. Xem
+[browser QA và các lưu ý UX](../testing/checkout-browser-qa-2026-10-12.md) và
+[bằng chứng và phần còn mở](../testing/checkout-contrast-review-fix-2026-10-12.md).
+
+**IN_PROGRESS — 12/10/2026, `codex/checkout-web-integration`:** Buyer Address
+#49 và Cart #50 được nối cục bộ tới `/checkout` với client #53. Checkout đọc
+giỏ/địa chỉ từ Backend, preview lại giá/kho, lưu mã/body theo Buyer trước tạo
+COD; mất phản hồi giữ yêu cầu để tra/replay. Test live dùng HTTP Nest và
+PostgreSQL riêng, React trong jsdom; bổ sung Chrome QA tại ghi chú phía trên.
+Chưa nối Order detail
+hay command UI chưa merge; chưa đánh dấu G-CHECKOUT DONE. Xem
+[bằng chứng và giới hạn](../testing/checkout-web-integration-verification.md).
+
+**Lịch sử đồng bộ #48 trước merge:** nền develop `5d17d4f` đã merge #42/#43/#44/#46/#47. Giữ list/detail/Seller/cancel/delivery/returned và thêm Buyer complete/D07 trên nhánh #48 (IN_PROGRESS). Migration completion giữ nguyên; không lấy #54/#55 chưa merge. Các đoạn ngày cũ dưới đây là lịch sử, không thay bằng chứng tích hợp mới. Web/G-FULFILMENT chưa nghiệm thu.
 
 **Lịch sử đồng bộ PR #48 ngày 12/10/2026:** nền `develop d4d1884` sau merge Cart #50.
 Giữ cron D07, job PostgreSQL, lease/retry và Buyer complete; giữ phần client Checkout đã merge. Completion vẫn IN_PROGRESS trên PR riêng; migration mới của #48 giữ nguyên, không sửa migration dùng chung.
@@ -755,7 +784,9 @@ biên nhận/gửi lại có kiểm soát.
 Đây là nền client đang trên PR riêng, chưa là Checkout UI runtime hay DONE
 G-CHECKOUT. Xem [kiểm chứng client](../testing/checkout-client-readiness-verification.md).
 
-## 14. Bổ sung C4.3 — hoàn tất đơn (IN_PROGRESS, chờ review/merge)
+## 14. Bổ sung C4.3 — hoàn tất đơn (CURRENT Backend sau merge #48)
+
+#48 đã merge tại `develop 541d15b` ngày 15/10; đây là nền Backend, chưa phải nghiệm thu Order Web hoặc G-FULFILMENT.
 
 Nhánh `codex/order-completion-runtime` triển khai [Buyer complete và tác vụ D07](../api/order-completion-runtime-contract.md). Buyer chỉ hoàn tất đơn mình sau DELIVERED/PAID. Cron thật phát hiện Order tới hạn 3 ngày và tạo `OrderCompletionJob` trong PostgreSQL; job có lease, lịch retry và FAILED sau tối đa 6 lượt. OrderCommand vẫn là receipt bất biến, không dùng PROCESSING làm queue lâu dài.
 

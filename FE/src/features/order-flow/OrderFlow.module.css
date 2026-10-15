@@ -1,0 +1,18 @@
+.page { max-width: 1120px; margin: 0 auto; padding: 28px 20px; color: #20242b; background: #fff; color-scheme: light; box-sizing: border-box; overflow-wrap: anywhere; }
+.page h1, .page h2 { color: #20242b; }
+.page h1 { font-size: 28px; margin: 0 0 12px; }
+.page h2 { font-size: 20px; }
+.page a { color: #bb350d; text-decoration: underline; text-underline-offset: 3px; }
+.page p { line-height: 1.65; overflow-wrap: anywhere; }
+.card { padding: 20px; margin: 20px 0; border: 1px solid #dce0e5; border-radius: 8px; background: #fff; }
+.page button { margin: 8px 12px 8px 0; padding: 11px 16px; background: #ca3b10; border: 1px solid #ca3b10; color: white; border-radius: 6px; cursor: pointer; min-height: 44px; }
+.page button:disabled { background: #e4e7eb; border-color: #e4e7eb; color: #555c65; cursor: not-allowed; }
+.page input, .page select, .page textarea { padding: 10px; border: 1px solid #9aa2ad; border-radius: 4px; font: inherit; max-width: 100%; box-sizing: border-box; color: #20242b; background: #fff; }
+.page label { display: block; margin: 14px 0; }
+.page label > select, .page label > textarea, .page label > input:not([type=checkbox]) { display: block; width: min(100%, 560px); margin-top: 6px; }
+.line { display: flex !important; gap: 12px; align-items: center; flex-wrap: wrap; }
+.error { background: #fff0ec; border-left: 4px solid #a82c05; padding: 12px; }
+.page :focus-visible { outline: 3px solid #1760ad; outline-offset: 3px; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 12px 8px; border-bottom: 1px solid #dce0e5; text-align: left; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .page { padding: 20px 12px; } .card { padding: 14px; } .table { display: block; overflow-x: auto; } .page button { width: 100%; margin-right: 0; } }

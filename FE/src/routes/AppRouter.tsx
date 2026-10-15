@@ -11,6 +11,7 @@ import { SellerDashboardPage } from '../pages/SellerDashboardPage';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
+import { CheckoutPage } from '../features/order-flow/CheckoutPage';
 
 export function AppRouter() {
   return (
@@ -33,6 +34,7 @@ export function AppRouter() {
         />
 
         <Route path="/cart" element={<ProtectedRoute allowedRoles={['USER']}><CartPage /></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute allowedRoles={['USER']}><CheckoutPage /></ProtectedRoute>} />
 
         {/* Protected Routes - Buyer addresses */}
         <Route
