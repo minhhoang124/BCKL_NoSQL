@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import { configureOrderListHttp } from './order/order-list.http.js';
 import { registerOrderDeliveryParser } from './order/order-delivery.http.js';
 import { registerOrderReturnedParser } from './order/order-returned.http.js';
+import { registerOrderCompletionParser } from './order/order-completion.http.js';
 import { registerCheckoutParser } from './checkout/checkout-http.js';
 import { registerOrderCancellationParser } from './order/order-cancellation.http.js';
 import { registerSellerOrderCommandParser } from './order/seller-order-command.http.js';
@@ -19,6 +20,7 @@ export function configureApp(app: INestApplication): void {
   registerOrderCancellationParser(app);
   registerOrderDeliveryParser(app);
   registerOrderReturnedParser(app);
+  registerOrderCompletionParser(app);
   // After CORS (so browser clients can read safe parser errors), before Nest's
   // default body parser; only Checkout POST routes use the 64 KiB limit.
   registerCheckoutParser(app);

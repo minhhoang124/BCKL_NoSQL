@@ -1,6 +1,11 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
-**Đồng bộ #47 sau merge #46 ngày 15/10/2026:** nền develop `11a0da7` đã có #42/#43/#44/#46. C4.2 xác nhận hàng quay về vẫn IN_PROGRESS trên nhánh #47; giữ đầy đủ list/detail/Seller/cancel/delivery/returned và parser tương ứng. Các số kiểm thử cũ bên dưới là bằng chứng lịch sử, không thay kết quả head tích hợp. Web/G-FULFILMENT chưa nghiệm thu.
+**Đồng bộ #48 ngày 15/10/2026:** nền develop `5d17d4f` đã merge #42/#43/#44/#46/#47. Giữ list/detail/Seller/cancel/delivery/returned và thêm Buyer complete/D07 trên nhánh #48 (IN_PROGRESS). Migration completion giữ nguyên; không lấy #54/#55 chưa merge. Các đoạn ngày cũ dưới đây là lịch sử, không thay bằng chứng tích hợp mới. Web/G-FULFILMENT chưa nghiệm thu.
+
+**Lịch sử đồng bộ PR #48 ngày 12/10/2026:** nền `develop d4d1884` sau merge Cart #50.
+Giữ cron D07, job PostgreSQL, lease/retry và Buyer complete; giữ phần client Checkout đã merge. Completion vẫn IN_PROGRESS trên PR riêng; migration mới của #48 giữ nguyên, không sửa migration dùng chung.
+Những mục ảnh chụp 10/10 phía dưới là lịch sử, không thay trạng thái mới này.
+**Lịch sử đồng bộ #47 trước merge:** nền develop `11a0da7` đã có #42/#43/#44/#46. C4.2 xác nhận hàng quay về vẫn IN_PROGRESS trên nhánh #47; giữ đầy đủ list/detail/Seller/cancel/delivery/returned và parser tương ứng. Các số kiểm thử cũ bên dưới là bằng chứng lịch sử, không thay kết quả head tích hợp. Web/G-FULFILMENT chưa nghiệm thu.
 
 **Đợt kiểm thử PR #47 ngày 14/10/2026:** giữ baseline head ac7d003 trên nền f267399 để bổ sung test C4.2. Develop đã có #43 tại 515f68a nhưng chưa sync vào nhánh này; không lấy kết quả nhánh riêng thay nghiệm thu bản kết hợp. Không sửa service/schema/contract nghiệp vụ; C4.2/Web/G-FULFILMENT vẫn IN_PROGRESS. Các snapshot trước đây giữ ngày/baseline riêng.
 **Lịch sử kiểm thử #46 trước merge:** develop đã merge #44 tại `2ed3ee5`, có API đọc đơn #42, Seller chuẩn bị #43 và hủy COD/hoàn kho #44. Nhánh #46 ghép thêm giao mô phỏng, chưa merge. Kiểm mới trên nhánh kết hợp: 535 unit, 511 Backend E2E, 122 FE PASS; 2 ca mới đi từ Checkout COD thật qua Seller tới delivery/replay và kiểm hủy muộn. [Báo cáo sau #44](../testing/pr46-post-pr44-integration-2026-10-15.md). Không ghép #47/#48/#54/#55 chưa merge; G-FULFILMENT/Web vẫn chưa nghiệm thu.
@@ -250,7 +255,11 @@ sequenceDiagram
 
 Trạng thái hiện tại vẫn dùng một `Role` cho mỗi User. Yêu cầu cùng tài khoản vừa mua vừa bán là `TARGET` và cần migration/Auth/UI/test riêng; không được mô tả là đã hoạt động.
 
-### Bổ sung C4.2 — hàng giao thất bại quay về (IN_PROGRESS)
+### Bổ sung C4.2 — hàng giao thất bại quay về (CURRENT Backend sau merge #47)
+
+PR #47 đã merge tại `develop 5d17d4f` ngày 15/10. Bằng chứng 532 Backend E2E
+trong báo cáo sau #46 thuộc head #47 trước merge, không thay kết quả mới của
+#48 và không phải nghiệm thu Web. D07/Buyer complete vẫn ở PR #48 riêng.
 
 Đồng bộ 15/10 trên `develop 11a0da7` sau #46. Luồng mới được kiểm qua HTTP:
 Cart → Checkout COD → Seller confirm/packing/ready → Admin ship/delivery-failed
@@ -745,3 +754,9 @@ biên nhận/gửi lại có kiểm soát.
 
 Đây là nền client đang trên PR riêng, chưa là Checkout UI runtime hay DONE
 G-CHECKOUT. Xem [kiểm chứng client](../testing/checkout-client-readiness-verification.md).
+
+## 14. Bổ sung C4.3 — hoàn tất đơn (IN_PROGRESS, chờ review/merge)
+
+Nhánh `codex/order-completion-runtime` triển khai [Buyer complete và tác vụ D07](../api/order-completion-runtime-contract.md). Buyer chỉ hoàn tất đơn mình sau DELIVERED/PAID. Cron thật phát hiện Order tới hạn 3 ngày và tạo `OrderCompletionJob` trong PostgreSQL; job có lease, lịch retry và FAILED sau tối đa 6 lượt. OrderCommand vẫn là receipt bất biến, không dùng PROCESSING làm queue lâu dài.
+
+Buyer hoặc SYSTEM thắng khóa Order sẽ ghi COMPLETED/completedAt/history/receipt nguyên tử; bên còn lại không chuyển trạng thái hai lần. Worker cũ mất lease không ghi được, việc chờ còn qua restart. Không thay stock/snapshot/Payment; không báo Dashboard/Review/Notification là DONE khi mới có mốc COMPLETED. Migration expand-only thêm bảng job/index, không đoán dữ liệu lịch sử. API giao hàng #46 và hàng quay về #47 đã merge; #48 đã giữ đủ controller/parser khi đồng bộ. Ba ca mới dùng COD Checkout → Seller chuẩn bị → Admin giao thành công qua HTTP thật rồi Buyer/D07 hoàn tất; có ca hai bên cạnh tranh. [Bằng chứng và giới hạn sau #47](../testing/pr48-post-pr47-integration-2026-10-15.md).

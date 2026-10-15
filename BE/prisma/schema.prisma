@@ -587,6 +587,7 @@ model Order {
   statusHistory          OrderStatusHistory[]
   cancelledBy            User?                @relation("OrderCancelledBy", fields: [cancelledById], references: [id], onDelete: Restrict)
   commands               OrderCommand[]
+  completionJob          OrderCompletionJob?
   deliveryAttempts       DeliveryAttempt[]    @relation("OrderDeliveryAttempts")
   currentAttempt         DeliveryAttempt?     @relation("OrderCurrentDeliveryAttempt", fields: [id, currentDeliveryAttempt], references: [orderId, deliveryAttempt], onDelete: NoAction, onUpdate: NoAction)
 
@@ -595,6 +596,7 @@ model Order {
   @@index([buyerId, createdAt])
   @@index([storeId, status, createdAt])
   @@index([checkoutId])
+  @@index([status, deliveredAt])
   @@index([cancelledById])
   @@map("orders")
 }
@@ -726,6 +728,28 @@ model StockMovement {
   @@unique([orderItemId, type])
   @@index([variantId, createdAt])
   @@map("stock_movements")
+}
+
+// Durable D07 work, distinct from the immutable OrderCommand transaction receipt.
+model OrderCompletionJob {
+  id             Int       @id @default(autoincrement())
+  orderId        Int       @unique
+  ruleVersion    Int       @default(1)
+  deliveredAt    DateTime
+  dueAt          DateTime
+  status         String    @default("PENDING") @db.VarChar(16)
+  attemptCount   Int       @default(0)
+  nextAttemptAt  DateTime  @default(now())
+  leaseToken     String?   @db.VarChar(36)
+  leaseExpiresAt DateTime?
+  completedAt    DateTime?
+  lastError      String?   @db.VarChar(64)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([status, nextAttemptAt])
+  @@map("order_completion_jobs")
 }
 
 model SearchReconciliationJob {

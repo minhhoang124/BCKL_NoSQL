@@ -23,6 +23,10 @@ import {
 } from './order-returned.controller.js';
 import { OrderReturnedService } from './order-returned.service.js';
 import { OrderReturnedRateGuard } from './order-returned-rate.guard.js';
+import { OrderCompletionController } from './order-completion.controller.js';
+import { OrderCompletionService } from './order-completion.service.js';
+import { OrderCompletionWorker } from './order-completion.worker.js';
+import { OrderCompletionRateGuard } from './order-completion-rate.guard.js';
 
 @Module({
   imports: [
@@ -39,6 +43,7 @@ import { OrderReturnedRateGuard } from './order-returned-rate.guard.js';
     SellerOrderCommandController,
     AdminReturnedController,
     SellerReturnedController,
+    OrderCompletionController,
   ],
   providers: [
     OrderListService,
@@ -52,6 +57,9 @@ import { OrderReturnedRateGuard } from './order-returned-rate.guard.js';
     SellerOrderCommandRateGuard,
     OrderReturnedService,
     OrderReturnedRateGuard,
+    OrderCompletionService,
+    OrderCompletionWorker,
+    OrderCompletionRateGuard,
   ],
 })
 export class OrderModule {}

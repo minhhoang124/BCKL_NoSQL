@@ -17,3 +17,4 @@ process.env.SEARCH_RECONCILIATION_ENABLED = 'false';
 // Runtime repair is exercised explicitly by E2E tests. Disable the wall-clock
 // cron so it cannot mutate shared fixtures between assertions.
 process.env.PRODUCT_IMAGE_REPAIR_ENABLED = 'false';
+process.env.ORDER_AUTO_COMPLETE_ENABLED = 'false';

@@ -174,3 +174,9 @@ $ pnpm run test
 # e2e tests
 $ pnpm run test:e2e
 ```
+
+## Order completion D07 (IN_PROGRESS)
+
+Buyer command: `POST /orders/:orderId/complete`, body `{}`, Idempotency-Key, own delivered/paid Order only. Scheduler `order-auto-complete-d07` runs every 15 seconds and discovers due Orders from PostgreSQL. Default delay is 3 days (`ORDER_AUTO_COMPLETE_DELAY_SECONDS=259200`); enable with `ORDER_AUTO_COMPLETE_ENABLED=true`. Apply the new completion-job migration before running. Never shorten the delay on real transactions merely to demo.
+
+Jobs/lease/retries persist in PostgreSQL; max 6 attempts with backoff, then FAILED for operator investigation (no requeue endpoint yet). Buyer/worker share atomic completion and immutable receipts. See [contract and limits](../docs/api/order-completion-runtime-contract.md). Backend tests disable global cron; the runtime suite enables an isolated app and verifies a real wall-clock tick on a dedicated test database. This is not acceptance evidence for UI, Review, Dashboard, Notification or real payment settlement.
