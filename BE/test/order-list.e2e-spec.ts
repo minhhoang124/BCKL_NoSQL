@@ -453,7 +453,7 @@ describe('Buyer/Seller Order lists (real PostgreSQL, read-only fixtures)', () =>
     });
     expect(readOnly).toBe('on');
   });
-  it('has Swagger for list and detail APIs, not unimplemented commands', () => {
+  it('has Swagger for list, detail, preparation and cancellation APIs', () => {
     const document = SwaggerModule.createDocument(
       app,
       new DocumentBuilder().addBearerAuth().build(),
@@ -463,7 +463,15 @@ describe('Buyer/Seller Order lists (real PostgreSQL, read-only fixtures)', () =>
       { bearer: [] },
     ]);
     expect(document.paths['/orders/{orderId}']?.get).toBeDefined();
-    expect(document.paths['/orders/{orderId}/cancel']).toBeUndefined();
+    for (const command of ['confirm', 'start-packing', 'ready-to-ship'])
+      expect(
+        document.paths[`/seller/orders/{orderId}/${command}`]?.post,
+      ).toBeDefined();
+    expect(document.paths['/seller/orders/{orderId}']?.get).toBeDefined();
+    expect(document.paths['/orders/{orderId}/cancel']?.post).toBeDefined();
+    expect(
+      document.paths['/seller/orders/{orderId}/cancel']?.post,
+    ).toBeDefined();
   });
   it('rate limit includes Retry-After and per-actor isolation', async () => {
     const guard = new OrderListRateGuard(

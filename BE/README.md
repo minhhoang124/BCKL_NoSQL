@@ -122,6 +122,18 @@ $ pnpm --dir BE exec prisma migrate dev --name <migration_name>
 
 ## Running tests
 
+### C3 cancellation (branch scope, not yet merged)
+
+`POST /orders/:orderId/cancel` (USER) and
+`POST /seller/orders/:orderId/cancel` (SELLER) accept JSON reasonCode/reasonText
+plus Idempotency-Key. Buyer: pending; Seller: pending/confirmed. Only unpaid COD
+is supported here. Ledger-backed restoration, cancellation audit, Payment,
+one Product version/outbox and immutable command receipt commit atomically.
+Same-key replay does not repeat stock changes. See
+[C3 contract](../docs/api/order-cancellation-contract.md) and
+[verification](../docs/testing/order-cancellation-api-verification.md).
+Timeouts/quota use ORDER_CANCEL_* in `.env.example`. Do not run E2E against demo.
+
 From the repository root, check all Backend TypeScript (including tests and
 `prisma.config.ts`) with:
 

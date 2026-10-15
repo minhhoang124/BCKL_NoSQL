@@ -1,9 +1,8 @@
 # Chuẩn bị Order detail, vòng đời đơn và hoàn kho
 
-**Cập nhật sau merge #38 ngày 10/10:** nền audit/OrderCommand là CURRENT trên develop 27e083b. Kết quả post-merge: 377 unit/331 E2E PASS trên DB test riêng; không đổi migration hoặc DB demo. API detail IN_PROGRESS trên `codex/order-detail-api`, xem [contract](../api/order-detail-read-contract.md) và [kiểm thử](../testing/order-detail-api-verification.md). Những câu “chưa merge” và T1–T6 bên dưới là ảnh chụp trước merge; không phải yêu cầu tiếp tục chờ #38. Command runtime/hoàn kho/delivery/UI vẫn chưa hoàn thành.
+Ngày đồng bộ: **14/10/2026**. Baseline `origin/develop 515f68a` sau merge #43 chuẩn bị đơn, giữ #42 detail/#38 audit/#45 DeliveryAttempt. Nhánh #44 giữ list/detail/Seller preparation/cancellation và parser riêng của từng nhóm; không ghép delivery/complete chưa merge.
 
-Ngày rà: **10/10/2026**. Baseline tích hợp hiện tại: `origin/develop bed88a0` sau merge #36 Checkout, #39 TypeScript và #37 Order list. Các mục 3, 7, 8 và phần kết quả cũ ở mục 9 là bằng chứng lịch sử trước đồng bộ, không phải trạng thái dependency hiện tại.
-Trạng thái: **IN_PROGRESS — có migration nền OrderCommand/audit và test database trên branch; chưa có API Order mới, chưa merge**.
+Trạng thái: **IN_PROGRESS — detail CURRENT ở lớp Backend trên develop; C3 có code trên nhánh #44, chưa merge và chưa nghiệm thu toàn luồng Web**. Các mục 3, 7, 8 và kết quả cũ ở mục 9 là bằng chứng lịch sử; runtime C3 xem mục 10. Contract detail ở [order-detail-read-contract.md](../api/order-detail-read-contract.md); test đồng bộ #44 được ghi riêng, không lấy số liệu trước merge #42 thay kết quả head mới.
 
 Đợt T0 ngày 09/10 đã thêm `20261009090000_order_command_audit_foundation`, hai bộ test schema/upgrade và [bằng chứng kiểm thử](../testing/order-command-foundation-verification.md). Phần audit chỉ đọc ở mục 3 và 7 là kết quả lịch sử trước đợt triển khai này, không phải kiểm tra mới trên DB demo. T1–T6 vẫn chưa hoàn thành; không lấy test schema làm bằng chứng luồng Order chạy được.
 
@@ -177,9 +176,24 @@ Nguồn là contract đã merge mục 2.1, 6, 7.1 và 7.2, không đặt thêm q
 4. Ghi Order/audit/history/Payment và receipt cùng transaction. Với cancel, restore từng item và một version/outbox mỗi Product cùng giao dịch; rollback tất cả nếu một bước lỗi.
 5. Unique DB + Serializable + retry hữu hạn bảo vệ cạnh tranh giữa nhiều process; helper/hash **không tự bảo vệ concurrency**. Sau commit mới trả response.
 
-107 unit test mới kiểm tra ma trận trạng thái, payload/ID/key/lý do, hash Unicode và tính bất biến. Chưa chứng minh receipt replay HTTP, cancellation restore, lost response, concurrency hay rollback toàn giao dịch. Các gate này vẫn NOT_RUN; G-FULFILMENT chưa DONE.
+107 unit test mới kiểm tra ma trận trạng thái, payload/ID/key/lý do, hash Unicode và tính bất biến. Bằng chứng tại thời điểm mục 9 viết chưa chứng minh receipt replay HTTP, cancellation restore, lost response, concurrency hay rollback; cập nhật runtime C3 nằm tại mục 10. G-FULFILMENT chưa DONE.
 
-## 10. Cập nhật sau merge #38 và runtime chuẩn bị đơn C2 — 10/10
+## 10. C3 triển khai độc lập sau merge #38 — 10/10
+
+Nền `develop 27e083b`; #42 detail/#43 Seller preparation đã được Hiền approve,
+chưa merge ở lần kiểm tra. C3 không cherry-pick code feature chưa merge. Không
+thêm/sửa migration: dùng OrderCommand/audit #38 và StockMovement/Outbox đã có.
+
+Đọc [contract C3](../api/order-cancellation-contract.md), [bằng chứng test](../testing/order-cancellation-api-verification.md)
+và mục 7.5.9 kiến trúc để lần theo Controller → Service → policy/request →
+ledger/stock/version/outbox → history/receipt. Các số liệu NOT_RUN ở mục 6/9
+là lịch sử; không thay bằng chứng mới hay nâng toàn bộ C1–C4 thành DONE.
+
+Hiền review Buyer/Seller state, Store/legacy/payment scope, timeline một event.
+Đạt review hoàn kho → một Product version/outbox, canonical UPSERT/DELETE.
+CHK-S04 xuyên dịch vụ và confirm-vs-cancel HTTP cần test tích hợp sau merge #43;
+writer SQL trong E2E C3 chỉ chứng minh canonical re-read/khóa, không là API confirm.
+## 11. Cập nhật sau merge #38 và runtime chuẩn bị đơn C2 — bằng chứng lịch sử 10/10
 
 Các mục 1–9 giữ bằng chứng và quyết định tại thời điểm chuẩn bị nền. #38 đã
 merge tại develop **27e083b**, có writer Checkout history BUYER và audit nền;
@@ -203,3 +217,13 @@ Gồm HTTP Checkout COD → ba command, restart/replay, hai app cạnh tranh key
 khóa DB thực và lỗi SQL ở history/receipt; không lấy kết quả test #42 chưa merge
 cộng vào branch C2. C2 chưa merge/nghiệm thu Web; hủy/hoàn kho, delivery,
 notification và UI còn NOT_RUN, G-FULFILMENT chưa DONE.
+
+## 12. Tích hợp sau merge #43 — 14/10
+
+#43 đã merge tại 515f68a. Test confirm-vs-cancel mới phải dùng HTTP thật trên
+hai ứng dụng/pool PostgreSQL độc lập, không dùng writer SQL mô phỏng confirm.
+Xác nhận thắng thì Buyer cancel bị chặn, không hoàn kho/version/outbox; hủy
+thắng thì confirm bị chặn, mỗi item hoàn đúng một lần, một version/event mỗi
+Product. Đọc detail/audit và replay receipt của bên thắng phải nhất quán. Test
+packing-vs-Seller-cancel phải tuân thủ trạng thái nguồn đã chốt. UI, delivery và
+G-FULFILMENT chưa nghiệm thu; bằng chứng cũ các mục 10/11 giữ thời điểm riêng.

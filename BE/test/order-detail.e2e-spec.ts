@@ -741,7 +741,7 @@ describe('Buyer/Seller Order detail HTTP + PostgreSQL', () => {
       await prisma.searchOutbox.findMany({ where: { productId } }),
     ).toEqual(outboxBefore);
   });
-  it('publishes nested detail schemas and errors in Swagger, not commands', () => {
+  it('publishes detail alongside cancellation and merged Seller preparation', () => {
     const document = SwaggerModule.createDocument(
       app,
       new DocumentBuilder().addBearerAuth().build(),
@@ -759,6 +759,13 @@ describe('Buyer/Seller Order detail HTTP + PostgreSQL', () => {
         items: { type: 'array' },
       },
     });
-    expect(document.paths['/orders/{orderId}/cancel']).toBeUndefined();
+    expect(document.paths['/orders/{orderId}/cancel']?.post).toBeDefined();
+    expect(
+      document.paths['/seller/orders/{orderId}/cancel']?.post,
+    ).toBeDefined();
+    for (const command of ['confirm', 'start-packing', 'ready-to-ship'])
+      expect(
+        document.paths[`/seller/orders/{orderId}/${command}`]?.post,
+      ).toBeDefined();
   });
 });
