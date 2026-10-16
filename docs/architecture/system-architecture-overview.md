@@ -792,6 +792,8 @@ G-CHECKOUT. Xem [kiểm chứng client](../testing/checkout-client-readiness-ver
 
 #48 đã merge tại `develop 541d15b` ngày 15/10; đây là nền Backend, chưa phải nghiệm thu Order Web hoặc G-FULFILMENT.
 
+**Trạng thái cập nhật 15/10:** #48 đã merge tại develop541d15b; mục này giữ mô tả triển khai từ nhánh cũ, Backend completion/D07 đã CURRENT, Web chưa nghiệm thu.
+
 Nhánh `codex/order-completion-runtime` triển khai [Buyer complete và tác vụ D07](../api/order-completion-runtime-contract.md). Buyer chỉ hoàn tất đơn mình sau DELIVERED/PAID. Cron thật phát hiện Order tới hạn 3 ngày và tạo `OrderCompletionJob` trong PostgreSQL; job có lease, lịch retry và FAILED sau tối đa 6 lượt. OrderCommand vẫn là receipt bất biến, không dùng PROCESSING làm queue lâu dài.
 
 Buyer hoặc SYSTEM thắng khóa Order sẽ ghi COMPLETED/completedAt/history/receipt nguyên tử; bên còn lại không chuyển trạng thái hai lần. Worker cũ mất lease không ghi được, việc chờ còn qua restart. Không thay stock/snapshot/Payment; không báo Dashboard/Review/Notification là DONE khi mới có mốc COMPLETED. Migration expand-only thêm bảng job/index, không đoán dữ liệu lịch sử. API giao hàng #46 và hàng quay về #47 đã merge; #48 đã giữ đủ controller/parser khi đồng bộ. Ba ca mới dùng COD Checkout → Seller chuẩn bị → Admin giao thành công qua HTTP thật rồi Buyer/D07 hoàn tất; có ca hai bên cạnh tranh. [Bằng chứng và giới hạn sau #47](../testing/pr48-post-pr47-integration-2026-10-15.md).
@@ -805,3 +807,9 @@ Luồng đọc đã chuẩn bị: `useOrderList/useOrderDetail` → `orderApi` �
 Nút Seller chỉ được chuẩn bị cho confirm → start-packing → ready-to-ship khi đúng role/Store, tài khoản active, Store ACTIVE/SUSPENDED, Payment hợp lệ, dữ liệu mới và không còn yêu cầu chưa rõ kết quả. UI chỉ gợi ý thao tác; Backend vẫn quyết định quyền/trạng thái trong transaction. Panel khóa bấm nhanh và không tự đổi trạng thái. Adapter POST giữ cùng Idempotency-Key (mã chống xử lý trùng), không auto retry/refresh sau 401; receipt (kết quả lệnh đã lưu) chỉ xác nhận lệnh cũ, không thay GET detail mới. Adapter này chưa được nối nút Web; phần điều phối recovery (đối chiếu khi mất kết quả) phải làm trước khi bật giao dịch.
 
 Buyer hủy/hoàn tất và Seller hủy/nhận hàng quay về vẫn disabled, chờ nối adapter/runtime FE (#44/#47/#48 đã merge Backend; FE chưa nối); không tạo quyền mới hoặc cho Seller tự đánh dấu giao thành công. Đã chạy **239 FE tests**, lint và build; chưa chạy browser, live API/PostgreSQL hoặc toàn luồng đặt COD–giao–hoàn tất cho nhánh này. Xem [audit màn hình, cách nối và checklist còn lại](../testing/order-ui-api-readiness-2026-10-15.md). G-CHECKOUT/G-FULFILMENT giữ IN_PROGRESS.
+
+## 16. Nền journal phục hồi yêu cầu Order — IN_PROGRESS
+
+Nhánh `codex/order-command-recovery` đồng bộ develop `09daae0` sau merge #54/#55 ngày 16/10/2026. Giữ Checkout và Order read panels đã merge; chỉ bổ sung thư viện tab-scoped pending intent (yêu cầu còn chờ trong tab). Nó lưu ID/lệnh/key trước HTTP, giữ qua reload, tách actor, chặn dữ liệu hỏng và chỉ xóa bằng receipt đã validate. Chưa controller/route/POST; chưa tự replay hoặc phục hồi sau đóng tab. V1 chỉ Seller preparation và Buyer complete body `{}`, không cancellation/returned. Không lưu token/địa chỉ hoặc tự coi GET là ack. [Cách hoạt động, biến và điều kiện còn thiếu](order-command-recovery-readiness.md). Đây là foundation, không phải Order Web/G-FULFILMENT DONE.
+
+Coordinator độc lập yêu cầu xác nhận, khóa bấm trùng, chụp và kiểm lại phiên trước/sau adapter, giữ unknown intent khi lỗi và chặn response/lỗi phiên cũ acknowledge. Adapter vẫn inject trong test, chưa nối Backend. #55 đã là dependency chính thức; nối route đọc và nối command recovery runtime là bước triển khai riêng, không bật POST trong lần đồng bộ này.
