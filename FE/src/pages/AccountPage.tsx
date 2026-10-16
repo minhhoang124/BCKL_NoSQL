@@ -17,6 +17,7 @@ export function AccountPage() {
         <p>ID: #{user.id}</p>
         <p>Trạng thái: {user.isActive ? 'Hoạt động' : 'Đã khóa'}</p>
         {user.role === 'USER' && user.isActive && <p><Link to="/account/addresses">Quản lý địa chỉ nhận hàng</Link></p>}
+        {user.role === 'USER' && user.isActive && <p><Link to="/account/orders">Đơn mua của tôi</Link></p>}
       </div>
     </div>
   );

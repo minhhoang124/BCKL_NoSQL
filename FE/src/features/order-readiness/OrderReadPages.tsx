@@ -1,0 +1,80 @@
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../contexts/useAuth';
+import { getAuthSessionVersion } from '../../services/apiClient';
+import { validOrderId } from '../../services/orderResponse';
+import { ORDER_STATUSES, type OrderScope, type OrderStatus } from '../../types/order';
+import { OrderDetailPanel, OrderListPanel } from './OrderPanels';
+import { orderStatusLabels } from './orderPolicy';
+import { useOrderDetail, useOrderList } from './useOrderRead';
+import styles from './OrderReadPages.module.css';
+
+const base = (scope: OrderScope) => scope === 'buyer' ? '/account/orders' : '/seller/orders';
+function pathId(value: string | undefined) {
+  return value && /^[1-9]\d{0,9}$/.test(value) && validOrderId(Number(value)) ? Number(value) : null;
+}
+/** Only merged GET adapters are wired here. No command dispatcher is supplied. */
+export function OrderReadPage({ scope, detail = false }: { scope: OrderScope; detail?: boolean }) {
+  const { user, loading } = useAuth();
+  const { orderId } = useParams();
+  const [params] = useSearchParams();
+  if (loading) return <p role="status">Đang xác minh phiên…</p>;
+  if (!user?.isActive || user.role !== (scope === 'buyer' ? 'USER' : 'SELLER'))
+    return <p role="alert">Cần tài khoản đang hoạt động và đúng vai trò để xem đơn.</p>;
+  const key = `${getAuthSessionVersion()}:${user.id}:${scope}:${orderId ?? ''}:${params.toString()}`;
+  if (detail && pathId(orderId) === null)
+    return <div className={styles.page}><p role="alert">Mã đơn hàng không hợp lệ.</p><Link to={base(scope)}>Về danh sách đơn</Link></div>;
+  return <div className={styles.page}>
+    <nav aria-label="Điều hướng đơn hàng">
+      <Link to={scope === 'buyer' ? '/account' : '/seller'}>{scope === 'buyer' ? 'Tài khoản' : 'Kênh người bán'}</Link>
+      {' · '}<Link to={base(scope)}>Danh sách đơn</Link>
+    </nav>
+    <p>Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật trên màn này.</p>
+    {detail ? <Detail key={key} scope={scope} orderId={pathId(orderId)!} /> : <List key={key} scope={scope} />}
+  </div>;
+}
+
+function List({ scope }: { scope: OrderScope }) {
+  const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
+  const status = params.get('status');
+  const after = params.get('afterId');
+  // Validate URL before mounting the component which can issue HTTP.
+  const invalid = Array.from(params.keys()).some(k => !['status', 'afterId'].includes(k)) ||
+    params.getAll('status').length > 1 || params.getAll('afterId').length > 1 ||
+    (status !== null && !ORDER_STATUSES.includes(status as OrderStatus)) ||
+    (after !== null && pathId(after) === null);
+  if (invalid) return <><p role="alert">Bộ lọc hoặc mốc trang không hợp lệ.</p><button onClick={() => setParams({})}>Về trang đầu</button></>;
+  return <>
+    <label>Trạng thái đơn
+      <select value={status ?? ''} onChange={event => setParams(event.target.value ? { status: event.target.value } : {})}>
+        <option value="">Tất cả trạng thái</option>
+        {ORDER_STATUSES.map(s => <option key={s} value={s}>{orderStatusLabels[s]}</option>)}
+      </select>
+    </label>
+    {after !== null && <button onClick={() => setParams(status ? { status } : {})}>Về trang đầu</button>}
+    <ListData scope={scope} status={status as OrderStatus | null} afterId={after === null ? undefined : Number(after)}
+      onSelect={id => navigate(`${base(scope)}/${id}`)}
+      onNext={id => setParams(status ? { status, afterId: String(id) } : { afterId: String(id) })} />
+  </>;
+}
+
+function ListData({ scope, status, afterId, onSelect, onNext }: {
+  scope: OrderScope; status: OrderStatus | null; afterId?: number;
+  onSelect: (id: number) => void; onNext: (id: number) => void;
+}) {
+  const { state, reload } = useOrderList(scope, { limit: 20, status: status ?? undefined, afterId });
+  return <>
+    <button disabled={state.status === 'loading'} onClick={reload}>Làm mới trang đơn</button>
+    <OrderListPanel scope={scope} source="api" state={state} onRetry={reload} onSelect={onSelect} onNextPage={onNext} />
+  </>;
+}
+
+function Detail({ scope, orderId }: { scope: OrderScope; orderId: number }) {
+  const { user } = useAuth();
+  const { state, reload, readKey } = useOrderDetail(scope, orderId);
+  return <>
+    <button disabled={state.status === 'loading'} onClick={reload}>Làm mới chi tiết đơn</button>
+    <OrderDetailPanel state={state} source="api" readKey={readKey} onRetry={reload}
+      context={{ scope, user, fresh: state.status === 'ready', busy: false, outcomeUnknown: false }} />
+  </>;
+}

@@ -12,6 +12,7 @@ import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { CheckoutPage } from '../features/order-flow/CheckoutPage';
+import { OrderReadPage } from '../features/order-readiness/OrderReadPages';
 
 export function AppRouter() {
   return (
@@ -45,6 +46,11 @@ export function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/account/orders" element={<ProtectedRoute allowedRoles={['USER']}><OrderReadPage scope="buyer" /></ProtectedRoute>} />
+        <Route path="/account/orders/:orderId" element={<ProtectedRoute allowedRoles={['USER']}><OrderReadPage scope="buyer" detail /></ProtectedRoute>} />
+        <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" /></ProtectedRoute>} />
+        <Route path="/seller/orders/:orderId" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" detail /></ProtectedRoute>} />
 
         {/* Protected Routes - Seller only */}
         <Route

@@ -16,7 +16,7 @@ describe.skipIf(!enabled)('Address → Cart → Checkout: real HTTP/PostgreSQL',
   const marker = `web-checkout-${crypto.randomUUID()}`;
   const nativeFetch = globalThis.fetch;
   let serial = 0;
-  let category, store;
+  let category, store, sellerSession;
   const users = [];
   beforeAll(async () => {
     const url = new URL(process.env.DATABASE_URL ?? '');
@@ -39,10 +39,12 @@ describe.skipIf(!enabled)('Address → Cart → Checkout: real HTTP/PostgreSQL',
     vi.stubEnv('VITE_API_URL', base);
     client = await import('../../services/apiClient');
     ({ AppRouter } = await import('../../routes/AppRouter'));
-    const seller = await prisma.user.create({ data: { email: `${marker}-seller@example.test`, passwordHash: 'fixture-no-login', role: 'SELLER' } });
+    const sellerPassword = 'Qa-only-Read-Seller123!';
+    const seller = await prisma.user.create({ data: { email: `${marker}-seller@example.test`, passwordHash: await requireBE('bcryptjs').hash(sellerPassword, 10), role: 'SELLER' } });
     users.push(seller.id);
     store = await prisma.store.create({ data: { sellerId: seller.id, name: 'QA Store', status: 'ACTIVE' } });
     category = await prisma.category.create({ data: { name: 'QA leaf', slug: marker } });
+    sellerSession = await http('/auth/login', null, 'POST', { email: seller.email, password: sellerPassword });
   }, 30000);
   async function http(path, token, method = 'GET', body) {
     const response = await nativeFetch(base + path, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: body ? JSON.stringify(body) : undefined });
@@ -104,6 +106,42 @@ describe.skipIf(!enabled)('Address → Cart → Checkout: real HTTP/PostgreSQL',
     expect(order.items).toHaveLength(1);
     expect(await prisma.cartItem.count({ where: { variantId: unselected.id, cart: { userId: f.session.user.id } } })).toBe(1);
     expect((await prisma.productVariant.findUniqueOrThrow({ where: { id: unselected.id } })).stock).toBe(5);
+    fireEvent.click(screen.getByRole('link', { name: `Theo dõi đơn ${order.orderNumber}` }));
+    expect(await screen.findByRole('heading', { name: order.orderNumber })).toBeInTheDocument();
+    expect(screen.getByText('QA snapshot address, QA ward, QA province')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hủy đơn' })).toBeDisabled();
+    // Read through the routed Seller UI with a real Seller JWT, including suspended Store.
+    cleanup();
+    await prisma.store.update({ where: { id: store.id }, data: { status: 'SUSPENDED' } });
+    try {
+      client.setAccessToken(sellerSession.accessToken, sellerSession.user.id);
+      show({ session: sellerSession }, '/seller/orders');
+      fireEvent.click(await screen.findByRole('button', { name: `Xem chi tiết ${order.orderNumber}` }));
+      expect(await screen.findByRole('heading', { name: order.orderNumber })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Xác nhận đơn' })).toBeDisabled();
+      await assertCommitted(f);
+      expect(await prisma.orderCommand.count({ where: { orderId: order.id } })).toBe(0);
+    } finally {
+      await prisma.store.update({ where: { id: store.id }, data: { status: 'ACTIVE' } });
+    }
+  }, 20000);
+  it.each(['buyer', 'seller'])('real Order detail rejects another %s through the routed UI', async scope => {
+    const f = await fixture(); const place = await prepare(f);
+    fireEvent.click(place); await screen.findByText('Đã ghi nhận đặt hàng COD');
+    const order = await assertCommitted(f);
+    cleanup();
+    const email = `${marker}-outsider-${serial++}@example.test`;
+    let outsider = await http('/auth/register', null, 'POST', { email, password: 'Qa-only-Password123!', accountType: 'USER' });
+    if (scope === 'seller') {
+      await prisma.user.update({ where: { id: outsider.user.id }, data: { role: 'SELLER' } });
+      outsider = await http('/auth/login', null, 'POST', { email, password: 'Qa-only-Password123!' });
+    }
+    client.setAccessToken(outsider.accessToken, outsider.user.id);
+    show({ session: outsider }, `${scope === 'buyer' ? '/account' : '/seller'}/orders/${order.id}`);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập');
+    expect(screen.queryByRole('heading', { name: order.orderNumber })).not.toBeInTheDocument();
+    await assertCommitted(f);
+    expect(await prisma.orderCommand.count({ where: { orderId: order.id } })).toBe(0);
   }, 20000);
   it('real commit followed by lost response replays same key/body without duplicate inventory/outbox', async () => {
     const f = await fixture(); const place = await prepare(f);

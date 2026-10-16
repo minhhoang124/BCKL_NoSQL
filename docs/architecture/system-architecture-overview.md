@@ -1,5 +1,21 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Browser #57 ngày 16/10/2026:** cùng source FE/BE `e0e9d22`, Chrome riêng + HTTP
+Nest + PostgreSQL QA đạt 5/5 nhóm: desktop/mobile sáng/tối, phân trang/filter,
+Seller Store tạm khóa, GET lỗi/retry, logout/login Buyer B khi GET A còn chờ,
+ownership404 và guest redirect. Baseline nghiệp vụ không đổi; không bật command.
+Header/Login dark có contrast risk cũ ngoài diff Order. [Bằng chứng, ảnh và giới hạn](../testing/pr57-browser-qa-2026-10-16.md).
+#57 vẫn Draft/IN_PROGRESS, không thay nghiệm thu POST/recovery/G-FULFILMENT.
+
+**Order Web GET — IN_PROGRESS, 16/10/2026:** nhánh `codex/order-web-read-runtime`
+từ develop `09daae0` sau merge #55 nối `/account/orders[/id]` và
+`/seller/orders[/id]` vào GET adapter/hooks/validator đã merge. Account/Seller
+dashboard và receipt Checkout có link; giữ Address/Cart/Checkout/Admin. List
+phân trang cursor, filter; detail lấy snapshot, lỗi/ownership/phiên được chặn.
+Không lấy #56 chưa merge, không truyền dispatcher cho nút command nên tất cả
+nút thay đổi đơn vẫn disabled. 295 FE PASS và 6 live HTTP/PostgreSQL QA PASS;
+browser chưa chạy, G-FULFILMENT chưa DONE. Xem [luồng và bằng chứng mới](../testing/order-read-web-runtime-2026-10-16.md).
+
 **Đồng bộ #55 ngày 16/10/2026:** nền develop `1e111f4` đã merge Checkout #54 và Order #42/#43/#44/#46/#47/#48. Giữ route Checkout và lớp chuẩn bị Order mục 15; #55 vẫn PREPARATION/IN_PROGRESS, chưa nối route Order hoặc nút giao dịch thật. Các bằng chứng ngày cũ bên dưới là lịch sử; merge Checkout không đồng nghĩa nghiệm thu toàn bộ G-CHECKOUT/G-FULFILMENT.
 
 **Đồng bộ #54 ngày 15/10/2026:** nền develop `541d15b` đã merge Cart #50, client #53 và Order #42/#43/#44/#46/#47/#48. Conflict chỉ kiến trúc, giữ cả Checkout và các luồng Order. Mã FE Checkout không đổi so với `2d30ef0`; #48 đã merge chính thức; #55 chưa merge không được ghép vào. #54 vẫn Draft/IN_PROGRESS; bằng chứng browser/live 12/10 bên dưới là lịch sử, chưa phải rerun browser trên head mới.

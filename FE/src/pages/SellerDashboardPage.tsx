@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { ApiError } from '../services/apiClient';
 import { marketplaceApi } from '../services/marketplaceApi';
 import type { Brand, Category, Product, Store } from '../types/marketplace';
@@ -56,7 +57,7 @@ export function SellerDashboardPage() {
   const saveShipping = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const data = new FormData(event.currentTarget); void run(() => marketplaceApi.shipping(selected.id, { packageWeightGrams: Number(data.get('weight')) }), 'Đã lưu kiện hàng.'); };
   const upload = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const body = new FormData(event.currentTarget); body.set('isPrimary', 'true'); body.set('sortOrder', '0'); void run(() => marketplaceApi.addImage(selected.id, body), 'Đã tải ảnh chính.'); };
   return <div className={styles.page}>
-    <div><h1>Kênh người bán</h1><p>Hoàn thiện Store và sản phẩm trước khi gửi Admin duyệt.</p></div>
+    <div><h1>Kênh người bán</h1><p>Hoàn thiện Store và sản phẩm trước khi gửi Admin duyệt.</p><Link to="/seller/orders">Đơn hàng của cửa hàng</Link></div>
     <div className={styles.tabs}><button className={tab === 'store' ? styles.active : ''} onClick={() => setTab('store')}>Store</button><button className={tab === 'products' ? styles.active : ''} onClick={() => setTab('products')}>Sản phẩm ({products.length})</button></div>
     {error && <p className={styles.error} role="alert">{error}</p>}{message && <p className={styles.success}>{message}</p>}
     {tab === 'store' ? <section className={styles.columns}>

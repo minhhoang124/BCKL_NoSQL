@@ -85,7 +85,7 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
   if (receipt) return <div className={styles.page}>
     <h1>Đã ghi nhận đặt hàng COD</h1><p>{receipt.replayed ? 'Đã khôi phục biên nhận gốc; không đặt thêm đơn.' : 'Đơn đã được tạo thành công.'}</p>
     <p>Đây là biên nhận lúc đặt, không phải trạng thái giao hàng hiện tại.</p>
-    {receipt.orders.map(o => <article className={styles.card} key={o.id}><h2>{o.orderNumber}</h2><p>{money(o.total)}</p><p>Mã đơn: {o.id}. Màn theo dõi đơn sẽ được nối khi API chi tiết đơn được tích hợp.</p></article>)}
+    {receipt.orders.map(o => <article className={styles.card} key={o.id}><h2>{o.orderNumber}</h2><p>{money(o.total)}</p><p>Mã đơn: {o.id}. <Link to={`/account/orders/${o.id}`}>Theo dõi đơn {o.orderNumber}</Link></p></article>)}
     {error && <p role="alert">{error}</p>}<Link to="/cart">Quay lại giỏ hàng</Link>
   </div>;
   return <div className={styles.page}>

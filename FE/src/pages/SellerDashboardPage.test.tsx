@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SellerDashboardPage } from './SellerDashboardPage';
+import { MemoryRouter } from 'react-router-dom';
 import { marketplaceApi } from '../services/marketplaceApi';
 import { ApiError } from '../services/apiClient';
 import type { Product } from '../types/marketplace';
@@ -16,7 +17,7 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 async function open() {
-  render(<SellerDashboardPage />);
+  render(<MemoryRouter><SellerDashboardPage /></MemoryRouter>);
   fireEvent.click(await screen.findByRole('button', { name: 'Sản phẩm (2)' }));
   fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh sửa' })[0]);
 }
