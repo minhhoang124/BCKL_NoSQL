@@ -1,0 +1,76 @@
+.panel {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1rem;
+  color: var(--text-h);
+  overflow-wrap: anywhere;
+}
+.panel h1 {
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  letter-spacing: normal;
+  margin: 0 0 1rem;
+}
+.panel h2 {
+  font-size: 1.2rem;
+}
+.panel h3 {
+  font-size: 1rem;
+  margin: 0.6rem 0;
+}
+.notice {
+  border-inline-start: 4px solid #c63b09;
+  background: var(--code-bg);
+  padding: 0.75rem;
+  margin-block: 0.8rem;
+}
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.8rem;
+}
+.card {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-block: 1rem;
+  background: var(--bg);
+}
+.panel button {
+  padding: 0.65rem 1rem;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  margin-block: 0.6rem;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  cursor: pointer;
+}
+.panel button:focus-visible {
+  outline: 3px solid #c63b09;
+  outline-offset: 3px;
+}
+.panel button:disabled {
+  cursor: not-allowed;
+  border-style: dashed;
+}
+.panel p {
+  margin-block: 0.45rem;
+}
+.hint {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+@media (max-width: 480px) {
+  .panel {
+    padding: 0.75rem;
+  }
+  .panel button {
+    width: 100%;
+  }
+  .card {
+    padding: 0.75rem;
+  }
+}
