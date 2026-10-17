@@ -1,5 +1,25 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Đồng bộ #58 ngày 17/10/2026:** nền `ad3b969` sau merge Admin #28.
+Giữ Admin, Checkout, Order GET và recovery foundation; không đổi thiết kế C2.
+Approval Hiền tại `fbbb13d` là bản trước đồng bộ, cần review delta mới.
+
+**Đồng bộ thiết kế #58 ngày 16/10/2026:** nền `develop 035656b` đã merge
+#56 (journal/coordinator phục hồi) và #57 (Order Web GET). Giữ cả hai phần;
+không bật Seller POST. #60 chỉ chuẩn bị adapter/component; contract chi tiết
+resolution ở #62 và bộ chuẩn bị kiểm thử #63 vẫn là PR riêng chưa merge.
+Approval thiết kế không thay nghiệm thu migration/API hoặc Web giao dịch thật.
+
+**Baseline thiết kế nối Seller C2 trước đồng bộ — PREPARATION:** từ develop `09daae0`,
+chốt theo API đã merge confirm → packing → ready; không lấy #56 chưa merge làm
+nền code. [Thiết kế cầu nối và settlement](seller-command-web-recovery-design.md)
+phân biệt receipt thành công với unknown outcome. Lỗi HTTP không tự chứng minh
+key chưa commit; đề xuất riêng Backend resolution + durable fence để đóng ý định
+an toàn, cần Hiền review và migration mới, **chưa triển khai**. Có
+[ma trận C2 Web](../testing/seller-command-web-test-matrix.md), tất cả ca tích hợp
+mới NOT_RUN. Không bật POST hoặc nhận foundation/GET là G-FULFILMENT DONE.
+
+**Admin và bằng chứng nền:**
 **Admin #28 — sửa draft và đồng bộ local ngày 16/10/2026, PARTIAL:**
 Nhánh Admin hợp nhất `develop 035656b` sau #56/#57, giữ route Checkout,
 Buyer/Seller Order chỉ đọc, recovery foundation và phần Address/Cart đã bàn giao.
