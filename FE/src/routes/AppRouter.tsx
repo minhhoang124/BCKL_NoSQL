@@ -17,6 +17,16 @@ import { OrderReadPage } from '../features/order-readiness/OrderReadPages';
 export function AppRouter() {
   return (
     <Routes>
+      {/* Admin has its own shell and does not use the public storefront layout. */}
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+
       <Route element={<PublicLayout />}>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
@@ -58,16 +68,6 @@ export function AppRouter() {
           element={
             <ProtectedRoute allowedRoles={['SELLER']}>
               <SellerDashboardPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Protected Routes - Admin only */}
-        <Route
-          path="/admin/*"
-          element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
-              <AdminDashboardPage />
             </ProtectedRoute>
           }
         />

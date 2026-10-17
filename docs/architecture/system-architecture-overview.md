@@ -1,5 +1,52 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Admin #28 — sửa draft và đồng bộ local ngày 16/10/2026, PARTIAL:**
+Nhánh Admin hợp nhất `develop 035656b` sau #56/#57, giữ route Checkout,
+Buyer/Seller Order chỉ đọc, recovery foundation và phần Address/Cart đã bàn giao.
+Sửa lỗi phản hồi lưu Catalog chậm xóa bản nháp mới: khóa selection/input/tabs/
+Create/Cancel/refresh trong lúc ghi; giữ identity bản sửa và chặn ghi khi tải
+Catalog thất bại hoặc bản ghi đã biến mất. Không thêm Brand editor, attribute
+editor, account/dashboard preview hoặc Backend mới vào #28. Kiểm hồi quy bản
+kết hợp: FE361 PASS/6 SKIP, lint/build PASS (5 warning nền). QA Catalog trên
+source `ab60dd8`: Hiền xác nhận Category giữ draft khi trùng slug, ảnh Brand
+giữ draft; DB xác nhận A lưu được, B không đổi, không thêm Brand sau lỗi.
+Pending controls/GET lỗi chỉ có test tự động, chưa xác nhận bằng browser thật.
+Không lấy QA `abe4a14` làm PASS toàn bộ bản mới.
+Xem [sửa draft và kiểm đồng bộ](../testing/admin-catalog-draft-fix-sync-2026-10-16.md).
+
+**Lịch sử Admin #28 — đồng bộ local ngày 16/10/2026, PARTIAL:** nhánh Admin lấy
+`develop 09daae0` sau merge Checkout #54 (`1e111f4`) và Order readiness #55.
+Giữ nguyên code Admin/Address/Cart/Auth/client, thêm route Checkout USER và các
+module Order đã merge; Order readiness chưa có route hoặc nút giao dịch thật.
+Không lấy foundation #56 chưa merge. Conflict chỉ tài liệu kiến trúc, giữ đủ
+Admin, Checkout và Order. QA trên `071f28a`/nền `541d15b` ngày 15/10 là bằng
+chứng lịch sử của bản trước; phải ghi riêng kiểm thử bản kết hợp mới, không nâng
+G-ADMIN/G-CHECKOUT/G-FULFILMENT thành DONE.
+Kiểm local bản kết hợp: FE284 PASS/4live SKIP, lint/typecheck/build PASS (5 warning
+Admin cũ); browser/live DB trên bản mới NOT_RUN. Xem [báo cáo đồng bộ Admin](../testing/admin-ui-post-checkout-sync-2026-10-16.md).
+
+**Lịch sử Admin #28 — đồng bộ ngày 15/10/2026, PARTIAL:** nhánh Admin lấy
+`develop 541d15b` sau merge #46/#47/#48, giữ nguyên toàn bộ FE của head
+`8eab9ef`: Admin shell, Address/Cart/Auth/client/router. Cây hợp nhất thử đã
+đối chiếu blob và không thay FE; chỉ conflict tài liệu kiến trúc. Giữ đủ
+Order list/detail/Seller/cancel/delivery/returned/complete và D07.
+Không ghép Checkout #54 hoặc Order UI #55. QA source `1260a47` trên nền
+`2ed3ee5` là lịch sử, không tự áp sang bản kết hợp `541d15b`; kiểm tra mới
+phải ghi riêng nguồn/bằng chứng và trạng thái NOT_RUN còn thiếu.
+Kết quả 85 FE test và QA Backend nền `41450b4` ngày 12–15/10 là bằng chứng
+lịch sử, không xác nhận bản đồng bộ mới. Lượt hồi quy mới phải ghi riêng FE/BE
+commit, DB và từng ca thực chạy. Ca hai Admin Product10 trên nền cũ có ảnh lỗi,
+DB một quyết định của B và bước phục hồi do Hiền xác nhận; không suy thành
+mọi race/session-isolation hoặc toàn bộ Admin đã nghiệm thu.
+Không dùng API PASS thay cho browser acceptance. Chi tiết lịch sử và giới hạn tại
+[Admin Backend QA](../testing/admin-ui-backend-qa.md). Backend đã có API khóa/mở
+account và Category attribute, nhưng UI tương ứng còn thiếu; không gọi toàn bộ
+hai chức năng này là thiếu API. Không nâng G-ADMIN hoặc toàn hệ thống thành DONE.
+**Sau merge #48 ngày 15/10/2026:** develop `541d15b` đã có #42/#43/#44/#46/#47/#48, Buyer complete/D07 CURRENT ở Backend. Migration completion giữ nguyên; không lấy #54/#55 chưa merge. Các đoạn ngày cũ dưới đây là lịch sử, không thay bằng chứng tích hợp mới. Web/G-FULFILMENT chưa nghiệm thu.
+**Sau merge #55 ngày 16/10/2026:** develop `09daae0` đã có Order readiness cùng Checkout #54. Chỉ các module chuẩn bị Order đã merge, chưa nối route Order hoặc nút giao dịch thật; không gọi Order Web DONE. #56 chưa merge, không ghép trong bản Admin này.
+
+**Lịch sử đồng bộ #55 ngày 16/10/2026:** nền develop `1e111f4` đã merge Checkout #54 và Order #42/#43/#44/#46/#47/#48. Giữ route Checkout và lớp chuẩn bị Order mục 15; khi kiểm trên nhánh #55 vẫn PREPARATION/IN_PROGRESS, chưa nối route Order hoặc nút giao dịch thật. Các bằng chứng ngày cũ bên dưới là lịch sử; merge Checkout không đồng nghĩa nghiệm thu toàn bộ G-CHECKOUT/G-FULFILMENT.
+
 **Browser #57 ngày 16/10/2026:** cùng source FE/BE `e0e9d22`, Chrome riêng + HTTP
 Nest + PostgreSQL QA đạt 5/5 nhóm: desktop/mobile sáng/tối, phân trang/filter,
 Seller Store tạm khóa, GET lỗi/retry, logout/login Buyer B khi GET A còn chờ,
