@@ -893,6 +893,18 @@ Hai lệnh Python trên đã được job `ai-python-checks` thực thi trên Gi
 
 ## 13. Chuẩn bị client Checkout — 12/10/2026, IN_PROGRESS
 
+**Admin attributes #65 — đồng bộ18/10 sau merge #62:** nền develop `7619a76`,
+giữ contract resolver/Order recovery và Admin/Checkout/Order GET; không đổi
+contract thuộc tính/34acceptance. Chưa schema/API/runtime,34ca NOT_RUN.
+
+Nhật ký #65: đồng bộ develop7e58255 sau#58 và ad3b969 sau#28; Hiền approve
+2d637e9, Hiền/Đạt approve b69b06b; các approval thuộc head ghi kèm.
+Audit develop035656b xác nhận thiếu Admin GET đầy đủ/options mutation và PATCH
+chưa bảo vệ type đã dùng. [Contract](../api/admin-category-attributes-contract.md)
+và [checklist](admin-category-attributes-readiness.md) tách thuộc tính với SKU,
+revision/audit/reason/confirmation/durable Search work. Implementation cần PR
+riêng sau merge; không nhận proposal hoặc CI là runtime PASS.
+
 Nhánh `codex/checkout-client-readiness` từ develop `dc52d92` (Address #49 và
 Auth #52 đã merge) bổ sung nhỏ ở `FE/src/services/apiClient.ts`, không lấy
 code Cart #50 hoặc Order chưa merge làm dependency. `ApiError.code` giữ mã
