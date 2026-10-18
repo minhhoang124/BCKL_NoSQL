@@ -31,7 +31,7 @@ export function assertSellerCommandQuery(query: unknown) {
 function bodyRoute(req: { method?: string; url?: string }) {
   return (
     req.method === 'POST' &&
-    /^\/seller\/orders\/[^/]+\/(confirm|start-packing|ready-to-ship)\/?$/i.test(
+    /^\/seller\/orders\/[^/]+\/(confirm|start-packing|ready-to-ship|resolve-command)\/?$/i.test(
       (req.url ?? '').split('?')[0],
     )
   );

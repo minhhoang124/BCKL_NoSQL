@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { assertOrderCommandNotClosed } from './order-command-fence.js';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, Role } from '@prisma/client';
@@ -149,6 +150,11 @@ export class OrderCompletionService {
                 },
               },
             });
+            await assertOrderCommandNotClosed(
+              tx,
+              { ...input, command: 'complete' },
+              stored !== null,
+            );
             if (stored) {
               const response = this.replay(stored, input);
               if (job) await this.finishJob(tx, job.id, 'SUCCEEDED', now);

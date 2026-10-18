@@ -128,26 +128,27 @@ enum SearchReconciliationStatus {
 }
 
 model User {
-  id                   Int                    @id @default(autoincrement())
-  email                String                 @unique
-  passwordHash         String
-  fullName             String?
-  role                 Role                   @default(USER)
-  isActive             Boolean                @default(true)
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  store                Store?
-  refreshTokens        RefreshToken[]
-  reviewedProducts     Product[]              @relation("ProductReviewer")
-  storeStatusActions   StoreStatusHistory[]   @relation("StoreStatusActor")
-  productStatusActions ProductStatusHistory[] @relation("ProductStatusActor")
-  addresses            UserAddress[]
-  cart                 Cart?
-  checkouts            Checkout[]
-  orders               Order[]                @relation("OrderBuyer")
-  orderStatusActions   OrderStatusHistory[]   @relation("OrderStatusActor")
-  cancelledOrders      Order[]                @relation("OrderCancelledBy")
-  orderCommands        OrderCommand[]         @relation("OrderCommandActor")
+  id                      Int                      @id @default(autoincrement())
+  email                   String                   @unique
+  passwordHash            String
+  fullName                String?
+  role                    Role                     @default(USER)
+  isActive                Boolean                  @default(true)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  store                   Store?
+  refreshTokens           RefreshToken[]
+  reviewedProducts        Product[]                @relation("ProductReviewer")
+  storeStatusActions      StoreStatusHistory[]     @relation("StoreStatusActor")
+  productStatusActions    ProductStatusHistory[]   @relation("ProductStatusActor")
+  addresses               UserAddress[]
+  cart                    Cart?
+  checkouts               Checkout[]
+  orders                  Order[]                  @relation("OrderBuyer")
+  orderStatusActions      OrderStatusHistory[]     @relation("OrderStatusActor")
+  cancelledOrders         Order[]                  @relation("OrderCancelledBy")
+  orderCommands           OrderCommand[]           @relation("OrderCommandActor")
+  orderCommandResolutions OrderCommandResolution[]
 
   @@map("users")
 }
@@ -548,12 +549,12 @@ model Checkout {
 }
 
 model Order {
-  id                     Int                  @id @default(autoincrement())
-  orderNumber            String               @unique
+  id                     Int                      @id @default(autoincrement())
+  orderNumber            String                   @unique
   checkoutId             Int
   buyerId                Int
   storeId                Int
-  status                 OrderStatus          @default(PENDING_CONFIRMATION)
+  status                 OrderStatus              @default(PENDING_CONFIRMATION)
   recipientNameSnapshot  String
   phoneSnapshot          String
   provinceSnapshot       String
@@ -562,34 +563,35 @@ model Order {
   addressLineSnapshot    String
   postalCodeSnapshot     String?
   deliveryNoteSnapshot   String?
-  subtotal               Decimal              @db.Decimal(14, 2)
-  shippingFee            Decimal              @db.Decimal(14, 2)
-  discountTotal          Decimal              @default(0) @db.Decimal(14, 2)
-  total                  Decimal              @db.Decimal(14, 2)
+  subtotal               Decimal                  @db.Decimal(14, 2)
+  shippingFee            Decimal                  @db.Decimal(14, 2)
+  discountTotal          Decimal                  @default(0) @db.Decimal(14, 2)
+  total                  Decimal                  @db.Decimal(14, 2)
   cancellationReason     String?
   cancelledById          Int?
   cancelledByType        OrderActorType?
-  cancellationReasonCode String?              @db.VarChar(64)
-  cancellationReasonText String?              @db.VarChar(500)
+  cancellationReasonCode String?                  @db.VarChar(64)
+  cancellationReasonText String?                  @db.VarChar(500)
   cancelledAt            DateTime?
   deliveredAt            DateTime?
   completedAt            DateTime?
   // Both null until the first recorded shipment; legacy attempts are not guessed.
   currentDeliveryAttempt Int?
   retryCount             Int?
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
-  checkout               Checkout             @relation(fields: [checkoutId, buyerId], references: [id, buyerId], onDelete: Restrict)
-  buyer                  User                 @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Restrict)
-  store                  Store                @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  checkout               Checkout                 @relation(fields: [checkoutId, buyerId], references: [id, buyerId], onDelete: Restrict)
+  buyer                  User                     @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Restrict)
+  store                  Store                    @relation(fields: [storeId], references: [id], onDelete: Restrict)
   items                  OrderItem[]
   payment                Payment?
   statusHistory          OrderStatusHistory[]
-  cancelledBy            User?                @relation("OrderCancelledBy", fields: [cancelledById], references: [id], onDelete: Restrict)
+  cancelledBy            User?                    @relation("OrderCancelledBy", fields: [cancelledById], references: [id], onDelete: Restrict)
   commands               OrderCommand[]
+  commandResolutions     OrderCommandResolution[]
   completionJob          OrderCompletionJob?
-  deliveryAttempts       DeliveryAttempt[]    @relation("OrderDeliveryAttempts")
-  currentAttempt         DeliveryAttempt?     @relation("OrderCurrentDeliveryAttempt", fields: [id, currentDeliveryAttempt], references: [orderId, deliveryAttempt], onDelete: NoAction, onUpdate: NoAction)
+  deliveryAttempts       DeliveryAttempt[]        @relation("OrderDeliveryAttempts")
+  currentAttempt         DeliveryAttempt?         @relation("OrderCurrentDeliveryAttempt", fields: [id, currentDeliveryAttempt], references: [orderId, deliveryAttempt], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([id, storeId])
   @@unique([checkoutId, storeId])
@@ -710,6 +712,26 @@ model OrderCommand {
   @@index([orderId, createdAt])
   @@index([actorId])
   @@map("order_commands")
+}
+
+model OrderCommandResolution {
+  id             Int            @id @default(autoincrement())
+  orderId        Int
+  actorId        Int
+  actorType      OrderActorType
+  actorScope     String         @db.VarChar(64)
+  idempotencyKey String         @db.VarChar(128)
+  command        String         @db.VarChar(32)
+  requestHash    String         @db.VarChar(64)
+  hashVersion    Int
+  resolvedAt     DateTime       @default(now()) @db.Timestamp(3)
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  actor          User           @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([actorScope, idempotencyKey])
+  @@index([orderId, resolvedAt])
+  @@index([actorId])
+  @@map("order_command_resolutions")
 }
 
 model StockMovement {

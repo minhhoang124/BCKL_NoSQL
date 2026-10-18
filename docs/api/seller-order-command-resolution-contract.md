@@ -1,5 +1,13 @@
 # Seller đối chiếu và đóng ý định Order — contract đề xuất v1
 
+**Triển khai 18/10/2026 — nhánh `codex/order-command-resolution-runtime`:**
+đã thêm migration mới `20261018040000_order_command_resolution` và POST
+`/seller/orders/:orderId/resolve-command` theo contract bên dưới. Đây là code
+trên nhánh, **chưa merge/chưa bật Seller Web**. Kết quả và các ca còn thiếu:
+[báo cáo runtime](../testing/order-command-resolution-runtime-2026-10-18.md).
+Các ghi nhận PROPOSED/NOT_RUN theo head cũ bên dưới là lịch sử, không phải bằng
+chứng kiểm thử bản triển khai mới. Không đổi semantics hoặc Search contract.
+
 Ngày16/10/2026; base develop `035656b`. **PROPOSED / CONTRACT REVIEW**, chưa có
 endpoint/schema/migration/runtime. #58 head6e544dc được Hiền approve hướng nghiệp
 vụ; không đồng nghĩa chi tiết dưới đây đã được duyệt hoặc đã triển khai.

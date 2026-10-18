@@ -720,24 +720,28 @@ describe('Seller preparation commands — real PostgreSQL, two app instances', (
         idempotencyKey: header,
         body: {},
       });
-      await prisma.orderCommand.create({
-        data: {
-          orderId,
-          actorScope: input.actorScope,
-          actorId: seller.id,
-          actorType: flaw === 'wrong-actor' ? 'BUYER' : 'SELLER',
-          command: 'confirm',
-          idempotencyKey: header,
-          requestHash:
-            flaw === 'wrong-hash' ? '0'.repeat(64) : input.requestHash,
-          hashVersion: flaw === 'unsupported-version' ? 2 : 1,
-          status: 'SUCCEEDED',
-          responseStatus: 200,
-          resultSnapshot: { invalid: 'private-receipt-must-not-leak' },
-          createdAt: new Date('2026-01-01T00:00:00.000Z'),
-          completedAt: new Date('2026-01-01T00:00:01.000Z'),
-        },
-      });
+      await prisma.$transaction(
+        (tx) =>
+          tx.orderCommand.create({
+            data: {
+              orderId,
+              actorScope: input.actorScope,
+              actorId: seller.id,
+              actorType: flaw === 'wrong-actor' ? 'BUYER' : 'SELLER',
+              command: 'confirm',
+              idempotencyKey: header,
+              requestHash:
+                flaw === 'wrong-hash' ? '0'.repeat(64) : input.requestHash,
+              hashVersion: flaw === 'unsupported-version' ? 2 : 1,
+              status: 'SUCCEEDED',
+              responseStatus: 200,
+              resultSnapshot: { invalid: 'private-receipt-must-not-leak' },
+              createdAt: new Date('2026-01-01T00:00:00.000Z'),
+              completedAt: new Date('2026-01-01T00:00:01.000Z'),
+            },
+          }),
+        { isolationLevel: 'Serializable' },
+      );
       const before = await state();
       const response = await post(orderId, 'confirm', header).expect(
         flaw === 'wrong-hash' ? 409 : 500,

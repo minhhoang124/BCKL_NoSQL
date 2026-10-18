@@ -26,6 +26,7 @@ import { Roles } from '../auth/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { SellerOrderCommandService } from './seller-order-command.service.js';
+import { OrderCommandResolutionService } from './order-command-resolution.service.js';
 import { SellerOrderCommandRateGuard } from './seller-order-command-rate.guard.js';
 import {
   assertSellerCommandQuery,
@@ -69,7 +70,46 @@ import {
 @ApiResponse({ status: 500, description: 'Safe internal error' })
 @Controller('seller/orders')
 export class SellerOrderCommandController {
-  constructor(private readonly commands: SellerOrderCommandService) {}
+  constructor(
+    private readonly commands: SellerOrderCommandService,
+    private readonly resolutions: OrderCommandResolutionService,
+  ) {}
+
+  @Post(':orderId/resolve-command')
+  @HttpCode(200)
+  @Header('Cache-Control', 'no-store')
+  @ApiBody({
+    required: true,
+    schema: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['command'],
+      properties: {
+        command: {
+          type: 'string',
+          enum: ['confirm', 'start-packing', 'ready-to-ship'],
+        },
+      },
+    },
+  })
+  @ApiOkResponse({
+    description:
+      'Original COMMITTED receipt or durable CLOSED_WITHOUT_EXECUTION; never executes a command',
+  })
+  resolve(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('orderId') id: string,
+    @Body() body: unknown,
+    @Req() req: Request,
+  ) {
+    assertSellerCommandQuery(req.query);
+    return this.resolutions.resolve(
+      user.userId,
+      sellerOrderId(id),
+      req.headers['idempotency-key'],
+      body,
+    );
+  }
   private run(
     user: AuthenticatedUser,
     id: string,

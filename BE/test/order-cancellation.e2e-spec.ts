@@ -769,23 +769,27 @@ describe('C3 cancellation — real Checkout, PostgreSQL and two HTTP application
         idempotencyKey: header,
         body,
       });
-      await prisma.orderCommand.create({
-        data: {
-          orderId,
-          actorId: buyer.id,
-          actorType: 'BUYER',
-          actorScope: input.actorScope,
-          idempotencyKey: header,
-          command: 'cancel',
-          requestHash: input.requestHash,
-          hashVersion: 1,
-          status: 'SUCCEEDED',
-          responseStatus: 200,
-          resultSnapshot: result as Prisma.InputJsonObject,
-          createdAt: new Date(0),
-          completedAt: new Date(),
-        },
-      });
+      await prisma.$transaction(
+        (tx) =>
+          tx.orderCommand.create({
+            data: {
+              orderId,
+              actorId: buyer.id,
+              actorType: 'BUYER',
+              actorScope: input.actorScope,
+              idempotencyKey: header,
+              command: 'cancel',
+              requestHash: input.requestHash,
+              hashVersion: 1,
+              status: 'SUCCEEDED',
+              responseStatus: 200,
+              resultSnapshot: result as Prisma.InputJsonObject,
+              createdAt: new Date(0),
+              completedAt: new Date(),
+            },
+          }),
+        { isolationLevel: 'Serializable' },
+      );
       const before = await state();
       const response = await post(header, second).expect(500);
       expect(response.body.code).toBe('INTERNAL_ERROR');

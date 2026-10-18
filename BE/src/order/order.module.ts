@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { OrderCommandResolutionService } from './order-command-resolution.service.js';
 import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from '../auth/auth.module.js';
 import { DatabaseModule } from '../database.module.js';
@@ -46,6 +47,7 @@ import { OrderCompletionRateGuard } from './order-completion-rate.guard.js';
     OrderCompletionController,
   ],
   providers: [
+    OrderCommandResolutionService,
     OrderListService,
     OrderDetailService,
     OrderListRateGuard,

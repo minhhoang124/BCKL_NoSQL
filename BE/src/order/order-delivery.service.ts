@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { assertOrderCommandNotClosed } from './order-command-fence.js';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma.service.js';
@@ -120,6 +121,7 @@ export class OrderDeliveryService {
                 },
               },
             });
+            await assertOrderCommandNotClosed(tx, input, stored !== null);
             if (stored) return this.replay(stored, input, command);
             const decision = deliveryDecision(command, input.body, order);
             const target = decision.status;

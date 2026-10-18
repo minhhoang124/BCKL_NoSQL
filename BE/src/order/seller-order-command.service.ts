@@ -8,6 +8,7 @@ import {
   waitForTransactionRetry,
 } from '../product/transaction-conflict.js';
 import { prepareOrderCommand } from './order-command-request.js';
+import { assertOrderCommandNotClosed } from './order-command-fence.js';
 import {
   nextOrderCommandStatus,
   orderCommandError,
@@ -122,7 +123,8 @@ export class SellerOrderCommandService {
                 },
               },
             });
-            if (stored) return this.replay(stored, input, command);
+            await assertOrderCommandNotClosed(tx, input, stored !== null);
+            if (stored) return this.replayReceipt(stored, input, command);
             if (!['ACTIVE', 'SUSPENDED'].includes(order.store.status))
               throw orderCommandError(409, 'STORE_STATE_CONFLICT');
             const target = nextOrderCommandStatus(
@@ -260,7 +262,7 @@ export class SellerOrderCommandService {
     throw orderCommandError(409, 'ORDER_COMMAND_IN_PROGRESS');
   }
 
-  private replay(
+  replayReceipt(
     stored: Prisma.OrderCommandGetPayload<Record<string, never>>,
     input: Prepared,
     command: SellerPreparationCommand,

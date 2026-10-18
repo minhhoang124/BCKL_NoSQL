@@ -47,7 +47,24 @@ describe('Order command and audit foundation (PostgreSQL)', () => {
     };
   }
 
-  async function insertCommand(c: Claim, client: Pool | PoolClient = pool) {
+  async function insertCommand(
+    c: Claim,
+    client: Pool | PoolClient = pool,
+  ): Promise<number> {
+    if (client === pool) {
+      const connection = await pool.connect();
+      try {
+        await connection.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
+        const result = await insertCommand(c, connection);
+        await connection.query('COMMIT');
+        return result;
+      } catch (error) {
+        await connection.query('ROLLBACK');
+        throw error;
+      } finally {
+        connection.release();
+      }
+    }
     const result = await client.query<{ id: number }>(
       `INSERT INTO order_commands
         ("orderId", "actorScope", "actorType", "actorId", "idempotencyKey",
@@ -271,7 +288,7 @@ describe('Order command and audit foundation (PostgreSQL)', () => {
       completedAt: null,
     });
     try {
-      await client.query('BEGIN');
+      await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
       const id = await insertCommand(c, client);
       await client.query(
         `INSERT INTO order_status_history
@@ -306,7 +323,7 @@ describe('Order command and audit foundation (PostgreSQL)', () => {
       completedAt: null,
     });
     try {
-      await client.query('BEGIN');
+      await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
       const id = await insertCommand(c, client);
       await client.query(
         `INSERT INTO order_status_history
@@ -332,7 +349,8 @@ describe('Order command and audit foundation (PostgreSQL)', () => {
     const b = await pool.connect();
     const c = claim();
     try {
-      await a.query('BEGIN');
+      await a.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
+      await b.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
       await insertCommand(c, a);
       // Attach the rejection handler immediately while connection B waits on A.
       const competing = insertCommand(c, b).then(
@@ -351,6 +369,7 @@ describe('Order command and audit foundation (PostgreSQL)', () => {
       ).toBe(1);
     } finally {
       await a.query('ROLLBACK');
+      await b.query('ROLLBACK');
       a.release();
       b.release();
     }
@@ -480,7 +499,7 @@ describe('Order command and audit foundation (PostgreSQL)', () => {
       ]),
     ).rejects.toMatchObject({
       code: '23514',
-      constraint: 'order_commands_receipt_immutable_check',
+      constraint: 'order_commands_identity_immutable',
     });
     expect(
       await prisma.orderCommand.findUniqueOrThrow({ where: { id } }),

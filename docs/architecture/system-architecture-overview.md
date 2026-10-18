@@ -1,5 +1,11 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Bổ sung bằng chứng #67 ngày18/10/2026:** không đổi runtime/schema; thêm
+kiểm khác Order/hash và malformed resolution identity. Full Backend E2E595 PASS/
+20 TODO, unit629 PASS; lint/typecheck/build/Prisma validate PASS. Hai Nest app
+không được mô tả là hai OS process; Web settlement/browser vẫn chưa nghiệm thu.
+[Ma trận bằng chứng và giới hạn](../testing/order-command-resolution-runtime-2026-10-18.md).
+
 **Sau merge #62 ngày18/10/2026:** #63 đồng bộ develop `7619a76`, giữ
 contract resolver chính thức và test harness chưa activate. Không đổi helpers
 hoặc schema/API; ghi chú baseline cũ dưới đây giữ để truy vết, không là trạng
@@ -951,6 +957,22 @@ Nhánh `codex/order-command-recovery` đồng bộ develop `09daae0` sau merge #
 Coordinator độc lập yêu cầu xác nhận, khóa bấm trùng, chụp và kiểm lại phiên trước/sau adapter, giữ unknown intent khi lỗi và chặn response/lỗi phiên cũ acknowledge. Adapter vẫn inject trong test, chưa nối Backend. #55 đã là dependency chính thức; nối route đọc và nối command recovery runtime là bước triển khai riêng, không bật POST trong lần đồng bộ này.
 
 ## 17. Seller recovery bridge #60 — chuẩn bị, chưa mount runtime
+
+### Resolver Backend — nhánh triển khai 18/10/2026, chưa merge
+
+`codex/order-command-resolution-runtime` thêm bảng `OrderCommandResolution`:
+bản chặn bền vững cho mã yêu cầu Seller đã được xác nhận chưa thực thi. API
+`POST /seller/orders/:orderId/resolve-command` xác thực tài khoản/quyền Store,
+khóa User → Store → Order trong transaction Serializable (giao dịch có cơ chế
+phát hiện xung đột đồng thời), rồi trả biên nhận gốc hoặc ghi bản chặn trước
+khi phản hồi. Nó không hủy đơn, không đổi kho hoặc trạng thái Order.
+
+Cả năm luồng ghi Order kiểm tra bản chặn trước replay/thực thi. Trigger DB
+ngăn tồn tại đồng thời biên nhận và bản chặn cùng actor/key; identity bất biến
+từ PROCESSING. Retry giới hạn ba lần, timeout hữu hạn; dùng chung quota Seller.
+Không dùng khóa trong RAM làm bảo đảm duy nhất. Migration mới không sửa lịch sử.
+Seller Web chưa nối resolver, chưa bật nút giao dịch. Xem
+[kết quả thực tế và giới hạn](../testing/order-command-resolution-runtime-2026-10-18.md).
 
 Đồng bộ18/10 sau merge #62 trên develop `7619a76`. Chỉ nhận contract chính
 thức, chưa resolver API/schema; không đổi source bridge/component hoặc bật POST.

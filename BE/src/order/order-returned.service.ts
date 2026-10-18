@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { assertOrderCommandNotClosed } from './order-command-fence.js';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, Role } from '@prisma/client';
 import { checkoutConfigInt } from '../checkout/checkout-create-rate.js';
@@ -121,6 +122,7 @@ export class OrderReturnedService {
                 },
               },
             });
+            await assertOrderCommandNotClosed(tx, input, stored !== null);
             if (stored) return this.replay(stored, input);
             if (
               actorType === 'SELLER' &&

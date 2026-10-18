@@ -374,26 +374,30 @@ describe('Buyer/Seller Order detail HTTP + PostgreSQL', () => {
       { actorType: 'SELLER' as const, actorId: otherSeller.id },
     ]) {
       const command = data.actorType
-        ? await prisma.orderCommand.create({
-            data: {
-              orderId: row.id,
-              actorType: data.actorType,
-              actorId: data.actorId,
-              actorScope:
-                data.actorType === 'SYSTEM'
-                  ? 'SYSTEM:ORDER_AUTO_COMPLETE'
-                  : `USER:${data.actorId}`,
-              idempotencyKey: `${marker}_cmd_${serial++}`,
-              requestHash: 'a'.repeat(64),
-              hashVersion: 1,
-              command: data.actorType === 'SYSTEM' ? 'complete' : 'confirm',
-              status: 'SUCCEEDED',
-              responseStatus: 200,
-              resultSnapshot: { private: 'private-command-receipt' },
-              createdAt: time,
-              completedAt: time,
-            },
-          })
+        ? await prisma.$transaction(
+            (tx) =>
+              tx.orderCommand.create({
+                data: {
+                  orderId: row.id,
+                  actorType: data.actorType,
+                  actorId: data.actorId,
+                  actorScope:
+                    data.actorType === 'SYSTEM'
+                      ? 'SYSTEM:ORDER_AUTO_COMPLETE'
+                      : `USER:${data.actorId}`,
+                  idempotencyKey: `${marker}_cmd_${serial++}`,
+                  requestHash: 'a'.repeat(64),
+                  hashVersion: 1,
+                  command: data.actorType === 'SYSTEM' ? 'complete' : 'confirm',
+                  status: 'SUCCEEDED',
+                  responseStatus: 200,
+                  resultSnapshot: { private: 'private-command-receipt' },
+                  createdAt: time,
+                  completedAt: time,
+                },
+              }),
+            { isolationLevel: 'Serializable' },
+          )
         : null;
       await prisma.orderStatusHistory.create({
         data: {
