@@ -937,3 +937,29 @@ Buyer hủy/hoàn tất và Seller hủy/nhận hàng quay về vẫn disabled, 
 Nhánh `codex/order-command-recovery` đồng bộ develop `09daae0` sau merge #54/#55 ngày 16/10/2026. Giữ Checkout và Order read panels đã merge; chỉ bổ sung thư viện tab-scoped pending intent (yêu cầu còn chờ trong tab). Nó lưu ID/lệnh/key trước HTTP, giữ qua reload, tách actor, chặn dữ liệu hỏng và chỉ xóa bằng receipt đã validate. Chưa controller/route/POST; chưa tự replay hoặc phục hồi sau đóng tab. V1 chỉ Seller preparation và Buyer complete body `{}`, không cancellation/returned. Không lưu token/địa chỉ hoặc tự coi GET là ack. [Cách hoạt động, biến và điều kiện còn thiếu](order-command-recovery-readiness.md). Đây là foundation, không phải Order Web/G-FULFILMENT DONE.
 
 Coordinator độc lập yêu cầu xác nhận, khóa bấm trùng, chụp và kiểm lại phiên trước/sau adapter, giữ unknown intent khi lỗi và chặn response/lỗi phiên cũ acknowledge. Adapter vẫn inject trong test, chưa nối Backend. #55 đã là dependency chính thức; nối route đọc và nối command recovery runtime là bước triển khai riêng, không bật POST trong lần đồng bộ này.
+
+## 17. Seller recovery bridge #60 — chuẩn bị, chưa mount runtime
+
+Đồng bộ18/10 sau merge #62 trên develop `7619a76`. Chỉ nhận contract chính
+thức, chưa resolver API/schema; không đổi source bridge/component hoặc bật POST.
+Nhật ký dưới đây giữ baseline và bằng chứng gốc, không nhận full integration.
+
+**Đồng bộ #60 ngày 18/10/2026:** nền `develop 7e58255` đã merge #58.
+Giữ thiết kế recovery, Admin/Checkout/Order GET; không đổi source bridge hoặc
+bật Seller POST. Resolver #62 chưa merge/chưa triển khai ở baseline đó.
+Regression: FE401 PASS/6live SKIP, lint/build PASS (5 warning Admin nền).
+Browser/HTTP/DB resolver NOT_RUN, không bật command.
+
+**Đồng bộ #60 ngày 17/10/2026:** nền `ad3b969` sau #28, giữ Admin và
+Order GET. Source bridge/component không đổi; chưa mount route hoặc bật POST.
+Approval `ca84f6a` là bản trước đồng bộ. Kiểm bản kết hợp: FE401 PASS/6live
+SKIP, lint/build PASS (5 warning Admin nền); chưa browser/HTTP/PostgreSQL.
+
+**Khung xác nhận Seller 16/10/2026:** `SellerCommandReview` cho confirmation,
+unknown, sending, đã ghi nhận/GET lỗi và blocked. Callback trống mặc định khóa;
+19 ca component chỉ jsdom. [Luồng và giới hạn](../testing/seller-command-confirmation-preparation-2026-10-16.md).
+
+**Cầu nối Seller recovery 16/10/2026:** từ develop `035656b`,
+`createSellerCommandRecovery` nối journal/coordinator với handle/validator #55,
+tái dùng key gốc và kiểm generation phiên.21 ca mới là mock HTTP, chưa live
+transaction. [Luồng và gate](../testing/seller-recovery-adapter-preparation-2026-10-16.md).
