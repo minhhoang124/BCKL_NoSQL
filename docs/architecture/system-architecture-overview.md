@@ -1,11 +1,39 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Đồng bộ Brand #64 sau merge #67 ngày18/10/2026:** nhận develop `39e8343`.
+Giữ nguyên Brand editor của `a220a5e` và source Admin/Address/Cart/Checkout/Order
+từ nền mới, gồm Backend resolver/migration đã merge. Chưa nối Brand vào Catalog
+production, chưa bật nút giao dịch Seller trên Web. Kiểm thử/giới hạn của lượt đồng bộ này ghi tại
+[báo cáo sau resolver](../testing/admin-brand-post-resolver-sync-2026-10-18.md);
+không dùng QA cũ để xác nhận bản kết hợp mới.
+
 **Bổ sung bằng chứng #67 ngày18/10/2026:** không đổi runtime/schema; thêm
 kiểm khác Order/hash và malformed resolution identity. Full Backend E2E595 PASS/
 20 TODO, unit629 PASS; lint/typecheck/build/Prisma validate PASS. Hai Nest app
 không được mô tả là hai OS process; Web settlement/browser vẫn chưa nghiệm thu.
 [Ma trận bằng chứng và giới hạn](../testing/order-command-resolution-runtime-2026-10-18.md).
 
+**Lịch sử Brand trước lượt đồng bộ sau #67:**
+
+**Đồng bộ Brand #64 ngày18/10/2026:** nhận develop `9956379` sau #58/#62/#63/#60/#65.
+Giữ nguyên source Brand editor và Admin nền; chưa nối editor vào router production.
+Kết quả QA cũ bên dưới không thay thế kiểm thử bản đồng bộ.
+
+**Đồng bộ Brand #64 ngày 17/10/2026 — IN_PROGRESS:** lấy `develop ad3b969`
+sau merge Admin #28. Giữ nguyên module Brand editor độc lập và toàn bộ Admin,
+Address/Cart/Checkout/Order đã merge; conflict chỉ ở tài liệu này, giữ đủ hai
+phía. Chưa nối editor vào tab Thương hiệu của Catalog: bước đó là PR integration
+riêng sau #64 merge. Các số QA ngày 16/10 bên dưới là lịch sử, không thay kiểm
+thử bản kết hợp mới; xem [báo cáo đồng bộ](../testing/admin-brand-develop-sync-2026-10-17.md).
+
+**IN_PROGRESS — Admin Brand editor riêng, 16/10/2026:** module sửa name/slug theo
+API Admin hiện có, không đổi isActive/schema/Auth/client hoặc nhập #28. Source
+`6aabf98`: 377 FE PASS/6 SKIP, lint/build PASS; QA browser → Backend → PostgreSQL
+riêng kiểm 409 giữ draft, sửa tên/slug và mất response sau commit vẫn khóa ghi
+sau GET. Chưa nối router/menu production, mobile Backend/Search index/competing
+Admin chưa nghiệm thu. [Bằng chứng và giới hạn](../testing/admin-brand-editor-and-attributes-readiness-2026-10-16.md).
+
+**Lịch sử cập nhật nền tích hợp:**
 **Sau merge #62 ngày18/10/2026:** #63 đồng bộ develop `7619a76`, giữ
 contract resolver chính thức và test harness chưa activate. Không đổi helpers
 hoặc schema/API; ghi chú baseline cũ dưới đây giữ để truy vết, không là trạng
