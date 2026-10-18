@@ -1,5 +1,22 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Sau merge #58 ngày 17/10/2026:** nền `develop 7e58255` đã có thiết kế
+recovery. #62 đồng bộ nền này, giữ nguyên contract được Hiền approve tại
+`4bca065`; chưa triển khai resolver/schema hoặc Web POST. Các ghi chú dưới
+đây là lịch sử tại baseline tương ứng, không thay trạng thái merge mới này.
+
+**Đồng bộ #62 ngày 17/10/2026:** nền `ad3b969` sau merge Admin #28.
+Giữ Admin/Checkout/Order GET; contract tại `e1590be` đã được Hiền approve,
+delta đồng bộ cần review lại. Không thêm resolver/schema hoặc bật Web POST.
+
+**PROPOSED — contract resolution Seller 16/10/2026:** Hiền approve nguyên tắc
+#58 tại6e544dc, #60 preparation tạica84f6a; không phải nghiệm thu runtime. Nhánh
+contract mới từ035656b chi tiết COMMITTED/CLOSED, lock protocol, shared quota và
+DB guard toàn USER-scope writer và identity immutable từ lúc PROCESSING.
+Chưa API/schema/migration hoặc bật POST;25ca mới
+NOT_RUN. [Contract để review trước implementation](../api/seller-order-command-resolution-contract.md).
+
+
 **Đồng bộ #58 ngày 17/10/2026:** nền `ad3b969` sau merge Admin #28.
 Giữ Admin, Checkout, Order GET và recovery foundation; không đổi thiết kế C2.
 Approval Hiền tại `fbbb13d` là bản trước đồng bộ, cần review delta mới.
