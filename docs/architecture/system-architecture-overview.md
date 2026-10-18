@@ -1,5 +1,29 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Sau merge #62 ngày18/10/2026:** #63 đồng bộ develop `7619a76`, giữ
+contract resolver chính thức và test harness chưa activate. Không đổi helpers
+hoặc schema/API; ghi chú baseline cũ dưới đây giữ để truy vết, không là trạng
+thái PR hiện tại. Runtime resolver vẫn NOT_IMPLEMENTED/NOT_RUN.
+
+**Đồng bộ #63 ngày 18/10/2026:** nền `develop 7e58255` đã merge #58.
+Giữ thiết kế recovery và Admin/Checkout/Order GET; không đổi helpers hoặc
+activate TODO. Resolver #62 còn OPEN, acceptance runtime vẫn NOT_RUN.
+Regression mới18/10:20 harness self-tests PASS, Backend lint PASS.
+Không lấy fake-upstream harness làm bằng chứng Nest/PostgreSQL resolver.
+
+**Đồng bộ #63 ngày 17/10/2026:** nền `ad3b969` sau #28, giữ Admin và
+Order GET. Chỉ chuẩn bị kiểm thử, không resolver runtime; approval `7c5c809`
+là bản trước đồng bộ. Acceptance resolution vẫn NOT_RUN.
+Kiểm bản kết hợp:20 harness self-tests PASS, Backend lint PASS; không DB/API
+runtime hoặc migration mới, không lấy proxy fake-upstream thay transaction proof.
+
+**TEST PREPARATION — resolution16/10/2026:** nhánh test-only từ035656b chuẩn bị
+guard namespace DB QA, proxy cắt HTTP200 và20TODO Backend theo contract #62,
+gồm identity claim PROCESSING bất biến theo feedback mới.
+Self-test proxy dùng fake upstream, không DB/transaction proof. Chưa endpoint,
+schema hoặc bật POST; toàn bộ acceptance resolution vẫn NOT_RUN.
+[Kế hoạch triển khai, fixture và ranh giới bằng chứng](../testing/order-resolution-implementation-readiness.md).
+
 **Sau merge #58 ngày 17/10/2026:** nền `develop 7e58255` đã có thiết kế
 recovery. #62 đồng bộ nền này, giữ nguyên contract được Hiền approve tại
 `4bca065`; chưa triển khai resolver/schema hoặc Web POST. Các ghi chú dưới
