@@ -112,6 +112,14 @@ jobs:
       - name: Run unit tests
         run: pnpm test
 
+      - name: Set up Python for evaluation tools
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run phase-two evaluation tool tests
+        run: python scripts/dataset/tests/test_evaluation_v2.py
+
       - name: Build workspaces
         run: pnpm build
 

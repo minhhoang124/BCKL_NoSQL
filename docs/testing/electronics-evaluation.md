@@ -52,3 +52,12 @@ Chạy riêng keyword/filter, semantic text, image và hybrid theo API đã ch�
 - [ ] Mở rộng ảnh độc lập, nhãn đủ phạm vi và test case tích hợp có bằng chứng.
 
 Đây là kế hoạch bàn giao, không phải kết quả test đã chạy trên dịch vụ.
+
+## Gói hoàn thiện ngày 29/09/2026
+
+Trạng thái khóa dữ liệu và các bước còn thiếu được chốt tại
+[`electronics/evaluation-completion-v2.md`](electronics/evaluation-completion-v2.md). Các hash của
+corpus, query, nhãn, mapping dự kiến, model và commit Search nằm trong
+[`electronics/evaluation-lock-v2.json`](electronics/evaluation-lock-v2.json). Bộ script mới chỉ cho
+phép tính Precision@K/Recall@K khi toàn bộ query đã có nhãn hợp lệ và được xác nhận
+`exhaustive=true`; vì vậy hiện tại chưa có chỉ số nào được công bố.
