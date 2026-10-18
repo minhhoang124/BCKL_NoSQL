@@ -295,6 +295,13 @@ hoặc nghiệm thu G-CHECKOUT. Xem [bằng chứng Cart](../testing/buyer-cart-
 
 ### 3.2 Backend NestJS
 
+**PROPOSED — 09/10/2026, Chat readiness trước code:** đã đối chiếu FR-CHT-01/
+D08 và JWT/User/Store hiện hành. Chưa có schema, REST, Gateway hoặc inbox runtime.
+Luồng gửi/read/reconnect, quyền suspended/account khóa, ràng buộc chống tin trùng
+và đề xuất sequence cần Hiền review tại
+[Chat implementation readiness](chat-implementation-readiness.md).
+Không đưa nội dung Chat vào Elasticsearch/FAISS; không tự đổi Auth đa quyền.
+
 **CURRENT — PR #24 đã merge:** bộ lọc listing `categoryId`/`brandId`/`inStock` được xử lý ở PostgreSQL và policy public trước khi đủ số kết quả một trang. `categoryId` có nghĩa là category đã chọn cùng toàn bộ nhánh con hoạt động, thống nhất với hybrid search khi người dùng nhập từ khóa. `inStock` chỉ tính variant bán hợp lệ; frontend dùng `nextCursor` để tải tiếp, kể cả sau trang rỗng. Xem [contract public listing](../api/product-moderation-public-api.md). Không đổi schema hoặc contract Search Service.
 
 Form Product tại `FE/src/pages/SellerDashboardPage.tsx` dùng state cho tên/mô tả/category/brand: chọn Product nào nạp đúng dữ liệu Product đó, lỗi lưu giữ nguyên form, lưu thành công mới reset. Khóa thao tác trong khi request đang chạy ngăn gửi trùng. Nếu đã lưu nhưng reload danh sách lỗi, UI báo rõ đã lưu để tránh hiểu nhầm cần tạo lại. Listing/detail bỏ qua response cũ khi đổi truy vấn/Product. Các thay đổi này chưa đồng nghĩa hoàn thành toàn bộ UI Seller hoặc gate G-LISTING.
