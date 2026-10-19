@@ -1,5 +1,56 @@
 # Backend–Search Service API contract
 
+## Mở rộng health nội bộ v1 — PROPOSED, 17/10/2026
+
+Phần này chỉ ghi delta chờ review theo PR #61, **chưa endpoint/auth/probe runtime**.
+Các endpoint đang hoạt động và GET /health legacy phía dưới không đổi.
+Hoàng đề xuất, Đạt đã xác nhận hướng tại review5546401582/comment6229349304;
+schema/fixture bổ sung phải được review delta trước implementation.
+
+- Đường dẫn chốt hướng: FastAPI `GET /internal/health/search`, Backend
+  `GET /admin/system-health`. Browser chỉ gọi Backend/current active ADMIN từ DB.
+- Token server-to-server riêng: `X-Internal-Health-Token`, biến AI
+  `AI_INTERNAL_HEALTH_TOKEN` và Backend `SEARCH_INTERNAL_HEALTH_TOKEN`.
+  Constant-time compare, fail-closed; không secret trong repo/URL/log.
+  Thiếu/sai/trùng header ->401 INTERNAL_HEALTH_UNAUTHORIZED; thiếu cấu hình
+  server ->503 INTERNAL_HEALTH_NOT_CONFIGURED. Đây là transport error riêng,
+  không trả snapshot. Chưa áp token mới vào legacy/search/index.
+- Snapshot HTTP200 chỉ xác nhận envelope hợp lệ: schemaVersion1, generatedAt,
+  components đúng clipImage/clipText/faiss/elasticsearch; capabilities đúng
+  semanticText/imageSearch/hybridText. Không overall tùy ý; strict extra-forbid.
+- Component có loaded nullable độc lập với READY/DEGRADED/UNAVAILABLE/UNKNOWN,
+  checkedAt/expiresAt/lastSuccessAt UTC, durationMs hữu hạn, mã allowlist.
+  Null khác0; vectorCount0 không đồng nghĩa lỗi hoặc đã đồng bộ đủ.
+- Delta18/10: generatedAt>=expiresAt bắt buộc UNKNOWN/SNAPSHOT_STALE, kể cả
+  quan sát lỗi cũ; không refresh timestamp lịch sử. Component reason NOT_CHECKED,
+  PROBE_BUSY, PROBE_TIMEOUT, SNAPSHOT_STALE, CLOCK_SKEW chỉ được UNKNOWN.
+  Capability vẫn ưu tiên failure chắc còn hạn của dependency khác nếu có.
+  Đây là invariant liên trường của validator, không chỉ JSON Schema structural.
+- Dimension mismatch chỉ là failure hiện tại khi cả model và FAISS có quan sát
+  thành công READY/DEGRADED còn hạn tại generatedAt; loaded/dimension lịch sử
+  trên UNKNOWN (stale/timeout) không được kéo capability thành UNAVAILABLE.
+  ES failure còn hạn vẫn chặn riêng hybrid theo dependency; không dời timestamp.
+- Deadline cycle5s tính lock/queue; mỗi probe min(cap,remaining), trần CLIP2s
+  mỗi model/ES1.5s/FAISS0.5s. Không dispatch khi hết budget. Chưa chạy do bận
+  ->UNKNOWN/PROBE_BUSY hoặc NOT_CHECKED; đã chạy quá hạn ->UNKNOWN/PROBE_TIMEOUT.
+  Native task chưa kết thúc giữ single-flight, completion muộn không refresh TTL.
+- Capability UNAVAILABLE đã biết ưu tiên hơn UNKNOWN, dimension mismatch fail
+  closed; RRF_CONFIG_INVALID chỉ hybrid. ES lỗi không suy semantic/image lỗi,
+  nhưng hybrid hiện không fallback và Backend public hybrid còn cần hydrate DB.
+- Nếu cần aggregate ở Backend: allREADY->READY; bất kỳ READY/DEGRADED khi không
+  allREADY->DEGRADED, kể cả allDEGRADED; không usable+cóUNKNOWN->UNKNOWN;
+  allUNAVAILABLE->UNAVAILABLE. Không thêm aggregate vào envelope AI hiện tại.
+- Snapshot TTL60s/probe30s, Backend timeout2s/body32KiB/cache15s/no retry hay
+  redirect, FE poll30s là policy hướng tới, chưa có runtime chứng minh.
+  Read-only: không ensure_index/refresh/write/sentinel/model download;
+  health đọc không chứng minh ghi bền, outbox synced hoặc chất lượng retrieval.
+
+Chi tiết field/error enum/clock skew/auth-network/ma trận runtime NOT_RUN ở
+[đề xuất health](search-health-proposal.md). [Fixture](examples/search-health-proposed-v1.json)
+là dữ liệu minh họa, không live. [JSON Schema](examples/search-health-proposed-v1.schema.json)
+được sinh từ Pydantic SearchHealthSnapshot; schema tests không thay runtime tests.
+Schema mới chưa được import vào router; không sửa Product/index/search payload.
+
 Trạng thái: **contract Hoàng–Đạt đã thống nhất; Search Service PR #8 đã merge**. Tài liệu này mô tả giao tiếp giữa NestJS Backend và FastAPI Search Service. PR #8 đã triển khai và kiểm thử các endpoint, đồng bộ Elasticsearch–FAISS, version/idempotency, retry lỗi một phần và hybrid RRF. PR #23 đã có bằng chứng tích hợp local Backend outbox–FastAPI–hydrate; CI xuyên dịch vụ và giao diện Web vẫn là các bước nghiệm thu riêng.
 
 PostgreSQL là nguồn chuẩn của Product, Variant, giá, tồn kho và trạng thái công khai. FastAPI quản lý Elasticsearch, CLIP/FAISS và RRF như các chỉ mục/phép xếp hạng phụ trợ. Backend không gọi Elasticsearch trực tiếp; Backend gọi Search Service, sau đó đọc lại PostgreSQL để loại sản phẩm không còn hợp lệ và giữ thứ tự kết quả còn lại.

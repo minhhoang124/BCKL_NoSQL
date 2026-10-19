@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-16T06:00:01.000Z",
+  "components": {
+    "clipImage": {"loaded":true,"status":"READY","checkedAt":"2026-10-16T06:00:00.000Z","expiresAt":"2026-10-16T06:01:00.000Z","lastSuccessAt":"2026-10-16T06:00:00.000Z","durationMs":120,"errorCode":null,"warningCodes":[],"dimension":512},
+    "clipText": {"loaded":true,"status":"READY","checkedAt":"2026-10-16T06:00:00.000Z","expiresAt":"2026-10-16T06:01:00.000Z","lastSuccessAt":"2026-10-16T06:00:00.000Z","durationMs":90,"errorCode":null,"warningCodes":[],"dimension":512},
+    "faiss": {"loaded":true,"status":"READY","checkedAt":"2026-10-16T06:00:00.000Z","expiresAt":"2026-10-16T06:01:00.000Z","lastSuccessAt":"2026-10-16T06:00:00.000Z","durationMs":2,"errorCode":null,"warningCodes":[],"dimension":512,"vectorCount":2},
+    "elasticsearch": {"loaded":null,"status":"UNAVAILABLE","checkedAt":"2026-10-16T06:00:00.000Z","expiresAt":"2026-10-16T06:01:00.000Z","lastSuccessAt":"2026-10-16T05:59:30.000Z","durationMs":1500,"errorCode":"ES_TIMEOUT","warningCodes":[],"indexExists":null,"readable":null}
+  },
+  "capabilities": {
+    "semanticText": {"status":"READY","reasonCodes":[]},
+    "imageSearch": {"status":"READY","reasonCodes":[]},
+    "hybridText": {"status":"UNAVAILABLE","reasonCodes":["ES_TIMEOUT"]}
+  }
+}
