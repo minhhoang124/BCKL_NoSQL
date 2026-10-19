@@ -1,0 +1,37 @@
+{
+  "status": "PROPOSED_NOT_RUNTIME",
+  "purpose": "Synthetic canonical hash vectors, not real receipts or stored user data",
+  "hashVersion": 1,
+  "vectors": [
+    {
+      "actorId": 7,
+      "orderId": 101,
+      "command": "complete",
+      "body": {},
+      "canonical": "{\"actorScope\":\"USER:7\",\"body\":{},\"command\":\"complete\",\"orderId\":101}",
+      "requestHash": "1ae432f016f4b068acdb4ec4be611a2716e30c499b7ae8fbfc217295cf7df861"
+    },
+    {
+      "actorId": 7,
+      "orderId": 101,
+      "command": "cancel",
+      "body": {
+        "reasonCode": "CHANGED_MIND",
+        "reasonText": "Tôi đổi ý mua hàng"
+      },
+      "canonical": "{\"actorScope\":\"USER:7\",\"body\":{\"reasonCode\":\"CHANGED_MIND\",\"reasonText\":\"Tôi đổi ý mua hàng\"},\"command\":\"cancel\",\"orderId\":101}",
+      "requestHash": "5c7e4d7ab866c3dd0cd08449c4484077ba73dfc7c81009b98549c20af453f412"
+    },
+    {
+      "actorId": 7,
+      "orderId": 101,
+      "command": "cancel",
+      "body": {
+        "reasonCode": "OTHER",
+        "reasonText": "Không còn nhu cầu"
+      },
+      "canonical": "{\"actorScope\":\"USER:7\",\"body\":{\"reasonCode\":\"OTHER\",\"reasonText\":\"Không còn nhu cầu\"},\"command\":\"cancel\",\"orderId\":101}",
+      "requestHash": "2b90ed0146392f084a1bf552011433676b85558f772f2421003b82ca7dbe0239"
+    }
+  ]
+}

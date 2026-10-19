@@ -1,5 +1,31 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Đồng bộ #69 sau merge Seller #68 — 19/10/2026:** nền `bd45b54`,
+giữ nguyên payload Buyer đã review và toàn Seller/Brand/health contract mới.
+Chỉ conflict ghi chú kiến trúc; không đổi logic Buyer hoặc bật cờ giao dịch.
+Seller opt-in đã merge, các dòng chưa merge bên dưới là lịch sử tại baseline cũ.
+[Kết quả kiểm bản kết hợp](../testing/pr69-post-seller-sync-2026-10-19.md).
+
+**Đồng bộ proposal #69 ngày18/10/2026:** nhận develop `aa62c84` sau Brand,
+evaluation/preflight và Chat readiness. Giữ contract Buyer của `42c223f` nguyên
+nội dung; conflict chỉ kiến trúc, giữ cả hai phía. Approval `42c223f` cần review
+delta/CI bản đồng bộ; vẫn chưa schema/API/journal v2 hoặc nút Buyer.
+[Báo cáo đồng bộ](../testing/pr69-develop-sync-2026-10-18.md).
+
+**Buyer recovery contract — PROPOSED, chưa triển khai:** bổ sung
+[đặc tả đối chiếu/đóng yêu cầu Buyer](../api/buyer-order-command-resolution-proposal.md),
+hash v1 và journal v2 tương thích pending cũ; không lưu nguyên văn lý do hủy.
+[Acceptance](../testing/buyer-resolution-contract-acceptance-2026-10-18.md)
+đều NOT_RUN cho runtime mới. Không thay schema/API hoặc bật nút Buyer.
+
+**Buyer cancel/complete readiness ngày18/10/2026 — PREPARATION:** audit nền
+`39e8343` xác nhận Backend #44/#48 đã merge; Web Buyer vẫn chưa nối. Resolver
+#67 chỉ SELLER/ba lệnh chuẩn bị; journal USER hiện chỉ complete body{}, không
+có cancellation reason payload/recovery Buyer. Chưa schema/API/command mới,
+không trộn #68. [Quyền, luồng, khoảng trống và thứ tự](buyer-order-command-readiness-2026-10-18.md)
+và [ma trận kiểm thử](../testing/buyer-order-command-test-matrix-2026-10-18.md).
+Unit nền chạy lại150BE/51FE PASS; Buyer Web/live recovery mới NOT_RUN.
+
 **Đồng bộ #68 ngày18/10/2026 — chờ review delta:** nhận develop `aa62c84`
 sau #64/#25/#34/#35/#41; giữ cả Brand, evaluation/preflight và Chat readiness.
 Conflict chỉ ở tài liệu này; không đổi source Seller hoặc bật cờ QA mặc định.
