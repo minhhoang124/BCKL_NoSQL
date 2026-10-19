@@ -1,3 +1,8 @@
+import {
+  assertSellerResolutionProof,
+  type SellerResolution,
+} from "../../services/orderResolutionApi";
+import type { PreparationCommand } from "../../types/order";
 /** Tab-scoped recovery foundation only. No HTTP, route or command button. */
 export type RecoveryActor = Readonly<{ id: number; role: "USER" | "SELLER" }>;
 export type RecoverableCommand =
@@ -74,7 +79,8 @@ function parse(raw: string, actor: RecoveryActor): PendingOrderIntent {
     !positiveId(v.orderId) ||
     !compatible(v.role, v.command) ||
     typeof v.idempotencyKey !== "string" ||
-    !/^[A-Za-z0-9_-]{16,128}$/.test(v.idempotencyKey) ||
+    v.idempotencyKey.length < 16 || v.idempotencyKey.length > 128 ||
+    /[^A-Za-z0-9_-]/.test(v.idempotencyKey) ||
     typeof v.createdAt !== "string" ||
     !Number.isFinite(Date.parse(v.createdAt)) ||
     new Date(v.createdAt).toISOString() !== v.createdAt
@@ -161,5 +167,37 @@ export function createOrderIntentJournal(
       blocked();
     }
   }
-  return Object.freeze({ pending, prepare, acknowledge });
+  function settleClosedIntent(
+    actor: RecoveryActor,
+    intent: PendingOrderIntent,
+    resolution: SellerResolution,
+  ): void {
+    const current = pending(actor);
+    if (
+      !current ||
+      !same(current, intent) ||
+      actor.role !== "SELLER" ||
+      resolution.outcome !== "CLOSED_WITHOUT_EXECUTION"
+    )
+      blocked();
+    assertSellerResolutionProof(resolution, {
+      actorId: actor.id,
+      orderId: current.orderId,
+      command: current.command as PreparationCommand,
+      idempotencyKey: current.idempotencyKey,
+    });
+    if (
+      resolution.orderId !== current.orderId ||
+      resolution.command !== current.command
+    )
+      blocked();
+    // Separate from success acknowledgement: never fabricate commandId.
+    try {
+      storage.removeItem(namespace(actor));
+      if (storage.getItem(namespace(actor)) !== null) blocked();
+    } catch {
+      blocked();
+    }
+  }
+  return Object.freeze({ pending, prepare, acknowledge, settleClosedIntent });
 }

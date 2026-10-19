@@ -1,5 +1,20 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Đồng bộ #68 ngày18/10/2026 — chờ review delta:** nhận develop `aa62c84`
+sau #64/#25/#34/#35/#41; giữ cả Brand, evaluation/preflight và Chat readiness.
+Conflict chỉ ở tài liệu này; không đổi source Seller hoặc bật cờ QA mặc định.
+Approval `acbf28f` là bản trước đồng bộ; bản kết hợp cần regression/CI/re-review.
+[Báo cáo đồng bộ](../testing/pr68-develop-sync-2026-10-18.md).
+
+**Sau merge Backend resolver #67, ngày18/10/2026 — Seller Web IN_PROGRESS:**
+nhánh `codex/seller-resolution-client` nhận nền `39e8343`, nối Seller detail qua
+cờ QA mặc định tắt. Một controller/view đọc Order + Store, consent từng bước,
+lưu key trước HTTP, giữ unknown qua reload, resolver settlement rồi GET mới;
+lỗi GET sau receipt chỉ read-retry. Đổi phiên/unmount không clear pending cũ.
+Chrome/Nest/PostgreSQL QA riêng đạt6/6 nhóm; FE524PASS/6liveSKIP. Chưa review/
+merge FE hoặc bật command mặc định, chưa toàn G-FULFILMENT DONE. Không lấy UI
+cam #59 chưa merge. [Luồng, biến, bằng chứng và giới hạn](../testing/seller-order-web-runtime-2026-10-18.md).
+
 **Đồng bộ Brand #64 sau merge #67 ngày18/10/2026:** nhận develop `39e8343`.
 Giữ nguyên Brand editor của `a220a5e` và source Admin/Address/Cart/Checkout/Order
 từ nền mới, gồm Backend resolver/migration đã merge. Chưa nối Brand vào Catalog
@@ -1032,3 +1047,27 @@ unknown, sending, đã ghi nhận/GET lỗi và blocked. Callback trống mặc 
 `createSellerCommandRecovery` nối journal/coordinator với handle/validator #55,
 tái dùng key gốc và kiểm generation phiên.21 ca mới là mock HTTP, chưa live
 transaction. [Luồng và gate](../testing/seller-recovery-adapter-preparation-2026-10-16.md).
+
+## 18. Seller resolution client — chuẩn bị độc lập ngày 18/10/2026
+
+Nhánh `codex/seller-resolution-client` từ develop `9956379` triển khai phần FE
+theo contract #62 đã merge, **không lấy code Backend #67 đang review làm nền**.
+`orderResolutionApi` gửi key gốc, kiểm response strict và phiên; kết quả hợp lệ
+được gắn với invocation (lần gọi cụ thể) trong memory. JSON tự dựng, bản sao
+response hoặc proof của phiên/key khác không giải phóng pending.
+
+Journal có `settleClosedIntent` riêng cho CLOSED, không giả `commandId` thành
+công. Coordinator dùng chung latch execute/resolve, so đầy đủ identity pending
+và thế hệ phiên trước/sau HTTP. Lỗi giữ key; không auto resolve/replay khi mount.
+
+`sellerResolutionFlow` tách settlement (xác minh kết quả cũ) khỏi GET mới. GET
+lỗi sau COMMITTED/CLOSED chỉ cho retry GET; chưa qua freshness gate để xét lệnh
+kế tiếp. Gate này không cấp quyền hoặc thay policy trạng thái/Payment Backend.
+`SellerResolutionReview` yêu cầu đồng ý riêng vì resolver có thể dừng ý định
+chưa thực thi; không gọi đó là hủy Order hoặc nút "gửi lại".
+
+Không sửa router/pages/OrderPanels, không mount component hoặc bật nút Seller.
+Không schema/Backend/Search/Auth chung hoặc UI Address/Cart/Admin của Hiền.
+Kiểm thử tại [báo cáo client](../testing/seller-resolution-client-2026-10-18.md)
+tách unit/jsdom/mock HTTP khỏi live API/PostgreSQL/browser; G-FULFILMENT vẫn
+IN_PROGRESS. Sau review/merge Backend #67 mới nối Web và nghiệm thu giao dịch.

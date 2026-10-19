@@ -6,6 +6,11 @@ import {
   type ValidatedCommandAcknowledgement,
   createOrderIntentJournal,
 } from "./orderIntentJournal";
+import {
+  assertSellerResolutionProof,
+  type SellerResolution,
+} from "../../services/orderResolutionApi";
+import type { PreparationCommand } from "../../types/order";
 
 export type VerifiedOrderSession = Readonly<{
   actor: RecoveryActor;
@@ -30,6 +35,7 @@ export function createOrderCommandCoordinator(options: {
   sendValidated: (
     intent: PendingOrderIntent,
   ) => Promise<ValidatedCommandAcknowledgement>;
+  resolveValidated?: (intent: PendingOrderIntent) => Promise<SellerResolution>;
 }) {
   let busy = false;
   function session(): VerifiedOrderSession {
@@ -82,8 +88,49 @@ export function createOrderCommandCoordinator(options: {
       busy = false;
     }
   }
+  async function resolve(input: {
+    intent: PendingOrderIntent;
+    confirmed: boolean;
+  }): Promise<SellerResolution> {
+    if (busy || input.confirmed !== true || !options.resolveValidated)
+      throw new OrderRecoveryBlockedError();
+    const captured = session();
+    if (captured.actor.role !== "SELLER") throw new OrderRecoveryBlockedError();
+    busy = true;
+    try {
+      // Resolving must NEVER prepare/persist a fresh intent or key.
+      const intent = options.journal.pending(captured.actor);
+      if (
+        !intent ||
+        !input.intent ||
+        (Object.keys(intent) as (keyof PendingOrderIntent)[]).some(
+          (k) => intent[k] !== input.intent[k],
+        )
+      )
+        throw new OrderRecoveryBlockedError();
+      assertCurrent(captured);
+      const result = await options.resolveValidated(intent);
+      assertCurrent(captured);
+      assertSellerResolutionProof(result, {
+        actorId: captured.actor.id,
+        orderId: intent.orderId,
+        command: intent.command as PreparationCommand,
+        idempotencyKey: intent.idempotencyKey,
+      });
+      if (result.outcome === "COMMITTED")
+        options.journal.acknowledge(captured.actor, intent, result.receipt);
+      else options.journal.settleClosedIntent(captured.actor, intent, result);
+      return result;
+    } catch (error) {
+      assertCurrent(captured);
+      throw error;
+    } finally {
+      busy = false;
+    }
+  }
   return Object.freeze({
     execute,
+    resolve,
     isBusy: () => busy,
     pending: () => options.journal.pending(session().actor),
   });
