@@ -210,7 +210,7 @@ export class OrderCommandResolutionService {
     throw orderCommandError(409, 'ORDER_COMMAND_IN_PROGRESS');
   }
 }
-function resolutionSqlState(error: unknown): string {
+export function resolutionSqlState(error: unknown): string {
   if (
     !(error instanceof Prisma.PrismaClientKnownRequestError) ||
     error.code !== 'P2010'
@@ -228,7 +228,7 @@ function resolutionSqlState(error: unknown): string {
         : ''),
   );
 }
-function scopeKeyConflict(error: unknown): boolean {
+export function scopeKeyConflict(error: unknown): boolean {
   if (
     !(error instanceof Prisma.PrismaClientKnownRequestError) ||
     error.code !== 'P2002'

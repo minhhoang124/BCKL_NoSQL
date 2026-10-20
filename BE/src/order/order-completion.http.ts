@@ -31,7 +31,7 @@ export function assertCompletionQuery(query: unknown) {
 function bodyRoute(req: { method?: string; url?: string }) {
   return (
     req.method === 'POST' &&
-    /^\/orders\/[^/]+\/complete\/?$/i.test((req.url ?? '').split('?')[0])
+    /^\/orders\/[^/]+\/(complete|resolve-command)\/?$/i.test((req.url ?? '').split('?')[0])
   );
 }
 

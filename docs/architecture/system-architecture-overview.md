@@ -1,5 +1,37 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Buyer #74 — đồng bộ 21/10/2026:** nhận develop `bf6f926` sau merge #77/#81.
+Giữ runtime/migration Buyer và foundation Attributes/Accounts đã merge; conflict
+chỉ ghi chú kiến trúc, giữ cả hai phía. Chưa nhận journal #75 hoặc adapter #84,
+chưa bật Buyer Web. Bản kết hợp751unit/670E2E PASS,20TODO; fresh16migrations trên
+DB QA riêng. [Bằng chứng và giới hạn](../testing/pr74-post77-sync-2026-10-21.md).
+Các ghi chú ngày20/10 bên dưới là lịch sử riêng baseline.
+
+**#74 nền sau Brand #71 — 20/10/2026:** nhận develop `2f78a98` gồm
+Accounts/AI health/Brand chính thức. Giữ Buyer, conflict chỉ kiến trúc.
+Không bật Buyer Web; báo cáo post80 ghi riêng kiểm thử cuối sau #71.
+
+**#74 sau merge AI health #79 — 20/10/2026:** nền develop `20a3c40` đã
+merge Accounts/AI readiness; giữ Buyer và toàn bộ AI. Conflict chỉ kiến trúc,
+không đổi logic Buyer. Bằng chứng sync sau #80 phía dưới giữ baseline riêng;
+CI/review đúng head cuối trước merge, không bật Buyer Web từ preparation.
+
+**PR #74 sau Accounts #80 — 20/10/2026:** nhận develop `39bbe28`, giữ runtime/
+migration Buyer và thêm Accounts chính thức. Không Buyer journal/Web POST;
+conflict chỉ tài liệu. [Kiểm thử bản kết hợp](../testing/pr74-post80-sync-2026-10-20.md).
+
+**Sau merge #70 — PR #74 sync20/10:** nhận develop `6d682e4`, giữ runtime/
+migration Buyer, nhận validator FE chính thức; chưa #75 hoặc Buyer Web POST.
+Fresh15 migrations,695unit và634E2E PASS/20TODO; lint/typecheck/build PASS.
+[Bằng chứng và giới hạn](../testing/pr74-post70-sync-2026-10-20.md).
+Các mốc đồng bộ cũ bên dưới là lịch sử, không thay baseline hiện tại.
+
+**PR #74 đồng bộ 20/10/2026:** nhận develop `335b455` sau #78/#72;
+giữ nguyên runtime/migration Buyer đã sửa P2, không nhận #70/#75 chưa merge.
+Fresh15 migrations, 695 unit, 634 E2E PASS/20 TODO; Buyer trọng tâm37 PASS.
+[Bằng chứng và giới hạn](../testing/pr74-post78-72-sync-2026-10-20.md).
+Chưa Buyer Web hoặc nghiệm thu toàn G-FULFILMENT; cần re-review/CI head mới.
+Các ghi chú theo ngày phía dưới là lịch sử, không thay trạng thái hiện tại.
 **Attributes #77 — kiểm bản kết hợp 21/10/2026:** đã nhận develop `76a62c9`
 sau merge Accounts UI #81; Backend/Prisma giữ nguyên source `4cad89d`, FE giữ
 source develop. Chạy lại 21 HTTP/migration và 721 FE tests đạt; full Backend
@@ -1224,6 +1256,24 @@ Kiểm thử tại [báo cáo client](../testing/seller-resolution-client-2026-1
 tách unit/jsdom/mock HTTP khỏi live API/PostgreSQL/browser; G-FULFILMENT vẫn
 IN_PROGRESS. Sau review/merge Backend #67 mới nối Web và nghiệm thu giao dịch.
 
+## 19. Buyer resolver Backend — IN_PROGRESS, 19/10/2026
+
+Contract #69 đã merge tại `622cfb9`; nhánh `codex/buyer-resolution-runtime`
+triển khai migration mới mở Buyer cancel/complete trong bảng fence hiện có và
+API `POST /orders/:orderId/resolve-command`. User UPDATE → Store SHARE → Order
+UPDATE trong Serializable, đọc canonical owner và receipt/fence rồi commit.
+COMMITTED chỉ trả receipt Buyer gốc; CLOSED chỉ đóng key, không đổi Order,
+Payment, kho, history hoặc SearchOutbox. Cancel không receipt chỉ dùng hash
+định danh fence, không giả đã chứng minh reason. D07 giữ namespace SYSTEM.
+
+Cả năm writer hiểu allowed-pair Buyer/Seller, chặn key đã đóng trước replay/
+policy kể cả đổi role. Giữ DB opposing-outcome/immutable triggers; không sửa
+migration #67. Quota Buyer resolver riêng, retry3lần/timeout hữu hạn, không
+log key/hash/lý do. Không sửa FastAPI, journal v2 hoặc bật nút Buyer.
+[Luồng/thuật ngữ](../api/buyer-order-command-resolution-runtime.md) và
+[kiểm thử/giới hạn](../testing/buyer-command-resolution-runtime-2026-10-19.md).
+Code trên nhánh riêng chưa là CURRENT; hai Nest app/SQL race không phải browser
+hay hai OS process crash test. G-FULFILMENT vẫn IN_PROGRESS.
 ## Bổ sung 19/10/2026 — Buyer resolution test preparation
 
 Audit năm writer trên `bd45b54`: guard trước replay/policy, SYSTEM namespace

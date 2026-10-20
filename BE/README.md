@@ -177,6 +177,15 @@ $ pnpm run test:e2e
 
 ## Order completion D07 (IN_PROGRESS)
 
+Buyer recovery Backend (IN_PROGRESS, 19/10): `POST /orders/:orderId/resolve-command`
+accepts original key and strict command/hashVersion/requestHash. It only returns
+the original Buyer receipt or closes the key durably; never cancels/completes an
+Order. Apply migration `20261019040000_buyer_order_command_resolution` before
+deploying this route. Existing Seller endpoint/D07 namespace remain separate.
+See [runtime contract](../docs/api/buyer-order-command-resolution-runtime.md)
+and [QA results/limits](../docs/testing/buyer-command-resolution-runtime-2026-10-19.md).
+Frontend recovery and Buyer buttons are not enabled by this Backend change.
+
 Buyer command: `POST /orders/:orderId/complete`, body `{}`, Idempotency-Key, own delivered/paid Order only. Scheduler `order-auto-complete-d07` runs every 15 seconds and discovers due Orders from PostgreSQL. Default delay is 3 days (`ORDER_AUTO_COMPLETE_DELAY_SECONDS=259200`); enable with `ORDER_AUTO_COMPLETE_ENABLED=true`. Apply the new completion-job migration before running. Never shorten the delay on real transactions merely to demo.
 
 Jobs/lease/retries persist in PostgreSQL; max 6 attempts with backoff, then FAILED for operator investigation (no requeue endpoint yet). Buyer/worker share atomic completion and immutable receipts. See [contract and limits](../docs/api/order-completion-runtime-contract.md). Backend tests disable global cron; the runtime suite enables an isolated app and verifies a real wall-clock tick on a dedicated test database. This is not acceptance evidence for UI, Review, Dashboard, Notification or real payment settlement.

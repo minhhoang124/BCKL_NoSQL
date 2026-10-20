@@ -121,7 +121,7 @@ export class OrderDeliveryService {
                 },
               },
             });
-            await assertOrderCommandNotClosed(tx, input, stored !== null);
+            await assertOrderCommandNotClosed(tx, { ...input, actorType: 'ADMIN' }, stored !== null);
             if (stored) return this.replay(stored, input, command);
             const decision = deliveryDecision(command, input.body, order);
             const target = decision.status;

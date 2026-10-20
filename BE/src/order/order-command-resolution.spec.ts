@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { parseResolutionCommand } from './order-command-resolution.service.js';
 import { assertOrderCommandNotClosed } from './order-command-fence.js';
 const input = {
+  actorType: 'SELLER',
   actorScope: 'USER:8',
   actorId: 8,
   orderId: 10,

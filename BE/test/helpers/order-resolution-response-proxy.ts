@@ -18,7 +18,8 @@ export async function startOrderResolutionResponseProxy(upstreamOrigin: string) 
   const server = createServer((incoming, outgoing) => {
     // Strict path/method allowlist; never proxy catalog/Auth/admin/demo traffic.
     if (incoming.method !== 'POST' ||
-        !/^\/seller\/orders\/[1-9][0-9]*\/(confirm|start-packing|ready-to-ship|resolve-command)$/.test(incoming.url ?? '')) {
+        !(/^\/seller\/orders\/[1-9][0-9]*\/(confirm|start-packing|ready-to-ship|resolve-command)$/.test(incoming.url ?? '') ||
+          /^\/orders\/[1-9][0-9]*\/(cancel|complete|resolve-command)$/.test(incoming.url ?? ''))) {
       incoming.resume(); outgoing.writeHead(404); outgoing.end(); return;
     }
     forwarded++;

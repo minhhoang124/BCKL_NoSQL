@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { BuyerCommandResolutionController } from './buyer-command-resolution.controller.js';
+import { BuyerCommandResolutionService } from './buyer-command-resolution.service.js';
+import { BuyerCommandResolutionRateGuard } from './buyer-command-resolution-rate.guard.js';
 import { OrderCommandResolutionService } from './order-command-resolution.service.js';
 import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from '../auth/auth.module.js';
@@ -37,6 +40,7 @@ import { OrderCompletionRateGuard } from './order-completion-rate.guard.js';
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [
+    BuyerCommandResolutionController,
     OrderListController,
     OrderDetailController,
     OrderDeliveryController,
@@ -47,6 +51,8 @@ import { OrderCompletionRateGuard } from './order-completion-rate.guard.js';
     OrderCompletionController,
   ],
   providers: [
+    BuyerCommandResolutionService,
+    BuyerCommandResolutionRateGuard,
     OrderCommandResolutionService,
     OrderListService,
     OrderDetailService,
