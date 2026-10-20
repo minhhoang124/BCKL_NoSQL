@@ -1,11 +1,12 @@
 # Backend–Search Service API contract
 
-## Mở rộng health nội bộ v1 — PROPOSED, 17/10/2026
+## Mở rộng health nội bộ v1 — contract đã duyệt, AI runtime IN_PROGRESS
 
-Phần này chỉ ghi delta chờ review theo PR #61, **chưa endpoint/auth/probe runtime**.
-Các endpoint đang hoạt động và GET /health legacy phía dưới không đổi.
-Hoàng đề xuất, Đạt đã xác nhận hướng tại review5546401582/comment6229349304;
-schema/fixture bổ sung phải được review delta trước implementation.
+Contract #61 đã merge tại `0aaaec2`. Nhánh `feat/dat/search-health-runtime`
+ngày20/10/2026 triển khai phần FastAPI để Hoàng review: endpoint/token, cached
+read-only probes và single-flight/deadline. **Chưa merge hoặc nghiệm thu Backend/FE**.
+GET /health legacy và payload search/index giữ nguyên. Schema/fixture v1 không
+đổi cấu trúc; [bằng chứng, cách chạy và giới hạn](../testing/search-health-runtime-2026-10-20.md).
 
 - Đường dẫn chốt hướng: FastAPI `GET /internal/health/search`, Backend
   `GET /admin/system-health`. Browser chỉ gọi Backend/current active ADMIN từ DB.
@@ -41,7 +42,8 @@ schema/fixture bổ sung phải được review delta trước implementation.
   allREADY->DEGRADED, kể cả allDEGRADED; không usable+cóUNKNOWN->UNKNOWN;
   allUNAVAILABLE->UNAVAILABLE. Không thêm aggregate vào envelope AI hiện tại.
 - Snapshot TTL60s/probe30s, Backend timeout2s/body32KiB/cache15s/no retry hay
-  redirect, FE poll30s là policy hướng tới, chưa có runtime chứng minh.
+  redirect, FE poll30s vẫn chờ implementation Backend/FE. AI đã có scheduler30s/TTL60s
+  trên nhánh runtime; thiếu token server thì không chạy background probes.
   Read-only: không ensure_index/refresh/write/sentinel/model download;
   health đọc không chứng minh ghi bền, outbox synced hoặc chất lượng retrieval.
 
@@ -49,7 +51,7 @@ Chi tiết field/error enum/clock skew/auth-network/ma trận runtime NOT_RUN �
 [đề xuất health](search-health-proposal.md). [Fixture](examples/search-health-proposed-v1.json)
 là dữ liệu minh họa, không live. [JSON Schema](examples/search-health-proposed-v1.schema.json)
 được sinh từ Pydantic SearchHealthSnapshot; schema tests không thay runtime tests.
-Schema mới chưa được import vào router; không sửa Product/index/search payload.
+Router nội bộ dùng schema này; không sửa Product/index/search payload.
 
 Trạng thái: **contract Hoàng–Đạt đã thống nhất; Search Service PR #8 đã merge**. Tài liệu này mô tả giao tiếp giữa NestJS Backend và FastAPI Search Service. PR #8 đã triển khai và kiểm thử các endpoint, đồng bộ Elasticsearch–FAISS, version/idempotency, retry lỗi một phần và hybrid RRF. PR #23 đã có bằng chứng tích hợp local Backend outbox–FastAPI–hydrate; CI xuyên dịch vụ và giao diện Web vẫn là các bước nghiệm thu riêng.
 

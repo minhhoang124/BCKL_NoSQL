@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from app.config import get_settings
 from app.routers.health import router as health_router
 from app.routers.index import router as index_router
+from app.routers.internal_health import router as internal_health_router
 from app.routers.search import router as search_router
 from app.services.clip_service import ClipService
 from app.services.elasticsearch_service import ElasticsearchService
@@ -15,6 +16,7 @@ from app.services.image_download_service import ImageDownloadService
 from app.services.image_service import ImageService
 from app.services.product_sync_service import ProductSyncService
 from app.services.runtime import runtime_state
+from app.services.search_health_service import SearchHealthService
 
 settings = get_settings()
 
@@ -68,8 +70,12 @@ def create_app(*, load_runtime: bool | None = None) -> FastAPI:
                     index_loaded=faiss_service.is_loaded,
                     vector_count=faiss_service.vector_count,
                 )
+            token = application.state.internal_health_token
+            if token is not None and token.get_secret_value().strip():
+                application.state.search_health_service.start()
             yield
         finally:
+            await application.state.search_health_service.close()
             await image_download_service.close()
             await elasticsearch_service.close()
 
@@ -82,10 +88,15 @@ def create_app(*, load_runtime: bool | None = None) -> FastAPI:
     application.include_router(health_router)
     application.include_router(search_router)
     application.include_router(index_router)
+    application.include_router(internal_health_router)
     application.state.image_service = image_service
     application.state.image_download_service = image_download_service
     application.state.elasticsearch_service = elasticsearch_service
     application.state.product_sync_service = product_sync_service
+    application.state.internal_health_token = settings.internal_health_token
+    application.state.search_health_service = SearchHealthService(
+        application, lambda: settings.rrf_k,
+    )
 
     @application.get("/", tags=["service"])
     def root() -> dict[str, str]:

@@ -1,4 +1,4 @@
-"""Proposed wire contract only; no route, auth, scheduler or live probe is installed."""
+"""Strict wire contract shared by the cached internal readiness endpoint."""
 
 import re
 from datetime import datetime

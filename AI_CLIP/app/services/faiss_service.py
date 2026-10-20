@@ -64,6 +64,26 @@ class FaissService:
             self._versions = versions
             self._deleted_product_ids = deleted_product_ids
 
+    def probe_search(self) -> tuple[int, int, np.ndarray, np.ndarray] | None:
+        """One read under the existing lock, no index copy or persistence."""
+        import numpy as np
+
+        if not self._lock.acquire(blocking=False):
+            raise BlockingIOError("Index busy")
+        try:
+            if self._index is None:
+                return None
+            dimension, count = int(self._index.d), int(self._index.ntotal)
+            # A malformed index must not cause an unbounded probe allocation.
+            if not 0 < dimension <= 65536:
+                raise ValueError("Invalid index dimension")
+            vector = np.zeros((1, dimension), dtype="float32")
+            vector[0, 0] = 1.0
+            scores, ids = self.search(vector, 1)
+            return dimension, count, scores, ids
+        finally:
+            self._lock.release()
+
     def current_version(self, product_id: int) -> int | None:
         self._require_index()
         with self._lock:

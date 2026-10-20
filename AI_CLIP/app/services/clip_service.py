@@ -1,5 +1,5 @@
 from threading import RLock
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     import numpy as np
@@ -21,6 +21,26 @@ class ClipService:
     @property
     def is_loaded(self) -> bool:
         return self._image_model is not None and self._text_model is not None
+
+    def model_loaded(self, kind: Literal["image", "text"]) -> bool:
+        return (self._image_model if kind == "image" else self._text_model) is not None
+
+    def probe_embedding(
+        self, kind: Literal["image", "text"], image: "Image.Image | None" = None,
+    ) -> "np.ndarray | None":
+        """Use already loaded models only; never queue behind foreground inference."""
+        if not self._lock.acquire(blocking=False):
+            raise BlockingIOError("Inference busy")
+        try:
+            if not self.model_loaded(kind):
+                return None
+            if kind == "image":
+                if image is None:
+                    raise ValueError("Image probe requires a decoded image")
+                return self.encode_image(image)
+            return self.encode_text("search service readiness")
+        finally:
+            self._lock.release()
 
     @property
     def embedding_dimension(self) -> int:

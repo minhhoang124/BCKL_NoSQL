@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import json
 import logging
+import math
+from time import monotonic
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -161,6 +165,110 @@ class ElasticsearchService:
         except (httpx.HTTPError, OSError) as error:
             logger.warning("Elasticsearch ping failed: %s", error)
             return False
+
+    async def readiness_probe(self, timeout_seconds: float) -> dict[str, Any]:
+        """Read target mapping and one hit. Never create/refresh/write an index."""
+        result: dict[str, Any] = {"loaded": None, "indexExists": None, "readable": None}
+        deadline = monotonic() + timeout_seconds
+        target = quote(self._index_name, safe="")
+
+        async def read(suffix, body=None):
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                raise httpx.ReadTimeout("Health budget")
+            async with self._client.stream(
+                "GET", f"{self._base_url}/{target}/{suffix}", json=body,
+                params={"allow_no_indices": "false", "ignore_unavailable": "false"},
+                timeout=remaining, follow_redirects=False,
+            ) as response:
+                if response.status_code in (401, 403):
+                    return "ES_AUTH_FAILED", None
+                if response.status_code == 404:
+                    result["indexExists"] = False
+                    return "ES_INDEX_MISSING", None
+                if response.status_code != 200:
+                    return "ES_QUERY_FAILED", None
+                content = bytearray()
+                async for chunk in response.aiter_bytes():
+                    content.extend(chunk)
+                    if len(content) > 262144:
+                        return "ES_QUERY_FAILED", None
+                return None, json.loads(content)
+
+        try:
+            code, mapping = await read("_mapping")
+            if code:
+                return {**result, "errorCode": code}
+            result["indexExists"] = True
+            if not isinstance(mapping, dict) or len(mapping) != 1:
+                return {**result, "errorCode": "ES_MAPPING_INVALID"}
+            target_mapping = next(iter(mapping.values()))["mappings"]
+            properties = target_mapping["properties"]
+            expected = INDEX_MAPPING["mappings"]["properties"]
+            if not isinstance(properties, dict) or any(
+                not isinstance(properties.get(key), dict)
+                or properties[key].get("type") != definition["type"]
+                or (key == "attributes" and properties[key].get("enabled") is not False)
+                for key, definition in expected.items()
+            ):
+                return {**result, "errorCode": "ES_MAPPING_INVALID"}
+            # A matching type does not mean the field can serve our queries.
+            # Full-text fields need an inverted index. Numeric/boolean filters
+            # can use doc values instead, so index=false alone is not an error.
+            if (
+                target_mapping.get("enabled", True) is not True
+                or target_mapping.get("_source", {}).get("enabled", True) is not True
+                or any(properties[key].get("index", True) is not True
+                       for key in ("name", "description"))
+            ):
+                return {**result, "errorCode": "ES_MAPPING_INVALID"}
+            for key in (
+                "productId", "categoryId", "categoryPathIds", "brandId",
+                "minPrice", "maxPrice", "inStock",
+            ):
+                indexed = properties[key].get("index", True)
+                doc_values = properties[key].get("doc_values", True)
+                if (type(indexed) is not bool or type(doc_values) is not bool
+                    or not (indexed or doc_values)):
+                    return {**result, "errorCode": "ES_MAPPING_INVALID"}
+            code, data = await read("_search", {
+                "size": 1, "query": {"match_all": {}}, "_source": ["productId"],
+                "track_total_hits": True,
+            })
+            result["readable"] = False
+            if code:
+                return {**result, "errorCode": code}
+            shards = data["_shards"]
+            if (
+                data.get("timed_out") is not False
+                or data.get("terminated_early") is True
+                or any(type(shards.get(k)) is not int or shards[k] < 0
+                       for k in ("total", "successful", "skipped", "failed"))
+                or shards["failed"] != 0 or shards["successful"] < 1
+                or shards["successful"] + shards["failed"] != shards["total"]
+            ):
+                return {**result, "errorCode": "ES_QUERY_FAILED"}
+            total = data["hits"]["total"]
+            hits = data["hits"]["hits"]
+            if (not isinstance(total, dict) or type(total.get("value")) is not int
+                or total["value"] < 0 or total.get("relation") != "eq"
+                or not isinstance(hits, list) or len(hits) != min(total["value"], 1)):
+                return {**result, "errorCode": "ES_QUERY_FAILED"}
+            for hit in hits:
+                identity, score = hit["_source"]["productId"], hit["_score"]
+                if (type(identity) is not int or identity < 1
+                    or type(score) not in (int, float) or not math.isfinite(score)):
+                    return {**result, "errorCode": "ES_QUERY_FAILED"}
+            return {**result, "readable": True,
+                    "warningCodes": ["EMPTY_INDEX"] if total["value"] == 0 else []}
+        except httpx.TimeoutException:
+            return {**result, "errorCode": "ES_TIMEOUT"}
+        except (httpx.HTTPError, OSError):
+            return {**result, "errorCode": "ES_UNREACHABLE"}
+        except (ValueError, TypeError, KeyError, AttributeError):
+            return {**result, "errorCode": (
+                "ES_QUERY_FAILED" if result["readable"] is False else "ES_MAPPING_INVALID"
+            )}
 
     async def ensure_index(self) -> bool:
         """Ensure the target index exists with required mapping.

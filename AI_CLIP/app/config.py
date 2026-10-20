@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 AI_CLIP_ROOT = Path(__file__).resolve().parents[1]
@@ -86,6 +86,7 @@ class Settings(BaseSettings):
         ),
     )
     rrf_k: int = Field(default=60, ge=1)
+    internal_health_token: SecretStr | None = None
 
     @property
     def allowed_image_hosts(self) -> set[str]:

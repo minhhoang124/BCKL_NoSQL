@@ -1,5 +1,23 @@
 # AI Service
 
+## Health nội bộ — nhánh triển khai 20/10/2026
+
+`GET /internal/health/search` dùng contract #61 đã duyệt. Cấu hình riêng
+`AI_INTERNAL_HEALTH_TOKEN` qua môi trường bí mật; Backend sau này dùng cùng giá trị
+ở `SEARCH_INTERNAL_HEALTH_TOKEN`. Không dùng token người dùng hoặc giá trị mẫu trong Git.
+Thiếu cấu hình trả503; thiếu/sai/trùng header `X-Internal-Health-Token` trả401.
+Mọi phản hồi route mới có `Cache-Control:no-store`. Không thay auth các route cũ.
+
+Scheduler bắt đầu sau startup khi có token, mỗi30s; GET đọc cache, không force
+inference. Snapshot đầu có thể UNKNOWN; HTTP200 chỉ nghĩa là envelope đọc được.
+TTL60s, cycle5s, cap ES1.5s/FAISS0.5s/mỗi CLIP2s; native quá hạn vẫn giữ
+single-flight tới khi kết thúc, không cập nhật từ kết quả muộn. Index rỗng hợp
+lệ trả READY + EMPTY_INDEX, không phải bằng chứng đã đồng bộ dữ liệu.
+
+Nhánh này **IN_PROGRESS/chờ review**, chưa nối Backend/Admin UI. Những mốc PR#8
+và số129tests bên dưới là lịch sử. Xem [báo cáo health runtime](../docs/testing/search-health-runtime-2026-10-20.md)
+để chạy, kiểm chứng và hiểu phạm vi thực sự đã kiểm.
+
 FastAPI service cho CLIP, FAISS và các chức năng tìm kiếm của đề tài.
 
 ## Trạng thái

@@ -1,7 +1,11 @@
 # Đề xuất contract health Search cho Admin
 
 Ngày 16/10/2026. Người chuẩn bị: Đạt, có Codex AI hỗ trợ rà code.
-Trạng thái: **PROPOSED — chờ Hoàng/Đạt thống nhất và Hiền review hiển thị. Chưa triển khai.**
+Trạng thái lịch sử: proposal16–18/10, đã được duyệt/merge qua #61 (`0aaaec2`).
+Ngày20/10: AI runtime đang ở nhánh `feat/dat/search-health-runtime`, chờ review/merge.
+[Báo cáo triển khai và ma trận bằng chứng](../testing/search-health-runtime-2026-10-20.md)
+phân biệt test AI với Backend/Admin/FE chưa chạy. Các đoạn “chưa runtime” và
+ma trận NOT_RUN phía dưới là ảnh chụp khi lập proposal, không phải số liệu nghiệm thu mới.
 Baseline đã đọc từ Git: develop `035656be3d1ce43e936ddd4f45e5ea8c01047cf8`.
 
 **Delta 17/10:** Đạt xác nhận review Hoàng 5546401582 về endpoint, envelope,

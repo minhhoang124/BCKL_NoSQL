@@ -1,5 +1,27 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Đồng bộ #79 sau Accounts #80 — 20/10/2026:** nhận develop `39bbe28`.
+Giữ AI runtime `1223fd3` nguyên byte và toàn bộ Accounts/Bảo vệ đã merge;
+conflict chỉ kiến trúc. Bản đồng bộ cần CI/review delta mới, không dùng approval
+cũ thay bản kết hợp. Chưa Backend aggregation hoặc Admin health UI.
+
+**#79 sửa P2 — 20/10/2026, IN_PROGRESS:** health ES kiểm khả năng query của
+text/filter, không chỉ type. Mapping lỗi trả ES_MAPPING_INVALID, không giả READY
+trên index rỗng. Không sửa mapping hoặc Product/search contract trong probe.
+[Red/green, ES QA và giới hạn](../testing/pr79-es-queryability-fix-2026-10-20.md).
+
+**Đồng bộ #79 sau merge #70 — 20/10/2026:** nhận develop `6d682e4`;
+giữ đủ phần AI health và Buyer receipt validation. #70 đã merge ở mức pure
+validator PREPARATION; #79 vẫn IN_PROGRESS/chờ review, chưa Backend aggregation
+hoặc Admin UI health. Các ghi chú đồng bộ #70 bên dưới là lịch sử trước merge.
+[Kiểm thử bản kết hợp và giới hạn](../testing/pr79-post70-sync-2026-10-20.md).
+
+**Search health AI — 20/10/2026, IN_PROGRESS:** contract #61 đã merge; nhánh
+`feat/dat/search-health-runtime` bổ sung GET nội bộ/token, cached read-only probes
+CLIP image/text, FAISS, ES và single-flight/deadline/TTL. Legacy/search/index giữ
+nguyên; Backend aggregation/Admin UI vẫn chờ PR riêng. Test và smoke với model
+cache/FAISS/ES thật không thay nghiệm thu G-OPERATE hoặc chất lượng retrieval.
+[Cách chạy, bằng chứng và giới hạn](../testing/search-health-runtime-2026-10-20.md).
 **Admin Accounts list — IN_PROGRESS, 20/10/2026:** Backend thêm GET
 `/admin/accounts` theo phần read-only contract #76, current active ADMIN,
 query strict/cursor/select allowlist/no-store; PostgreSQL RepeatableRead read-only.
@@ -34,6 +56,7 @@ Kiểm đúng Order/Buyer/tổng tiền, reason và một sự kiện lịch s�
 không nhận SYSTEM receipt thay Buyer. Không HTTP, schema/API, journal v2, UI
 hoặc dependency vào đề xuất #69/#68. Không là nghiệm thu giao dịch Buyer Web.
 [Hướng dẫn biến, điều kiện và kiểm thử](../testing/buyer-receipt-validation-2026-10-18.md).
+
 **Product concurrency test — 19/10/2026, TEST-ONLY:** sửa tiền điều kiện của
 kiểm thử hai PATCH cùng version bằng barrier sau đọc snapshot thật. Giữ CAS/
 transaction/outbox production nguyên vẹn; tách ca tuần tự200/200 khỏi cùng-version

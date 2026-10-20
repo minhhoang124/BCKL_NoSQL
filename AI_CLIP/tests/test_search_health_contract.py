@@ -349,7 +349,9 @@ def test_bad_capability_reasons(reasons: list[str]) -> None:
         validate(data)
 
 
-def test_contract_does_not_install_internal_health_route() -> None:
+def test_runtime_installs_contract_route_without_changing_legacy_health() -> None:
     with TestClient(create_app(load_runtime=False)) as client:
-        assert "/internal/health/search" not in client.get("/openapi.json").json()["paths"]
+        paths = client.get("/openapi.json").json()["paths"]
+        schema = paths["/internal/health/search"]["get"]["responses"]["200"]["content"]
+        assert schema["application/json"]["schema"]["$ref"].endswith("/SearchHealthSnapshot")
         assert client.get("/health").status_code == 200
