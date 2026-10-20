@@ -1,5 +1,6 @@
 .layout { color-scheme: light; background: #f6f7f8; color: #20242b; padding: 32px; min-height: 100svh; font: 14px/1.55 'Segoe UI', Arial, sans-serif; }
 .layout * { box-sizing: border-box; }
+.embedded { min-height: 0; padding: 20px 0 0; margin-top: 24px; border-top: 1px solid #e0e3e8; }
 .layout h1, .layout h2, .layout h3 { color: #20242b; margin: 0 0 12px; font-weight: 700; }
 .layout h1 { font-size: 30px; line-height: 1.25; }
 .layout h2 { font-size: 18px; }
@@ -28,3 +29,4 @@
 .confirm dl { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 8px; }
 .confirm dd { margin: 0; overflow-wrap: anywhere; font-weight: 600; }
 @media (max-width: 760px) { .layout { padding: 20px 14px; } .columns { grid-template-columns: 1fr; } .panel { padding: 16px; } }
+@media (max-width: 760px) { .embedded { padding: 20px 0 0; } }

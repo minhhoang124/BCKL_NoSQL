@@ -5,14 +5,23 @@ import { brandApi, validateBrandDraft } from './brandApi';
 import type { AdminBrand, BrandApi, BrandPatch } from './brandApi';
 import styles from './AdminBrandEditor.module.css';
 
-export function AdminBrandEditor({ api = brandApi }: { api?: BrandApi }) {
+interface EditorProps {
+  api?: BrandApi;
+  embedded?: boolean;
+  disabled?: boolean;
+  reloadToken?: number;
+  onLockChange?: (locked: boolean) => void;
+  onSaved?: () => void;
+}
+
+export function AdminBrandEditor({ api = brandApi, ...integration }: EditorProps) {
   const { user, loading } = useAuth();
   if (loading) return <p role="status">Đang xác thực…</p>;
   if (!user || user.role !== 'ADMIN' || !user.isActive) return <p role="alert">Chỉ Admin đang hoạt động được sửa thương hiệu.</p>;
-  return <BrandEditorContent key={`${user.id}:${getAuthSessionVersion()}`} api={api} />;
+  return <BrandEditorContent key={`${user.id}:${getAuthSessionVersion()}`} api={api} {...integration} />;
 }
 
-function BrandEditorContent({ api }: { api: BrandApi }) {
+function BrandEditorContent({ api, embedded = false, disabled = false, reloadToken = 0, onLockChange, onSaved }: Omit<EditorProps, 'api'> & { api: BrandApi }) {
   const [rows, setRows] = useState<AdminBrand[]>([]);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const [selected, setSelected] = useState<AdminBrand | null>(null);
@@ -53,15 +62,17 @@ function BrandEditorContent({ api }: { api: BrandApi }) {
     mounted.current = true;
     const timer = window.setTimeout(() => { void load(); }, 0);
     return () => { mounted.current = false; window.clearTimeout(timer); abortPending(); };
-  }, [load, abortPending]);
+  }, [load, abortPending, reloadToken]);
   useEffect(() => { if (confirm) confirmationHeading.current?.focus(); }, [confirm]);
+  useEffect(() => { onLockChange?.(busy || confirm !== null || uncertain); }, [busy, confirm, uncertain, onLockChange]);
+  useEffect(() => () => { onLockChange?.(false); }, [onLockChange]);
 
   const choose = (row: AdminBrand) => {
-    if (pending.current || uncertain || phase !== 'ready') return;
+    if (disabled || pending.current || uncertain || phase !== 'ready') return;
     setSelected(row); setName(row.name); setSlug(row.slug); setConfirm(null); setError(''); setNotice('');
   };
   const review = () => {
-    if (!selected || pending.current || uncertain || phase !== 'ready') return;
+    if (disabled || !selected || pending.current || uncertain || phase !== 'ready') return;
     const nextName = name.trim(); const nextSlug = slug.trim();
     const invalid = validateBrandDraft(nextName, nextSlug);
     if (invalid) { setError(invalid); return; }
@@ -70,7 +81,7 @@ function BrandEditorContent({ api }: { api: BrandApi }) {
     setError(''); setConfirm(patch);
   };
   const save = async () => {
-    if (!selected || !confirm || pending.current || uncertain || phase !== 'ready') return;
+    if (disabled || !selected || !confirm || pending.current || uncertain || phase !== 'ready') return;
     pending.current = true; setBusy(true); setError(''); setNotice('');
     ++sequence.current; reads.current?.abort();
     const controller = new AbortController(); writes.current = controller;
@@ -80,6 +91,7 @@ function BrandEditorContent({ api }: { api: BrandApi }) {
       setSelected(null); setConfirm(null);
       setNotice(`Đã lưu thương hiệu. ${result.searchReconciliation ? `Backend ghi nhận job ${result.searchReconciliation.jobId} (${result.searchReconciliation.status}); chưa xác nhận index đã đồng bộ.` : 'Không có job đồng bộ trong phản hồi.'}`);
       await load();
+      if (current()) onSaved?.();
     } catch (failure) {
       if (!current()) return;
       setConfirm(null);
@@ -99,12 +111,12 @@ function BrandEditorContent({ api }: { api: BrandApi }) {
       if (current()) setBusy(false);
     }
   };
-  const blocked = busy || uncertain || phase !== 'ready';
+  const blocked = disabled || busy || uncertain || phase !== 'ready';
 
-  return <section className={styles.layout} aria-label="Sửa thương hiệu Admin">
-    <header className={styles.header}><div><p className={styles.eyebrow}>ADMIN / CATALOG</p><h1>Sửa thương hiệu</h1>
+  return <section className={`${styles.layout} ${embedded ? styles.embedded : ''}`} aria-label="Sửa thương hiệu Admin">
+    <header className={styles.header}><div><p className={styles.eyebrow}>ADMIN / CATALOG</p>{embedded ? <h2>Sửa thương hiệu</h2> : <h1>Sửa thương hiệu</h1>}
       <p>Chỉ sửa tên và slug. Không thay trạng thái bật/tắt hoặc dữ liệu sản phẩm.</p></div>
-      <button type="button" disabled={busy || confirm !== null} onClick={() => { if (!pending.current && !confirm) void load(); }}>Tải lại danh sách</button>
+      <button type="button" disabled={disabled || busy || confirm !== null} onClick={() => { if (!disabled && !pending.current && !confirm) void load(); }}>Tải lại danh sách</button>
     </header>
     {notice && <p role="status" className={styles.notice}>{notice}</p>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
@@ -123,17 +135,17 @@ function BrandEditorContent({ api }: { api: BrandApi }) {
             <label>Slug<input value={slug} disabled={blocked || !!confirm} onChange={event => setSlug(event.target.value)} spellCheck={false} /></label>
             <p className={styles.hint}>Tên 2–120 ký tự; slug 2–140 ký tự, chữ thường/số và gạch nối. Không tự đổi slug theo tên.</p>
             <div className={styles.actions}><button type="submit" disabled={blocked || !!confirm}>Xem lại thay đổi</button>
-              <button type="button" disabled={busy || uncertain} onClick={() => { setSelected(null); setConfirm(null); setError(''); }}>Hủy chỉnh sửa</button></div>
+              <button type="button" disabled={disabled || busy || uncertain} onClick={() => { setSelected(null); setConfirm(null); setError(''); }}>Hủy chỉnh sửa</button></div>
           </form>
           {confirm && <section className={styles.confirm} aria-label="Xác nhận thay đổi thương hiệu"><h3 ref={confirmationHeading} tabIndex={-1}>Xác nhận trước khi lưu</h3>
             <dl><dt>Tên</dt><dd>{confirm.name ?? selected.name}</dd><dt>Slug</dt><dd>{confirm.slug ?? selected.slug}</dd></dl>
             <p>Đổi tên có thể tạo công việc cập nhật Search. Backend vẫn quyết định dữ liệu và kết quả ghi.</p>
             <div className={styles.actions}><button type="button" disabled={blocked} onClick={() => void save()}>{busy ? 'Đang lưu…' : 'Xác nhận lưu'}</button>
-              <button type="button" disabled={busy} onClick={() => setConfirm(null)}>Quay lại sửa</button></div>
+              <button type="button" disabled={disabled || busy} onClick={() => setConfirm(null)}>Quay lại sửa</button></div>
           </section>}
         </> : <p>Danh sách gồm cả thương hiệu đã tắt. Không xóa hoặc bật/tắt trong màn này.</p>}
       </section>
     </div>}
-    <p className={styles.hint}>Backend hiện chưa có version/If-Match cho Brand; không nhận đã ngăn ghi đè giữa hai Admin. Module chưa được nối vào Admin #28.</p>
+    <p className={styles.hint}>Backend hiện chưa có version/If-Match cho Brand; không nhận đã ngăn ghi đè giữa hai Admin. Khóa kết quả chưa rõ chỉ giữ trong màn hình hiện tại, không bảo đảm qua tải lại trang.</p>
   </section>;
 }

@@ -1,5 +1,31 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**#71 sau Accounts/AI health — 20/10/2026:** nhận develop `abdc0be` sau
+#80/#79/#76; giữ Brand/Catalog source nguyên byte `b812e85` và toàn bộ
+Backend/AI chính thức. Conflict chỉ kiến trúc; không tự mở rộng Brand/Accounts.
+[Kiểm thử bản kết hợp](../testing/pr71-post80-79-sync-2026-10-20.md).
+
+**#71 đồng bộ sau #70 ngày20/10:** nhận develop `6d682e4`; source Brand
+integration nguyên byte9cf0e53, giữ Buyer receipt và test nền mới.55targeted,
+662FE PASS/6liveSKIP; lint/build PASS. Chưa browser/DB QA mới, không mở rộng
+phạm vi Admin hoặc sửa Backend. [Bằng chứng và giới hạn](../testing/pr71-post70-sync-2026-10-20.md).
+Ghi chú theo ngày phía dưới là lịch sử, không thay baseline đồng bộ này.
+
+**Đồng bộ #71 ngày19/10/2026:** nhận develop622cfb9 sau health #61,
+Seller #68 và contract Buyer #69. Chỉ conflict kiến trúc, giữ đủ hai phía;
+Brand source giữ nguyên425071a, chưa thay giới hạn unknown/Backend versioning.
+
+**Brand Catalog integration — IN_PROGRESS,18/10/2026:** sau #64 merge thật tại
+`bdd3fce`, nhánh mới từ develop `aa62c84` nối editor name/slug vào tab
+Thương hiệu `/admin/catalog`. Giữ create/toggle Brand và Category; khóa thao tác
+chéo khi xác nhận/ghi/unknown, giữ draft qua tab. Source`37b4182` đã QA chọn lọc
+desktop/mobile với Nest/PostgreSQL riêng: tạo Brand,409/name/slug/unknown+GET và
+Category OFF. Đã bù trên source`560f7af` (chỉ đổi docs): Brand12 OFF→ON và
+Category11 ON khớp browser/DB, đúng3PATCH200, jobs32→35, dữ liệu khác giữ nguyên.
+Không đổi Backend/schema,
+Auth/client, Checkout/Order hoặc bật Seller command. Chưa nghiệm thu toàn Admin;
+xem [kiểm thử và giới hạn bản tích hợp](../testing/admin-brand-catalog-integration-2026-10-18.md).
+Các ghi chú #64 bên dưới là lịch sử module trước integration.
 **Đồng bộ #79 sau Accounts #80 — 20/10/2026:** nhận develop `39bbe28`.
 Giữ AI runtime `1223fd3` nguyên byte và toàn bộ Accounts/Bảo vệ đã merge;
 conflict chỉ kiến trúc. Bản đồng bộ cần CI/review delta mới, không dùng approval

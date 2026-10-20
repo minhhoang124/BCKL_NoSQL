@@ -11,6 +11,7 @@ import {
 import { ApiError, fetchApi } from '../services/apiClient';
 import { useAuth } from '../contexts/useAuth';
 import { mediaUrl } from '../services/marketplaceApi';
+import { AdminBrandEditor } from '../features/admin-brands/AdminBrandEditor';
 import styles from './AdminDashboardPage.module.css';
 
 type ProductQueueItem = {
@@ -1059,6 +1060,15 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
   const [brandForm, setBrandForm] = useState({ name: '', slug: '' });
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<'categories' | 'brands'>('categories');
+  const [editorOpened, setEditorOpened] = useState(false);
+  const [editorLocked, setEditorLocked] = useState(false);
+  const [brandRevision, setBrandRevision] = useState(0);
+  const editorLock = useRef(false);
+  const onEditorLock = useCallback((locked: boolean) => {
+    editorLock.current = locked;
+    setEditorLocked(locked);
+  }, []);
+  const catalogBusy = busy || editorLocked;
   const selected =
     categories.find((category) => category.id === selectedId) ?? null;
   const load = useCallback(async () => {
@@ -1088,7 +1098,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
     void load();
   }, [load]);
   const saveCategory = async () => {
-    if (mutation.current || loading || !ready) return;
+    if (mutation.current || editorLock.current || loading || !ready) return;
     if (selectedId !== null && !selected) {
       setError('Danh mục đang sửa không còn trong danh sách. Hãy tải lại hoặc hủy bản nháp để tạo mới.');
       return;
@@ -1131,7 +1141,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
     }
   };
   const saveBrand = async () => {
-    if (mutation.current || loading || !ready) return;
+    if (mutation.current || editorLock.current || loading || !ready) return;
     if (!brandForm.name.trim() || !brandForm.slug.trim()) {
       setError('Nhập tên và mã đường dẫn thương hiệu.');
       return;
@@ -1146,6 +1156,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
       });
       notify({ kind: 'success', message: 'Đã tạo thương hiệu.' });
       setBrandForm({ name: '', slug: '' });
+      setBrandRevision(value => value + 1);
       await load();
     } catch (caught) {
       setError(await readError(caught));
@@ -1155,7 +1166,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
     }
   };
   const updateCategoryActive = async (category: Category) => {
-    if (mutation.current || loading || !ready) return;
+    if (mutation.current || editorLock.current || loading || !ready) return;
     if (!window.confirm(`Xác nhận ${category.isActive ? 'tắt' : 'bật'} danh mục ${category.name}? Thay đổi có thể ảnh hưởng sản phẩm công khai.`)) return;
     mutation.current = true;
     setBusy(true);
@@ -1178,7 +1189,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
     }
   };
   const updateBrandActive = async (brand: Brand) => {
-    if (mutation.current || loading || !ready) return;
+    if (mutation.current || editorLock.current || loading || !ready) return;
     if (!window.confirm(`Xác nhận ${brand.isActive ? 'tắt' : 'bật'} thương hiệu ${brand.name}? Thay đổi có thể ảnh hưởng sản phẩm công khai.`)) return;
     mutation.current = true;
     setBusy(true);
@@ -1192,6 +1203,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
         kind: 'success',
         message: `Đã ${brand.isActive ? 'tắt' : 'bật'} thương hiệu.`,
       });
+      setBrandRevision(value => value + 1);
       await load();
     } catch (caught) {
       setError(await readError(caught));
@@ -1201,7 +1213,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
     }
   };
   const beginEdit = (category: Category) => {
-    if (mutation.current || loading || !ready) return;
+    if (mutation.current || editorLock.current || loading || !ready) return;
     setSelectedId(category.id);
     setForm({
       name: category.name,
@@ -1218,25 +1230,25 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
         action={
           <button
             className={styles.secondaryButton}
-            disabled={busy || loading}
-            onClick={() => { if (!mutation.current) void load(); }}
+            disabled={catalogBusy || loading}
+            onClick={() => { if (!mutation.current && !editorLock.current) void load(); }}
           >
             ↻　Làm mới
           </button>
         }
       />
-      {error && <Notice error={error} onRetry={busy ? undefined : () => { if (!mutation.current) void load(); }} />}
+      {error && <Notice error={error} onRetry={catalogBusy ? undefined : () => { if (!mutation.current && !editorLock.current) void load(); }} />}
       <div className={styles.filterTabs}>
         <button
           className={tab === 'categories' ? styles.activeTab : ''}
-          disabled={busy}
+          disabled={catalogBusy}
           onClick={() => setTab('categories')}
         >
           Danh mục <span>{categories.length}</span>
         </button>
         <button
           className={tab === 'brands' ? styles.activeTab : ''}
-          disabled={busy}
+          disabled={catalogBusy}
           onClick={() => setTab('brands')}
         >
           Thương hiệu <span>{brands.length}</span>
@@ -1384,6 +1396,8 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
                 <h2>Thương hiệu</h2>
                 <p>Danh sách thương hiệu trong hệ thống</p>
               </div>
+              <button className={styles.textButton} disabled={catalogBusy || loading || !ready || editorOpened}
+                onClick={() => setEditorOpened(true)}>Sửa tên/slug thương hiệu</button>
             </div>
             <div className={styles.brandList}>
               {brands.map((brand) => (
@@ -1404,7 +1418,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
                   </span>
                   <button
                     className={styles.textButton}
-                    disabled={busy || loading || !ready}
+                    disabled={catalogBusy || loading || !ready}
                     onClick={() => void updateBrandActive(brand)}
                   >
                     {brand.isActive ? 'Tắt' : 'Bật'}
@@ -1429,7 +1443,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
             <input
               id="brand-name"
               className={styles.input}
-              disabled={busy || loading}
+              disabled={catalogBusy || loading}
               value={brandForm.name}
               onChange={(event) =>
                 setBrandForm({ ...brandForm, name: event.target.value })
@@ -1442,7 +1456,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
             <input
               id="brand-slug"
               className={styles.input}
-              disabled={busy || loading}
+              disabled={catalogBusy || loading}
               value={brandForm.slug}
               onChange={(event) =>
                 setBrandForm({ ...brandForm, slug: event.target.value })
@@ -1451,7 +1465,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
             />
             <button
               className={styles.approveButton}
-              disabled={busy || loading || !ready}
+              disabled={catalogBusy || loading || !ready}
               onClick={() => void saveBrand()}
             >
               {busy ? 'Đang lưu…' : 'Thêm thương hiệu'}
@@ -1462,6 +1476,11 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
           </section>
         </div>
       )}
+      {/* Keep the editor mounted across Catalog tabs so drafts/unknown locks survive. */}
+      {editorOpened && <div hidden={tab !== 'brands'}>
+        <AdminBrandEditor embedded disabled={busy || loading || !ready} reloadToken={brandRevision}
+          onLockChange={onEditorLock} onSaved={() => { void load(); }} />
+      </div>}
       {loading && (
         <div className={styles.loadingCard}>
           Đang tải danh mục và thương hiệu…
