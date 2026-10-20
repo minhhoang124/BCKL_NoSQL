@@ -1,5 +1,42 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Attributes #77 — kiểm bản kết hợp 21/10/2026:** đã nhận develop `76a62c9`
+sau merge Accounts UI #81; Backend/Prisma giữ nguyên source `4cad89d`, FE giữ
+source develop. Chạy lại 21 HTTP/migration và 721 FE tests đạt; full Backend
+709 unit/633 E2E đạt trên source trước sync không đổi. Gemini CLI chỉ rà được
+một tình huống khóa cha–con, không phải full review/test. Chưa API ghi hoặc bật
+editor; CI đúng head mới vẫn là gate. [Bằng chứng và giới hạn](../testing/pr77-cli-cross-review-2026-10-21.md).
+
+**Nền tích hợp sau #71 — 20/10/2026:** develop `2f78a98` đã merge Brand
+Catalog, Accounts và AI health. Giữ cả các miền; các ghi chú baseline cũ bên
+dưới là lịch sử, không thay gate CI/review đúng head cuối. Không bật thêm ghi.
+
+**#77 sau merge AI health #79 — 20/10/2026:** nền develop `20a3c40` đã có
+Accounts/AI readiness. Giữ nguyên Backend/Prisma so `a3ac192` và toàn bộ AI mới;
+conflict chỉ kiến trúc, chưa writes. Báo cáo sau #80 ghi riêng lượt kiểm sau #79.
+
+**Đồng bộ #77 sau Accounts #80 — 20/10/2026:** nhận develop `39bbe28`.
+Giữ đồng thời middleware no-store Attributes và Accounts trước guards/parser;
+không bỏ endpoint hoặc bảo vệ đã merge. Schema Attributes giữ nguyên,
+chưa write API. [Kiểm thử bản kết hợp](../testing/pr77-post80-sync-2026-10-20.md).
+
+**Đồng bộ #77 sau #70 — 20/10/2026:** nhận develop `6d682e4`, giữ nguyên
+Backend/schema/AI của `dd8e5b3` và toàn bộ validator Buyer đã merge. Conflict
+chỉ tài liệu, giữ cả hai phía; không nhận #74/#75/#80 chưa merge.
+Kiểm thử bản kết hợp và giới hạn: [báo cáo sau #70](../testing/pr77-post70-sync-2026-10-20.md).
+
+**Đồng bộ #77 — 20/10/2026:** nhận develop `335b455` sau #78/#72 đã merge,
+giữ bản sửa HEAD/case-insensitive no-store `6849b55`. Conflict chỉ ghi chú kiến
+trúc, giữ đủ cả hai phía; các dòng "chưa merge" về #78 bên dưới là lịch sử.
+Chưa hoàn thành Backend write Attributes; bản kết hợp cần E2E/CI và re-review.
+[Bằng chứng bản kết hợp](../testing/pr77-post78-72-sync-2026-10-20.md).
+
+**Attributes foundation/Admin read — 19/10/2026, IN_PROGRESS:** nhánh
+`codex/admin-attribute-read` thêm migration revision/audit và ba GET Admin đọc
+cấu hình, inactive, usage, cursor trong read-only RepeatableRead. Không có API
+ghi options/revision/audit hoàn chỉnh hoặc thay đổi Search/FastAPI trong đợt này.
+Hiền chưa được coi đã có đủ Backend để nối editor ghi. Cơ chế, test và phần còn
+thiếu ở [báo cáo foundation/read](../testing/admin-attribute-read-foundation-2026-10-19.md).
 **#71 sau Accounts/AI health — 20/10/2026:** nhận develop `abdc0be` sau
 #80/#79/#76; giữ Brand/Catalog source nguyên byte `b812e85` và toàn bộ
 Backend/AI chính thức. Conflict chỉ kiến trúc; không tự mở rộng Brand/Accounts.

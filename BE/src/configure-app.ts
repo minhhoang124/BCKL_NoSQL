@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import type { NextFunction, Request, Response } from 'express';
 import { configureOrderListHttp } from './order/order-list.http.js';
 import { registerOrderDeliveryParser } from './order/order-delivery.http.js';
 import { registerOrderReturnedParser } from './order/order-returned.http.js';
@@ -10,6 +11,16 @@ import { registerSellerOrderCommandParser } from './order/seller-order-command.h
 import { configureAccountListHttp } from './auth/admin-account-list.js';
 
 export function configureApp(app: INestApplication): void {
+  // Apply before guards/validation as sensitive Admin failures must not be cached either.
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (
+      (req.method === 'GET' || req.method === 'HEAD') &&
+      /^\/admin\/categories\/[^/]+\/attributes(?:\/|$)/i.test(req.path)
+    ) {
+      res.setHeader('Cache-Control', 'no-store');
+    }
+    next();
+  });
   configureAccountListHttp(app);
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',

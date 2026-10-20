@@ -149,6 +149,7 @@ model User {
   cancelledOrders         Order[]                  @relation("OrderCancelledBy")
   orderCommands           OrderCommand[]           @relation("OrderCommandActor")
   orderCommandResolutions OrderCommandResolution[]
+  attributeAuditActions   CategoryAttributeAudit[]
 
   @@map("users")
 }
@@ -302,6 +303,7 @@ model CategoryAttributeDefinition {
   allowsCustom  Boolean                   @default(true)
   sortOrder     Int                       @default(0)
   isActive      Boolean                   @default(true)
+  revision      Int                       @default(1)
   createdAt     DateTime                  @default(now())
   updatedAt     DateTime                  @updatedAt
   category      Category                  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -311,6 +313,28 @@ model CategoryAttributeDefinition {
   @@unique([categoryId, slug])
   @@index([categoryId, isActive])
   @@map("category_attribute_definitions")
+}
+
+// Foundation for the reviewed Admin write contract; read PR does not mint audits.
+model CategoryAttributeAudit {
+  id            Int      @id @default(autoincrement())
+  actorId       Int
+  categoryId    Int
+  definitionId  Int
+  optionId      Int?
+  entityType    String   @db.VarChar(16)
+  command       String   @db.VarChar(32)
+  revision      Int
+  reason        String?
+  correlationId String   @db.Uuid
+  oldValues     Json?
+  newValues     Json
+  createdAt     DateTime @default(now())
+  actor         User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([definitionId, createdAt])
+  @@index([categoryId, createdAt])
+  @@map("category_attribute_audits")
 }
 
 model CategoryAttributeOption {
