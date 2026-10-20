@@ -1103,3 +1103,11 @@ Không schema/Backend/Search/Auth chung hoặc UI Address/Cart/Admin của Hiề
 Kiểm thử tại [báo cáo client](../testing/seller-resolution-client-2026-10-18.md)
 tách unit/jsdom/mock HTTP khỏi live API/PostgreSQL/browser; G-FULFILMENT vẫn
 IN_PROGRESS. Sau review/merge Backend #67 mới nối Web và nghiệm thu giao dịch.
+
+## Bổ sung 19/10/2026 — Buyer resolution test preparation
+
+Audit năm writer trên `bd45b54`: guard trước replay/policy, SYSTEM namespace
+riêng; helper/check DB hiện chỉ nhận fence Seller. Chuẩn bị input fixture bằng
+builders đã merge và guard DB QA sẵn có; không connect/seed, không migration/API
+hoặc bật nút Buyer.16 kịch bản cạnh tranh tương lai vẫn NOT_RUN, self-tests
+không là proof DB. [Audit, fixtures và oracle kiểm thử](../testing/buyer-resolution-test-readiness-2026-10-19.md).
