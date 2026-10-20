@@ -7,8 +7,10 @@ import { registerOrderCompletionParser } from './order/order-completion.http.js'
 import { registerCheckoutParser } from './checkout/checkout-http.js';
 import { registerOrderCancellationParser } from './order/order-cancellation.http.js';
 import { registerSellerOrderCommandParser } from './order/seller-order-command.http.js';
+import { configureAccountListHttp } from './auth/admin-account-list.js';
 
 export function configureApp(app: INestApplication): void {
+  configureAccountListHttp(app);
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true,

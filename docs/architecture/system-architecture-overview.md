@@ -1,5 +1,12 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Admin Accounts list — IN_PROGRESS, 20/10/2026:** Backend thêm GET
+`/admin/accounts` theo phần read-only contract #76, current active ADMIN,
+query strict/cursor/select allowlist/no-store; PostgreSQL RepeatableRead read-only.
+Không schema/migration hoặc ghi audit/Search job. PATCH khóa/mở giữ mức cơ bản,
+chưa status hardening/session epoch; chưa nhận Accounts UI hoàn thành.
+[API và cách dựng QA cho Hiền](../api/admin-accounts-list.md).
+
 **PR #70 đồng bộ 20/10/2026:** nhận develop `335b455` sau #78/#72;
 giữ nguyên validator Buyer, chưa nhận #74/#75 hoặc bật giao dịch.
 98 test trọng tâm và 653 FE PASS/6 live SKIP; cần review delta/CI mới.

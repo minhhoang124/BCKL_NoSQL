@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { RolesGuard } from './guards/roles.guard.js';
 import { SearchModule } from '../search/search.module.js';
 import { AdminAccountController } from './admin-account.controller.js';
+import { AdminAccountListService } from './admin-account-list.service.js';
 
 @Module({
   imports: [
@@ -18,7 +19,13 @@ import { AdminAccountController } from './admin-account.controller.js';
     SearchModule,
   ],
   controllers: [AuthController, AdminAccountController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    RolesGuard,
+    AdminAccountListService,
+  ],
   exports: [AuthService, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}
