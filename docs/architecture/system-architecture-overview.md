@@ -1,5 +1,32 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**PR #70 đồng bộ 20/10/2026:** nhận develop `335b455` sau #78/#72;
+giữ nguyên validator Buyer, chưa nhận #74/#75 hoặc bật giao dịch.
+98 test trọng tâm và 653 FE PASS/6 live SKIP; cần review delta/CI mới.
+[Bằng chứng và giới hạn](../testing/pr70-post78-72-sync-2026-10-20.md).
+Các ghi chú theo ngày phía dưới là lịch sử, không thay trạng thái hiện tại.
+
+**Sau merge #69 ngày19/10/2026:** contract Buyer đã được duyệt và merge tại
+`622cfb9`; runtime resolver Buyer vẫn chưa triển khai. #70 đang đồng bộ tài liệu,
+giữ nguyên validator đã duyệt; bản mới cần kiểm thử và review lại trước merge.
+
+**Đồng bộ #70 sau merge Seller #68 — 19/10/2026:** nền `bd45b54`,
+giữ nguyên payload Buyer đã review và toàn Seller/Brand/health contract mới.
+Chỉ conflict ghi chú kiến trúc; không đổi logic Buyer hoặc bật cờ giao dịch.
+Seller opt-in đã merge, các dòng chưa merge bên dưới là lịch sử tại baseline cũ.
+[Kết quả kiểm bản kết hợp](../testing/pr70-post-seller-sync-2026-10-19.md).
+
+**Đồng bộ #70 ngày18/10/2026:** nền `aa62c84`, giữ validator/test Buyer của
+`82d300b` nguyên byte để reviewer độc lập tiếp tục đối chiếu. Conflict chỉ kiến
+trúc, giữ đủ nội dung Buyer và Brand/tooling/Chat. Không Backend/API/journal/UI.
+[Báo cáo kiểm bản kết hợp](../testing/pr70-develop-sync-2026-10-18.md).
+
+**Buyer receipt validation — PREPARATION ngày18/10/2026:** nhánh riêng từ
+`develop 39e8343` thêm hai hàm kiểm biên nhận cancel/complete theo Backend đã merge.
+Kiểm đúng Order/Buyer/tổng tiền, reason và một sự kiện lịch sử của command;
+không nhận SYSTEM receipt thay Buyer. Không HTTP, schema/API, journal v2, UI
+hoặc dependency vào đề xuất #69/#68. Không là nghiệm thu giao dịch Buyer Web.
+[Hướng dẫn biến, điều kiện và kiểm thử](../testing/buyer-receipt-validation-2026-10-18.md).
 **Product concurrency test — 19/10/2026, TEST-ONLY:** sửa tiền điều kiện của
 kiểm thử hai PATCH cùng version bằng barrier sau đọc snapshot thật. Giữ CAS/
 transaction/outbox production nguyên vẹn; tách ca tuần tự200/200 khỏi cùng-version
