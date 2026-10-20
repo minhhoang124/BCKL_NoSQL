@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { Role } from '@prisma/client';
+import { Role, type Product } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { createHash } from 'node:crypto';
 import { access, mkdtemp, rm } from 'node:fs/promises';
@@ -22,6 +22,7 @@ import { SearchReconciliationWorker } from '../src/search/search-reconciliation.
 import { ProductImageStorageService } from '../src/product/product-image-storage.service.js';
 import { ProductImageRepairService } from '../src/product/product-image-repair.service.js';
 import { ProductImageRepairWorker } from '../src/product/product-image-repair.worker.js';
+import { ProductService } from '../src/product/product.service.js';
 
 const PNG_1PX = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
@@ -792,32 +793,137 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       }
     });
 
-    // 7. Hai mutation đồng thời trên cùng một Product version không tạo version đi lùi; request thứ hai nhận 409 Conflict
-    it('handles concurrent mutations with optimistic locking: one succeeds, one gets 409 Conflict without version corruption', async () => {
+    // Promise.all alone cannot guarantee both requests observed the same version.
+    // Gate AFTER the real ownership/snapshot read, BEFORE either actual DB write.
+    it.each(['DRAFT', 'APPROVED'] as const)(
+      'same-version concurrent %s edits commit once, with one 409 and consistent outbox',
+      async (state) => {
+        const id =
+          state === 'APPROVED'
+            ? await createAndApproveProduct(`${marker}-concurrent-approved`)
+            : ((
+                await request(app.getHttpServer())
+                  .post('/seller/products')
+                  .auth(tokens.seller, { type: 'bearer' })
+                  .send({ name: `${marker}-concurrent-draft`, categoryId })
+                  .expect(201)
+              ).body.id as number);
+        const initial = await prisma.product.findUniqueOrThrow({
+          where: { id },
+        });
+        const eventsBefore = await prisma.searchOutbox.count({
+          where: { productId: id },
+        });
+        const reader = app.get(ProductService) as unknown as {
+          getOwnedEditableProduct(
+            sellerId: number,
+            productId: number,
+          ): Promise<Product>;
+        };
+        const originalRead = reader.getOwnedEditableProduct.bind(reader);
+        const observedVersions: number[] = [];
+        let release!: () => void;
+        let expired = false;
+        const bothSnapshotsRead = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        // Deadline only: never use elapsed time to choose a winner.
+        const deadline = setTimeout(() => {
+          expired = true;
+          release();
+        }, 4000);
+        const spy = vi
+          .spyOn(reader, 'getOwnedEditableProduct')
+          .mockImplementation(async (owner, productId) => {
+            const snapshot = await originalRead(owner, productId);
+            if (productId !== id) return snapshot;
+            observedVersions.push(snapshot.version);
+            if (observedVersions.length === 2) release();
+            await bothSnapshotsRead;
+            if (expired)
+              throw new Error(
+                'Both real Product snapshots did not reach the test barrier',
+              );
+            return snapshot;
+          });
+        const names = [`${marker}-concurrent-a`, `${marker}-concurrent-b`];
+        let requests: Promise<request.Response>[] = [];
+        try {
+          requests = names.map((name) =>
+            request(app.getHttpServer())
+              .patch(`/seller/products/${id}`)
+              .auth(tokens.seller, { type: 'bearer' })
+              .send({ name })
+              .timeout({ response: 6000, deadline: 7000 })
+              .then((response) => response),
+          );
+          const responses = await Promise.all(requests);
+          expect(observedVersions).toEqual([initial.version, initial.version]);
+          expect(responses.map(({ status }) => status).sort()).toEqual([
+            200, 409,
+          ]);
+          const winner = responses.findIndex(({ status }) => status === 200);
+          const after = await prisma.product.findUniqueOrThrow({
+            where: { id },
+          });
+          expect(after.version).toBe(initial.version + 1);
+          expect(after.name).toBe(names[winner]);
+          const events = await prisma.searchOutbox.findMany({
+            where: { productId: id, version: after.version },
+          });
+          if (state === 'APPROVED') {
+            expect(after).toMatchObject({
+              sellerStatus: 'DRAFT',
+              moderationStatus: 'NOT_SUBMITTED',
+            });
+            expect(events).toHaveLength(1);
+            expect(events[0]).toMatchObject({
+              operation: 'DELETE',
+              version: after.version,
+              productId: id,
+            });
+          } else {
+            expect(events).toHaveLength(0);
+          }
+          expect(
+            await prisma.searchOutbox.count({ where: { productId: id } }),
+          ).toBe(eventsBefore + (state === 'APPROVED' ? 1 : 0));
+        } finally {
+          clearTimeout(deadline);
+          release();
+          await Promise.allSettled(requests);
+          spy.mockRestore();
+        }
+      },
+    );
+
+    it('sequential Product edits can both succeed and increase version twice', async () => {
       const created = await request(app.getHttpServer())
         .post('/seller/products')
         .auth(tokens.seller, { type: 'bearer' })
-        .send({ name: `${marker}-concurrent`, categoryId })
+        .send({ name: `${marker}-sequential`, categoryId })
         .expect(201);
       const id = created.body.id as number;
       const initial = await prisma.product.findUniqueOrThrow({ where: { id } });
-
-      const [resA, resB] = await Promise.all([
-        request(app.getHttpServer())
+      const eventsBefore = await prisma.searchOutbox.count({
+        where: { productId: id },
+      });
+      for (const suffix of ['a', 'b']) {
+        await request(app.getHttpServer())
           .patch(`/seller/products/${id}`)
           .auth(tokens.seller, { type: 'bearer' })
-          .send({ name: `${marker}-concurrent-a` }),
-        request(app.getHttpServer())
-          .patch(`/seller/products/${id}`)
-          .auth(tokens.seller, { type: 'bearer' })
-          .send({ name: `${marker}-concurrent-b` }),
-      ]);
-
-      const statuses = [resA.status, resB.status].sort();
-      expect(statuses).toEqual([200, 409]);
-
-      const after = await prisma.product.findUniqueOrThrow({ where: { id } });
-      expect(after.version).toBe(initial.version + 1);
+          .send({ name: `${marker}-sequential-${suffix}` })
+          .expect(200);
+      }
+      expect(
+        await prisma.product.findUniqueOrThrow({ where: { id } }),
+      ).toMatchObject({
+        version: initial.version + 2,
+        name: `${marker}-sequential-b`,
+      });
+      expect(
+        await prisma.searchOutbox.count({ where: { productId: id } }),
+      ).toBe(eventsBefore);
     });
 
     // 8. Gọi writeDeleteEvent(tx, productId, version) hai lần trên cùng version không bị ghi đè, không reset attemptCount/status

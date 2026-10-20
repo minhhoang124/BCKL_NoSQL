@@ -1,5 +1,11 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Product concurrency test — 19/10/2026, TEST-ONLY:** sửa tiền điều kiện của
+kiểm thử hai PATCH cùng version bằng barrier sau đọc snapshot thật. Giữ CAS/
+transaction/outbox production nguyên vẹn; tách ca tuần tự200/200 khỏi cùng-version
+200/409, kiểm thêm APPROVED về DRAFT và một DELETE Search. Chưa merge, không thêm
+API/schema hoặc xem test barrier là khóa vận hành. Xem [bằng chứng và giới hạn](../testing/product-concurrency-test-stabilization-2026-10-19.md).
+
 **Đồng bộ #69 sau merge Seller #68 — 19/10/2026:** nền `bd45b54`,
 giữ nguyên payload Buyer đã review và toàn Seller/Brand/health contract mới.
 Chỉ conflict ghi chú kiến trúc; không đổi logic Buyer hoặc bật cờ giao dịch.
