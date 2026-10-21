@@ -1,5 +1,32 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Accounts #86 — sau #88,21/10/2026:** nhận develop `d84381a` tại `d3949cb`;
+conflict chỉ ghi chú kiến trúc, giữ cả Accounts và E2E safety. Runtime FE/BE/
+Prisma/AI nguyên byte so3f82a70. Bổ sung bằng chứng browser đúng3f82a70 cho
+59User/3Store, network/timeout/logout và role; sau sync722FE/14guardDB PASS,
+lint/build/typecheck đạt. [Báo cáo và giới hạn](../testing/pr86-post88-qa-2026-10-21.md).
+Hai profile Admin và status hardening chưa nghiệm thu; giữ Draft chờ re-review.
+Các kết quả baseline cũ bên dưới giữ lịch sử, không đổi nhãn thành lần chạy mới.
+
+**Accounts #86 — sync sau #74,21/10/2026:** nhận develop `fa85f66` tại
+`c4d6a83`, giữ nguyên FE đã được Hoàng approve ở `f8648f3` và toàn Backend Buyer
+đã merge. Conflict chỉ ghi chú kiến trúc, giữ cả hai phía. Giới hạn/bằng chứng
+bản kết hợp:722FE PASS/6liveSKIP,751BE unit và73E2E chọn lọc PASS; lint/build/
+typecheck và16fresh migration đạt trên DB riêng. [Báo cáo sau #74](../testing/pr86-post74-sync-2026-10-21.md).
+Chưa browser mới/hai Admin độc lập, chưa bật khóa/mở hoặc nghiệm thu toàn Admin.
+Các bảng kiểm theo baseline phía dưới giữ lịch sử, không đổi nhãn QA cũ.
+
+**Accounts UI integration — IN_PROGRESS,21/10/2026:** sau #81 merge thật tại
+`76a62c9`, nhánh riêng nối reader đã duyệt vào `/admin/users` và mục Tài khoản,
+AuthContext/GET thật, không bật khóa/mở. Giữ Brand/Catalog, Checkout/Order và
+shared Auth/client; không Backend/schema mới trong delta. Đã nhận develop
+`bf6f926` (#77) tại `d0b8c49`, giữ đủ ghi chú Accounts/Attributes; kiểm lại722FE
+PASS/6liveSKIP,709BE unit PASS, typecheck/lint/build và15migration QA riêng.
+Cả FE/BE mới đã QA browser/DB cho pagination/filter/Store
+CLOSED/SUSPENDED/null, logout và chặn Buyer/Seller. Hai profile Admin độc lập
+vẫn NOT_RUN; chưa toàn Accounts/Admin/G3 DONE. [Bằng chứng và giới hạn](../testing/admin-accounts-integration-2026-10-21.md).
+Ghi chú theo ngày bên dưới giữ lịch sử tại baseline tương ứng.
+
 **An toàn E2E — 21/10/2026, bản sửa đang review:** `setup-env` không được đọc
 `.env` local hoặc ghi đè URL QA. Chốt target trước test collection, chỉ nhận DB
 QA riêng hoặc service CI đã cấu hình. Đã có sự cố runner chọn nhầm demo do
@@ -75,6 +102,7 @@ cấu hình, inactive, usage, cursor trong read-only RepeatableRead. Không có 
 ghi options/revision/audit hoàn chỉnh hoặc thay đổi Search/FastAPI trong đợt này.
 Hiền chưa được coi đã có đủ Backend để nối editor ghi. Cơ chế, test và phần còn
 thiếu ở [báo cáo foundation/read](../testing/admin-attribute-read-foundation-2026-10-19.md).
+
 **#71 sau Accounts/AI health — 20/10/2026:** nhận develop `abdc0be` sau
 #80/#79/#76; giữ Brand/Catalog source nguyên byte `b812e85` và toàn bộ
 Backend/AI chính thức. Conflict chỉ kiến trúc; không tự mở rộng Brand/Accounts.

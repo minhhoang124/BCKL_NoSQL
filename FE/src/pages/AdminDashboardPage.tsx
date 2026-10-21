@@ -13,6 +13,10 @@ import { useAuth } from '../contexts/useAuth';
 import { mediaUrl } from '../services/marketplaceApi';
 import { AdminBrandEditor } from '../features/admin-brands/AdminBrandEditor';
 import styles from './AdminDashboardPage.module.css';
+import { AdminAccountsReader } from '../features/admin-accounts/AdminAccountsReader';
+import { createAccountReadApi } from '../features/admin-accounts/accountReadApi';
+
+const accountsReadApi = createAccountReadApi();
 
 type ProductQueueItem = {
   id: number;
@@ -87,7 +91,7 @@ const navItems = [
   { to: '/admin/products', label: 'Duyệt sản phẩm', icon: '◇' },
   { to: '/admin/stores', label: 'Cửa hàng', icon: '⌂' },
   { to: '/admin/catalog', label: 'Danh mục & thương hiệu', icon: '▤' },
-  { to: '/admin/users', label: 'Tài khoản', icon: '◎', disabled: true },
+  { to: '/admin/users', label: 'Tài khoản', icon: '◎' },
   { to: '/admin/returns', label: 'Hậu mãi', icon: '↺', disabled: true },
 ];
 
@@ -1508,9 +1512,7 @@ function UnsupportedPage({
         <span>◷</span>
         <h2>Chức năng chưa được nghiệm thu</h2>
         <p>
-          {title === 'Quản lý tài khoản'
-            ? 'Backend đã có API khóa/mở tài khoản; API danh sách và giao diện quản lý tài khoản còn thiếu.'
-            : 'Giao diện và API hậu mãi chưa được tích hợp trong đợt bàn giao này.'}
+          Giao diện và API hậu mãi chưa được tích hợp trong đợt bàn giao này.
           {' '}Trang không dùng dữ liệu mẫu để thay cho chức năng thật.
         </p>
         <Link className={styles.secondaryButton} to="/admin">
@@ -1657,12 +1659,7 @@ function AdminConsole() {
             />
             <Route
               path="users"
-              element={
-                <UnsupportedPage
-                  title="Quản lý tài khoản"
-                  description="Theo dõi User, Seller và trạng thái hoạt động của tài khoản."
-                />
-              }
+              element={<AdminAccountsReader api={accountsReadApi} embedded />}
             />
             <Route
               path="returns"

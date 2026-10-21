@@ -232,10 +232,21 @@ describe('Admin product moderation', () => {
     expect(screen.getByText('0')).toBeInTheDocument();
   });
 
-  it('describes account status API as available without claiming the UI is implemented', () => {
+  it('connects the existing users route and menu to real Accounts GET, not status writes', async () => {
+    vi.mocked(fetchApi).mockResolvedValueOnce({ items: [], nextCursor: null });
     renderAdmin('/admin/users');
-    expect(screen.getByText(/Backend đã có API khóa\/mở tài khoản; API danh sách/)).toBeInTheDocument();
-    expect(fetchApi).not.toHaveBeenCalled();
+    expect(await screen.findByText('Không có tài khoản phù hợp')).toBeVisible();
+    expect(screen.getByRole('link', { name: /Tài khoản/ })).toHaveAttribute('href', '/admin/users');
+    expect(fetchApi).toHaveBeenCalledWith('/admin/accounts?limit=50', expect.objectContaining({ method: 'GET', retryOnUnauthorized: false }));
+    expect(screen.queryByRole('button', { name: /khóa|mở khóa/i })).not.toBeInTheDocument();
+  });
+
+  it('clears and blocks Accounts controls when the integrated endpoint denies access', async () => {
+    vi.mocked(fetchApi).mockRejectedValueOnce(new ApiError('Private diagnostic', 403));
+    renderAdmin('/admin/users');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không có quyền đọc danh sách Admin');
+    expect(screen.getByRole('searchbox')).toBeDisabled();
+    expect(screen.queryByText(/Private diagnostic/)).not.toBeInTheDocument();
   });
 
   it('shows saved attributes, option labels and shipping fields for review', async () => {

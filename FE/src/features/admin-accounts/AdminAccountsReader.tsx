@@ -5,7 +5,7 @@ import { normalizeAccountSearch } from './accountReadApi';
 import type { AccountPage, AccountQuery, AccountReadApi, AccountRole } from './accountReadApi';
 import styles from './AdminAccountsLayout.module.css';
 
-interface Props { api?: AccountReadApi; pageSize?: number }
+interface Props { api?: AccountReadApi; pageSize?: number; embedded?: boolean }
 const roles = { USER: 'Người mua', SELLER: 'Người bán', ADMIN: 'Quản trị viên' };
 const storeStatuses = { PENDING: 'Chờ duyệt', ACTIVE: 'Hoạt động', REJECTED: 'Đã từ chối', SUSPENDED: 'Tạm khóa', CLOSED: 'Đã đóng' };
 export function AdminAccountsReader(props: Props) {
@@ -15,7 +15,7 @@ export function AdminAccountsReader(props: Props) {
   if (!Number.isInteger(props.pageSize ?? 50) || (props.pageSize ?? 50) < 1 || (props.pageSize ?? 50) > 100) return <p role="alert">Giới hạn trang không hợp lệ.</p>;
   return <AccountScreen key={`${user.id}:${getAuthSessionVersion()}`} {...props} />;
 }
-function AccountScreen({ api, pageSize = 50 }: Props) {
+function AccountScreen({ api, pageSize = 50, embedded = false }: Props) {
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('ALL');
   const [active, setActive] = useState('ALL');
@@ -31,7 +31,7 @@ function AccountScreen({ api, pageSize = 50 }: Props) {
     } catch { setValidation('Từ khóa tối đa 120 ký tự Unicode sau NFC/trim, không có ký tự điều khiển.'); }
   };
   const reset = () => { setSearch(''); setRole('ALL'); setActive('ALL'); setValidation(''); setApplied({}); setAttempt(previous => previous + 1); };
-  return <section className={styles.layout} aria-label="Accounts chỉ đọc"><div className={styles.pageContent}>
+  return <section className={`${styles.layout} ${embedded ? styles.embedded : ''}`} aria-label="Accounts chỉ đọc"><div className={styles.pageContent}>
     <header className={styles.header}><div><p className={styles.eyebrow}>BCKL / ADMIN · ACCOUNTS</p>
       <h1>Quản lý tài khoản — chỉ đọc</h1><p>Danh sách, tìm kiếm và phân trang theo Backend; không thay đổi tài khoản.</p></div>
       <span className={styles.preparationBadge}>Chưa bật khóa/mở</span></header>
