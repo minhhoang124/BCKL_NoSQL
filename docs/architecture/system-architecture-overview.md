@@ -1,5 +1,11 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**An toàn E2E — 21/10/2026, bản sửa đang review:** `setup-env` không được đọc
+`.env` local hoặc ghi đè URL QA. Chốt target trước test collection, chỉ nhận DB
+QA riêng hoặc service CI đã cấu hình. Đã có sự cố runner chọn nhầm demo do
+`override: true`; lượt FAIL không là bằng chứng nghiệp vụ, không tự dọn dữ liệu.
+[Nguyên nhân, ảnh hưởng quan sát được và kiểm chứng](../testing/e2e-database-target-safety-2026-10-21.md).
+
 **Buyer #74 — đồng bộ 21/10/2026:** nhận develop `bf6f926` sau merge #77/#81.
 Giữ runtime/migration Buyer và foundation Attributes/Accounts đã merge; conflict
 chỉ ghi chú kiến trúc, giữ cả hai phía. Chưa nhận journal #75 hoặc adapter #84,

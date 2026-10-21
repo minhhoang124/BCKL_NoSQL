@@ -1,14 +1,8 @@
-import path from 'node:path';
-import { config } from 'dotenv';
+import { assertRuntimeQaTarget } from './helpers/runtime-qa-target.js';
 
-// CI provides DATABASE_URL directly. Local runs fall back to the repository
-// root .env, then BE/.env for an optional service-specific override.
-config({ path: path.resolve(process.cwd(), '../.env'), quiet: true });
-config({
-  path: path.resolve(process.cwd(), '.env'),
-  override: true,
-  quiet: true,
-});
+// No .env fallback or override: a local service file may point at the demo DB.
+// Abort the entire suite before collecting tests or opening fixture connections.
+assertRuntimeQaTarget(process.env.DATABASE_URL, process.env.GITHUB_ACTIONS);
 
 // Tests dispatch explicitly with fixture-scoped queries. Never poll real outbox
 // rows in the local demo database while an E2E application is running.

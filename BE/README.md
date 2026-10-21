@@ -189,3 +189,14 @@ Frontend recovery and Buyer buttons are not enabled by this Backend change.
 Buyer command: `POST /orders/:orderId/complete`, body `{}`, Idempotency-Key, own delivered/paid Order only. Scheduler `order-auto-complete-d07` runs every 15 seconds and discovers due Orders from PostgreSQL. Default delay is 3 days (`ORDER_AUTO_COMPLETE_DELAY_SECONDS=259200`); enable with `ORDER_AUTO_COMPLETE_ENABLED=true`. Apply the new completion-job migration before running. Never shorten the delay on real transactions merely to demo.
 
 Jobs/lease/retries persist in PostgreSQL; max 6 attempts with backoff, then FAILED for operator investigation (no requeue endpoint yet). Buyer/worker share atomic completion and immutable receipts. See [contract and limits](../docs/api/order-completion-runtime-contract.md). Backend tests disable global cron; the runtime suite enables an isolated app and verifies a real wall-clock tick on a dedicated test database. This is not acceptance evidence for UI, Review, Dashboard, Notification or real payment settlement.
+
+## E2E database safety
+
+E2E requires an explicitly injected isolated QA `DATABASE_URL` and test JWT
+secrets. Test setup does not load `.env` files: Backend local configuration may
+point at demo. Local target must be `127.0.0.1:5549` and a dedicated
+`bckl_order_resolution_test_*` database. The Attributes suites additionally
+require their documented `bckl_order_resolution_test_attributes_20261019` prefix.
+Missing or unsafe target aborts before test collection. Never set
+`GITHUB_ACTIONS=true` locally to bypass the gate. See
+`docs/testing/e2e-database-target-safety-2026-10-21.md` for the incident and fix.
