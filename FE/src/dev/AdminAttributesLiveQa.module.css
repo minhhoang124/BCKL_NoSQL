@@ -1,0 +1,9 @@
+.root { color-scheme: light; color: #20242b; background: #f5f7fa; min-height: 100vh; padding: 20px; font-family: 'Segoe UI', sans-serif; overflow-wrap: anywhere; }
+.root h1, .root h2, .root h3 { color: #20242b; line-height: 1.3; }
+.root header, .root form { background: #fff; border: 1px solid #ccd5e0; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.root form { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.root label { display: grid; gap: 6px; }
+.root input, .root button { color: #20242b; background: #fff; border: 1px solid #8896a8; border-radius: 8px; padding: 10px; min-height: 44px; font: inherit; max-width: 100%; box-sizing: border-box; }
+.root button:disabled { color: #566272; background: #e8edf3; }
+.root [role='alert'] { background: #fff0ed; color: #992c13; padding: 12px; }
+@media (max-width: 680px) { .root { padding: 10px; } .root form { align-items: stretch; flex-direction: column; } }

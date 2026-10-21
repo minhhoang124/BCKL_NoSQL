@@ -1,5 +1,16 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Tích hợp sau Accounts #86 — 21/10/2026:** #86 đã merge tại `e409335`.
+Nhánh #73 giữ cả reader Accounts production và Attributes DEV/read preparation;
+không mở ghi Attributes hoặc khóa/mở Accounts. Conflict chỉ ghi chú kiến trúc.
+
+**Attributes #73 — 21/10/2026:** nhận develop `d84381a` gồm read foundation
+#77, Accounts #81, Buyer #74 và guard DB E2E #88. DEV entry dùng Auth/GET thật,
+PostgreSQL riêng16migrations; browser read/filter/cursor/role/logout và45HTTP/DB
+checks đạt, FE821PASS/6liveSKIP. Không gắn Catalog production, không bật ghi;
+hai profile độc lập và live race/network chưa chạy, toàn Admin/G3 chưa nghiệm thu.
+[Bằng chứng và giới hạn](../testing/pr73-live-read-qa-2026-10-21.md).
+
 **Accounts #86 — sau #88,21/10/2026:** nhận develop `d84381a` tại `d3949cb`;
 conflict chỉ ghi chú kiến trúc, giữ cả Accounts và E2E safety. Runtime FE/BE/
 Prisma/AI nguyên byte so3f82a70. Bổ sung bằng chứng browser đúng3f82a70 cho
@@ -1290,6 +1301,16 @@ Kiểm thử tại [báo cáo client](../testing/seller-resolution-client-2026-1
 tách unit/jsdom/mock HTTP khỏi live API/PostgreSQL/browser; G-FULFILMENT vẫn
 IN_PROGRESS. Sau review/merge Backend #67 mới nối Web và nghiệm thu giao dịch.
 
+## Admin Category Attributes — PREPARATION, 19/10/2026
+
+Hiền chuẩn bị layout/editor definition và option theo contract #65 đã merge,
+trên nền develop `622cfb9`. Preview chỉ DEV với mẫu tổng hợp, draft trong RAM,
+validation/reason và hộp trước/sau; nút ghi thật luôn khóa. Không API adapter,
+Auth/router/menu, PostgreSQL hoặc Search mới; không thay Brand/Category đã có.
+Backend Admin read/options/revision/usage/audit đầy đủ chưa bàn giao; acceptance
+AT01–34 vẫn NOT_RUN ở mức tích hợp, chưa Admin/G3 DONE. Xem
+[bàn giao, kiểm tra và đầu vào cần Hoàng cung cấp](../testing/admin-category-attributes-local-review-2026-10-19.md).
+
 ## 19. Buyer resolver Backend — IN_PROGRESS, 19/10/2026
 
 Contract #69 đã merge tại `622cfb9`; nhánh `codex/buyer-resolution-runtime`
@@ -1315,3 +1336,13 @@ riêng; helper/check DB hiện chỉ nhận fence Seller. Chuẩn bị input fix
 builders đã merge và guard DB QA sẵn có; không connect/seed, không migration/API
 hoặc bật nút Buyer.16 kịch bản cạnh tranh tương lai vẫn NOT_RUN, self-tests
 không là proof DB. [Audit, fixtures và oracle kiểm thử](../testing/buyer-resolution-test-readiness-2026-10-19.md).
+
+## Admin Attributes read preparation — 20/10/2026
+
+Bổ sung adapter ba GET Admin và component chỉ đọc tách khỏi editor minh họa;
+phân trang ID, kiểm nesting/usage/revision và bỏ options khi phiên bản thay đổi.
+Chỉ dùng trong DEV/test với transport giả lập; chưa nối Catalog/router production,
+chưa API ghi hoặc QA Backend/PostgreSQL thật. Không dùng kết quả unit/mock để
+nghiệm thu AT01–34, Admin hoặc toàn giai đoạn 3. Đồng bộ nền develop `6d682e4`,
+giữ nguyên cả ghi chú Attributes và Buyer ở trên, không nhận Backend #77 đã merge.
+[Phạm vi, bằng chứng và phần còn chờ bàn giao](../testing/admin-attributes-read-preparation-2026-10-20.md).

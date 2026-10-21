@@ -1,0 +1,12 @@
+.root { color-scheme: light; color: #20242b; background: #f5f7fa; padding: 24px; font-family: 'Segoe UI', sans-serif; overflow-wrap: anywhere; }
+.root h1 { font-size: 1.5rem; }
+.root h1, .root h2, .root h3 { color: #20242b; }
+.root button, .root select { color: #20242b; background: #fff; border: 1px solid #8896a8; border-radius: 8px; min-height: 44px; padding: 10px; font: inherit; max-width: 100%; }
+.root button { cursor: pointer; }
+.root button:disabled { cursor: default; color: #566272; background: #e8edf3; }
+.root button:focus-visible, .root select:focus-visible { outline: 3px solid #1658ac; outline-offset: 2px; }
+.columns { display: grid; grid-template-columns: minmax(210px, 1fr) minmax(0, 2fr); gap: 20px; }
+.columns section { min-width: 0; background: #fff; border: 1px solid #ccd5e0; border-radius: 12px; padding: 16px; }
+.row { display: block; width: 100%; text-align: left; margin-bottom: 8px; }
+.root [role='alert'] { background: #fff0ed; color: #992c13; padding: 12px; border: 1px solid #d96649; }
+@media (max-width: 680px) { .root { padding: 12px; } .columns { grid-template-columns: minmax(0, 1fr); } }
