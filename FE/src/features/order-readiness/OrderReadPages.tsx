@@ -25,7 +25,7 @@ function pathId(value: string | undefined) {
     ? Number(value)
     : null;
 }
-/** Only merged GET adapters are wired here. No command dispatcher is supplied. */
+/** Read routes and the merged, explicitly gated Seller command workspace. */
 export function OrderReadPage({
   scope,
   detail = false,
@@ -61,22 +61,46 @@ export function OrderReadPage({
         <Link to={base(scope)}>Danh sách đơn</Link>
       </nav>
       <p>
-        {scope === "seller" &&
-        detail &&
+        {scope === "seller" && detail &&
         import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED === "true"
           ? "Kiểm thử xử lý đơn Seller; mỗi bước cần xác nhận, không tự gửi lại yêu cầu."
           : "Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật trên màn này."}
       </p>
-      {detail ? (
-        scope === "seller" &&
-        import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED === "true" ? (
-          <SellerOrderWorkspace key={key} orderId={pathId(orderId)!} />
-        ) : (
-          <Detail key={key} scope={scope} orderId={pathId(orderId)!} />
-        )
-      ) : (
-        <List key={key} scope={scope} />
-      )}
+      <div
+        className={
+          !detail && scope === "buyer" ? styles.accountGrid : undefined
+        }
+      >
+        {!detail && scope === "buyer" && (
+          <aside
+            className={styles.accountSidebar}
+            aria-label="Tài khoản mua hàng"
+          >
+            <h2>Tài khoản</h2>
+            <strong>{user.fullName ?? "Tài khoản của bạn"}</strong>
+            <p>{user.email}</p>
+            <nav aria-label="Điều hướng tài khoản">
+              <Link to="/account">Hồ sơ của tôi</Link>
+              <Link to="/account/addresses">Sổ địa chỉ</Link>
+              <Link to="/account/orders" aria-current="page">
+                Đơn mua
+              </Link>
+            </nav>
+          </aside>
+        )}
+        <div className={styles.content}>
+          {detail ? (
+            scope === "seller" &&
+            import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED === "true" ? (
+              <SellerOrderWorkspace key={key} orderId={pathId(orderId)!} />
+            ) : (
+              <Detail key={key} scope={scope} orderId={pathId(orderId)!} />
+            )
+          ) : (
+            <List key={key} scope={scope} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,103 +1,20 @@
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background-color: #fff;
-  border-bottom: 1px solid #eaeaea;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.logo a {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
-  text-decoration: none;
-}
-
-.search form {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.search input {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 300px;
-}
-
-.search button {
-  padding: 0.5rem 1rem;
-  background-color: #09f;
-  color: white;
-  border: none;
-  border-radius: 4px;
-}
-
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.nav a {
-  color: #333;
-  text-decoration: none;
-}
-
-.nav a:hover {
-  text-decoration: underline;
-}
-
-.registerBtn {
-  background-color: #09f;
-  color: white !important;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  text-decoration: none !important;
-}
-
-.logoutBtn {
-  background: none;
-  border: none;
-  color: #d32f2f;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.logoutBtn:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-.logoutError {
-  position: absolute;
-  right: 1rem;
-  top: calc(100% + 0.5rem);
-  z-index: 10;
-  max-width: min(24rem, calc(100vw - 2rem));
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border: 1px solid #dc2626;
-  border-radius: 0.5rem;
-  background: #fef2f2;
-  color: #991b1b;
-  font-size: 0.875rem;
-}
-
-.logoutBtn:hover {
-  text-decoration: underline;
-}
-
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .search input {
-    width: 100%;
-  }
-}
+.header { color: #20242b; color-scheme: light; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; align-items: center; padding: 24px max(24px, calc((100vw - 1344px) / 2)); background-color: #fff; border-bottom: 1px solid var(--market-line); position: sticky; top: 0; z-index: 100; font: 400 14px/1.5 var(--market-font); }
+.logo { display: flex; align-items: center; gap: 24px; }
+.logo a { font-size: 36px; font-weight: 700; line-height: 1; color: var(--market-brand); letter-spacing: -1.5px; text-decoration: none; }
+.tagline { white-space: nowrap; font-size: 16px; }
+.search { flex: 1 1 320px; max-width: 640px; min-width: 0; }
+.search form { display: flex; min-width: 0; }
+.search input { box-sizing: border-box; min-width: 0; width: 100%; min-height: 48px; color: #20242b; background-color: #fff; padding: 12px 16px; border: 1px solid var(--market-brand); border-radius: 6px 0 0 6px; font: inherit; }
+.search input::placeholder { color: #596170; opacity: 1; }
+.header :focus-visible { outline: 2px solid var(--market-brand); outline-offset: 3px; }
+.search button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; background-color: var(--market-brand); color: white; border: 1px solid var(--market-brand); border-radius: 0 6px 6px 0; font: 600 14px/1.5 var(--market-font); cursor: pointer; }
+.search button svg { width: 24px; height: 24px; flex-shrink: 0; }
+.nav { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; max-width: 100%; }
+.nav a { color: var(--market-ink); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; overflow-wrap: anywhere; }
+.nav a:hover { text-decoration: underline; }
+.nav .registerBtn { background-color: var(--market-brand); color: white; padding: 0 16px; border-radius: var(--market-radius); text-decoration: none; }
+.logoutBtn { background: none; border: none; color: #b42318; cursor: pointer; font: inherit; min-height: 44px; }
+.logoutBtn:disabled { cursor: not-allowed; opacity: 0.65; }
+.logoutBtn:hover { text-decoration: underline; }
+.logoutError { position: absolute; right: 16px; top: calc(100% + 8px); z-index: 10; max-width: min(384px, calc(100vw - 32px)); margin: 0; padding: 12px 16px; border: 1px solid #b42318; border-radius: 6px; background: #fff0ed; color: #991b1b; font-size: 14px; }
+@media (max-width: 768px) { .header { position: relative; padding: 16px; gap: 16px; } .logo { gap: 16px; } .logo a { font-size: 28px; } .tagline { font-size: 14px; } .search { order: 3; flex-basis: 100%; max-width: none; } .nav { gap: 12px; } }

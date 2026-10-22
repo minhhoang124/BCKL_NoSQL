@@ -1,70 +1,14 @@
-.container {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  border: 1px solid #eaeaea;
-  border-radius: 8px;
-  background-color: #fff;
-}
-
-.title {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-weight: 500;
-}
-
-.form input, .form select {
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.form input:focus, .form select:focus {
-  outline: none;
-  border-color: #09f;
-  box-shadow: 0 0 0 2px rgba(0, 153, 255, 0.2);
-}
-
-.submitBtn {
-  background-color: #09f;
-  color: white;
-  padding: 0.75rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 1rem;
-}
-
-.submitBtn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.linkText {
-  text-align: center;
-  margin-top: 1rem;
-}
-
-.linkText a {
-  color: #09f;
-  text-decoration: none;
-}
-
-.linkText a:hover {
-  text-decoration: underline;
-}
+.container { box-sizing: border-box; width: 100%; min-width: 0; padding: 48px; border: 1px solid var(--market-line); border-radius: var(--market-radius); background-color: #fff; color: #20242b; color-scheme: light; }
+.title { color: #20242b; font: 700 30px/1.25 var(--market-font); letter-spacing: -0.5px; margin: 0 0 16px; }
+.subtitle { color: var(--market-muted); margin-bottom: 32px; }
+.form { display: flex; flex-direction: column; gap: 24px; }
+.form label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 500; }
+.form input, .form select { box-sizing: border-box; min-width: 0; width: 100%; min-height: 48px; color: #20242b; background-color: #fff; padding: 12px 16px; border: 1px solid var(--market-line); border-radius: var(--market-radius); font: 400 16px/1.5 var(--market-font); }
+.form input::placeholder { color: #596170; opacity: 1; }
+.form input:focus, .form select:focus { outline: 2px solid var(--market-brand); outline-offset: 2px; border-color: var(--market-brand); }
+.submitBtn { min-height: 52px; margin-top: 8px; }
+.linkText { text-align: center; margin-top: 32px; font-size: 14px; }
+.linkText a { color: var(--market-brand); text-decoration: none; font-weight: 600; }
+.linkText a:hover { text-decoration: underline; }
+.container a:focus-visible, .submitBtn:focus-visible { outline: 2px solid var(--market-brand); outline-offset: 3px; }
+@media (max-width: 600px) { .container { padding: 24px; } .title { font-size: 28px; } }

@@ -1,22 +1,33 @@
 .page {
-  max-width: 66rem;
+  max-width: 1344px;
   margin: 0 auto;
-  padding: 1rem;
-  color: var(--text-h);
+  padding: 16px 0;
+  color: var(--market-ink);
+  font: 400 16px/1.5 var(--market-font);
   overflow-wrap: anywhere;
 }
 .page nav { margin-block: 0.5rem 1rem; }
 .page label { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
-.page select, .page > button {
+.page select, .page > button, .content > button {
   min-height: 44px;
   max-width: 100%;
   padding: 0.65rem;
   margin-block: 0.5rem;
-  background: var(--bg);
-  color: var(--text-h);
-  border: 1px solid var(--border);
+  background: var(--market-surface);
+  color: var(--market-ink);
+  border: 1px solid var(--market-line);
   border-radius: 0.35rem;
   font: inherit;
 }
-.page :focus-visible { outline: 3px solid #c63b09; outline-offset: 3px; }
+.page :focus-visible { outline: 3px solid var(--market-brand); outline-offset: 3px; }
+.accountGrid { display: grid; grid-template-columns: 226px minmax(0, 1fr); gap: 36px; align-items: start; }
+.content { min-width: 0; }
+.accountSidebar { background: var(--market-surface); border: 1px solid var(--market-line); border-radius: var(--market-radius); padding: 24px 12px; }
+.accountSidebar h2, .accountSidebar strong, .accountSidebar > p { margin: 0 12px 12px; display: block; }
+.accountSidebar h2 { font-size: 20px; }
+.accountSidebar > p { color: var(--market-muted); font-size: 13px; overflow-wrap: anywhere; }
+.accountSidebar nav { display: grid; gap: 8px; margin-top: 32px; }
+.accountSidebar a { display: block; padding: 12px 18px; border-radius: 4px; text-decoration: none; color: var(--market-ink); }
+.accountSidebar a[aria-current] { background: var(--market-soft); color: var(--market-brand); font-weight: 600; }
+@media (max-width: 900px) { .accountGrid { grid-template-columns: 1fr; gap: 16px; } .accountSidebar nav { display: flex; flex-wrap: wrap; margin: 12px 0 0; } .accountSidebar { padding: 16px 12px; } }
 @media (max-width: 480px) { .page { padding: 0.75rem; } .page label { display: grid; } }

@@ -11,7 +11,7 @@ const { values } = parseArgs({ options: { 'playwright-module': { type: 'string' 
 assert(values.output && values['playwright-module']);
 const db = new URL(process.env.DATABASE_URL ?? '');
 assert.equal(db.hostname, '127.0.0.1'); assert.equal(db.port, '5549');
-assert.equal(db.pathname, '/bckl_checkout_web_20261012');
+assert(['/bckl_checkout_web_20261012', '/bckl_pr59_combined_20261020'].includes(db.pathname));
 assert([...db.searchParams].every(([k, v]) => k === 'schema' && v === 'public')); assert(!db.hash);
 assert(process.env.JWT_ACCESS_SECRET && process.env.JWT_REFRESH_SECRET);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -103,6 +103,9 @@ try {
     await page.goto(frontend + '/account'); await page.getByRole('link', { name: 'Đơn mua của tôi' }).click();
     await page.getByRole('button', { name: 'Trang tiếp theo', exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: /^Xem chi tiết / }).count(), 20);
+    assert(await page.getByRole('complementary', { name: 'Tài khoản mua hàng' }).isVisible());
+    assert.equal(await page.getByRole('navigation', { name: 'Điều hướng tài khoản' }).getByRole('link').count(), 3);
+    assert.equal(await page.getByRole('link', { name: 'Đơn mua', exact: true }).getAttribute('aria-current'), 'page');
     await shot(page, `${name}-01-buyer-list`);
     await page.getByRole('button', { name: 'Trang tiếp theo', exact: true }).click();
     await page.waitForURL(/afterId=/);
@@ -116,8 +119,14 @@ try {
     await page.getByRole('button', { name: `Xem chi tiết ${order.orderNumber}` }).click();
     await page.getByRole('heading', { name: order.orderNumber, exact: true }).waitFor();
     assert(await page.getByRole('button', { name: 'Hủy đơn', exact: true }).isDisabled());
+    for (const region of ['Địa chỉ nhận hàng', 'Thanh toán', 'Sản phẩm trong đơn', 'Lịch sử đơn'])
+      assert(await page.getByRole('region', { name: region, exact: true }).isVisible());
     await shot(page, `${name}-04-buyer-detail`);
-    const dimensions = await page.locator('section[aria-label="Chi tiết đơn hàng"]').evaluate(element => ({ width: innerWidth, documentWidth: document.documentElement.scrollWidth, panelWidth: element.scrollWidth, panelClientWidth: element.clientWidth, heading: getComputedStyle(element.querySelector('h1')).color, surface: getComputedStyle(element.querySelector('section')).backgroundColor }));
+    await page.evaluate(() => document.fonts.ready);
+    const dimensions = await page.locator('section[aria-label="Chi tiết đơn hàng"]').evaluate(element => ({ width: innerWidth, documentWidth: document.documentElement.scrollWidth, panelWidth: element.scrollWidth, panelClientWidth: element.clientWidth, heading: getComputedStyle(element.querySelector('h1')).color, font: getComputedStyle(element.querySelector('h1')).fontFamily, surface: getComputedStyle(element.querySelector('section')).backgroundColor }));
+    assert.equal(dimensions.heading, 'rgb(32, 36, 43)');
+    assert.equal(dimensions.surface, 'rgb(255, 255, 255)');
+    assert(dimensions.font.includes('Inter'));
     assert(dimensions.panelWidth <= dimensions.panelClientWidth, `Order panel horizontal overflow: ${JSON.stringify(dimensions)}`);
     await page.keyboard.press('Tab'); await page.getByRole('button', { name: 'Làm mới chi tiết đơn', exact: true }).focus();
     assert.equal(await page.getByRole('button', { name: 'Làm mới chi tiết đơn', exact: true }).evaluate(e => getComputedStyle(e).outlineStyle), 'solid');

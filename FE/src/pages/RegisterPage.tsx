@@ -6,6 +6,7 @@ import { fetchApi, ApiError } from '../services/apiClient';
 import type { SessionResponse } from '../types/auth';
 import { ErrorMessage } from '../components/ErrorMessage/ErrorMessage';
 import styles from './AuthForm.module.css';
+import { AuthLayout } from '../components/AuthLayout/AuthLayout';
 
 export function RegisterPage() {
   const { login } = useAuth();
@@ -40,7 +41,7 @@ export function RegisterPage() {
   }
 
   return (
-    <div className={styles.container}>
+    <AuthLayout><div className={styles.container}>
       <h1 className={styles.title}>Đăng ký</h1>
       {error && <ErrorMessage message={error} />}
       <form className={styles.form} onSubmit={submit}>
@@ -64,13 +65,13 @@ export function RegisterPage() {
             <option value="SELLER">Người bán</option>
           </select>
         </label>
-        <button type="submit" className={styles.submitBtn} disabled={busy}>
+        <button type="submit" className={`market-button ${styles.submitBtn}`} disabled={busy}>
           {busy ? 'Đang xử lý...' : 'Tạo tài khoản'}
         </button>
       </form>
       <p className={styles.linkText}>
         Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
       </p>
-    </div>
+    </div></AuthLayout>
   );
 }

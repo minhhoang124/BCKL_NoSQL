@@ -1,0 +1,34 @@
+/* Source: deliverables/ui-orange-v1/00-foundations. Light storefront is
+   intentional under either OS theme; a dark storefront is not designed yet. */
+:root {
+  --market-brand: #d63b0b;
+  --market-brand-hover: #b83209;
+  --market-soft: #fff2ec;
+  --market-ink: #20242b;
+  --market-muted: #69717c;
+  --market-line: #e3e6e9;
+  --market-bg: #f6f7f8;
+  --market-surface: #ffffff;
+  --market-radius: 6px;
+  --market-space-1: 8px;
+  --market-space-2: 16px;
+  --market-space-3: 24px;
+  --market-space-4: 32px;
+  --market-font: 'Inter', system-ui, sans-serif;
+}
+
+/* Shared presentation primitives. Never decide permissions or transaction state. */
+.market-button {
+  min-height: 44px;
+  padding: 12px 20px;
+  border: 1px solid var(--market-brand);
+  border-radius: var(--market-radius);
+  color: white;
+  background: var(--market-brand);
+  font: 600 14px/1.5 var(--market-font);
+  cursor: pointer;
+}
+.market-button:hover:not(:disabled) { background: var(--market-brand-hover); }
+.market-button:disabled { background: #e4e7eb; border-color: #e4e7eb; color: #555c65; cursor: not-allowed; }
+.market-button:focus-visible { outline: 2px solid var(--market-brand); outline-offset: 3px; }
+.market-card { background: var(--market-surface); border: 1px solid var(--market-line); border-radius: var(--market-radius); padding: 24px; }

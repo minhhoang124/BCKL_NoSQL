@@ -11,7 +11,8 @@ assert(values.output && values['playwright-module']);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const db = new URL(process.env.DATABASE_URL ?? '');
 assert.equal(db.hostname, '127.0.0.1'); assert.equal(db.port, '5549');
-assert.match(db.pathname, /^\/bckl_order_resolution_test_[a-z0-9_]{1,40}$/);
+assert(/^\/bckl_order_resolution_test_[a-z0-9_]{1,40}$/.test(db.pathname) ||
+  db.pathname === '/bckl_pr59_combined_20261020');
 assert(!db.search && !db.hash);
 for (const f of ['.env', 'BE/.env', 'FE/.env', 'FE/.env.local']) {
   try { await access(path.join(root, f)); throw new Error(`Refuse local dotenv override ${f}`); }

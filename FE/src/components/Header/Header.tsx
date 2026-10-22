@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
 import { ApiError } from '../../services/apiClient';
 import styles from './Header.module.css';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -33,11 +34,12 @@ export function Header() {
     <header className={styles.header}>
       <div className={styles.logo}>
         <Link to="/">BCKL</Link>
+        <span className={styles.tagline}>Chợ hiện đại</span>
       </div>
       <div className={styles.search}>
         <form onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`); }}>
           <input aria-label="Tìm sản phẩm" type="search" placeholder="Tìm kiếm sản phẩm..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-          <button type="submit">Tìm</button>
+          <button type="submit"><MagnifyingGlassIcon aria-hidden="true" />Tìm</button>
         </form>
       </div>
       <nav className={styles.nav}>

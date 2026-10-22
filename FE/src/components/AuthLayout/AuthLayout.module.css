@@ -1,0 +1,9 @@
+.layout { display: grid; grid-template-columns: 0.94fr 1fr; gap: 48px; margin: 40px auto; align-items: stretch; }
+.intro { padding: 56px 48px; background: var(--market-soft); border-radius: var(--market-radius); color: var(--market-ink); }
+.eyebrow { font-weight: 700; color: var(--market-brand); margin-bottom: 40px; }
+.intro h2 { font: 700 38px/1.22 var(--market-font); letter-spacing: -1px; color: var(--market-ink); margin: 0 0 24px; }
+.intro h2 span { color: var(--market-brand); }
+.intro p { max-width: 440px; line-height: 1.7; }
+.note { margin-top: 32px; color: var(--market-muted); font-size: 14px; }
+.artwork { display: block; width: 100%; height: auto; margin-top: 32px; border-radius: var(--market-radius); }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; gap: 24px; margin: 8px auto; max-width: 670px; } .intro { order: 2; padding: 24px; } .intro h2 { font-size: 28px; } .eyebrow { margin-bottom: 16px; } .note { margin-top: 16px; } }

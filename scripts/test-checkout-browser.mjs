@@ -120,7 +120,7 @@ try {
         pageWidth: p.scrollWidth, viewport: innerWidth, documentWidth: document.documentElement.scrollWidth };
     });
     assert.equal(measurements.heading, 'rgb(32, 36, 43)');
-    assert.equal(measurements.surface, 'rgb(255, 255, 255)');
+    assert.equal(measurements.surface, 'rgb(246, 247, 248)');
     assert.equal(measurements.selectText, 'rgb(32, 36, 43)');
     assert.equal(measurements.selectBackground, 'rgb(255, 255, 255)');
     assert(measurements.documentWidth <= width, `${name} horizontal overflow ${JSON.stringify(measurements)}`);

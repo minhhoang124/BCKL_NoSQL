@@ -103,12 +103,15 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
     </section>}
     {loading ? <p role="status">Đang tải địa chỉ và giỏ hàng…</p> : <>
       {!dataReady ? <button disabled={busy || !!intent} onClick={reloadCart}>Tải lại</button> : <>
+      <div className={styles.checkoutGrid}><div className={styles.checkoutMain}>
       {!addresses.length && <p>Chưa có địa chỉ nhận hàng. Thêm địa chỉ ở màn Address trước khi đặt.</p>}
       <label>Địa chỉ nhận hàng<select disabled={busy || !!intent} value={addressId} onChange={e => { setAddressId(Number(e.target.value)); setPreview(null); }}><option value={0}>Chọn địa chỉ</option>{addresses.map(a => <option key={a.id} value={a.id}>{a.recipientName} — {a.addressLine}, {a.ward}, {a.province}</option>)}</select></label>
       {selectedAddress && <p aria-label="Địa chỉ giao hàng đã chọn">{selectedAddress.recipientName} — {selectedAddress.addressLine}, {selectedAddress.ward}, {selectedAddress.province}</p>}
       {cart?.groups.map(group => <section className={styles.card} key={group.store.id}><h2>{group.store.name}</h2>{group.items.map(i => <label className={styles.line} key={i.variantId}><input type="checkbox" disabled={busy || !!intent || !i.available} checked={selected.includes(i.variantId)} onChange={e => { setSelected(ids => e.target.checked ? [...ids, i.variantId] : ids.filter(id => id !== i.variantId)); setPreview(null); }} />{i.productName ?? `Mặt hàng #${i.variantId}`} × {i.quantity} — {i.currentUnitPrice ? money(i.currentUnitPrice) : 'Không thể mua'}{!i.available && <span> · Không thể mua: {i.unavailableReason}</span>}</label>)}</section>)}
       {!!cart?.unavailableItems.length && <p role="alert">Có {cart.unavailableItems.length} dòng không còn bán công khai; quay lại giỏ để xóa. Không hiển thị nội dung nháp.</p>}
       {!items.length && cart && <p>Giỏ chưa có mặt hàng mua được.</p>}
+      </div><aside className={`${styles.card} ${styles.checkoutSummary}`} aria-label="Xác nhận thanh toán">
+      <h2>Thanh toán COD</h2><p>Kiểm tra lại giá và tồn kho trước khi đặt hàng.</p>
       <button disabled={busy || !!intent || storageBlocked || refreshRequired || !!selectionError || !cart || !addressId || body.items.length < 1 || body.items.length > 50} onClick={() => void run(async () => { if (!selectionError && cart && dataReady && !loading && !refreshRequired) setPreview(await write<Preview>('/checkout/preview', body)); })}>Kiểm tra giá và kho</button>
       {preview && <section className={styles.card}>
         {preview.groups.flatMap(g => g.items).filter(i => i.errors.length).map(i => <p role="alert" key={i.variantId}>Mặt hàng #{i.variantId}: {i.errors.join(', ')}. Giá hiện tại {money(i.unitPrice)}.</p>)}
@@ -116,7 +119,7 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
         <button disabled={busy || !!intent || storageBlocked || !preview.canCheckout || !preview.totals} onClick={submit}>Đặt hàng COD</button>
         {!preview.canCheckout && <button disabled={busy || !!intent} onClick={reloadCart}>Tải lại giỏ và giá</button>}
       </section>}
-      </>}
+      </aside></div></>}
     </>}
     {busy && <p role="status">Đang xử lý… Không đóng trang hoặc gửi yêu cầu mới.</p>}
   </div>;

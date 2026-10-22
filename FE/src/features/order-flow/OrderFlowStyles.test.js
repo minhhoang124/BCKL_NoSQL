@@ -20,7 +20,7 @@ const contrast = (a, b) => {
 describe('Checkout local color pairs (CSS regression, not browser QA)', () => {
   it('sets local foreground/background and light native controls', () => {
     expect(rule('.page')).toContain('color: #20242b;');
-    expect(rule('.page')).toContain('background: #fff;');
+    expect(rule('.page')).toContain('background: var(--market-bg);');
     expect(rule('.page')).toContain('color-scheme: light;');
   });
   it('overrides global dark heading color explicitly', () => {
@@ -33,7 +33,7 @@ describe('Checkout local color pairs (CSS regression, not browser QA)', () => {
   });
   it.each([
     ['text', '#20242b', '#ffffff'], ['link', '#bb350d', '#ffffff'],
-    ['button', '#ffffff', '#ca3b10'], ['error', '#20242b', '#fff0ec'],
+    ['button', '#ffffff', '#d63b0b'], ['error', '#20242b', '#fff0ec'],
   ])('%s color pair meets 4.5:1', (_, foreground, background) => {
     expect(contrast(foreground, background)).toBeGreaterThanOrEqual(4.5);
   });

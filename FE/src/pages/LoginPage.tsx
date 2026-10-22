@@ -6,6 +6,7 @@ import { fetchApi, ApiError } from '../services/apiClient';
 import type { SessionResponse } from '../types/auth';
 import { ErrorMessage } from '../components/ErrorMessage/ErrorMessage';
 import styles from './AuthForm.module.css';
+import { AuthLayout } from '../components/AuthLayout/AuthLayout';
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -43,8 +44,9 @@ export function LoginPage() {
   }
 
   return (
-    <div className={styles.container}>
+    <AuthLayout><div className={styles.container}>
       <h1 className={styles.title}>Đăng nhập</h1>
+      <p className={styles.subtitle}>Chào mừng bạn trở lại với BCKL.</p>
       {error && <ErrorMessage message={error} />}
       <form className={styles.form} onSubmit={submit}>
         <label>
@@ -55,13 +57,13 @@ export function LoginPage() {
           Mật khẩu
           <input name="password" type="password" minLength={8} maxLength={72} autoComplete="current-password" required />
         </label>
-        <button type="submit" className={styles.submitBtn} disabled={busy}>
+        <button type="submit" className={`market-button ${styles.submitBtn}`} disabled={busy}>
           {busy ? 'Đang xử lý...' : 'Đăng nhập'}
         </button>
       </form>
       <p className={styles.linkText}>
         Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
       </p>
-    </div>
+    </div></AuthLayout>
   );
 }
