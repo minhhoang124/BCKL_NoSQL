@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { OrderStatus, Role } from '@prisma/client';
+import { OrderStatus, Prisma, Role } from '@prisma/client';
 import { setTimeout as delay } from 'node:timers/promises';
 import request from 'supertest';
 import { gzipSync } from 'node:zlib';
@@ -462,45 +462,89 @@ describe('Seller preparation commands — real PostgreSQL, two app instances', (
     });
   });
 
-  // Force overlapping transactions: both app instances must be blocked on real DB locks.
+  // Gate the first real transaction in each app before either actor row lock.
+  // set_config already established each Serializable snapshot. Do not hold a
+  // business lock while polling pg_stat_activity: its 1s lock_timeout is real,
+  // so a slow test observer must not manufacture two legitimate HTTP409s.
   async function race(
     first: () => PromiseLike<request.Response>,
     second: () => PromiseLike<request.Response>,
+    synchronizationDelayMs = 0,
   ) {
-    let unlock!: () => void;
-    let ready!: () => void;
-    const release = new Promise<void>((r) => {
-      unlock = r;
+    let release!: () => void;
+    let arrivals = 0;
+    let expired = false;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
     });
-    const locked = new Promise<void>((r) => {
-      ready = r;
-    });
-    const blocker = prisma.$transaction(
-      async (tx) => {
-        await tx.$queryRaw`SELECT id FROM users WHERE id = ${seller.id} FOR UPDATE`;
-        ready();
-        await release;
-      },
-      { timeout: 5000 },
-    );
-    await locked;
-    const pending = [Promise.resolve(first()), Promise.resolve(second())];
+    const deadline = setTimeout(() => {
+      expired = true;
+      release();
+    }, 4000);
+    const install = (client: PrismaService) => {
+      const original = client.$transaction.bind(client);
+      let firstTransaction = true;
+      return vi.spyOn(client, '$transaction').mockImplementation(
+        ((
+          work: (tx: Prisma.TransactionClient) => Promise<unknown>,
+          options?: {
+            maxWait?: number;
+            timeout?: number;
+            isolationLevel?: Prisma.TransactionIsolationLevel;
+          },
+        ) =>
+          original(async (tx) => {
+            expect(options?.isolationLevel).toBe('Serializable');
+            if (!firstTransaction) return work(tx);
+            firstTransaction = false;
+            const guarded = new Proxy(tx, {
+              get(target, property, receiver) {
+                if (property !== '$queryRaw')
+                  return Reflect.get(target, property, receiver);
+                return async (
+                  query: TemplateStringsArray | Prisma.Sql,
+                  ...values: unknown[]
+                ) => {
+                  if (
+                    Array.isArray(query) &&
+                    query.join(' ').includes('FROM users') &&
+                    query.join(' ').includes('FOR UPDATE') &&
+                    values[0] === seller.id
+                  ) {
+                    arrivals++;
+                    if (arrivals === 2) {
+                      if (synchronizationDelayMs)
+                        await delay(synchronizationDelayMs);
+                      release();
+                    }
+                    await gate;
+                    if (expired)
+                      throw new Error(
+                        'Both real Seller transactions did not reach the pre-lock barrier',
+                      );
+                  }
+                  return target.$queryRaw(query, ...values);
+                };
+              },
+            });
+            return work(guarded);
+          }, options)) as typeof client.$transaction,
+      );
+    };
+    const spies = [install(prisma), install(otherPrisma)];
     try {
-      let count = 0;
-      for (let i = 0; i < 20; i++) {
-        const rows = await prisma.$queryRaw<
-          { count: bigint }[]
-        >`SELECT count(*) AS count FROM pg_stat_activity WHERE datname = current_database() AND state = 'active' AND wait_event_type = 'Lock'`;
-        count = Number(rows[0].count);
-        if (count >= 2) break;
-        await delay(20);
-      }
-      expect(count).toBeGreaterThanOrEqual(2);
+      const responses = await Promise.all([
+        Promise.resolve(first()),
+        Promise.resolve(second()),
+      ]);
+      expect(arrivals).toBe(2);
+      expect(expired).toBe(false);
+      return responses;
     } finally {
-      unlock();
-      await blocker;
+      clearTimeout(deadline);
+      release();
+      for (const spy of spies) spy.mockRestore();
     }
-    return Promise.all(pending);
   }
   it('same key across independent apps commits one transition/history and one receipt', async () => {
     const header = key();
@@ -510,6 +554,23 @@ describe('Seller preparation commands — real PostgreSQL, two app instances', (
     );
     expect(responses.map((x) => x.status)).toEqual([200, 200]);
     expect(responses.map((x) => x.body.replayed).sort()).toEqual([false, true]);
+    expect(responses[0].body.commandId).toBe(responses[1].body.commandId);
+    const db = await state();
+    expect(db.commands).toHaveLength(1);
+    expect(db.history).toHaveLength(2);
+  });
+  it('slow test synchronization does not consume the production actor lock budget', async () => {
+    const header = key();
+    const responses = await race(
+      () => post(orderId, 'confirm', header),
+      () => post(orderId, 'confirm', header, otherApp),
+      1200,
+    );
+    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    expect(responses.map((response) => response.body.replayed).sort()).toEqual([
+      false,
+      true,
+    ]);
     expect(responses[0].body.commandId).toBe(responses[1].body.commandId);
     const db = await state();
     expect(db.commands).toHaveLength(1);
@@ -608,6 +669,62 @@ describe('Seller preparation commands — real PostgreSQL, two app instances', (
     }
     expect(await state()).toEqual(before);
     await post(orderId, 'confirm', header).expect(200);
+  });
+  it('a real actor lock timeout can return two 409s without committing; the same key later commits once', async () => {
+    let unlock!: () => void;
+    let ready!: () => void;
+    const release = new Promise<void>((resolve) => {
+      unlock = resolve;
+    });
+    const locked = new Promise<void>((resolve) => {
+      ready = resolve;
+    });
+    const blocker = otherPrisma.$transaction(
+      async (tx) => {
+        await tx.$queryRaw`SELECT id FROM users WHERE id = ${seller.id} FOR UPDATE`;
+        ready();
+        await release;
+      },
+      { timeout: 5000 },
+    );
+    await locked;
+    const header = key();
+    const before = await state();
+    const started = performance.now();
+    try {
+      const responses = await Promise.all([
+        post(orderId, 'confirm', header),
+        post(orderId, 'confirm', header, otherApp),
+      ]);
+      expect(responses.map((response) => [response.status, response.body.code])).toEqual([
+        [409, 'ORDER_COMMAND_IN_PROGRESS'],
+        [409, 'ORDER_COMMAND_IN_PROGRESS'],
+      ]);
+      expect(responses.map((response) => response.headers['retry-after'])).toEqual([
+        '1',
+        '1',
+      ]);
+      expect(performance.now() - started).toBeLessThan(4000);
+      expect(await state()).toEqual(before);
+    } finally {
+      unlock();
+      await blocker;
+    }
+    const retry = await Promise.all([
+      post(orderId, 'confirm', header),
+      post(orderId, 'confirm', header, otherApp),
+    ]);
+    expect(retry.map((response) => response.status)).toEqual([200, 200]);
+    expect(retry.map((response) => response.body.replayed).sort()).toEqual([
+      false,
+      true,
+    ]);
+    expect(retry[0].body.commandId).toBe(retry[1].body.commandId);
+    const after = await state();
+    expect(after.commands).toHaveLength(1);
+    expect(after.history).toHaveLength(before.history.length + 1);
+    expect(after.order?.status).toBe('CONFIRMED');
+    expect(after.payment).toEqual(before.payment);
   });
   it('keeps receipt across app restart and replay after a response was discarded', async () => {
     const header = key();

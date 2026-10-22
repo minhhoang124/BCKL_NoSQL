@@ -1,5 +1,12 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Order concurrency QA — 22/10/2026, IN_PROGRESS:** nhánh test riêng bỏ khóa
+Seller do observer giữ trong lúc polling; hai transaction thật gặp nhau trước
+khóa User, rồi PostgreSQL tự quyết định conflict/replay. Bổ sung ca đồng bộ
+chậm và ca hai request hết hạn khóa thật rồi retry cùng key. Không đổi runtime,
+schema, timeout hoặc bật Buyer Web; nguyên nhân chính xác của409/409 lịch sử
+vẫn chưa đủ trace để kết luận. [Cơ chế, bằng chứng và giới hạn](../testing/order-concurrency-test-isolation-2026-10-22.md).
+
 **Đồng bộ #91 sau merge #93 — 22/10/2026:** nhận develop `966f146`.
 Giữ kernel PREPARATION và bản sửa Search chờ đúng durable job. Không thay
 production kernel, schema hoặc bật API ghi; kết quả lịch sử bên dưới giữ nguyên.
