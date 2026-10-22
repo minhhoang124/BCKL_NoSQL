@@ -122,6 +122,11 @@ $ pnpm --dir BE exec prisma migrate dev --name <migration_name>
 
 ## Running tests
 
+For a reproducible local Address/Cart PostgreSQL/API workspace and generated
+Buyer accounts, follow [Address/Cart QA handoff](../docs/testing/address-cart-local-qa.md).
+Safety checks: `pnpm --dir BE qa:address-cart:guards` from repository root.
+The launcher rejects shared/demo database names; never commit its ignored
+credentials/images/output. It does not include pending UI PRs or test Order writes.
 ### Admin delivery simulation (C4.1 working branch)
 
 ADMIN JWT + Idempotency-Key; four POST commands: /admin/orders/:orderId/ship,

@@ -1,5 +1,11 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Đồng bộ PR #51 ngày 20/10/2026:** nền `develop 2f78a98` sau merge Brand #71.
+Giữ công cụ QA prepare/serve/verify cùng phần client Checkout. Cart #50 đã merge; fixture/API smoke QA không thay nghiệm thu luồng Order hoặc Checkout Web.
+Những mục ảnh chụp 10/10 phía dưới là lịch sử, không thay trạng thái mới này.
+Giữ cả bước CI kiểm tra guard QA và bộ kiểm tra evaluation Python từ develop.
+Build Backend và 10 guard test đã đạt trên bản kết hợp; chưa chạy lại API/DB
+handoff hoặc trình duyệt trong lượt đồng bộ này, không dùng kết quả cũ thay thế.
 **Order concurrency QA — 22/10/2026, IN_PROGRESS:** nhánh test riêng bỏ khóa
 Seller do observer giữ trong lúc polling; hai transaction thật gặp nhau trước
 khóa User, rồi PostgreSQL tự quyết định conflict/replay. Bổ sung ca đồng bộ
@@ -1248,6 +1254,19 @@ biên nhận/gửi lại có kiểm soát.
 Đây là nền client đang trên PR riêng, chưa là Checkout UI runtime hay DONE
 G-CHECKOUT. Xem [kiểm chứng client](../testing/checkout-client-readiness-verification.md).
 
+## Công cụ QA Address/Cart cục bộ — 10/10/2026
+
+`BE/scripts/address-cart-handoff.mjs` có ba bước prepare → serve → verify.
+Prepare tạo fixture có nhãn trong PostgreSQL loopback riêng, giữ dữ liệu đã sửa
+khi chạy lại. Serve khởi động AppModule thật từ build với JWT/DB tự sinh cục bộ,
+upload fixture riêng và tắt worker index/repair/auto-complete. Verify gọi HTTP
+thật, dùng Buyer tạm và cleanup theo đúng owner; không gửi giao dịch tạo Order.
+Database demo và index dùng chung không tham gia; không đổi schema/API nghiệp vụ.
+
+Các credentials/upload/kết quả nằm trong `.env.address-cart-*` bị Git ignore,
+không phải artifact bàn giao trên Git. Mỗi thành viên dựng trên máy mình; URL
+loopback không chia sẻ giữa các máy. UI #49/#50 và tích hợp Order là lớp riêng,
+không tự coi DONE từ API smoke. Xem [runbook portable](../testing/address-cart-local-qa.md).
 ## 14. Bổ sung C4.3 — hoàn tất đơn (CURRENT Backend sau merge #48)
 
 #48 đã merge tại `develop 541d15b` ngày 15/10; đây là nền Backend, chưa phải nghiệm thu Order Web hoặc G-FULFILMENT.
@@ -1386,6 +1405,15 @@ nghiệm thu AT01–34, Admin hoặc toàn giai đoạn 3. Đồng bộ nền de
 giữ nguyên cả ghi chú Attributes và Buyer ở trên, không nhận Backend #77 đã merge.
 [Phạm vi, bằng chứng và phần còn chờ bàn giao](../testing/admin-attributes-read-preparation-2026-10-20.md).
 
+## Công cụ QA #51 — đồng bộ develop 22/10/2026
+
+Nhận `e394c9e`, conflict chỉ kiến trúc; giữ CI evaluation và guard QA. Script
+prepare/serve/verify giữ nguyên, không Backend/schema/Auth/FE mới. Trên checkout
+sạch/DB QA mới5549:17migration, prepare lặp bảo toàn dữ liệu và verify HTTP thật
+đạt;0Order/0outbox sau verify, cấu hình ignored cũ không đổi. Full BE1034unit,
+FE939PASS/6liveSKIP và10guard đạt. Chưa browser/Checkout write/fulfilment/index;
+nhờ Hiền review đúng head mới, chưa merge hoặc nghiệm thu Web bằng QA tools.
+[Bằng chứng và giới hạn](../testing/pr51-post-develop-sync-2026-10-22.md).
 ## Buyer command confirmation UI — PREPARATION, 22/10/2026
 
 Từ develop `e394c9e`, thêm `BuyerCommandReview` chưa mount: xác nhận hủy có lý
