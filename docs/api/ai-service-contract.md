@@ -1,5 +1,11 @@
 # Backend–Search Service API contract
 
+**21/10/2026 — Backend Admin aggregation IN_PROGRESS:** implementation riêng
+theo #61/#79, không đổi envelope AI hoặc Search/index wire. Response Backend,
+phân quyền, timeout/cache và cách tách snapshot gốc khỏi freshness projection
+được ghi tại [Admin system health](admin-system-health.md). Chưa merge hoặc nối
+health UI; smoke unloaded runtime không thay bằng chứng all-ready deployment.
+
 ## Mở rộng health nội bộ v1 — contract đã duyệt, AI runtime IN_PROGRESS
 
 Contract #61 đã merge tại `0aaaec2`. Nhánh `feat/dat/search-health-runtime`

@@ -13,6 +13,15 @@ import { configureAccountListHttp } from './auth/admin-account-list.js';
 export function configureApp(app: INestApplication): void {
   // Apply before guards/validation as sensitive Admin failures must not be cached either.
   app.use((req: Request, res: Response, next: NextFunction) => {
+    if (/^\/admin\/system-health\/?$/i.test(req.path)) {
+      res.setHeader('Cache-Control', 'no-store');
+      if ((req.method === 'GET' || req.method === 'HEAD') &&
+          (req.originalUrl.includes('?') || req.headers['transfer-encoding'] !== undefined ||
+           (req.headers['content-length'] !== undefined && req.headers['content-length'] !== '0'))) {
+        res.status(400).json({ statusCode: 400, message: 'Health does not accept query or body.' });
+        return;
+      }
+    }
     if (
       (req.method === 'GET' || req.method === 'HEAD') &&
       /^\/admin\/categories\/[^/]+\/attributes(?:\/|$)/i.test(req.path)

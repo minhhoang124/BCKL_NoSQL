@@ -13,6 +13,7 @@ import { AddressModule } from './address/address.module.js';
 import { CartModule } from './cart/cart.module.js';
 import { OrderModule } from './order/order.module.js';
 import { CheckoutModule } from './checkout/checkout.module.js';
+import { AdminSystemHealthModule } from './health/admin-system-health.module.js';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CheckoutModule } from './checkout/checkout.module.js';
     CartModule,
     OrderModule,
     CheckoutModule,
+    AdminSystemHealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
