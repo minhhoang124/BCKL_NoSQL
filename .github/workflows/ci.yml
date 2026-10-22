@@ -38,6 +38,20 @@ jobs:
       ELASTICSEARCH_URL: http://localhost:9200
 
     services:
+      backend-e2e-postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: bckl_order_resolution_test_attributes_20261019
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 127.0.0.1:5549:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d bckl_order_resolution_test_attributes_20261019"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
       postgres:
         image: postgres:17-alpine
         env:
@@ -123,7 +137,16 @@ jobs:
       - name: Build workspaces
         run: pnpm build
 
+      - name: Prepare isolated Backend E2E database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5549/bckl_order_resolution_test_attributes_20261019?schema=public
+        run: |
+          pnpm --dir BE exec prisma migrate deploy
+          pnpm prisma:seed
+
       - name: Run Backend E2E tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5549/bckl_order_resolution_test_attributes_20261019?schema=public
         run: pnpm --dir BE test:e2e
 
   evaluation-package-portability:
