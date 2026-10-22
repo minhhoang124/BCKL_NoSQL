@@ -1,5 +1,31 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Đồng bộ #91 sau merge #93 — 22/10/2026:** nhận develop `966f146`.
+Giữ kernel PREPARATION và bản sửa Search chờ đúng durable job. Không thay
+production kernel, schema hoặc bật API ghi; kết quả lịch sử bên dưới giữ nguyên.
+Kiểm thử bản kết hợp được ghi riêng, không dùng approval cũ thay re-review.
+
+**Attributes canonical usage — 21/10/2026:** kernel #91 bổ sung count tổng
+options/active options/Product trực tiếp của Category, cùng snapshot sau fence,
+không tin usage từ UI. 36case PostgreSQL/795unit đạt; full E2E lượt mới còn lỗi
+test Search khi hàng đợi dài, đang sửa riêng; chưa coi API ghi đã hoàn thành.
+Chi tiết và giới hạn ở báo cáo kernel bên dưới.
+
+**Sau #86/#73 — 21/10/2026:** nhận develop `be568e0`, giữ Accounts
+production và Attributes DEV/read preparation; không bật Backend ghi mới.
+Runtime riêng của nhánh giữ nguyên, conflict chỉ tài liệu kiến trúc.
+
+**Attributes transaction boundary — PREPARATION21/10/2026:** nhánh riêng từ
+developfa85f66, đã nhận #88/develop `d84381a`, thêm kernel chưa đăng ký
+provider/controller. Có đường tạo definition mới với revision1/audit/job atomic;
+không gọi đó là create API. User SHARE → Category
+MVCC write fence → definition UPDATE/CAS; usage đọc trong transaction, canonical
+audit + optional durable job nguyên tử, final signature chặn trạng thái lệch sau
+audit. Chưa create-definition API, normalized uniqueness, full policy hoặc shared
+writers production; không nhận Backend Attributes/Hiền editor đã hoàn thành.
+[Luồng/biến/gate](attribute-write-transaction-boundary.md) và
+[kiểm thử có giới hạn](../testing/attribute-transaction-boundary-2026-10-21.md).
+
 **Search regression — 21/10/2026:** test Store/Category/Brand/Seller invalidation
 chờ đúng durable job thay vì giả định một batch20 đã xử lý mọi việc. Đã tái lập
 bằng21job fixture của Category rỗng; worker/runtime/schema không đổi. Full
@@ -44,7 +70,7 @@ CLOSED/SUSPENDED/null, logout và chặn Buyer/Seller. Hai profile Admin độc 
 vẫn NOT_RUN; chưa toàn Accounts/Admin/G3 DONE. [Bằng chứng và giới hạn](../testing/admin-accounts-integration-2026-10-21.md).
 Ghi chú theo ngày bên dưới giữ lịch sử tại baseline tương ứng.
 
-**An toàn E2E — 21/10/2026, bản sửa đang review:** `setup-env` không được đọc
+**An toàn E2E — 21/10/2026, #88 đã merge:** `setup-env` không được đọc
 `.env` local hoặc ghi đè URL QA. Chốt target trước test collection, chỉ nhận DB
 QA riêng hoặc service CI đã cấu hình. Đã có sự cố runner chọn nhầm demo do
 `override: true`; lượt FAIL không là bằng chứng nghiệp vụ, không tự dọn dữ liệu.
