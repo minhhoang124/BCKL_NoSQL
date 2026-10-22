@@ -126,6 +126,29 @@ jobs:
       - name: Run Backend E2E tests
         run: pnpm --dir BE test:e2e
 
+  evaluation-package-portability:
+    name: Evaluation bytes - ${{ matrix.os }} - autocrlf=${{ matrix.autocrlf }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        autocrlf: ['false', 'true']
+    steps:
+      - name: Configure Git checkout newline mode
+        shell: bash
+        run: git config --global core.autocrlf '${{ matrix.autocrlf }}'
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify all preliminary packages and captured canonical bytes
+        run: python docs/testing/electronics/preliminary/2026-10-21-dat-decision/test_portability.py
+
   ai-python-checks:
     name: AI Service - Ruff and Pytest
     runs-on: ubuntu-latest

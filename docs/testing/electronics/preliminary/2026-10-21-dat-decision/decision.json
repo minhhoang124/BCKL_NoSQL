@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "protocolId": "dat-ai-assisted-text-pilot-v1",
+  "status": "DAT_AUTHORIZED_EXPLORATORY_ONLY",
+  "decidedAt": "2026-10-21",
+  "decisionOwner": "Đạt",
+  "authorization": "User instruction in task: ok bạn làm luôn đi, không cần hỏi ý kiến hiền",
+  "annotationMethod": "AI_ASSISTED_DELEGATED_ADJUDICATION",
+  "independentDoubleAnnotation": false,
+  "humanPerPairReviewClaimed": false,
+  "newHienApprovalClaimed": false,
+  "groupConsensusClaimed": false,
+  "officialPublicationAllowed": false,
+  "exploratoryMetricsAllowed": true,
+  "totalPairs": 1032,
+  "previousNumericLabelsPreserved": 975,
+  "acceptedNewDecisions": [
+    {"queryId": "TEXT-V1-012", "productId": 64, "externalId": "abo:B00JZVPJD8", "relevance": 0, "sourceRefs": ["S01", "S02"]},
+    {"queryId": "TEXT-V1-012", "productId": 65, "externalId": "abo:B00JZVPKE6", "relevance": 0, "sourceRefs": ["S01", "S02"]},
+    {"queryId": "TEXT-V1-012", "productId": 69, "externalId": "abo:B00MJEYM5O", "relevance": 0, "sourceRefs": ["S01", "S03"]}
+  ],
+  "numericLabelsAfterDecision": 978,
+  "unjudgedAfterDecision": 54,
+  "canonicalLabelsSha256": "2c745fbf82ffa339c3b3ad93399078e3000c67579bf7f148fa89d25a3d626350",
+  "selectedQueryIds": ["TEXT-V1-001", "TEXT-V1-002", "TEXT-V1-004", "TEXT-V1-005", "TEXT-V1-006", "TEXT-V1-010", "TEXT-V1-011"],
+  "evaluatedPairs": 602,
+  "primaryRelevanceThreshold": 2,
+  "sensitivityRelevanceThreshold": 1,
+  "ks": [5, 10, 20],
+  "systems": ["keyword", "semantic", "hybrid"],
+  "rerunRetrieval": false,
+  "recomputedMetrics": false,
+  "inputSha256": {
+    "baseline-labels.jsonl": "a14d717b85ce100469f86d624e9afea6de4cf217ba69423840751f7ec744169c",
+    "review.json": "296dab096af946840d4c14bd1a3d20456c62787dcf62a21e7e84155f2caed34c",
+    "protocol-proposal.md": "eb9ccd85c724f3c643b6cc4b0fb65611a6d968f901e37b0e0f261f8c50380e56",
+    "metrics-summary.csv": "9b15a9476b2d3b060bf9d73ee51887f2b0a4692df49192c5a19a352afdfeb860",
+    "metrics-per-query.csv": "44e84afc0577a0e8d21f78ac14d334a48c37b60e624acc001c31f80e60b81f0a",
+    "provenance.json": "285b9def7fef5f0fec08c7d9fbbf3aac8f32ca85f7d0339ccb0146f7ac15420d",
+    "evaluation-lock-v2.json": "a7022560b29f827e49f74df238c3f1b0b3d86f72b68ab8e080236feca219037a"
+  }
+}
