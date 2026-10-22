@@ -41,6 +41,7 @@ import { ProductService } from './product.service.js';
 import { ProductLifecycleService } from './product-lifecycle.service.js';
 import { ProductVisibilityDto } from './dto/product-lifecycle.dto.js';
 import { ProductIdPipe } from './product-id.pipe.js';
+import { ProductUploadParserInterceptor } from './product-upload-parser.interceptor.js';
 
 @ApiTags('seller-products')
 @ApiBearerAuth()
@@ -111,6 +112,7 @@ export class SellerProductController {
     },
   })
   @UseInterceptors(
+    ProductUploadParserInterceptor,
     FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }),
   )
   @Post(':productId/images')

@@ -60,7 +60,7 @@ export class ProductImageStorageService {
     if (!file?.buffer?.length) {
       throw new BadRequestException('Cần chọn một file ảnh');
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024 || file.buffer.length > 5 * 1024 * 1024) {
       throw new BadRequestException('Ảnh không được vượt quá 5 MB');
     }
 
@@ -209,6 +209,29 @@ export class ProductImageStorageService {
   private async validateAndDetectExtension(
     buffer: Buffer,
   ): Promise<'jpg' | 'png' | 'webp'> {
+    // Reject other loaders before passing untrusted bytes to the native decoder.
+    // MIME types and filenames are client-controlled and are not an allowlist.
+    let format: 'jpeg' | 'png' | 'webp' | null = null;
+    if (buffer.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))) {
+      format = 'jpeg';
+    } else if (
+      buffer
+        .subarray(0, 8)
+        .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+    ) {
+      format = 'png';
+    } else if (
+      buffer.length >= 12 &&
+      buffer.subarray(0, 4).equals(Buffer.from('RIFF')) &&
+      buffer.subarray(8, 12).equals(Buffer.from('WEBP'))
+    ) {
+      format = 'webp';
+    }
+    if (!format) {
+      throw new BadRequestException(
+        'Chỉ chấp nhận ảnh JPEG, PNG hoặc WebP hợp lệ',
+      );
+    }
     try {
       const image = sharp(buffer, {
         failOn: 'error',
@@ -216,12 +239,11 @@ export class ProductImageStorageService {
         sequentialRead: true,
       });
       const metadata = await image.metadata();
-      if (!metadata.width || !metadata.height) throw new Error('missing size');
-      await image.stats();
-      if (metadata.format === 'jpeg') return 'jpg';
-      if (metadata.format === 'png' || metadata.format === 'webp') {
-        return metadata.format;
+      if (metadata.format !== format || !metadata.width || !metadata.height) {
+        throw new Error('unsupported format or missing size');
       }
+      await image.stats();
+      return format === 'jpeg' ? 'jpg' : format;
     } catch {
       // Normalize decoder and resource-limit failures into a safe client error.
     }

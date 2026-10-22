@@ -1,6 +1,8 @@
 packages:
   - 'FE'
   - 'BE'
+overrides:
+  '@nestjs/platform-express>multer': '2.4.0'
 allowBuilds:
   '@prisma/engines': true
   '@scarf/scarf': false
