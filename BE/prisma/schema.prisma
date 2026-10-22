@@ -293,6 +293,8 @@ model ProductStatusHistory {
 }
 
 model CategoryAttributeDefinition {
+  // SQL migration 20261021100000 also enforces normalized name uniqueness per
+  // category (incl. inactive rows) via an expression index; Prisma cannot model it.
   id            Int                       @id @default(autoincrement())
   categoryId    Int
   name          String
@@ -338,6 +340,8 @@ model CategoryAttributeAudit {
 }
 
 model CategoryAttributeOption {
+  // SQL migration 20261021100000 reserves normalized values per definition,
+  // including inactive options, without rewriting the historical display value.
   id                    Int                         @id @default(autoincrement())
   attributeDefinitionId Int
   value                 String

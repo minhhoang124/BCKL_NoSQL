@@ -13,6 +13,7 @@ import { UpdateBrandDto } from './dto/update-brand.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { CreateCategoryAttributeDto } from './dto/create-category-attribute.dto.js';
 import { UpdateCategoryAttributeDto } from './dto/update-category-attribute.dto.js';
+import { rethrowAttributeUniqueError } from './attribute-unique-error.js';
 
 type CategoryRow = {
   id: number;
@@ -197,34 +198,38 @@ export class CatalogService {
     categoryId: number,
     dto: CreateCategoryAttributeDto,
   ) {
-    return this.prisma.$transaction(async (tx) => {
-      await tx.category.findUniqueOrThrow({ where: { id: categoryId } });
-      const definition = await tx.categoryAttributeDefinition.create({
-        data: {
-          categoryId,
-          name: dto.name,
-          slug: dto.slug,
-          dataType: dto.dataType,
-          isRequired: dto.isRequired ?? false,
-          isFilterable: dto.isFilterable ?? false,
-          allowsCustom: dto.allowsCustom ?? true,
-          sortOrder: dto.sortOrder ?? 0,
-        },
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        await tx.category.findUniqueOrThrow({ where: { id: categoryId } });
+        const definition = await tx.categoryAttributeDefinition.create({
+          data: {
+            categoryId,
+            name: dto.name,
+            slug: dto.slug,
+            dataType: dto.dataType,
+            isRequired: dto.isRequired ?? false,
+            isFilterable: dto.isFilterable ?? false,
+            allowsCustom: dto.allowsCustom ?? true,
+            sortOrder: dto.sortOrder ?? 0,
+          },
+        });
+        const job =
+          definition.isActive && definition.isRequired
+            ? await this.searchReconciliationService.enqueueCategory(
+                tx,
+                categoryId,
+              )
+            : null;
+        return {
+          ...definition,
+          searchReconciliation: job
+            ? { jobId: job.id.toString(), status: job.status }
+            : null,
+        };
       });
-      const job =
-        definition.isActive && definition.isRequired
-          ? await this.searchReconciliationService.enqueueCategory(
-              tx,
-              categoryId,
-            )
-          : null;
-      return {
-        ...definition,
-        searchReconciliation: job
-          ? { jobId: job.id.toString(), status: job.status }
-          : null,
-      };
-    });
+    } catch (error: unknown) {
+      rethrowAttributeUniqueError(error);
+    }
   }
 
   async updateCategoryAttribute(
@@ -235,33 +240,40 @@ export class CatalogService {
     if (!Object.values(dto).some((value) => value !== undefined)) {
       throw new BadRequestException('Cần ít nhất một trường để cập nhật');
     }
-    return this.prisma.$transaction(async (tx) => {
-      await tx.categoryAttributeDefinition.findFirstOrThrow({
-        where: { id: attributeId, categoryId },
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        await tx.categoryAttributeDefinition.findFirstOrThrow({
+          where: { id: attributeId, categoryId },
+        });
+        const definition = await tx.categoryAttributeDefinition.update({
+          where: { id: attributeId },
+          data: {
+            ...(dto.name !== undefined ? { name: dto.name } : {}),
+            ...(dto.dataType !== undefined ? { dataType: dto.dataType } : {}),
+            ...(dto.isRequired !== undefined
+              ? { isRequired: dto.isRequired }
+              : {}),
+            ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+            ...(dto.allowsCustom !== undefined
+              ? { allowsCustom: dto.allowsCustom }
+              : {}),
+          },
+        });
+        const job = await this.searchReconciliationService.enqueueCategory(
+          tx,
+          categoryId,
+        );
+        return {
+          ...definition,
+          searchReconciliation: {
+            jobId: job.id.toString(),
+            status: job.status,
+          },
+        };
       });
-      const definition = await tx.categoryAttributeDefinition.update({
-        where: { id: attributeId },
-        data: {
-          ...(dto.name !== undefined ? { name: dto.name } : {}),
-          ...(dto.dataType !== undefined ? { dataType: dto.dataType } : {}),
-          ...(dto.isRequired !== undefined
-            ? { isRequired: dto.isRequired }
-            : {}),
-          ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
-          ...(dto.allowsCustom !== undefined
-            ? { allowsCustom: dto.allowsCustom }
-            : {}),
-        },
-      });
-      const job = await this.searchReconciliationService.enqueueCategory(
-        tx,
-        categoryId,
-      );
-      return {
-        ...definition,
-        searchReconciliation: { jobId: job.id.toString(), status: job.status },
-      };
-    });
+    } catch (error: unknown) {
+      rethrowAttributeUniqueError(error);
+    }
   }
 
   async createBrand(dto: CreateBrandDto) {
