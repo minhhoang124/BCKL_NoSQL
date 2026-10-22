@@ -1378,3 +1378,13 @@ chưa API ghi hoặc QA Backend/PostgreSQL thật. Không dùng kết quả unit
 nghiệm thu AT01–34, Admin hoặc toàn giai đoạn 3. Đồng bộ nền develop `6d682e4`,
 giữ nguyên cả ghi chú Attributes và Buyer ở trên, không nhận Backend #77 đã merge.
 [Phạm vi, bằng chứng và phần còn chờ bàn giao](../testing/admin-attributes-read-preparation-2026-10-20.md).
+
+## Buyer command client — runtime review, 22/10/2026
+
+Nhánh `codex/buyer-command-client-runtime` từ develop `e394c9e` sau #75/#84:
+nối journal với execute/resolver adapter, chỉ settle đúng receipt/fence proof,
+giữ key khi unknown, known outcome rồi GET lỗi chỉ tải GET lại. Body lý do chỉ
+RAM, không lưu storage. Không mount route/nút hoặc đổi Backend/schema/Auth;
+chưa Buyer Web DONE. [Luồng và biến](buyer-command-client-runtime.md),
+[kiểm thử mới và giới hạn](../testing/buyer-command-client-runtime-2026-10-22.md).
+Không phụ thuộc #94 Attributes đang review, không dùng approval nền thay review mới.

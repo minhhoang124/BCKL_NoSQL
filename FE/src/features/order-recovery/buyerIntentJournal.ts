@@ -10,6 +10,18 @@ import {
   normalizeBuyerCommand,
   type BuyerCommand,
 } from "./buyerCommandFingerprint";
+import {
+  assertBuyerResolutionProof,
+  prepareBuyerResolution,
+  type PreparedBuyerResolution,
+  type BuyerResolution,
+} from "../../services/buyerResolutionApi";
+import {
+  assertBuyerCommandProof,
+  prepareBuyerCommand,
+  type PreparedBuyerCommand,
+  type BuyerCommandReceipt,
+} from "../../services/buyerCommandApi";
 
 export type LegacyBuyerIntent = Readonly<{
   schemaVersion: 1;
@@ -32,7 +44,8 @@ export type BuyerIntentV2 = Readonly<{
   requestHash: string;
 }>;
 export type BuyerPendingIntent = LegacyBuyerIntent | BuyerIntentV2;
-type StoragePort = Pick<Storage, "getItem" | "setItem">;
+type StoragePort = Pick<Storage, "getItem" | "setItem"> &
+  Partial<Pick<Storage, "removeItem">>;
 const baseFields = [
   "schemaVersion",
   "actorId",
@@ -87,17 +100,32 @@ function parse(raw: string, actorId: number): BuyerPendingIntent {
   return Object.freeze(v as unknown as BuyerPendingIntent);
 }
 
-/** Preparation only: same physical slot as Seller/v1; NO HTTP, remove, settle,
- * ACK, auto replay or mount. Unresolved v1/v2 always blocks a new execution.
+/** Buyer client integration: same physical slot as Seller/v1. No automatic
+ * HTTP/replay or route mount. Settlement requires the actual adapter's proof.
  * Verified Auth/session checks are mandatory before and after async hashing.
  */
-export function createBuyerIntentJournal(options: {
+export function createBuyerSettlementJournal(options: {
   getStorage: () => StoragePort;
   getSession: () => VerifiedOrderSession | null;
   keyFactory?: () => string;
   now?: () => Date;
 }) {
   let busy = false;
+  let settlementBlocked = false;
+  const resolutions = new WeakMap<
+    PreparedBuyerResolution,
+    {
+      session: VerifiedOrderSession;
+      raw: string;
+    }
+  >();
+  const executions = new WeakMap<
+    PreparedBuyerCommand,
+    {
+      session: VerifiedOrderSession;
+      raw: string;
+    }
+  >();
   function capture(): VerifiedOrderSession {
     const s = options.getSession();
     if (
@@ -130,6 +158,7 @@ export function createBuyerIntentJournal(options: {
     }
   }
   function pending(): BuyerPendingIntent | null {
+    if (settlementBlocked) blocked();
     const s = capture(),
       raw = read(s.actor.id);
     current(s);
@@ -161,7 +190,7 @@ export function createBuyerIntentJournal(options: {
   }): Promise<BuyerIntentV2> {
     // Capture caller-owned values once; never re-read mutable input after await.
     const { orderId, command, body, confirmed } = input;
-    if (busy || confirmed !== true) blocked();
+    if (busy || settlementBlocked || confirmed !== true) blocked();
     const s = capture();
     busy = true;
     try {
@@ -209,7 +238,7 @@ export function createBuyerIntentJournal(options: {
     }
   }
   async function upgradeLegacyComplete(): Promise<BuyerIntentV2> {
-    if (busy) blocked();
+    if (busy || settlementBlocked) blocked();
     const s = capture();
     busy = true;
     try {
@@ -243,10 +272,145 @@ export function createBuyerIntentJournal(options: {
       busy = false;
     }
   }
+  function prepareResolution(
+    intent: BuyerIntentV2,
+    total: string,
+  ): PreparedBuyerResolution {
+    if (busy || settlementBlocked) blocked();
+    const s = capture(),
+      raw = read(s.actor.id);
+    current(s);
+    if (raw === null) blocked();
+    const saved = parse(raw, s.actor.id);
+    if (
+      saved.schemaVersion !== 2 ||
+      Reflect.ownKeys(intent).length !== Reflect.ownKeys(saved).length ||
+      (Object.keys(saved) as (keyof BuyerIntentV2)[]).some(
+        (k) => saved[k] !== intent[k],
+      )
+    )
+      blocked();
+    const handle = prepareBuyerResolution({
+      actorId: saved.actorId,
+      orderId: saved.orderId,
+      command: saved.command,
+      idempotencyKey: saved.idempotencyKey,
+      hashVersion: saved.hashVersion,
+      requestHash: saved.requestHash,
+      total,
+    });
+    resolutions.set(handle, { session: s, raw });
+    return handle;
+  }
+  function removeClaim(claim: {
+    session: VerifiedOrderSession;
+    raw: string;
+  }): void {
+    if (busy || settlementBlocked) blocked();
+    current(claim.session);
+    const storage = options.getStorage();
+    if (typeof storage.removeItem !== "function") blocked();
+    current(claim.session);
+    // Raw compare catches even timestamp/format changes during the HTTP await.
+    if (read(claim.session.actor.id) !== claim.raw) blocked();
+    current(claim.session);
+    try {
+      storage.removeItem(keyFor(claim.session.actor.id));
+      current(claim.session);
+      if (read(claim.session.actor.id) !== null) blocked();
+    } catch (error) {
+      // Do not overwrite/restore an unknown or newer record after a failed delete.
+      settlementBlocked = true;
+      throw error instanceof OrderRecoverySessionChangedError
+        ? error
+        : new OrderRecoveryBlockedError();
+    }
+  }
+  function settleResolution(
+    handle: PreparedBuyerResolution,
+    result: BuyerResolution,
+  ): void {
+    const claim = resolutions.get(handle);
+    if (!claim) blocked();
+    assertBuyerResolutionProof(result, handle);
+    removeClaim(claim);
+    resolutions.delete(handle); // One-use, tied to this journal and captured raw.
+  }
+  async function prepareExecution(
+    intent: BuyerIntentV2,
+    total: string,
+    body: unknown,
+  ): Promise<PreparedBuyerCommand> {
+    if (busy || settlementBlocked) blocked();
+    const s = capture(),
+      raw = read(s.actor.id);
+    current(s);
+    if (raw === null) blocked();
+    const saved = parse(raw, s.actor.id);
+    if (
+      saved.schemaVersion !== 2 ||
+      Reflect.ownKeys(intent).length !== Reflect.ownKeys(saved).length ||
+      (Object.keys(saved) as (keyof BuyerIntentV2)[]).some(
+        (k) => saved[k] !== intent[k],
+      )
+    )
+      blocked();
+    busy = true;
+    try {
+      const handle = await prepareBuyerCommand(
+        {
+          actorId: saved.actorId,
+          orderId: saved.orderId,
+          command: saved.command,
+          idempotencyKey: saved.idempotencyKey,
+          hashVersion: saved.hashVersion,
+          requestHash: saved.requestHash,
+          total,
+        },
+        body,
+      );
+      current(s);
+      if (read(s.actor.id) !== raw) blocked();
+      executions.set(handle, { session: s, raw });
+      return handle;
+    } finally {
+      busy = false;
+    }
+  }
+  function settleExecution(
+    handle: PreparedBuyerCommand,
+    receipt: BuyerCommandReceipt,
+  ): void {
+    const claim = executions.get(handle);
+    if (!claim) blocked();
+    assertBuyerCommandProof(receipt, handle);
+    removeClaim(claim);
+    executions.delete(handle);
+  }
   return Object.freeze({
     pending,
     prepareNew,
     upgradeLegacyComplete,
+    prepareResolution,
+    settleResolution,
+    prepareExecution,
+    settleExecution,
+    isBlocked: () => settlementBlocked,
     isBusy: () => busy,
+  });
+}
+
+/** Keep #75's preparation interface unchanged: callers of this factory cannot
+ * settle/clear anything. Only the explicit integration factory above exposes it.
+ */
+export function createBuyerIntentJournal(
+  options: Parameters<typeof createBuyerSettlementJournal>[0],
+) {
+  const journal = createBuyerSettlementJournal(options);
+  return Object.freeze({
+    pending: journal.pending,
+    prepareNew: journal.prepareNew,
+    upgradeLegacyComplete: journal.upgradeLegacyComplete,
+    isBusy: journal.isBusy,
   });
 }

@@ -1,4 +1,4 @@
-/** PREPARATION ONLY. No route/coordinator/journal settlement calls this module. */
+/** Recovery composition calls this adapter; no route/button is mounted. */
 import { ApiError, AuthSessionChangedError, fetchApi, getAuthSessionVersion } from './apiClient';
 import { validOrderId } from './orderResponse';
 import { validateBuyerCancellationReceipt, validateBuyerCompletionReceipt } from './buyerOrderReceipt';
