@@ -1379,6 +1379,17 @@ nghiệm thu AT01–34, Admin hoặc toàn giai đoạn 3. Đồng bộ nền de
 giữ nguyên cả ghi chú Attributes và Buyer ở trên, không nhận Backend #77 đã merge.
 [Phạm vi, bằng chứng và phần còn chờ bàn giao](../testing/admin-attributes-read-preparation-2026-10-20.md).
 
+## Buyer command confirmation UI — PREPARATION, 22/10/2026
+
+Từ develop `e394c9e`, thêm `BuyerCommandReview` chưa mount: xác nhận hủy có lý
+do/hoàn tất khi đã nhận hàng; chặn pending, dữ liệu cũ, đổi phiên và bấm trùng.
+Unknown không replay/new key; receipt đã xác minh nhưng GET lỗi chỉ tải GET.
+Tái sử dụng `BuyerRecoveryConsent` đã merge cho bước đồng ý đối chiếu riêng;
+không nhận code #95 pending hoặc bật nút Buyer. Không API/schema/Auth/router mới.
+Full FE992PASS/6liveSKIP, lint/typecheck/build đạt; chưa browser/live HTTP/DB UI.
+[Thành phần, biến và điểm nối](buyer-command-ui-preparation.md),
+[bằng chứng và giới hạn](../testing/buyer-command-ui-preparation-2026-10-22.md).
+
 ## Buyer command client — runtime review, 22/10/2026
 
 Nhánh `codex/buyer-command-client-runtime` từ develop `e394c9e` sau #75/#84:
@@ -1388,3 +1399,11 @@ RAM, không lưu storage. Không mount route/nút hoặc đổi Backend/schema/A
 chưa Buyer Web DONE. [Luồng và biến](buyer-command-client-runtime.md),
 [kiểm thử mới và giới hạn](../testing/buyer-command-client-runtime-2026-10-22.md).
 Không phụ thuộc #94 Attributes đang review, không dùng approval nền thay review mới.
+
+### Đồng bộ Buyer confirmation sau #95 — 23/10/2026
+
+#95 đã merge tại develop `5a872e6`. Nhánh confirmation nhận nền chính thức,
+giữ source UI/runtime nguyên byte so cây QA đã kiểm `d478d9b`; conflict chỉ
+hai ghi chú kiến trúc phía trên và giữ đủ cả hai. Không mount production.
+Chrome QA trước sync14/14 và fullFE1096PASS là bằng chứng của source này,
+không nhận như lượt chạy mới; sau sync kiểm targeted và bundle riêng.
