@@ -1,5 +1,9 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Chat SQL experiment21/10:** thêm script fixture riêng chứng minh sequence
+theo hội thoại, replay/payload conflict và rollback;4nhóm assertion PostgreSQL
+PASS. Không schema/API/socket/Chat runtime hoặc tự đổi cursor contract.
+[Cách kiểm lại và gate](../testing/chat-sequence-experiment-2026-10-21.md).
 **Đồng bộ PR #51 ngày 20/10/2026:** nền `develop 2f78a98` sau merge Brand #71.
 Giữ công cụ QA prepare/serve/verify cùng phần client Checkout. Cart #50 đã merge; fixture/API smoke QA không thay nghiệm thu luồng Order hoặc Checkout Web.
 Những mục ảnh chụp 10/10 phía dưới là lịch sử, không thay trạng thái mới này.
@@ -132,6 +136,24 @@ editor; CI đúng head mới vẫn là gate. [Bằng chứng và giới hạn](.
 Catalog, Accounts và AI health. Giữ cả các miền; các ghi chú baseline cũ bên
 dưới là lịch sử, không thay gate CI/review đúng head cuối. Không bật thêm ghi.
 
+**Chat #66 đồng bộ 20/10/2026:** nền develop `abdc0be` đã có Accounts và AI
+health. Giữ nền chính thức, không wire Chat runtime. Type Store nhận thêm
+legacy CLOSED theo Prisma; không mở quyền gửi/mở Chat mới, giữ read-only
+history theo policy hiện có. [Kiểm thử và giới hạn](../testing/pr66-post80-79-sync-2026-10-20.md).
+
+**Đồng bộ Chat #66 ngày18/10/2026:** nhận develop `aa62c84` sau #67 và
+Brand/tooling/Chat readiness. Giữ source nền, chưa wire Chat runtime; bản kết
+hợp và sửa validation nếu có cần Hiền review đúng head mới.
+[Báo cáo kiểm thử](../testing/pr66-develop-sync-2026-10-18.md).
+
+**Chat policy foundation — PREPARATION, 18/10/2026:** nhánh từ develop7e58255
+thêm pure functions kiểm quyền Buyer/Store, account/Store state và read sequence
+không lùi. Chưa schema/ChatModule/API/Socket/inbox hoặc dispatcher runtime;
+không đổi Auth hay Order. DB facts phải được xác minh trong giao dịch, không
+nhận bằng chứng giao dịch cũ từ client. [Luồng và giới hạn test](../testing/chat-policy-foundation-2026-10-18.md).
+Follow-up cùng nhánh: chuẩn bị strict Message payload và hash/replay comparison,
+chưa persistence/idempotency DB hoặc transport.68Chat unit tests nằm trong662
+Backend unit PASS; lint/build PASS. Không nhận test thuần là Chat runtime DONE.
 **#77 sau merge AI health #79 — 20/10/2026:** nền develop `20a3c40` đã có
 Accounts/AI readiness. Giữ nguyên Backend/Prisma so `a3ac192` và toàn bộ AI mới;
 conflict chỉ kiến trúc, chưa writes. Báo cáo sau #80 ghi riêng lượt kiểm sau #79.
@@ -1405,6 +1427,14 @@ nghiệm thu AT01–34, Admin hoặc toàn giai đoạn 3. Đồng bộ nền de
 giữ nguyên cả ghi chú Attributes và Buyer ở trên, không nhận Backend #77 đã merge.
 [Phạm vi, bằng chứng và phần còn chờ bàn giao](../testing/admin-attributes-read-preparation-2026-10-20.md).
 
+## Chat #66 — đồng bộ develop 22/10/2026, PREPARATION
+
+Nhận develop `e394c9e`; conflict chỉ tài liệu này, giữ cả Chat và nền
+Buyer/Attributes/Accounts/UI mới. Chat policy/request/SQL probe nguyên byte so
+`944d9a6`, không schema/module/API/socket/inbox mới. Full BE1113unit và FE939
+PASS/6liveSKIP; typecheck/lint/build/Prisma đạt. Chưa SQL/Chat live/browser mới;
+giữ Draft chờ Hiền review đúng head kết hợp, không dùng approval cũ để merge.
+[Bằng chứng và giới hạn](../testing/pr66-post-develop-sync-2026-10-22.md).
 ## Công cụ QA #51 — đồng bộ develop 22/10/2026
 
 Nhận `e394c9e`, conflict chỉ kiến trúc; giữ CI evaluation và guard QA. Script
