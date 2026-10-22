@@ -1,5 +1,11 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Search regression — 21/10/2026:** test Store/Category/Brand/Seller invalidation
+chờ đúng durable job thay vì giả định một batch20 đã xử lý mọi việc. Đã tái lập
+bằng21job fixture của Category rỗng; worker/runtime/schema không đổi. Full
+670E2E PASS/20TODO trên QA riêng; không phải live dual-index nghiệm thu mới.
+[Root cause và bằng chứng](../testing/search-reconciliation-queue-regression-2026-10-21.md).
+
 **Tích hợp sau Accounts #86 — 21/10/2026:** #86 đã merge tại `e409335`.
 Nhánh #73 giữ cả reader Accounts production và Attributes DEV/read preparation;
 không mở ghi Attributes hoặc khóa/mở Accounts. Conflict chỉ ghi chú kiến trúc.

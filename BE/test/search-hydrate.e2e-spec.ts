@@ -45,6 +45,8 @@ describe('Search Hydrate & Filter API (e2e)', () => {
   let storeId: number;
   const tokens: Record<string, string> = {};
   const marker = `search-hydrate-${Date.now()}`;
+  const backlogJobIds: bigint[] = [];
+  const backlogCategoryIds: number[] = [];
 
   beforeAll(async () => {
     tempRoot = await mkdtemp(path.join(os.tmpdir(), 'bckl-search-'));
@@ -100,6 +102,12 @@ describe('Search Hydrate & Filter API (e2e)', () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     if (prisma) {
+      await prisma.searchReconciliationJob.deleteMany({
+        where: { id: { in: backlogJobIds } },
+      });
+      await prisma.category.deleteMany({
+        where: { id: { in: backlogCategoryIds } },
+      });
       if (storeId) {
         await prisma.product.deleteMany({ where: { storeId } });
         await prisma.store.delete({ where: { id: storeId } });
@@ -119,6 +127,44 @@ describe('Search Hydrate & Filter API (e2e)', () => {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
+
+  // A runtime batch processes at most 20 jobs, not necessarily this request's
+  // job. Wait on the durable identity instead of assuming an empty QA queue.
+  // Terminal failures are assertions, unless that test explicitly expects one.
+  // This never resets backoff or fabricates a successful job.
+  async function settleReconciliation(
+    jobIds: bigint[],
+    runBatch = () => app.get(SearchReconciliationWorker).runBatch(),
+    expectedStatus: 'SUCCEEDED' | 'FAILED' = 'SUCCEEDED',
+  ): Promise<void> {
+    expect(jobIds.length).toBeGreaterThan(0);
+    for (let pass = 0; pass < 100; pass++) {
+      // Run before reading: an explicitly re-eligible FAILED job must retry.
+      await runBatch();
+      const jobs = await prisma.searchReconciliationJob.findMany({
+        where: { id: { in: jobIds } },
+        select: { id: true, status: true },
+      });
+      expect(jobs).toHaveLength(jobIds.length);
+      if (
+        jobs.every((job) =>
+          ['SUCCEEDED', 'FAILED', 'DEAD'].includes(job.status),
+        )
+      ) {
+        for (const job of jobs) expect(job.status).toBe(expectedStatus);
+        return;
+      }
+      if (pass === 99)
+        throw new Error(
+          `Reconciliation did not settle: ${jobs.map((job) => `${job.id}:${job.status}`).join(', ')}`,
+        );
+    }
+  }
+
+  function reconciliationJobId(response: request.Response): bigint {
+    expect(response.body.searchReconciliation?.jobId).toMatch(/^[1-9]\d*$/);
+    return BigInt(response.body.searchReconciliation.jobId as string);
+  }
 
   async function createAndApproveProduct(
     name: string,
@@ -1354,14 +1400,30 @@ describe('Search Hydrate & Filter API (e2e)', () => {
   // Store & Category Invalidation Cascade
   // ===========================================================================
   describe('Store & Category Invalidation Cascade', () => {
-    it('suspending a store cascades DELETE outbox events to its products, and reactivating restores UPSERT', async () => {
+    it('suspending a store cascades DELETE despite a full older batch, and reactivating restores UPSERT', async () => {
       const id = await createAndApproveProduct(`${marker}-store-cascade`);
       const initialProd = await prisma.product.findUniqueOrThrow({
         where: { id },
       });
 
-      // Admin suspends the store
-      await request(app.getHttpServer())
+      // All belong to this fixture. Older no-op CATEGORY jobs deterministically
+      // occupy the first batch without touching another suite's parent state.
+      const emptyCategory = await prisma.category.create({
+        data: { name: `${marker}-backlog`, slug: `${marker}-backlog` },
+      });
+      backlogCategoryIds.push(emptyCategory.id);
+      for (let index = 0; index < 21; index++) {
+        const job = await prisma.searchReconciliationJob.create({
+          data: {
+            scope: 'CATEGORY',
+            scopeId: emptyCategory.id,
+            createdAt: new Date('1970-01-01T00:00:00.000Z'),
+            nextAttemptAt: null,
+          },
+        });
+        backlogJobIds.push(job.id);
+      }
+      const suspended = await request(app.getHttpServer())
         .patch(`/admin/stores/${storeId}/status`)
         .auth(tokens.admin, { type: 'bearer' })
         .send({ status: 'SUSPENDED', reason: 'Tạm khóa để kiểm tra vi phạm' })
@@ -1372,6 +1434,17 @@ describe('Search Hydrate & Filter API (e2e)', () => {
           }),
         );
       await app.get(SearchReconciliationWorker).runBatch();
+      expect(
+        await prisma.searchReconciliationJob.findUniqueOrThrow({
+          where: { id: reconciliationJobId(suspended) },
+        }),
+      ).toMatchObject({ status: 'PENDING', attemptCount: 0 });
+      expect(
+        await prisma.searchReconciliationJob.count({
+          where: { id: { in: backlogJobIds }, status: 'SUCCEEDED' },
+        }),
+      ).toBe(20);
+      await settleReconciliation([reconciliationJobId(suspended)]);
 
       // Product version must advance and DELETE event must exist
       const suspendedProd = await prisma.product.findUniqueOrThrow({
@@ -1385,12 +1458,12 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       expect(deleteOutbox?.operation).toBe('DELETE');
 
       // Admin reactivates the store
-      await request(app.getHttpServer())
+      const reactivated = await request(app.getHttpServer())
         .patch(`/admin/stores/${storeId}/status`)
         .auth(tokens.admin, { type: 'bearer' })
         .send({ status: 'ACTIVE', reason: 'Cửa hàng đã giải trình xong' })
         .expect(200);
-      await app.get(SearchReconciliationWorker).runBatch();
+      await settleReconciliation([reconciliationJobId(reactivated)]);
 
       // Product version must advance again and UPSERT event must exist
       const reactivatedProd = await prisma.product.findUniqueOrThrow({
@@ -1411,7 +1484,7 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       });
 
       const newCategoryName = `Cat-Renamed-${Date.now()}`;
-      await request(app.getHttpServer())
+      const renamed = await request(app.getHttpServer())
         .patch(`/admin/categories/${categoryId}`)
         .auth(tokens.admin, { type: 'bearer' })
         .send({ name: newCategoryName })
@@ -1421,7 +1494,7 @@ describe('Search Hydrate & Filter API (e2e)', () => {
             status: 'PENDING',
           }),
         );
-      await app.get(SearchReconciliationWorker).runBatch();
+      await settleReconciliation([reconciliationJobId(renamed)]);
 
       const updatedProd = await prisma.product.findUniqueOrThrow({
         where: { id },
@@ -1437,7 +1510,6 @@ describe('Search Hydrate & Filter API (e2e)', () => {
     });
 
     it('reconciles Brand, Seller eligibility and required-attribute changes through durable jobs', async () => {
-      const worker = app.get(SearchReconciliationWorker);
       const id = await createAndApproveProduct(`${marker}-parent-dependencies`);
       const brand = await prisma.brand.create({
         data: { name: `${marker}-brand`, slug: `${marker}-brand` },
@@ -1449,7 +1521,7 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       await app.get(SearchReconciliationService).reconcileProduct(id);
 
       const renamedBrand = `${marker}-brand-renamed`;
-      await request(app.getHttpServer())
+      const renamed = await request(app.getHttpServer())
         .patch(`/admin/brands/${brand.id}`)
         .auth(tokens.admin, { type: 'bearer' })
         .send({ name: renamedBrand })
@@ -1457,7 +1529,7 @@ describe('Search Hydrate & Filter API (e2e)', () => {
         .expect(({ body }) =>
           expect(body.searchReconciliation.status).toBe('PENDING'),
         );
-      await worker.runBatch();
+      await settleReconciliation([reconciliationJobId(renamed)]);
       expect(
         (
           await prisma.searchOutbox.findFirstOrThrow({
@@ -1467,12 +1539,12 @@ describe('Search Hydrate & Filter API (e2e)', () => {
         ).payload,
       ).toMatchObject({ brandName: renamedBrand });
 
-      await request(app.getHttpServer())
+      const disabled = await request(app.getHttpServer())
         .patch(`/admin/accounts/${sellerId}/status`)
         .auth(tokens.admin, { type: 'bearer' })
         .send({ isActive: false })
         .expect(200);
-      await worker.runBatch();
+      await settleReconciliation([reconciliationJobId(disabled)]);
       expect(
         await prisma.searchOutbox.findFirst({
           where: { productId: id, operation: 'DELETE' },
@@ -1480,12 +1552,12 @@ describe('Search Hydrate & Filter API (e2e)', () => {
         }),
       ).not.toBeNull();
 
-      await request(app.getHttpServer())
+      const enabled = await request(app.getHttpServer())
         .patch(`/admin/accounts/${sellerId}/status`)
         .auth(tokens.admin, { type: 'bearer' })
         .send({ isActive: true })
         .expect(200);
-      await worker.runBatch();
+      await settleReconciliation([reconciliationJobId(enabled)]);
 
       const attribute = await request(app.getHttpServer())
         .post(`/admin/categories/${categoryId}/attributes`)
@@ -1498,7 +1570,7 @@ describe('Search Hydrate & Filter API (e2e)', () => {
         })
         .expect(201);
       expect(attribute.body.searchReconciliation.status).toBe('PENDING');
-      await worker.runBatch();
+      await settleReconciliation([reconciliationJobId(attribute)]);
       const afterRequired = await prisma.product.findUniqueOrThrow({
         where: { id },
       });
@@ -1514,14 +1586,14 @@ describe('Search Hydrate & Filter API (e2e)', () => {
         }),
       ).toMatchObject({ operation: 'DELETE' });
 
-      await request(app.getHttpServer())
+      const optional = await request(app.getHttpServer())
         .patch(
           `/admin/categories/${categoryId}/attributes/${attribute.body.id}`,
         )
         .auth(tokens.admin, { type: 'bearer' })
         .send({ isRequired: false })
         .expect(200);
-      await worker.runBatch();
+      await settleReconciliation([reconciliationJobId(optional)]);
       await prisma.categoryAttributeDefinition.delete({
         where: { id: attribute.body.id as number },
       });
@@ -1533,7 +1605,7 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       const id = await createAndApproveProduct(`${marker}-durable-retry`);
       const service = app.get(SearchReconciliationService);
       const firstName = `${marker}-stale-category-name`;
-      await request(app.getHttpServer())
+      const firstChange = await request(app.getHttpServer())
         .patch(`/admin/categories/${categoryId}`)
         .auth(tokens.admin, { type: 'bearer' })
         .send({ name: firstName })
@@ -1547,7 +1619,11 @@ describe('Search Hydrate & Filter API (e2e)', () => {
             ? Promise.reject(new Error('simulated mid-batch crash'))
             : original(productId),
         );
-      await app.get(SearchReconciliationWorker).runBatch();
+      await settleReconciliation(
+        [reconciliationJobId(firstChange)],
+        undefined,
+        'FAILED',
+      );
       failure.mockRestore();
 
       const failedJob = await prisma.searchReconciliationJob.findFirstOrThrow({
@@ -1557,7 +1633,7 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       expect(failedJob.lastError).toContain('simulated mid-batch crash');
 
       const latestName = `${marker}-latest-category-name`;
-      await request(app.getHttpServer())
+      const latestChange = await request(app.getHttpServer())
         .patch(`/admin/categories/${categoryId}`)
         .auth(tokens.admin, { type: 'bearer' })
         .send({ name: latestName })
@@ -1577,10 +1653,15 @@ describe('Search Hydrate & Filter API (e2e)', () => {
         service,
         app.get(ConfigService),
       );
-      await Promise.all([
-        restartedWorker.runBatch(),
-        concurrentWorker.runBatch(),
-      ]);
+      await settleReconciliation(
+        [failedJob.id, reconciliationJobId(latestChange)],
+        async () => {
+          await Promise.all([
+            restartedWorker.runBatch(),
+            concurrentWorker.runBatch(),
+          ]);
+        },
+      );
 
       expect(
         await prisma.searchReconciliationJob.findUnique({
