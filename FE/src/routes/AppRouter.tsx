@@ -1,22 +1,48 @@
-import { Routes, Route } from 'react-router-dom';
-import { PublicLayout } from '../layouts/PublicLayout';
-import { HomePage } from '../pages/HomePage';
-import { LoginPage } from '../pages/LoginPage';
-import { RegisterPage } from '../pages/RegisterPage';
-import { AccountPage } from '../pages/AccountPage';
+import { Routes, Route } from "react-router-dom";
+import { PublicLayout } from "../layouts/PublicLayout";
+import { HomePage } from "../pages/HomePage";
+import { LoginPage } from "../pages/LoginPage";
+import { RegisterPage } from "../pages/RegisterPage";
+import { AccountPage } from "../pages/AccountPage";
+import { ProductDetailPage } from "../pages/ProductDetailPage";
+import { SellerDashboardPage } from "../pages/SellerDashboardPage";
+import { AdminDashboardPage } from "../pages/AdminDashboardPage";
+import { NotFoundPage } from "../pages/NotFoundPage";
+import { ProtectedRoute } from "./ProtectedRoute";
+import { BuyerPreviewLayout } from "../features/buyer-preview/BuyerPreviewLayout";
+import { SellerOrderPreviewLayout, SellerOrdersPreviewPage, SellerOrderDetailPreviewPage } from "../features/seller-order-preview/SellerOrderPreview";
+import {
+  CheckoutPreviewPage,
+  CheckoutResultPreviewPage,
+  BuyerOrdersPreviewPage,
+  BuyerOrderDetailPreviewPage,
+} from "../features/buyer-preview/BuyerPreviewPages";
 import { CartPage } from '../pages/CartPage';
 import { AddressBookPage } from '../pages/AddressBookPage';
-import { ProductDetailPage } from '../pages/ProductDetailPage';
-import { SellerDashboardPage } from '../pages/SellerDashboardPage';
-import { AdminDashboardPage } from '../pages/AdminDashboardPage';
-import { NotFoundPage } from '../pages/NotFoundPage';
-import { ProtectedRoute } from './ProtectedRoute';
 import { CheckoutPage } from '../features/order-flow/CheckoutPage';
 import { OrderReadPage } from '../features/order-readiness/OrderReadPages';
 
 export function AppRouter() {
   return (
     <Routes>
+      {import.meta.env.DEV && (
+        <Route path="/dev/seller-orders" element={<SellerOrderPreviewLayout />}>
+          <Route index element={<SellerOrdersPreviewPage />} />
+          <Route path=":demoId" element={<SellerOrderDetailPreviewPage />} />
+        </Route>
+      )}
+      {import.meta.env.DEV && (
+        <Route path="/dev/buyer-flow" element={<BuyerPreviewLayout />}>
+          <Route index element={<CheckoutPreviewPage />} />
+          <Route path="checkout" element={<CheckoutPreviewPage />} />
+          <Route path="result" element={<CheckoutResultPreviewPage />} />
+          <Route path="orders" element={<BuyerOrdersPreviewPage />} />
+          <Route
+            path="orders/:demoId"
+            element={<BuyerOrderDetailPreviewPage />}
+          />
+        </Route>
+      )}
       {/* Admin has its own shell and does not use the public storefront layout. */}
       <Route
         path="/admin/*"
@@ -66,7 +92,7 @@ export function AppRouter() {
         <Route
           path="/seller/*"
           element={
-            <ProtectedRoute allowedRoles={['SELLER']}>
+            <ProtectedRoute allowedRoles={["SELLER"]}>
               <SellerDashboardPage />
             </ProtectedRoute>
           }

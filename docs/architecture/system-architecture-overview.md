@@ -1,5 +1,9 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**#40 đồng bộ 20/10/2026:** nhận develop `2f78a98`; giữ toàn bộ route thật
+Address/Cart/Checkout/Order và Admin shell riêng. Màn mẫu chỉ ở `/dev` khi DEV,
+không thay nghiệp vụ thật. 680 FE PASS/6 live SKIP, build/lint PASS;
+browser/API/DB bản kết hợp chưa chạy. [Báo cáo](../testing/pr40-post71-sync-2026-10-20.md).
 **Chat SQL experiment21/10:** thêm script fixture riêng chứng minh sequence
 theo hội thoại, replay/payload conflict và rollback;4nhóm assertion PostgreSQL
 PASS. Không schema/API/socket/Chat runtime hoặc tự đổi cursor contract.
@@ -576,6 +580,23 @@ flowchart LR
 ## 3. Kiến trúc chạy và trách nhiệm thành phần
 
 ### 3.1 Frontend React
+
+**IN_PROGRESS — bổ sung 09/10/2026:** chuẩn bị Seller Order UI DEV
+`/dev/seller-orders`, chỉ thay đổi state phiên mẫu, không gọi giao dịch thật;
+đọc [Seller readiness](seller-order-ui-readiness.md). Kịch bản Buyer → COD →
+Seller → theo dõi và lỗi cạnh tranh được ghi tại
+[journey verification](../testing/checkout-order-journey-verification.md),
+toàn bộ luồng thật NOT_RUN/chờ dependencies. Rà màn #40 chưa có screenshot
+do công cụ Browser lỗi; [checklist](../testing/buyer-preview-experience-checklist.md)
+phân biệt DOM/code check với desktop/mobile chưa kiểm. Không đổi API/schema
+hoặc phân công Address/Cart/Admin của Hiền.
+
+**IN_PROGRESS — 09/10/2026, Buyer Checkout/Order UI preview:** bốn màn được
+chuẩn bị riêng tại `FE/src/features/buyer-preview/`, route DEV
+`/dev/buyer-flow/*`, có nhãn dữ liệu giả và không gọi Checkout/Order API.
+Không sửa hai màn Address/Cart Hiền phụ trách. Fixture là view model, không
+được coi là DTO hay bằng chứng luồng mua hàng hoàn thành. Luồng, dependencies
+và bước nối API ở [Buyer Checkout/Order readiness](buyer-checkout-order-ui-readiness.md).
 
 Thư mục `FE/` chứa ứng dụng React, TypeScript và Vite. React Router điều hướng các trang public, account, Seller và Admin. `AuthProvider` giữ phiên đăng nhập trong bộ nhớ, gọi refresh session khi tải lại trang và dùng `apiClient` làm điểm gọi Backend thống nhất.
 
@@ -1427,6 +1448,14 @@ nghiệm thu AT01–34, Admin hoặc toàn giai đoạn 3. Đồng bộ nền de
 giữ nguyên cả ghi chú Attributes và Buyer ở trên, không nhận Backend #77 đã merge.
 [Phạm vi, bằng chứng và phần còn chờ bàn giao](../testing/admin-attributes-read-preparation-2026-10-20.md).
 
+## Order preview #40 — đồng bộ develop 22/10/2026
+
+Nhận `e394c9e`, conflict chỉ kiến trúc, giữ đủ ghi chú. Preview nguyên byte so
+`d3c0f6a`; route thật/Accounts/Admin shell được giữ và preview chỉ ở DEV.
+40selected/957fullFE PASS/6liveSKIP, lint/typecheck/build đạt; marker preview
+không có trong JavaScript production. Không giao dịch Buyer mới hoặc nhận mẫu
+là Web thật; chưa browser/API/PostgreSQL bản kết hợp. Nhờ Hiền review head mới.
+[Bằng chứng và giới hạn](../testing/pr40-post-develop-sync-2026-10-22.md).
 ## Chat #66 — đồng bộ develop 22/10/2026, PREPARATION
 
 Nhận develop `e394c9e`; conflict chỉ tài liệu này, giữ cả Chat và nền
