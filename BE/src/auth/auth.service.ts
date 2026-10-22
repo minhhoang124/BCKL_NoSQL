@@ -175,10 +175,14 @@ export class AuthService {
         data: { isActive },
         select: publicUserSelect,
       });
-      const job =
-        existing.role === Role.SELLER
-          ? await this.searchReconciliation.enqueueSeller(tx, userId)
-          : null;
+      // Ownership is canonical even if the account's current role changed.
+      const ownedStore = await tx.store.findUnique({
+        where: { sellerId: userId },
+        select: { id: true },
+      });
+      const job = ownedStore
+        ? await this.searchReconciliation.enqueueSeller(tx, userId)
+        : null;
       return {
         ...user,
         searchReconciliation: job
