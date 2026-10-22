@@ -214,6 +214,7 @@ export function OrderDetailPanel({
   readKey,
   onRetry,
   onAction,
+  showActions = true,
 }: {
   state: OrderReadState<OrderDetail>;
   source: Source;
@@ -221,6 +222,7 @@ export function OrderDetailPanel({
   readKey: string;
   onRetry?: () => void;
   onAction?: ActionHandler;
+  showActions?: boolean;
 }) {
   if (state.status !== "ready")
     return (
@@ -323,13 +325,13 @@ export function OrderDetailPanel({
           </div>
         </div>
       </section>
-      <Actions
+      {showActions && <Actions
         key={`${order.id}:${context.user?.id}:${context.scope}`}
         order={order}
         context={context}
         readKey={readKey}
         onAction={onAction}
-      />
+      />}
     </section>
   );
 }

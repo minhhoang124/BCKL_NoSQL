@@ -44,6 +44,8 @@ export type BuyerCommandReviewProps = {
   pending: "clear" | "present" | "blocked";
   /** Off by default. No route sets this, no HTTP/storage access in this view. */
   connected?: boolean;
+  /** Set only by the authenticated production workspace after integration. */
+  integrated?: boolean;
   onConfirm?: (request: BuyerReviewRequest) => unknown | Promise<unknown>;
   onDismiss?: () => void;
   onReload?: () => unknown | Promise<unknown>;
@@ -76,7 +78,7 @@ export function BuyerCommandReview(props: BuyerCommandReviewProps) {
 
 function ReviewContent({
   session, binding, order, command, phase, fresh, pending, connected,
-  onConfirm, onDismiss, onReload,
+  onConfirm, onDismiss, onReload, integrated = false,
 }: BuyerCommandReviewProps) {
   const heading = useId(), reasonId = useId(), codeId = useId();
   const mounted = useRef(true), latch = useRef(false), reloadLatch = useRef(false);
@@ -144,7 +146,7 @@ function ReviewContent({
     <section className={styles.panel} aria-labelledby={heading}
       aria-busy={phase === "sending" || phase === "acknowledged-refreshing" ||
         (submitted && !failed) || reloading}>
-      <p className={styles.preparation}>BẢN CHUẨN BỊ — chưa bật giao dịch Buyer trên Web.</p>
+      <p className={styles.preparation}>{integrated ? 'Thao tác với đơn đã lưu. Server kiểm tra lại quyền và trạng thái trước khi ghi nhận.' : 'BẢN CHUẨN BỊ — chưa bật giao dịch Buyer trên Web.'}</p>
       <h2 id={heading}>{command === "cancel" ? "Xác nhận hủy đơn" : "Xác nhận đã nhận hàng"}</h2>
       <p>Đơn <strong>{order.orderNumber}</strong> · Tổng đã lưu: {orderMoney(order.total)}</p>
       {phase === "confirm-new" && <>

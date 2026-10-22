@@ -1414,3 +1414,15 @@ giữ source UI/runtime nguyên byte so cây QA đã kiểm `d478d9b`; conflict 
 hai ghi chú kiến trúc phía trên và giữ đủ cả hai. Không mount production.
 Chrome QA trước sync14/14 và fullFE1096PASS là bằng chứng của source này,
 không nhận như lượt chạy mới; sau sync kiểm targeted và bundle riêng.
+
+## Buyer Order Web integration — 23/10/2026
+
+Branch `codex/buyer-order-web-commands` từ develop023ce96 sau95/96: nối Buyer
+detail production với confirmation/cancel/complete và resolver đã merge.
+AuthContext/GET/orderId/session generation fence, one runtime/mounted epoch,
+same-key recovery, explicit consent; known receipt/fence nhưng GET lỗi chỉ GET.
+CLOSED chỉ cho ý định mới sau fresh GET, không tự hủy Order. Reason chỉ RAM.
+Buyer detail bật mặc định, build flag `VITE_BUYER_ORDER_COMMANDS_ENABLED=false`
+quay UI về chỉ đọc; Seller giữ gate riêng. Không Backend/schema/Auth mới.
+Đây là code trên branch tích hợp cho tới khi PR merge, không G-FULFILMENT DONE.
+[Luồng/biến/trạng thái](buyer-order-web-workflow.md) và [test/Chrome/giới hạn](../testing/buyer-order-web-runtime-2026-10-23.md).

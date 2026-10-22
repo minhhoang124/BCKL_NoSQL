@@ -50,6 +50,9 @@ function tree(path: string) {
   );
 }
 beforeEach(() => {
+  // Preserve explicit read-only fallback coverage; command workspace has its
+  // own production-route tests with the feature enabled/default.
+  vi.stubEnv('VITE_BUYER_ORDER_COMMANDS_ENABLED', 'false');
   api.mockReset();
   setAccessToken("fixture-only", buyer.id);
   auth = {
@@ -70,6 +73,7 @@ afterEach(() => {
   cleanup();
   setAccessToken(null);
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
 describe("Order routes + merged GET client/validators (mock HTTP boundary, not live DB)", () => {
   it("shows only implemented Buyer account links and current session identity", async () => {

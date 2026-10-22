@@ -17,6 +17,7 @@ import { orderStatusLabels } from "./orderPolicy";
 import { useOrderDetail, useOrderList } from "./useOrderRead";
 import styles from "./OrderReadPages.module.css";
 import { SellerOrderWorkspace } from "../order-recovery/SellerOrderWorkspace";
+import { BuyerOrderWorkspace } from "../order-recovery/BuyerOrderWorkspace";
 
 const base = (scope: OrderScope) =>
   scope === "buyer" ? "/account/orders" : "/seller/orders";
@@ -64,7 +65,9 @@ export function OrderReadPage({
         {scope === "seller" && detail &&
         import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED === "true"
           ? "Kiểm thử xử lý đơn Seller; mỗi bước cần xác nhận, không tự gửi lại yêu cầu."
-          : "Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật trên màn này."}
+          : scope === 'buyer' && detail && import.meta.env.VITE_BUYER_ORDER_COMMANDS_ENABLED !== 'false'
+            ? "Xem đơn đã lưu; hủy hoặc hoàn tất hợp lệ cần xác nhận riêng, không tự gửi lại yêu cầu."
+            : "Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật trên màn này."}
       </p>
       <div
         className={
@@ -93,6 +96,8 @@ export function OrderReadPage({
             scope === "seller" &&
             import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED === "true" ? (
               <SellerOrderWorkspace key={key} orderId={pathId(orderId)!} />
+            ) : scope === 'buyer' && import.meta.env.VITE_BUYER_ORDER_COMMANDS_ENABLED !== 'false' ? (
+              <BuyerOrderWorkspace key={key} orderId={pathId(orderId)!} />
             ) : (
               <Detail key={key} scope={scope} orderId={pathId(orderId)!} />
             )
