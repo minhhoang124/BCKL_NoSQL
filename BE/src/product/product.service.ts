@@ -382,26 +382,27 @@ export class ProductService {
   ) {
     await this.getWritableStore(sellerId);
     const product = await this.getOwnedEditableProduct(sellerId, productId);
-    const definition = await this.prisma.categoryAttributeDefinition.findFirst({
-      where: {
-        id: attributeDefinitionId,
-        categoryId: product.categoryId,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        dataType: true,
-        allowsCustom: true,
-      },
-    });
-    if (!definition) {
-      throw new BadRequestException(
-        'Thuộc tính không hoạt động hoặc không thuộc danh mục sản phẩm',
-      );
-    }
-    const data = await this.normalizeAttributeValue(definition, dto);
-
     return this.runSerializable(async (tx) => {
+      // Re-read definition and selected option in the write snapshot on EVERY
+      // retry; never carry a value normalized against pre-transaction rules.
+      const definition = await tx.categoryAttributeDefinition.findFirst({
+        where: {
+          id: attributeDefinitionId,
+          categoryId: product.categoryId,
+          isActive: true,
+        },
+        select: {
+          id: true,
+          dataType: true,
+          allowsCustom: true,
+        },
+      });
+      if (!definition) {
+        throw new BadRequestException(
+          'Thuộc tính không hoạt động hoặc không thuộc danh mục sản phẩm',
+        );
+      }
+      const data = await this.normalizeAttributeValue(tx, definition, dto);
       const value = await tx.productAttributeValue.upsert({
         where: {
           productId_attributeDefinitionId: {
@@ -883,6 +884,7 @@ export class ProductService {
   }
 
   private async normalizeAttributeValue(
+    tx: Prisma.TransactionClient,
     definition: {
       id: number;
       dataType: CategoryAttributeDataType;
@@ -926,7 +928,7 @@ export class ProductService {
     }
     if (definition.dataType === CategoryAttributeDataType.SINGLE_SELECT) {
       if (dto.optionId != null) {
-        const option = await this.prisma.categoryAttributeOption.findFirst({
+        const option = await tx.categoryAttributeOption.findFirst({
           where: {
             id: dto.optionId,
             attributeDefinitionId: definition.id,
