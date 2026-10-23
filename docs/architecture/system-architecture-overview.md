@@ -1,5 +1,15 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**COD browser journey — 23/10/2026:** trên nền #100, kiểm thật Address → Cart →
+Checkout → Seller chuẩn bị → Admin delivery HTTP mô phỏng → Buyer hoàn tất;
+nhánh mất response/reload rồi hủy hoàn kho, đổi giá/thiếu kho đều đạt. 4nhóm
+Chrome/Nest/PostgreSQL QA riêng,21ảnh; doubleclick không nhân command/kho/outbox.
+Chỉ thêm driver, không đổi runtime/schema. Chưa Admin delivery UI, loaded
+Search hoặc toàn marketplace DONE. Đã chạy lại4/4nhóm trên nền #106/Auth/image,
+nâng DB QA17→19migration không reset; kho/history/receipt/outbox vẫn đúng.
+Đây là nhánh kiểm thử chưa đồng nghĩa PR đã merge.
+[Bằng chứng và giới hạn](../testing/cod-browser-journey-2026-10-23.md).
+
 **Admin Search health — 23/10/2026:** bản kết hợp sau Buyer Web giữ ba lớp:
 Backend đọc PostgreSQL và quan sát AI → parser/projection canonical ở Web →
 badge hiệu lực tự hết hạn, không làm mới timestamp gốc. 401/403 khóa mọi lần
@@ -27,6 +37,10 @@ DEGRADED, UNAVAILABLE và UNKNOWN đều có kiểm diễn giải UI; READY/DEGR
 có deployment model/index live nên không nhận all-ready. Attributes chỉ đọc hồi
 quy đạt; PR #94 write API chưa merge nên editor ghi vẫn khóa.
 [Bằng chứng và giới hạn](../testing/admin-search-health-ui-integration-2026-10-22.md).
+
+**Tích hợp #97 — 23/10/2026:** health UI đã merge tại `dc47ea7`; các nhãn
+IN_PROGRESS/chưa merge của phần22/10 phía trên là lịch sử. Đồng bộ #101 giữ
+đủ health và COD, không chọn bỏ một phía hoặc thay runtime/schema.
 
 **Đồng bộ 23/10/2026:** nhận develop `65ad255` sau merge #94/#108/#102/#104/#107. Backend ghi
 Attributes đã có trên develop; các nhãn chưa merge ngày 22/10 bên dưới là lịch
