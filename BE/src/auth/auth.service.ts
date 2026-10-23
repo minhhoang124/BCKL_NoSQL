@@ -17,8 +17,9 @@ import type {
 } from './auth.types.js';
 import { LoginDto } from './dto/login.dto.js';
 import { PublicAccountType, RegisterDto } from './dto/register.dto.js';
+import { credentialMatches } from './credential-version.js';
 
-const publicUserSelect = {
+export const publicUserSelect = {
   id: true,
   email: true,
   fullName: true,
@@ -51,11 +52,12 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const email = dto.email.trim().toLowerCase();
+    const passwordHash = await hash(dto.password, 12);
     try {
       const user = await this.prisma.user.create({
         data: {
           email,
-          passwordHash: await hash(dto.password, 12),
+          passwordHash,
           fullName: dto.fullName?.trim(),
           role:
             dto.accountType === PublicAccountType.SELLER
@@ -64,7 +66,7 @@ export class AuthService {
         },
         select: publicUserSelect,
       });
-      return this.createSession(user);
+      return this.createSession(user, passwordHash);
     } catch (error: unknown) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -85,12 +87,7 @@ export class AuthService {
     }
     if (!user.isActive)
       throw new UnauthorizedException('Tài khoản không hoạt động');
-    const {
-      passwordHash: _passwordHash,
-      updatedAt: _updatedAt,
-      ...publicUser
-    } = user;
-    return this.createSession(publicUser);
+    return this.createSession(user, user.passwordHash);
   }
 
   async refresh(token: string | undefined) {
@@ -109,15 +106,19 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token không hợp lệ');
 
     const tokenHash = this.hashToken(token);
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-      select: publicUserSelect,
-    });
-    if (!user?.isActive)
-      throw new UnauthorizedException('Tài khoản không hoạt động');
-
-    const next = await this.signTokens(user);
     const rotated = await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${payload.sub} FOR UPDATE`;
+      const current = await tx.user.findUnique({ where: { id: payload.sub } });
+      if (
+        !current?.isActive ||
+        !credentialMatches(payload.cv, current.credentialVersion)
+      )
+        throw new UnauthorizedException('Phiên đăng nhập đã hết hiệu lực');
+      const user = await tx.user.findUniqueOrThrow({
+        where: { id: current.id },
+        select: publicUserSelect,
+      });
+      const next = await this.signTokens(user, current.credentialVersion);
       const result = await tx.refreshToken.updateMany({
         where: {
           tokenHash,
@@ -127,7 +128,7 @@ export class AuthService {
         },
         data: { revokedAt: new Date() },
       });
-      if (result.count !== 1) return false;
+      if (result.count !== 1) return null;
       await tx.refreshToken.create({
         data: {
           tokenHash: this.hashToken(next.refreshToken),
@@ -135,13 +136,13 @@ export class AuthService {
           expiresAt: this.refreshExpiry(),
         },
       });
-      return true;
+      return { user, ...next };
     });
     if (!rotated)
       throw new UnauthorizedException(
         'Refresh token đã hết hạn hoặc bị thu hồi',
       );
-    return { user, ...next };
+    return rotated;
   }
 
   async logout(token: string | undefined): Promise<void> {
@@ -202,20 +203,38 @@ export class AuthService {
     };
   }
 
-  private async createSession(user: PublicUser) {
-    const tokens = await this.signTokens(user);
-    await this.prisma.refreshToken.create({
-      data: {
-        tokenHash: this.hashToken(tokens.refreshToken),
-        userId: user.id,
-        expiresAt: this.refreshExpiry(),
-      },
+  private async createSession(
+    identity: Pick<PublicUser, 'id'>,
+    expectedPasswordHash: string,
+  ) {
+    // Same User lock as refresh/password change. A login which read the old hash
+    // must not mint a new-version session after another request changes it.
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${identity.id} FOR UPDATE`;
+      const current = await tx.user.findUnique({ where: { id: identity.id } });
+      if (!current?.isActive || current.passwordHash !== expectedPasswordHash)
+        throw new UnauthorizedException('Thông tin đăng nhập đã thay đổi');
+      const user = await tx.user.findUniqueOrThrow({
+        where: { id: current.id },
+        select: publicUserSelect,
+      });
+      const tokens = await this.signTokens(user, current.credentialVersion);
+      await tx.refreshToken.create({
+        data: {
+          tokenHash: this.hashToken(tokens.refreshToken),
+          userId: user.id,
+          expiresAt: this.refreshExpiry(),
+        },
+      });
+      return { user, ...tokens };
     });
-    return { user, ...tokens };
   }
 
-  private async signTokens(user: Pick<PublicUser, 'id' | 'email' | 'role'>) {
-    const base = { sub: user.id, email: user.email, role: user.role };
+  private async signTokens(
+    user: Pick<PublicUser, 'id' | 'email' | 'role'>,
+    cv: number,
+  ) {
+    const base = { sub: user.id, email: user.email, role: user.role, cv };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwt.signAsync({ ...base, type: 'access' } satisfies JwtPayload, {
         secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),

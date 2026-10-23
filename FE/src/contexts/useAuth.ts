@@ -7,6 +7,8 @@ export interface AuthContextType {
   login: (session: SessionResponse) => void;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  applyProfile?: (user: User, sessionVersion: number) => void;
+  endSession?: (sessionVersion: number) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

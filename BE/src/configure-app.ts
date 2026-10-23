@@ -10,6 +10,7 @@ import { registerOrderCancellationParser } from './order/order-cancellation.http
 import { registerSellerOrderCommandParser } from './order/seller-order-command.http.js';
 import { configureAccountListHttp } from './auth/admin-account-list.js';
 import { registerAttributeWriteParser } from './catalog/admin-attribute-write.http.js';
+import { registerAccountSettingsHttp } from './auth/account-settings.http.js';
 
 export function configureApp(app: INestApplication): void {
   // Apply before guards/validation as sensitive Admin failures must not be cached either.
@@ -32,6 +33,7 @@ export function configureApp(app: INestApplication): void {
     next();
   });
   configureAccountListHttp(app);
+  registerAccountSettingsHttp(app);
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true,

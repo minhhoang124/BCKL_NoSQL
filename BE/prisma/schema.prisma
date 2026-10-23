@@ -131,6 +131,7 @@ model User {
   id                      Int                      @id @default(autoincrement())
   email                   String                   @unique
   passwordHash            String
+  credentialVersion       Int                      @default(1)
   fullName                String?
   role                    Role                     @default(USER)
   isActive                Boolean                  @default(true)
@@ -150,6 +151,7 @@ model User {
   orderCommands           OrderCommand[]           @relation("OrderCommandActor")
   orderCommandResolutions OrderCommandResolution[]
   attributeAuditActions   CategoryAttributeAudit[]
+  accountSecurityEvents   AccountSecurityEvent[]
 
   @@map("users")
 }
@@ -166,6 +168,19 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+model AccountSecurityEvent {
+  id          BigInt   @id @default(autoincrement())
+  userId      Int
+  event       String
+  fromVersion Int
+  toVersion   Int
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, toVersion], map: "account_security_event_once")
+  @@map("account_security_events")
 }
 
 model Store {

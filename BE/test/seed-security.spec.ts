@@ -9,6 +9,7 @@ function demoUser(passwordHash: string): User {
     id: 42,
     email: 'admin.demo@example.com',
     passwordHash,
+    credentialVersion: 1,
     fullName: 'Existing User',
     role: 'ADMIN',
     isActive: true,

@@ -1,5 +1,16 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Account settings —23/10/2026, runtime PR:** tên hiển thị CAS và đổi mật khẩu
+có kiểm mật khẩu hiện tại; User row lock dùng chung login/refresh/password.
+Hai migration mới thêm credentialVersion và audit bất biến; hash/version/revoke
+mọi refresh/audit cùng giao dịch, JWTcv chặn phiên cũ ở request mới. Web giữ
+boundary tài khoản, không replay password khi mất response và yêu cầu đăng nhập
+lại. Hai cờ write/UI mặc định tắt; phạm vi tích hợp được ghi tại PR #108,
+không hoàn thành toàn bộ profile,
+onboarding hoặc reset/verify P1. Phải migrate trước Auth code và nâng cấp đủ
+replica trước bật ghi. [API/biến/rollout](../api/account-settings.md),
+[kiểm thử và giới hạn](../testing/account-settings-2026-10-23.md).
+
 **Attributes QA handoff / timeout —22/10/2026, PR review:** lock/query timeout
 55P03/57014 trả503/Retry-After:1, không replay giao dịch. Thêm launcher opt-in
 kiểm target/role/migrations, tạo bundle mới gồm2Admin/Seller/Buyer và đủ4kiểu

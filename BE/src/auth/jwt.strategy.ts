@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../prisma.service.js';
 import type { AuthenticatedUser, JwtPayload } from './auth.types.js';
+import { credentialMatches } from './credential-version.js';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -25,8 +26,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
-    if (!user?.isActive)
+    if (
+      !user?.isActive ||
+      !credentialMatches(payload.cv, user.credentialVersion)
+    )
       throw new UnauthorizedException('Tài khoản không hoạt động');
-    return { userId: user.id, email: user.email, role: user.role };
+    return {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      credentialVersion: user.credentialVersion,
+    };
   }
 }

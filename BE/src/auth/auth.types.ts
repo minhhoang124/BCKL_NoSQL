@@ -6,10 +6,12 @@ export interface JwtPayload {
   role: Role;
   type: 'access' | 'refresh';
   jti?: string;
+  cv?: number;
 }
 
 export interface AuthenticatedUser {
   userId: number;
+  credentialVersion?: number;
   email: string;
   role: Role;
 }

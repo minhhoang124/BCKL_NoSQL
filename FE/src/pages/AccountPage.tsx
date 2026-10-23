@@ -1,6 +1,7 @@
 import { useAuth } from '../contexts/useAuth';
 import { Link } from 'react-router-dom';
 import styles from './AccountPage.module.css';
+import { AccountSettings } from '../features/account-settings/AccountSettings';
 
 export function AccountPage() {
   const { user } = useAuth();
@@ -19,6 +20,7 @@ export function AccountPage() {
         {user.role === 'USER' && user.isActive && <p><Link to="/account/addresses">Quản lý địa chỉ nhận hàng</Link></p>}
         {user.role === 'USER' && user.isActive && <p><Link to="/account/orders">Đơn mua của tôi</Link></p>}
       </div>
+      {import.meta.env.VITE_ACCOUNT_SETTINGS_ENABLED === 'true' && <AccountSettings />}
     </div>
   );
 }

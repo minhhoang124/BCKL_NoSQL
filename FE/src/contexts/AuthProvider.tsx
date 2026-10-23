@@ -61,8 +61,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearAuth();
   };
 
+  const applyProfile = (profile: User, version: number) => {
+    if (version !== getAuthSessionVersion()) return;
+    // Profile editing is not login/logout: do not reset pending Order identity.
+    setUser(current => current?.id === profile.id ? { ...current, fullName: profile.fullName } : current);
+  };
+  const endSession = useCallback((version: number) => {
+    if (version === getAuthSessionVersion()) clearAuth();
+  }, [clearAuth]);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refresh }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refresh, applyProfile, endSession }}>
       {children}
     </AuthContext.Provider>
   );

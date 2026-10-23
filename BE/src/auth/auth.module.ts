@@ -10,6 +10,8 @@ import { RolesGuard } from './guards/roles.guard.js';
 import { SearchModule } from '../search/search.module.js';
 import { AdminAccountController } from './admin-account.controller.js';
 import { AdminAccountListService } from './admin-account-list.service.js';
+import { AccountSettingsService } from './account-settings.service.js';
+import { AccountSettingsGuard } from './account-settings.http.js';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { AdminAccountListService } from './admin-account-list.service.js';
     JwtAuthGuard,
     RolesGuard,
     AdminAccountListService,
+    AccountSettingsService,
+    AccountSettingsGuard,
   ],
   exports: [AuthService, JwtAuthGuard, RolesGuard],
 })
