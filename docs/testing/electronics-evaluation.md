@@ -1,5 +1,15 @@
 # Bộ query và ground truth điện tử
 
+## Quyết định hiện hành ngày 23/10/2026
+
+Nhóm chốt định lượng trên **7 truy vấn phát triển × 86 sản phẩm = 602 cặp đủ nhãn**;
+giữ kết quả truy hồi và Precision/Recall@5/10/20. Không cần hoàn thiện đủ 12 truy
+vấn để tính chỉ số cho tập này. Năm truy vấn thiếu nhãn giữ nguyên và loại khỏi
+phép tính, không gán ô trống thành 0. Nhãn có AI hỗ trợ, không gọi là hai lượt chấm độc lập;
+không suy thành chất lượng tìm ảnh/toàn hệ thống. [Quyết định và giới hạn](electronics/evaluation-scope-7q-2026-10-23.md).
+Các mô tả ngày 29/09 và bộ nhãn mốc/đồng thuận cũ bên dưới là lịch sử từng gói,
+không phải bằng chứng hai người đã chấm độc lập 602 cặp của đợt này.
+
 Ngày chuẩn bị ban đầu: 15/09/2026. Trạng thái review gần nhất: 24/09/2026. Bộ cũ có 20 query ảnh catalog và 20 query tiếng Việt, bám 20 sản phẩm GIỮ trong báo cáo QA. Manifest nằm tại `docs/testing/electronics/queries.jsonl`; nhãn đề xuất tại `ground-truth-proposed.jsonl`. Ảnh gốc được tham chiếu bằng đường dẫn tương đối và SHA-256 trong gói ABO, không commit ảnh.
 
 ## Cách dùng và giới hạn
@@ -53,11 +63,13 @@ Chạy riêng keyword/filter, semantic text, image và hybrid theo API đã ch�
 
 Đây là kế hoạch bàn giao, không phải kết quả test đã chạy trên dịch vụ.
 
-## Gói hoàn thiện ngày 29/09/2026
+## Gói lịch sử ngày 29/09/2026 — không phải gate định lượng hiện hành
 
 Trạng thái khóa dữ liệu và các bước còn thiếu được chốt tại
 [`electronics/evaluation-completion-v2.md`](electronics/evaluation-completion-v2.md). Các hash của
 corpus, query, nhãn, mapping dự kiến, model và commit Search nằm trong
 [`electronics/evaluation-lock-v2.json`](electronics/evaluation-lock-v2.json). Bộ script mới chỉ cho
 phép tính Precision@K/Recall@K khi toàn bộ query đã có nhãn hợp lệ và được xác nhận
-`exhaustive=true`; vì vậy hiện tại chưa có chỉ số nào được công bố.
+`exhaustive=true` theo thiết kế v2 cũ. Quyết định ngày 23/10 ở trên thay điều kiện
+đủ 12 truy vấn cho tập 7 truy vấn; không dùng tình trạng chưa công bố ngày 29/09
+làm trạng thái hiện tại.

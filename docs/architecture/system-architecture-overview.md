@@ -1,5 +1,13 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Đối chiếu SRS và phạm vi định lượng — 23/10/2026:** Backend Attributes #94
+đã merge tại `a91db91`; chưa đồng nghĩa editor Admin hoàn chỉnh. Nhóm chốt
+7 truy vấn phát triển đủ nhãn trên 86 sản phẩm (602 cặp), giữ retrieval và
+Precision/Recall@5/10/20; không cần đủ 12 query mới tính cohort này. Nhãn AI
+hỗ trợ, không hai lượt chấm độc lập hoặc đánh giá chất lượng ảnh/toàn hệ thống.
+[Quyết định đánh giá](../testing/electronics/evaluation-scope-7q-2026-10-23.md),
+[ma trận khoảng thiếu SRS](../project/srs-scope-gap-review-2026-10-23.md).
+
 **Image Web live QA — 23/10/2026:** bản ghép QA Backend #102 và Web #104
 đạt5nhóm Chrome với CLIP/FAISS/Elasticsearch/PostgreSQL thật, dữ liệu tổng hợp
 trên DB/index mới. Có kiểm bấm đôi và lọc Product đã ẩn khi index stale.

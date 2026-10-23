@@ -1,5 +1,13 @@
 # Đề xuất quy trình đánh giá với nhãn có AI hỗ trợ
 
+**Cập nhật hiệu lực ngày 23/10/2026:** nhóm đã chốt [phạm vi 7 truy vấn/602 cặp](evaluation-scope-7q-2026-10-23.md).
+Mục 5–6 đã được cập nhật để thay yêu cầu cũ phải đủ 12 truy vấn. Trạng thái chưa
+xác nhận của bản đề xuất ngày 21/10 chỉ còn là lịch sử, không chặn chỉ số của
+7 truy vấn đã đủ nhãn.
+Giữ nhãn có AI hỗ trợ, không gọi là hai lượt chấm độc lập; 5 truy vấn thiếu nhãn
+không đưa vào phép tính, không đổi null thành 0.
+Không thay retrieval, công thức hoặc khóa dữ liệu cũ trong đợt cập nhật này.
+
 Trạng thái: **DRAFT_PROPOSAL**, 21/10/2026. Phạm vi: nghiên cứu thử nghiệm text
 retrieval trên corpus ABO v1b 86 sản phẩm và 12 query đã khóa. Đạt yêu cầu chuẩn bị
 phương án này; chưa có xác nhận mới của Hiền hoặc thay đổi protocol chính thức.
@@ -28,11 +36,13 @@ muốn dùng thiết kế khác phải nêu rõ thay đổi và giới hạn, kh
 4. Nếu nhóm thay đổi cách hiểu “nhẹ”, USB operating power, Party/PA hoặc outdoor,
    ghi quyết định trước khi tính và áp nhất quán cho đủ 86 sản phẩm của query bị
    ảnh hưởng; không chỉ thay những cặp khó hoặc những kết quả Top-K.
-5. Đánh giá chính hướng đến đủ 12 × 86. Mỗi query chỉ được tính Recall toàn corpus
-   khi đủ 86 nhãn số và có danh sách provenance. Không bỏ riêng cặp khó khỏi mẫu số.
-6. Trong lúc chưa đủ, phép tính trên các query đầy đủ chỉ được báo là exploratory
-   subset với danh sách query/độ phủ cụ thể. Không đổi tên thành kết quả đủ 12 query.
-   Bộ 7 query đã chia sẻ vẫn thuộc trường hợp này.
+5. Theo quyết định ngày 23/10, phạm vi định lượng chốt trên **7 × 86 = 602 cặp**
+   đã đủ nhãn. Mỗi query được tính Recall trên corpus 86 đã chấm đầy đủ, giữ
+   provenance và không bỏ riêng cặp khó khỏi mẫu số. Không cần đủ 12 query.
+6. Báo rõ đây là tập 7 truy vấn phát triển có nhãn AI hỗ trợ, chọn theo độ đầy
+   đủ nhãn chứ không theo điểm. Năm truy vấn thiếu nhãn giữ ngoài phép tính,
+   không gán trống thành 0; không đổi tên thành kết quả đủ 12 query hoặc kết
+   quả chất lượng tìm ảnh/toàn hệ thống.
 
 ## Cấu hình và phép tính giữ nguyên
 
@@ -55,8 +65,9 @@ Không tự ghi `independent=true`, Hiền đã duyệt hoặc human-reviewed t�
 
 ## Điều kiện chuyển sang kết quả dùng trong báo cáo
 
-- Nhóm review và xác nhận thiết kế AI-assisted cùng cách nêu giới hạn. Tài liệu
-  này chưa có hiệu lực chỉ vì được push lên PR của Đạt.
+- Nhóm đã xác nhận phạm vi 7 query/602 cặp theo quyết định 23/10; giữ cách nêu
+  giới hạn AI-assisted, không giả hai lượt chấm độc lập. Việc cập nhật tài liệu
+  không tự chứng minh dữ liệu hoặc từng phép tính đã được kiểm lại.
 - Chốt nhãn số cho query muốn đánh giá theo tiêu chí đã thống nhất; giữ unjudged
   trong nguồn, không biến thành negative.
 - Tạo phiên bản protocol/lock/label manifest riêng đã review; công cụ xác minh

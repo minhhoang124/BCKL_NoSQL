@@ -1,12 +1,21 @@
 # Hoàn thiện bộ đánh giá giai đoạn 2
 
+**Đã thay phạm vi định lượng ngày 23/10/2026:** nhóm chốt 7 truy vấn đủ 86 nhãn/
+truy vấn, tổng 602 cặp, nhãn có AI hỗ trợ. Không cần đủ 12 truy vấn để tính
+Precision/Recall@5/10/20 trên tập này. Giữ kết quả truy hồi, phép tính và 5 truy
+vấn thiếu nhãn; không biến ô trống thành 0.
+[Quyết định hiện hành](evaluation-scope-7q-2026-10-23.md). Toàn bộ quy trình v2
+phía dưới giữ làm lịch sử ngày 29/09; không giả là hai lượt chấm độc lập hoặc
+sửa khóa dữ liệu cũ để vượt điều kiện kiểm tra. PR tài liệu này không sửa công
+cụ v2 hoặc tính lại chỉ số.
+
 Ngày chuẩn bị: 29/09/2026.
 
-## Kết luận hiện tại
+## Kết luận lịch sử ngày 29/09/2026
 
 - Corpus import v1b có 86 `externalId` duy nhất. Cả 12 query text consensus đều có anchor trong corpus này.
 - Mapping chính thức đã được Hoàng báo có 86 cặp duy nhất với SHA-256 `C705EF318320CA0A0C8765E5AD2C321A5C57763C77A908CF417BC0070B46D359`, nhưng file mapping không nằm trong repository/workspace hiện tại nên chưa được gắn `productId`.
-- 12 nhãn text đã được Hiền và Đạt đồng thuận ở PR #21, nhưng đều có `exhaustive=false`. Chúng chỉ là seed/anchor; Recall toàn corpus chỉ được tính sau khi review đủ `12 x 86 = 1.032` cặp query–sản phẩm.
+- 12 nhãn text đã được Hiền và Đạt đồng thuận ở PR #21, nhưng đều có `exhaustive=false`. Chúng chỉ là seed/anchor. Protocol v2 khi đó yêu cầu `12 x 86 = 1.032` cặp; **không áp điều kiện đủ 12 này cho phạm vi 7 query/602 cặp đã chốt ngày 23/10**.
 - 11 query ảnh độc lập đều nằm ngoài corpus 86. Corpus 86 chỉ có một ảnh chính cho mỗi sản phẩm và không có spin 360 độ trong metadata hiện có. Vì vậy không thay ảnh catalog thành ảnh độc lập giả.
 - Chưa được công bố Precision@K hoặc Recall@K.
 
@@ -35,14 +44,14 @@ PR #23 không chặn phép đo Search Service offline. PR #23 chỉ cần cho b�
 
 5. Chạy `build_evaluation_pool.py` để tạo ma trận review toàn bộ 86 sản phẩm cho mỗi query. Top-20 chỉ cung cấp rank; sản phẩm ngoài Top-20 vẫn phải được review và không tự động bị gán negative.
 
-## Việc Hiền và Đạt cùng làm
+## Quy trình Hiền và Đạt theo protocol v2 lịch sử — không phải gate 7 query
 
 1. Gán độc lập `relevance=2/1/0` cho toàn bộ 1.032 dòng trong ma trận full-corpus.
 2. Giải quyết mọi bất đồng và ghi `reviewedBy`, `adjudicationStatus`, `reviewEvidence`.
 3. Chỉ đặt `exhaustive=true` khi đủ `labeledBy`, một `reviewedBy` khác người gán, `consensusBy` có ít nhất hai người, `adjudicationStatus=AGREED/RESOLVED` và `reviewEvidence`. Giữ unjudged riêng, không đổi thành 0.
 4. Chạy công cụ metric. Công cụ phải dừng nếu query còn nhãn thiếu hoặc chưa exhaustive. Các giá trị K và ngưỡng relevance lấy từ lock; tham số CLI nếu được truyền phải khớp chính xác lock.
 
-## Definition of done
+## Definition of done của protocol v2 lịch sử
 
 - Mapping đúng hash, đủ và một-một; mọi `productId` nguyên dương.
 - Query, corpus, mapping, model/index và tham số có hash/commit cố định.

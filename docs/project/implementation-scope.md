@@ -70,6 +70,14 @@ Thiết kế chi tiết được quản lý tại `docs/architecture/product-dom
 - Có search log, click log và thời gian phản hồi.
 - Có thực nghiệm Precision@K, Recall@K tại các K đã chốt và thời gian phản hồi.
 
+**Quyết định định lượng ngày 23/10/2026:** dùng 7 truy vấn phát triển đủ nhãn trên
+86 sản phẩm (602 cặp), giữ kết quả truy hồi và Precision/Recall@5/10/20. Không cần
+đủ 12 truy vấn mới tính chỉ số cho tập này; 5 truy vấn thiếu nhãn giữ ngoài phép
+tính, không gán ô trống thành 0. Nhãn có AI hỗ trợ, không gọi là hai lượt chấm
+độc lập hoặc suy rộng thành chất lượng ảnh/
+toàn hệ thống. Kiểm thử chức năng tìm ảnh trình bày riêng.
+[Quyết định chi tiết](../testing/electronics/evaluation-scope-7q-2026-10-23.md).
+
 ### 2.4 Giỏ hàng, tồn kho và đơn COD
 
 - CartItem tham chiếu `variantId`.

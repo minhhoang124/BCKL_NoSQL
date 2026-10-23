@@ -129,6 +129,13 @@ Bàn giao: keyword search, semantic text search, image search và danh sách RRF
 
 Thời gian: 12/10–25/10/2026.
 
+Cập nhật ngày 23/10: định lượng chốt trên 7 truy vấn phát triển đã đủ nhãn cho
+86 sản phẩm (602 cặp), không cần đủ 12 truy vấn mới tính chỉ số. Giữ retrieval
+và Precision/Recall@5/10/20; 5 truy vấn thiếu nhãn giữ nguyên ngoài phép tính,
+không chuyển ô trống thành 0. Nhãn có AI hỗ trợ, không gọi hai lượt chấm độc
+lập; kiểm thử chức năng tìm ảnh tách riêng. Xem
+[quyết định phạm vi](../testing/electronics/evaluation-scope-7q-2026-10-23.md).
+
 - So sánh Elasticsearch, CLIP và RRF.
 - Thử early fusion và late fusion.
 - Precision và Recall tại K = 5, 10, 20.

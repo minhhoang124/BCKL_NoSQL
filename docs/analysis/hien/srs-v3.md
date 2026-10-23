@@ -10,6 +10,13 @@ Ngày phát hành bản tổng hợp: 23/09/2026
 Ngày cập nhật quyết định: 24/09/2026
 Phiên bản tài liệu: 3.1
 
+Bổ sung quyết định ngày 23/10/2026: phạm vi định lượng gồm 7 truy vấn phát triển
+× 86 sản phẩm = 602 cặp đủ nhãn; giữ kết quả truy hồi và Precision/Recall@5/10/20.
+Không yêu cầu đủ 12 truy vấn để tính tập này; 5 truy vấn thiếu nhãn giữ nguyên,
+không chuyển ô trống thành 0. Nhãn có AI hỗ trợ, không phải hai lượt chấm độc lập;
+không suy rộng thành chất lượng tìm
+ảnh/toàn hệ thống. [Quyết định và giới hạn](../../testing/electronics/evaluation-scope-7q-2026-10-23.md).
+
 ## 1 Mục đích và quy ước sử dụng
 
 SRS v3 đặc tả phạm vi, quy tắc nghiệp vụ, luồng thành công và thất bại, dữ liệu cùng tiêu chí nghiệm thu của sàn đa người bán. Đây là bản tổng hợp để nhóm thống nhất yêu cầu và tiếp tục thiết kế, triển khai, kiểm thử. Nội dung kế thừa SRS Đề tài 18 v2, bản phân tích v0.5 của Hiền và bản tham khảo Hoàng gửi ngày 23/09/2026.
@@ -211,7 +218,7 @@ P0 chuẩn bị corpus/query/nhãn và baseline tái lập; P1 hoàn tất báo 
 
 Với query q, Rq là tập relevant đã gán nhãn và Lq,K là tối đa K kết quả đầu: Precision@K = số relevant trong Lq,K chia K; vị trí thiếu do ít kết quả được tính không relevant. Recall@K = số relevant trong Lq,K chia kích thước Rq khi Rq không rỗng. Báo macro trung bình trên tập query hợp lệ cùng số mẫu. Query không có relevant báo riêng khả năng trả rỗng/false positive, không tự cho Recall bằng 1. Định nghĩa exact-product và similar-product phải được gán nhãn riêng, không trộn mẫu số.
 
-Nếu chỉ gán nhãn bằng pooling chưa phủ hết corpus, ghi rõ recall trên tập relevant đã đánh giá và tỷ lệ phủ nhãn; không gọi là recall toàn corpus. Bộ 12 query text có nhãn positive chưa đầy đủ chỉ dùng smoke. 11 ảnh query ngoài tập 86 không đủ để đánh giá trên lần import 86. Báo cáo 86 vector/512 chiều và self-match rank 1 của ID 58, 125, 143 ở commit 9b754fb là bằng chứng kỹ thuật do Đạt cung cấp, chưa phải kết quả chất lượng tìm kiếm độc lập và chưa chứng minh public-ready.
+Nếu chỉ gán nhãn bằng pooling chưa phủ hết corpus, ghi rõ recall trên tập relevant đã đánh giá và tỷ lệ phủ nhãn; không gọi là recall toàn corpus. Bộ nhãn mốc của 12 truy vấn văn bản trong lịch sử không đủ làm mẫu số Recall. Theo quyết định ngày 23/10, phần định lượng chốt trên 7 truy vấn đủ 86 nhãn/truy vấn (602 cặp), chọn theo độ đầy đủ nhãn chứ không theo điểm. Giữ kết quả truy hồi, phép tính và nêu giới hạn của tập phát triển có nhãn AI hỗ trợ; không cần đủ 12 truy vấn mới được tính tập này. Năm truy vấn thiếu nhãn giữ nguyên ngoài phép tính, không gán ô trống thành 0. Có 11 ảnh truy vấn ngoài tập 86, chưa đủ để đánh giá ảnh trên lần import 86 sản phẩm. Báo cáo 86 vector/512 chiều và kết quả tự tìm lại ảnh ở hạng 1 của ID 58, 125, 143 tại commit `9b754fb` là bằng chứng kỹ thuật lịch sử, không thay bằng chứng chất lượng ảnh hoặc khả năng phục vụ công khai.
 
 **AC-EVAL-01:** có corpus/query/nhãn đóng phiên bản, relevance và mẫu số công bố; chạy các nhánh trên cùng tập; lưu cấu hình, số mẫu, kết quả Việt–Anh và latency; dữ liệu chưa đủ nhãn chỉ được báo smoke hoặc metric có giới hạn phủ nhãn rõ ràng.
 
