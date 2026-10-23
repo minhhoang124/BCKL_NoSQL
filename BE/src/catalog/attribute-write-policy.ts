@@ -1,6 +1,6 @@
 /**
- * Schema-independent preparation for contract #65. NOT wired to controllers.
- * Callers must eventually read state/usage under the shared DB lock protocol,
+ * Schema-independent policy for contract #65, composed by the runtime candidate.
+ * Callers must read state/usage under the shared DB lock protocol,
  * then persist metadata/revision/audit/durable work atomically. These pure
  * checks are not a uniqueness constraint, authorization check or transaction.
  */

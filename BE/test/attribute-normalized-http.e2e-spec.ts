@@ -100,7 +100,7 @@ describe('Existing Attribute HTTP writes with normalized DB uniqueness', () => {
     const result = await request(app.getHttpServer())
       .patch(`${base()}/${secondId}`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Kết nối' })
+      .send({ expectedRevision: 1, name: 'Kết nối' })
       .expect(409);
     expect(result.body.code).toBe('ATTRIBUTE_NAME_CONFLICT');
     expect(await snapshot()).toEqual(before);

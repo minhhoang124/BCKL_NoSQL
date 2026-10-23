@@ -201,11 +201,38 @@ export function isAttributeTransactionConflict(error: unknown): boolean {
   return code === '40001' || code === '40P01';
 }
 
+/** A known database wait/cancellation is unavailable, NOT permission to replay
+ * the mutation. Match structured driver metadata only, never error messages. */
+export function isAttributeDatabaseTimeout(error: unknown): boolean {
+  let code: unknown;
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code !== 'P2010') return false;
+    const adapter = error.meta?.driverAdapterError;
+    const cause =
+      adapter && typeof adapter === 'object' && 'cause' in adapter
+        ? adapter.cause
+        : null;
+    code =
+      error.meta?.code ??
+      (cause && typeof cause === 'object' && 'originalCode' in cause
+        ? cause.originalCode
+        : undefined);
+  } else if (error instanceof Error && error.name === 'DriverAdapterError') {
+    const cause = error.cause;
+    code =
+      cause && typeof cause === 'object' && 'originalCode' in cause
+        ? cause.originalCode
+        : undefined;
+  }
+  return code === '55P03' || code === '57014';
+}
+
 /**
- * PREPARATION: not registered in CatalogModule and not called by any controller.
- * This is an internal transaction boundary, not the attribute policy/parser.
- * Existing Seller/Admin/import writers do NOT yet share this fence. Activation
- * requires their integration plus normalized unique constraints and policy review.
+ * Internal boundary composed by AdminAttributeWriteService in the runtime
+ * integration candidate. This is not the policy/parser: callers must run the
+ * canonical planner inside its callback. Product value/category/submit writers
+ * share the category fence; a future writer must participate in the same order.
+ * Foundations #83/#87/#91/#92 are official; API activation is reviewed separately.
  * Work must contain ONLY transaction-local DB operations: it may be retried.
  */
 export class AttributeTransactionBoundary {
@@ -316,6 +343,10 @@ export class AttributeTransactionBoundary {
           },
         );
       } catch (error) {
+        if (isAttributeDatabaseTimeout(error))
+          throw new ServiceUnavailableException(
+            'Attribute database busy; retry later',
+          );
         if (!isAttributeTransactionConflict(error)) throw error;
         if (attempt === 2)
           throw new ServiceUnavailableException(
@@ -589,6 +620,10 @@ export class AttributeTransactionBoundary {
           },
         );
       } catch (error) {
+        if (isAttributeDatabaseTimeout(error))
+          throw new ServiceUnavailableException(
+            'Attribute database busy; retry later',
+          );
         if (!isAttributeTransactionConflict(error)) throw error;
         if (attempt === 2)
           throw new ServiceUnavailableException(

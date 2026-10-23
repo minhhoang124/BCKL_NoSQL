@@ -1,5 +1,7 @@
 # Byte-hashed evaluation packages must survive Windows autocrlf checkout.
 /.gitattributes text eol=lf
+/tools/attributes-qa/*.sh text eol=lf
+/tools/attributes-qa/Dockerfile text eol=lf
 /docs/testing/electronics/preliminary/** text eol=lf
 /docs/testing/electronics/preliminary/**/*.xlsx -text -diff -merge
 /docs/testing/electronics/ai-assisted-evaluation-protocol-proposal-2026-10-21.md text eol=lf

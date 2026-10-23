@@ -9,6 +9,7 @@ import { registerCheckoutParser } from './checkout/checkout-http.js';
 import { registerOrderCancellationParser } from './order/order-cancellation.http.js';
 import { registerSellerOrderCommandParser } from './order/seller-order-command.http.js';
 import { configureAccountListHttp } from './auth/admin-account-list.js';
+import { registerAttributeWriteParser } from './catalog/admin-attribute-write.http.js';
 
 export function configureApp(app: INestApplication): void {
   // Apply before guards/validation as sensitive Admin failures must not be cached either.
@@ -38,6 +39,7 @@ export function configureApp(app: INestApplication): void {
   });
   // Reject unsupported Order GET bodies before any JSON parser is registered.
   configureOrderListHttp(app);
+  registerAttributeWriteParser(app);
   registerSellerOrderCommandParser(app);
   registerOrderCancellationParser(app);
   registerOrderDeliveryParser(app);

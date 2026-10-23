@@ -117,7 +117,11 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       if (rootCategoryId)
         await prisma.category.delete({ where: { id: rootCategoryId } });
       await prisma.user.deleteMany({
-        where: { email: { startsWith: marker } },
+        // Keep actors referenced by immutable Attribute audits.
+        where: {
+          email: { startsWith: marker },
+          attributeAuditActions: { none: {} },
+        },
       });
     }
     if (app) await app.close();
@@ -1567,6 +1571,8 @@ describe('Search Hydrate & Filter API (e2e)', () => {
           slug: `${marker}-runtime-required`,
           dataType: 'TEXT',
           isRequired: true,
+          confirmPolicyChange: true,
+          reason: 'QA explicitly require this attribute',
         })
         .expect(201);
       expect(attribute.body.searchReconciliation.status).toBe('PENDING');
@@ -1588,14 +1594,19 @@ describe('Search Hydrate & Filter API (e2e)', () => {
 
       const optional = await request(app.getHttpServer())
         .patch(
-          `/admin/categories/${categoryId}/attributes/${attribute.body.id}`,
+          `/admin/categories/${categoryId}/attributes/${attribute.body.definition.id}`,
         )
         .auth(tokens.admin, { type: 'bearer' })
-        .send({ isRequired: false })
+        .send({
+          expectedRevision: attribute.body.definition.revision,
+          isRequired: false,
+          confirmPolicyChange: true,
+          reason: 'QA explicitly relax this requirement',
+        })
         .expect(200);
       await settleReconciliation([reconciliationJobId(optional)]);
       await prisma.categoryAttributeDefinition.delete({
-        where: { id: attribute.body.id as number },
+        where: { id: attribute.body.definition.id as number },
       });
       await prisma.product.update({ where: { id }, data: { brandId: null } });
       await prisma.brand.delete({ where: { id: brand.id } });

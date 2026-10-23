@@ -1,5 +1,23 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Attributes QA handoff / timeout —22/10/2026, PR review:** lock/query timeout
+55P03/57014 trả503/Retry-After:1, không replay giao dịch. Thêm launcher opt-in
+kiểm target/role/migrations, tạo bundle mới gồm2Admin/Seller/Buyer và đủ4kiểu
+thuộc tính; credentials chỉ ở artifacts Git-ignored trên máy nhận. Compose QA
+riêng5549 và API loopback3014 không dùng DB demo. Không migration hoặc thay
+contract Search; chưa merge/chưa bật editor. [Chạy và giới hạn](../testing/attributes-editor-handoff-2026-10-22.md).
+
+**Attributes write runtime — REVIEW, 22/10/2026:** branch
+`codex/admin-attribute-write-api` từ develop `e394c9e`, sau merge chính thức
+#83/#87/#92/#89/#90/#85/#75/#84/#59. Bốn POST/PATCH definition/options đã nối
+controller → policy → shared Category fence → revision/audit/durable Search job
+trong cùng giao dịch. Seller create/value/move/submit cùng giao thức, public/Search
+bỏ optional value không còn hợp lệ; không thay Order snapshot hoặc migration.
+Đây là PR runtime mới, **chưa merge/chưa editor UI**, không dùng approval nền
+thay runtime review. [Luồng và biến](changes/attributes-write-api-2026-10-22.md),
+[API](../api/admin-category-attributes-write-runtime.md),
+[kiểm thử đúng nền mới](../testing/attributes-write-api-promotion-2026-10-22.md).
+Các ghi chú ngày cũ dưới đây là lịch sử, không thay trạng thái nền đã merge.
 **Seller Order Web — 23/10/2026, runtime promotion:** route chi tiết nối ba
 bước xác nhận → đóng gói → sẵn sàng bàn giao, mặc định bật và có build
 kill-switch chỉ đọc. Không POST khi mount/reload; confirmation/resolve tách

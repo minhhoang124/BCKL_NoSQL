@@ -33,6 +33,11 @@ import {
 } from './product-image-storage.service.js';
 import { SearchOutboxService } from '../search/search-outbox.service.js';
 import { listingInclude } from './product-public-policy.js';
+import { listingProblems } from './product-public-policy.js';
+import {
+  fenceAttributeCategory,
+  isAttributeTransactionConflict,
+} from '../catalog/attribute-transaction-boundary.js';
 
 const productInclude = {
   category: { select: { id: true, name: true, slug: true } },
@@ -78,16 +83,19 @@ export class ProductService {
 
   async createDraft(sellerId: number, dto: CreateProductDto) {
     const store = await this.getWritableStore(sellerId);
-    await this.assertCatalogSelection(dto.categoryId, dto.brandId);
-    return this.prisma.product.create({
-      data: {
-        storeId: store.id,
-        categoryId: dto.categoryId,
-        brandId: dto.brandId ?? null,
-        name: dto.name,
-        description: this.normalizeOptionalText(dto.description),
-      },
-      include: productInclude,
+    return this.runSerializable(async (tx) => {
+      await fenceAttributeCategory(tx, dto.categoryId);
+      await this.assertCatalogSelection(dto.categoryId, dto.brandId, tx);
+      return tx.product.create({
+        data: {
+          storeId: store.id,
+          categoryId: dto.categoryId,
+          brandId: dto.brandId ?? null,
+          name: dto.name,
+          description: this.normalizeOptionalText(dto.description),
+        },
+        include: productInclude,
+      });
     });
   }
 
@@ -132,6 +140,17 @@ export class ProductService {
     );
 
     await this.runSerializable(async (tx) => {
+      // Lock both usage scopes in ID order before moving the Product. This
+      // invalidates an Admin's stale canonical category/Product count snapshot.
+      for (const categoryId of [
+        ...new Set([product.categoryId, dto.categoryId ?? product.categoryId]),
+      ].sort((a, b) => a - b))
+        await fenceAttributeCategory(tx, categoryId);
+      await this.assertCatalogSelection(
+        dto.categoryId ?? product.categoryId,
+        dto.brandId === undefined ? product.brandId : dto.brandId,
+        tx,
+      );
       await this.incrementVersion(tx, product, {
         ...(dto.categoryId !== undefined ? { categoryId: dto.categoryId } : {}),
         ...(dto.brandId !== undefined ? { brandId: dto.brandId } : {}),
@@ -383,6 +402,25 @@ export class ProductService {
     await this.getWritableStore(sellerId);
     const product = await this.getOwnedEditableProduct(sellerId, productId);
     return this.runSerializable(async (tx) => {
+      await fenceAttributeCategory(tx, product.categoryId);
+      const current = await tx.product.findFirst({
+        where: { id: productId, store: { sellerId } },
+      });
+      if (
+        !current ||
+        current.version !== product.version ||
+        current.categoryId !== product.categoryId
+      )
+        throw new ConflictException(
+          'Sản phẩm vừa được cập nhật bởi yêu cầu khác',
+        );
+      if (
+        current.moderationStatus === 'PENDING' ||
+        current.moderationStatus === 'FROZEN'
+      )
+        throw new ForbiddenException(
+          'Không thể sửa sản phẩm đang chờ duyệt hoặc bị đóng băng',
+        );
       // Re-read definition and selected option in the write snapshot on EVERY
       // retry; never carry a value normalized against pre-transaction rules.
       const definition = await tx.categoryAttributeDefinition.findFirst({
@@ -546,121 +584,78 @@ export class ProductService {
   private async submitLocked(sellerId: number, productId: number) {
     await this.getWritableStore(sellerId);
     const product = await this.getOwnedEditableProduct(sellerId, productId);
-    const [
-      productImages,
-      sellableVariant,
-      shippingProfile,
-      requiredDefinitions,
-    ] = await Promise.all([
-      this.prisma.productImage.findMany({
-        where: { productId },
-        select: { id: true, url: true, isPrimary: true },
-      }),
-      this.prisma.productVariant.findFirst({
-        where: { productId, isActive: true, price: { gt: 0 } },
-        select: { id: true },
-      }),
-      this.prisma.productShippingProfile.findUnique({
-        where: { productId },
-        select: { packageWeightGrams: true },
-      }),
-      this.prisma.categoryAttributeDefinition.findMany({
-        where: {
-          categoryId: product.categoryId,
-          isActive: true,
-          isRequired: true,
-        },
-        select: {
-          id: true,
-          name: true,
-          dataType: true,
-          allowsCustom: true,
-        },
-        orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
-      }),
-    ]);
-    const requiredValues = requiredDefinitions.length
-      ? await this.prisma.productAttributeValue.findMany({
-          where: {
-            productId,
-            attributeDefinitionId: {
-              in: requiredDefinitions.map((definition) => definition.id),
-            },
-          },
-          select: {
-            attributeDefinitionId: true,
-            optionId: true,
-            textValue: true,
-            numberValue: true,
-            booleanValue: true,
-            option: {
-              select: {
-                id: true,
-                attributeDefinitionId: true,
-                isActive: true,
-              },
-            },
-          },
-        })
-      : [];
-    const valuesByDefinition = new Map(
-      requiredValues.map((value) => [value.attributeDefinitionId, value]),
-    );
-    const missing: string[] = [];
-    const primaryImage = productImages.find((image) => image.isPrimary);
-    if (!primaryImage) {
-      missing.push('ảnh chính');
-    } else {
-      const published = await Promise.all(
-        productImages.map((image) => this.imageStorage.isPublished(image.url)),
-      );
-      if (published.some((exists) => !exists))
-        missing.push('file ảnh đã tải lên hợp lệ');
-    }
-    if (!sellableVariant) missing.push('variant đang bán có giá hợp lệ');
-    if (!shippingProfile?.packageWeightGrams)
-      missing.push('khối lượng kiện hàng');
-    for (const definition of requiredDefinitions) {
-      const value = valuesByDefinition.get(definition.id);
-      if (
-        !value ||
-        !this.hasStoredAttributeValue(
-          definition.dataType,
-          definition.allowsCustom,
-          definition.id,
-          value,
-        )
-      ) {
-        missing.push(`thuộc tính bắt buộc "${definition.name}"`);
-      }
-    }
-    if (missing.length) {
-      throw new BadRequestException(
-        `Sản phẩm chưa đủ điều kiện gửi duyệt: ${missing.join(', ')}`,
-      );
-    }
-    const updated = await this.prisma.product.updateMany({
-      where: {
-        id: productId,
-        storeId: product.storeId,
-        version: product.version,
-      },
-      data: {
-        sellerStatus: 'ACTIVE',
-        moderationStatus: 'PENDING',
-        rejectionReason: null,
-        submittedAt: new Date(),
-        reviewedAt: null,
-        reviewedBy: null,
-        version: { increment: 1 },
-      },
+    // File I/O stays outside the retriable DB transaction and under the existing
+    // image publish lock. CAS below rejects a changed Product/image snapshot.
+    const images = await this.prisma.productImage.findMany({
+      where: { productId },
+      select: { id: true, url: true, isPrimary: true },
     });
-    if (!updated.count) {
-      throw new ConflictException(
-        'Sản phẩm vừa được cập nhật bởi yêu cầu khác',
+    if (!images.some((image) => image.isPrimary))
+      throw new BadRequestException(
+        'Sản phẩm chưa đủ điều kiện gửi duyệt: ảnh chính',
       );
-    }
-    return this.getMine(sellerId, productId);
+    const published = await Promise.all(
+      images.map((image) => this.imageStorage.isPublished(image.url)),
+    );
+    if (published.some((exists) => !exists))
+      throw new BadRequestException(
+        'Sản phẩm chưa đủ điều kiện gửi duyệt: file ảnh đã tải lên hợp lệ',
+      );
+
+    return this.runSerializable(async (tx) => {
+      await fenceAttributeCategory(tx, product.categoryId);
+      const canonical = await tx.product.findFirst({
+        where: { id: productId, store: { sellerId } },
+        include: listingInclude,
+      });
+      if (
+        !canonical ||
+        canonical.version !== product.version ||
+        canonical.categoryId !== product.categoryId
+      )
+        throw new ConflictException(
+          'Sản phẩm vừa được cập nhật bởi yêu cầu khác',
+        );
+      if (
+        canonical.moderationStatus === 'PENDING' ||
+        canonical.moderationStatus === 'FROZEN'
+      )
+        throw new ForbiddenException(
+          'Không thể gửi duyệt sản phẩm đang chờ hoặc bị đóng băng',
+        );
+      const categories = await tx.category.findMany({
+        select: { id: true, parentId: true, isActive: true },
+      });
+      const problems = listingProblems(canonical, categories);
+      if (problems.length) throw new BadRequestException(problems.join('; '));
+      const updated = await tx.product.updateMany({
+        where: {
+          id: productId,
+          storeId: product.storeId,
+          version: product.version,
+        },
+        data: {
+          sellerStatus: 'ACTIVE',
+          moderationStatus: 'PENDING',
+          rejectionReason: null,
+          submittedAt: new Date(),
+          reviewedAt: null,
+          reviewedBy: null,
+          version: { increment: 1 },
+        },
+      });
+      if (!updated.count)
+        throw new ConflictException(
+          'Sản phẩm vừa được cập nhật bởi yêu cầu khác',
+        );
+      // APPROVED re-submit removes its old public document in the same commit.
+      if (canonical.moderationStatus === 'APPROVED')
+        await this.outbox.writeDeleteEvent(tx, productId, product.version + 1);
+      return tx.product.findUniqueOrThrow({
+        where: { id: productId },
+        include: productInclude,
+      });
+    });
   }
 
   private async getWritableStore(sellerId: number) {
@@ -1000,8 +995,9 @@ export class ProductService {
   private async assertCatalogSelection(
     categoryId: number,
     brandId?: number | null,
+    client: Prisma.TransactionClient | PrismaService = this.prisma,
   ) {
-    const category = await this.prisma.category.findFirst({
+    const category = await client.category.findFirst({
       where: { id: categoryId, isActive: true },
       select: { id: true, children: { where: { isActive: true }, take: 1 } },
     });
@@ -1010,7 +1006,7 @@ export class ProductService {
       throw new BadRequestException('Sản phẩm phải thuộc danh mục lá');
     }
     if (brandId != null) {
-      const brand = await this.prisma.brand.findFirst({
+      const brand = await client.brand.findFirst({
         where: { id: brandId, isActive: true },
         select: { id: true },
       });
@@ -1033,7 +1029,10 @@ export class ProductService {
           isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
         });
       } catch (error: unknown) {
-        if (isTransactionConflict(error)) {
+        if (
+          isTransactionConflict(error) ||
+          isAttributeTransactionConflict(error)
+        ) {
           if (attempt < 4) {
             await waitForTransactionRetry(attempt);
             continue;

@@ -158,21 +158,44 @@ export function publicProduct(product: ListingProduct) {
         productOptionValueId,
       }),
     ),
-    attributes: product.attributeValues
-      .filter(
-        (value) =>
-          value.attributeDefinition.isActive &&
-          value.attributeDefinition.categoryId === product.categoryId,
-      )
-      .map((value) => ({
-        id: value.attributeDefinitionId,
-        name: value.attributeDefinition.name,
-        value: value.option?.isActive
-          ? value.option.value
-          : (value.textValue ??
-            value.numberValue?.toString() ??
-            value.booleanValue),
-      })),
+    attributes: product.attributeValues.flatMap((value) => {
+      const definition = value.attributeDefinition;
+      if (!definition.isActive || definition.categoryId !== product.categoryId)
+        return [];
+      let projected: string | boolean | null = null;
+      switch (definition.dataType) {
+        case 'TEXT':
+          projected = value.textValue?.trim() || null;
+          break;
+        case 'NUMBER':
+          projected = value.numberValue?.toString() ?? null;
+          break;
+        case 'BOOLEAN':
+          projected = value.booleanValue;
+          break;
+        case 'SINGLE_SELECT':
+          projected =
+            value.optionId !== null
+              ? value.option?.isActive &&
+                value.option.attributeDefinitionId === definition.id
+                ? value.option.value
+                : null
+              : definition.allowsCustom
+                ? value.textValue?.trim() || null
+                : null;
+      }
+      // Optional inactive choices are omitted, never exposed as null or old
+      // labels. The exact same projection feeds Search via buildUpsertPayload.
+      return projected === null
+        ? []
+        : [
+            {
+              id: value.attributeDefinitionId,
+              name: definition.name,
+              value: projected,
+            },
+          ];
+    }),
     optionGroups: product.optionGroups.map((group) => ({
       id: group.id,
       name: group.name,

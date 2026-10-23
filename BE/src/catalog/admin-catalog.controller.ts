@@ -24,8 +24,6 @@ import { CreateBrandDto } from './dto/create-brand.dto.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { UpdateBrandDto } from './dto/update-brand.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
-import { CreateCategoryAttributeDto } from './dto/create-category-attribute.dto.js';
-import { UpdateCategoryAttributeDto } from './dto/update-category-attribute.dto.js';
 
 @ApiTags('admin-catalog')
 @ApiBearerAuth()
@@ -60,25 +58,6 @@ export class AdminCatalogController {
   @Delete('categories/:categoryId')
   deactivateCategory(@Param('categoryId', ParseIntPipe) categoryId: number) {
     return this.catalog.deactivateCategory(categoryId);
-  }
-
-  @ApiCreatedResponse({ description: 'Thuộc tính danh mục đã được tạo' })
-  @Post('categories/:categoryId/attributes')
-  createCategoryAttribute(
-    @Param('categoryId', ParseIntPipe) categoryId: number,
-    @Body() dto: CreateCategoryAttributeDto,
-  ) {
-    return this.catalog.createCategoryAttribute(categoryId, dto);
-  }
-
-  @ApiOkResponse({ description: 'Thuộc tính và durable reconciliation job' })
-  @Patch('categories/:categoryId/attributes/:attributeId')
-  updateCategoryAttribute(
-    @Param('categoryId', ParseIntPipe) categoryId: number,
-    @Param('attributeId', ParseIntPipe) attributeId: number,
-    @Body() dto: UpdateCategoryAttributeDto,
-  ) {
-    return this.catalog.updateCategoryAttribute(categoryId, attributeId, dto);
   }
 
   @ApiOkResponse({ description: 'Toàn bộ thương hiệu, gồm cả bản ghi đã tắt' })

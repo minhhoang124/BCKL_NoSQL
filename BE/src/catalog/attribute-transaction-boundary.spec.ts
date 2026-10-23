@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   AttributeTransactionBoundary,
   isAttributeTransactionConflict,
+  isAttributeDatabaseTimeout,
 } from './attribute-transaction-boundary.js';
 import type { PrismaService } from '../prisma.service.js';
 
@@ -20,6 +21,51 @@ const known = (code: string, meta?: Prisma.JsonObject) =>
     meta,
   });
 describe('Attribute transaction preparation bounds', () => {
+  it.each([
+    [known('P2010', { code: '55P03' }), true],
+    [known('P2010', { code: '57014' }), true],
+    [
+      known('P2010', {
+        driverAdapterError: { cause: { originalCode: '55P03' } },
+      }),
+      true,
+    ],
+    [
+      Object.assign(new Error('withheld'), {
+        name: 'DriverAdapterError',
+        cause: { originalCode: '57014' },
+      }),
+      true,
+    ],
+    [known('P2034'), false],
+    [known('P2002', { code: '55P03' }), false],
+    [known('P2010', { code: '23514' }), false],
+    [known('P2010', { code: '40001' }), false],
+    [new Error('55P03 timeout message is not proof'), false],
+    [{ code: '55P03' }, false],
+  ])('classifies only structured database timeouts (%s)', (error, expected) => {
+    expect(isAttributeDatabaseTimeout(error)).toBe(expected);
+  });
+  it.each(['create', 'patch'] as const)(
+    'maps %s lock timeout to503 without retrying the mutation',
+    async (operation) => {
+      const transaction = vi
+        .fn()
+        .mockRejectedValue(known('P2010', { code: '55P03' }));
+      const callback = vi.fn();
+      const boundary = new AttributeTransactionBoundary(
+        { $transaction: transaction } as unknown as PrismaService,
+        { enqueueCategory: vi.fn() },
+      );
+      await expect(
+        operation === 'create'
+          ? boundary.createDefinition({ actorId: 1, categoryId: 2 }, callback)
+          : boundary.run(scope, callback),
+      ).rejects.toMatchObject({ status: 503 });
+      expect(transaction).toHaveBeenCalledOnce();
+      expect(callback).not.toHaveBeenCalled();
+    },
+  );
   it.each([
     { actorId: 0 },
     { actorId: '1' },
