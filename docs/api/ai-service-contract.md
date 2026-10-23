@@ -157,6 +157,13 @@ Ví dụ: `DELETE /index/product/125?version=5`. DELETE xóa sản phẩm khỏi
 
 ## Tìm kiếm
 
+**Image gateway candidate23/10:** Backend đang triển khai proxy multipart tới
+endpoint image **đã tồn tại**, không đổi wire/AI runtime. Field image JPEG/PNG
+5MiB, topK1..50/default10, candidateK1..150/default min(max(topK*3,30),150).
+Response query type=image/topK/candidateK, text bị omit theo exclude-none.
+Hydrate vẫn dùng PostgreSQL/public policy. [Giới hạn, validator và test candidate](image-search-gateway.md).
+Chưa Web upload hoặc loaded Search acceptance; cần Hoàng–Đạt review alignment.
+
 - `POST /search/image`: truy vấn bằng ảnh; CLIP tạo vector và FAISS tìm ứng viên.
 - `POST /search/text`: truy vấn văn bản ngữ nghĩa bằng CLIP/FAISS.
 - `POST /search/hybrid`: endpoint hợp nhất cho Backend. FastAPI lấy ứng viên từ Elasticsearch (từ khóa/bộ lọc) và CLIP/FAISS, sau đó dùng RRF để xếp hạng. Endpoint đã được triển khai trong PR #8 và chạy smoke test với Elasticsearch thật; Backend vẫn phải hydrate và kiểm tra trạng thái Product từ PostgreSQL.

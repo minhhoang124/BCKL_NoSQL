@@ -1,5 +1,17 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Đồng bộ 23/10/2026:** nhận develop `66c5756` sau merge Backend Attributes
+#94, toolkit #105 và Account settings #108. Các ghi chú “chưa merge” ngày22/10
+dưới đây là lịch sử của PR; API ghi
+Attributes đã có trên develop, nhưng chưa nghiệm thu editor UI của Hiền.
+Không thay contract hoặc schema tìm ảnh trong lượt đồng bộ này.
+
+**Image query gateway — REVIEW23/10:** nhánh Backend nối multipart JPEG/PNG
+tới FastAPI image endpoint hiện có, không đổi AI/schema. Memory/pixel/decode,
+quota/deadline/body cap và strict wire validator nằm trước shared PostgreSQL
+hydrate; ảnh truy vấn không lưu. Chưa Web upload/loaded CLIP–FAISS acceptance.
+[Luồng, biến, giới hạn và test](../api/image-search-gateway.md).
+
 **Account settings —23/10/2026, runtime PR:** tên hiển thị CAS và đổi mật khẩu
 có kiểm mật khẩu hiện tại; User row lock dùng chung login/refresh/password.
 Hai migration mới thêm credentialVersion và audit bất biến; hash/version/revoke

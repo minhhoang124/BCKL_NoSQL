@@ -68,6 +68,15 @@ export class SearchService {
     // 1. Call FastAPI Search Service
     const aiResponse = await this.callFastApiSearch(dto);
 
+    return this.hydrate(aiResponse, dto);
+  }
+
+  // Both retrieval modes use the same canonical PostgreSQL/public-policy read.
+  // Input must have passed its mode-specific wire validator before this method.
+  async hydrate(
+    aiResponse: Pick<SearchServiceResponse, 'items' | 'responseTimeMs'>,
+    dto: Omit<SearchHybridQueryDto, 'query'>,
+  ) {
     if (aiResponse.items.length === 0) {
       return { items: [], responseTimeMs: aiResponse.responseTimeMs };
     }
@@ -165,7 +174,11 @@ export class SearchService {
       throw new Error('Search Service returned non-object response');
     }
     const data = raw as Record<string, unknown>;
-    this.assertExactKeys(data, ['query', 'items', 'responseTimeMs'], 'response');
+    this.assertExactKeys(
+      data,
+      ['query', 'items', 'responseTimeMs'],
+      'response',
+    );
     if (!data.query || typeof data.query !== 'object') {
       throw new Error('Search Service response missing query object');
     }

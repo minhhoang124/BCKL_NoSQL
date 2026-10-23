@@ -1,5 +1,19 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import type { UploadedImage } from '../product/product-image-storage.service.js';
+import {
+  IMAGE_SEARCH_MAX_BYTES,
+  ImageSearchService,
+} from './image-search.service.js';
+import { ImageSearchInterceptor } from './image-search.interceptor.js';
 import { SearchHybridQueryDto } from './dto/search-query.dto.js';
 import { SearchService } from './search.service.js';
 
@@ -13,7 +27,48 @@ import { SearchService } from './search.service.js';
 @ApiTags('search')
 @Controller('search')
 export class SearchController {
-  constructor(private readonly search: SearchService) {}
+  constructor(
+    private readonly search: SearchService,
+    private readonly imageSearch: ImageSearchService,
+  ) {}
+
+  @Post('image')
+  @HttpCode(200)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['image'],
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'JPEG/PNG <= 5 MiB; no persistence',
+        },
+        topK: { type: 'integer', minimum: 1, maximum: 50, default: 10 },
+        candidateK: { type: 'integer', minimum: 1, maximum: 150 },
+      },
+    },
+  })
+  @UseInterceptors(
+    ImageSearchInterceptor,
+    FileInterceptor('image', {
+      limits: {
+        fileSize: IMAGE_SEARCH_MAX_BYTES,
+        files: 1,
+        fields: 2,
+        parts: 3,
+        fieldSize: 32,
+        fieldNameSize: 32,
+      },
+    }),
+  )
+  image(
+    @UploadedFile() file: UploadedImage | undefined,
+    @Body() body: unknown,
+  ) {
+    return this.imageSearch.image(file, body);
+  }
 
   @ApiOkResponse({
     description:
