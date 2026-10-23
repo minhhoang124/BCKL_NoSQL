@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { canActAsBuyer } from '../auth/buyer-access.js';
 import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma.service.js';
 import type { OrderListResponseDto } from './order-list.dto.js';
@@ -24,7 +25,9 @@ export class OrderListService {
         });
         if (!actor?.isActive)
           throw orderError(401, 'UNAUTHORIZED', 'Vui lòng đăng nhập lại.');
-        if (actor.role !== role)
+        if (
+          role === Role.USER ? !canActAsBuyer(actor.role) : actor.role !== role
+        )
           throw orderError(
             403,
             'FORBIDDEN',

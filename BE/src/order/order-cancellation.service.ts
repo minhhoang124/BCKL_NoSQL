@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { canActAsBuyer } from '../auth/buyer-access.js';
 import { assertOrderCommandNotClosed } from './order-command-fence.js';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, Role } from '@prisma/client';
@@ -98,7 +99,9 @@ export class OrderCancellationService {
             });
             if (!actor?.isActive) throw orderCommandError(401, 'UNAUTHORIZED');
             if (
-              actor.role !== (actorType === 'BUYER' ? Role.USER : Role.SELLER)
+              actorType === 'BUYER'
+                ? !canActAsBuyer(actor.role)
+                : actor.role !== Role.SELLER
             )
               throw orderCommandError(403, 'FORBIDDEN');
             const owner =

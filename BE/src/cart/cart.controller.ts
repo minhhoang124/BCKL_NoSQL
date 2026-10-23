@@ -1,3 +1,4 @@
+import { BuyerAccess } from '../auth/buyer-access.js';
 import {
   Body,
   Controller,
@@ -50,6 +51,7 @@ import { CartService } from './cart.service.js';
   description: 'RATE_LIMITED, header Retry-After (seconds)',
 })
 @UseGuards(JwtAuthGuard, RolesGuard, CartRateLimitGuard)
+@BuyerAccess()
 @Roles(Role.USER)
 @UseFilters(CartExceptionFilter)
 @Controller('cart')

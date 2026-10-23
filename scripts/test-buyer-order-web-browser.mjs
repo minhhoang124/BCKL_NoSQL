@@ -10,6 +10,7 @@ const { values } = parseArgs({
   options: {
     "playwright-module": { type: "string" },
     output: { type: "string" },
+    "seller-as-buyer": { type: "boolean", default: false },
   },
 });
 assert(values.output && values["playwright-module"]);
@@ -19,7 +20,9 @@ assert.equal(db.hostname, "127.0.0.1");
 assert.equal(db.port, "5549");
 assert.equal(
   db.pathname,
-  "/bckl_order_resolution_test_buyer_web_20261023_v916",
+  values['seller-as-buyer']
+    ? "/bckl_order_resolution_test_attributes_20261019_v931"
+    : "/bckl_order_resolution_test_buyer_web_20261023_v916",
 );
 assert(
   !db.hash &&
@@ -44,6 +47,10 @@ Object.assign(process.env, {
   SEARCH_RECONCILIATION_ENABLED: "false",
   PRODUCT_IMAGE_REPAIR_ENABLED: "false",
   ORDER_AUTO_COMPLETE_ENABLED: "false",
+  ...(values['seller-as-buyer'] ? {
+    ACCOUNT_BUYER_ACCESS_ENABLED: 'true',
+    VITE_ACCOUNT_BUYER_ACCESS_ENABLED: 'true',
+  } : {}),
 });
 const reqBE = createRequire(path.join(root, "BE/package.json"));
 const reqFE = createRequire(path.join(root, "FE/package.json"));
@@ -356,7 +363,10 @@ try {
     data: { name: "QA Browser Leaf", slug: marker },
   });
   async function fixture(command, name) {
-    const buyer = await actor("USER", name);
+    const buyer = await actor(values['seller-as-buyer'] ? "SELLER" : "USER", name);
+    if (values['seller-as-buyer']) {
+      await p.store.create({ data: { sellerId: buyer.user.id, name: `${marker}-${name}-own-store`, status: 'SUSPENDED' } });
+    }
     const product = await p.product.create({
       data: {
         storeId: store.id,
@@ -768,6 +778,7 @@ try {
   const evidence = {
     marker,
     layer: "REAL_CHROME_HTTP_POSTGRES",
+    buyerAccountRole: values['seller-as-buyer'] ? 'SELLER' : 'USER',
     browserVersion,
     headless: true,
     results,

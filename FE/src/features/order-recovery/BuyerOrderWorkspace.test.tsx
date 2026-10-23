@@ -175,7 +175,9 @@ describe("Buyer production Order detail workspace", () => {
     });
     expect(writes()).toHaveLength(0);
   });
-  it("lost committed response survives real storage-backed remount and resolves only after consent", async () => {
+  it.each(["USER", "SELLER"] as const)("%s lost committed response survives real storage-backed remount and resolves only after consent", async (role) => {
+    vi.stubEnv("VITE_ACCOUNT_BUYER_ACCESS_ENABLED", role === "SELLER" ? "true" : "false");
+    auth.user = { ...buyer, role };
     transport.mockImplementation(async (url, init) => {
       if (url.endsWith("/resolve-command"))
         return json({
@@ -214,6 +216,29 @@ describe("Buyer production Order detail workspace", () => {
     expect(writes()[1][1].headers.get("Idempotency-Key")).toBe(
       JSON.parse(raw).idempotencyKey,
     );
+    expect(auth.user?.role).toBe(role);
+  });
+  it("allows Seller complete in Buyer context only with opt-in, without rewriting auth", async () => {
+    vi.stubEnv("VITE_ACCOUNT_BUYER_ACCESS_ENABLED", "true");
+    auth.user = { ...buyer, role: "SELLER" };
+    order = commandOrder("complete");
+    render(tree());
+    await choose("complete"); consent("complete");
+    fireEvent.click(submit("complete"));
+    await screen.findByText("Đã xác minh biên nhận và tải lại đơn. Không cần gửi lại lệnh.");
+    expect(writes()).toHaveLength(1);
+    expect(writes()[0][0]).toContain('/orders/101/complete');
+    expect(auth.user.role).toBe("SELLER");
+  });
+  it("keeps Seller out of Buyer route when the new flag is off", async () => {
+    vi.stubEnv("VITE_ACCOUNT_BUYER_ACCESS_ENABLED", "false");
+    auth.user = { ...buyer, role: "SELLER" };
+    transport.mockImplementation(async (url: string) =>
+      json(url.includes('/products') ? { items: [], nextCursor: null } : []));
+    render(tree());
+    await waitFor(() => expect(transport.mock.calls.some(([url]) => url.includes('/categories'))).toBe(true));
+    expect(writes()).toHaveLength(0);
+    expect(transport.mock.calls.some(([url]) => url.endsWith('/orders/101'))).toBe(false);
   });
   it.each(["cancel", "complete"] as const)(
     "known %s receipt + GET failure exposes GET-only retry",

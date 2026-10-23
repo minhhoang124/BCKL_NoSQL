@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { canActAsBuyer } from '../auth/buyer-access.js';
 import { PrismaService } from '../prisma.service.js';
 import { checkoutConfigInt } from '../checkout/checkout-create-rate.js';
 import {
@@ -81,7 +82,7 @@ export class BuyerCommandResolutionService {
               select: { isActive: true, role: true },
             });
             if (!actor?.isActive) throw orderCommandError(401, 'UNAUTHORIZED');
-            if (actor.role !== Role.USER)
+            if (!canActAsBuyer(actor.role))
               throw orderCommandError(403, 'FORBIDDEN');
             const ref = await tx.order.findFirst({
               where: { id: orderId, buyerId: actorId },

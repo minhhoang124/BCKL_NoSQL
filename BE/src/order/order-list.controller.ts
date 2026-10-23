@@ -1,3 +1,4 @@
+import { BuyerAccess } from '../auth/buyer-access.js';
 import {
   Controller,
   Get,
@@ -44,6 +45,7 @@ export class OrderListController {
   constructor(private readonly orders: OrderListService) {}
 
   @Get('orders')
+  @BuyerAccess()
   @Roles(Role.USER)
   @Header('Cache-Control', 'no-store')
   @ApiQuery({

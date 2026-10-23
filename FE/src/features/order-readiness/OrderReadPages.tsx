@@ -5,6 +5,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useAuth } from "../../contexts/useAuth";
+import { hasBuyerAccess } from "../../utils/buyerAccess";
 import { getAuthSessionVersion } from "../../services/apiClient";
 import { validOrderId } from "../../services/orderResponse";
 import {
@@ -38,7 +39,7 @@ export function OrderReadPage({
   const { orderId } = useParams();
   const [params] = useSearchParams();
   if (loading) return <p role="status">Đang xác minh phiên…</p>;
-  if (!user?.isActive || user.role !== (scope === "buyer" ? "USER" : "SELLER"))
+  if (!user?.isActive || (scope === "buyer" ? !hasBuyerAccess(user) : user.role !== "SELLER"))
     return (
       <p role="alert">
         Cần tài khoản đang hoạt động và đúng vai trò để xem đơn.

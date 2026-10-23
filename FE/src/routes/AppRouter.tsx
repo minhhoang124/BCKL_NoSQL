@@ -72,21 +72,21 @@ export function AppRouter() {
           }
         />
 
-        <Route path="/cart" element={<ProtectedRoute allowedRoles={['USER']}><CartPage /></ProtectedRoute>} />
-        <Route path="/checkout" element={<ProtectedRoute allowedRoles={['USER']}><CheckoutPage /></ProtectedRoute>} />
+        <Route path="/cart" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><CartPage /></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><CheckoutPage /></ProtectedRoute>} />
 
         {/* Protected Routes - Buyer addresses */}
         <Route
           path="/account/addresses"
           element={
-            <ProtectedRoute allowedRoles={['USER']}>
+            <ProtectedRoute buyerAccess allowedRoles={['USER']}>
               <AddressBookPage />
             </ProtectedRoute>
           }
         />
 
-        <Route path="/account/orders" element={<ProtectedRoute allowedRoles={['USER']}><OrderReadPage scope="buyer" /></ProtectedRoute>} />
-        <Route path="/account/orders/:orderId" element={<ProtectedRoute allowedRoles={['USER']}><OrderReadPage scope="buyer" detail /></ProtectedRoute>} />
+        <Route path="/account/orders" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><OrderReadPage scope="buyer" /></ProtectedRoute>} />
+        <Route path="/account/orders/:orderId" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><OrderReadPage scope="buyer" detail /></ProtectedRoute>} />
         <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" /></ProtectedRoute>} />
         <Route path="/seller/orders/:orderId" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" detail /></ProtectedRoute>} />
 

@@ -1,3 +1,4 @@
+import { BuyerAccess } from '../auth/buyer-access.js';
 import {
   Body,
   Controller,
@@ -51,6 +52,7 @@ import { AddressService } from './address.service.js';
 @ApiUnauthorizedResponse({ type: AddressErrorDto })
 @ApiForbiddenResponse({ type: AddressErrorDto })
 @UseGuards(JwtAuthGuard, RolesGuard)
+@BuyerAccess()
 @Roles(Role.USER)
 @UseFilters(AddressExceptionFilter)
 @Controller('me/addresses')

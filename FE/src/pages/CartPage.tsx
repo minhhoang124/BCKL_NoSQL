@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
+import { hasBuyerAccess } from '../utils/buyerAccess';
 import { useAuth } from '../contexts/useAuth';
 import { ApiError } from '../services/apiClient';
 import { cartApi } from '../services/cartApi';
@@ -84,7 +85,7 @@ export function CartPage() {
   const { user, loading } = useAuth();
   if (loading) return <p role="status">Đang kiểm tra phiên đăng nhập...</p>;
   if (!user) return <p role="alert">Vui lòng đăng nhập để xem giỏ hàng.</p>;
-  if (user.role !== 'USER' || !user.isActive)
+  if (!hasBuyerAccess(user))
     return <p role="alert">Chỉ tài khoản người mua đang hoạt động được quản lý giỏ hàng.</p>;
   return <CartContent key={user.id} user={user} />;
 }

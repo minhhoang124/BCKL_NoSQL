@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/useAuth";
+import { hasBuyerAccess } from "../../utils/buyerAccess";
 import { getAuthSessionVersion } from "../../services/apiClient";
 import { OrderDetailPanel } from "../order-readiness/OrderPanels";
 import { BuyerCommandReview } from "./BuyerCommandReview";
@@ -16,9 +17,11 @@ export function BuyerOrderWorkspace({ orderId }: { orderId: number }) {
   const { user, loading } = useAuth();
   const version = getAuthSessionVersion();
   if (loading) return <p role="status">Đang xác minh phiên…</p>;
-  if (!user?.isActive || user.role !== "USER")
+  if (!user?.isActive || !hasBuyerAccess(user))
     return <p role="alert">Cần Buyer đang hoạt động để xem đơn.</p>;
   const session: VerifiedOrderSession = {
+    // USER here is the existing BUYER journal context, not a rewritten Auth role.
+    // Keep the real user/token and auth session generation unchanged.
     actor: { id: user.id, role: "USER" },
     version,
     isActive: true,

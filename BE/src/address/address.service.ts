@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { canActAsBuyer } from '../auth/buyer-access.js';
 import { PrismaService } from '../prisma.service.js';
 import {
   isTransactionConflict,
@@ -165,7 +166,7 @@ export class AddressService {
                 'UNAUTHORIZED',
                 'Vui lòng đăng nhập lại.',
               );
-            if (user.role !== Role.USER)
+            if (!canActAsBuyer(user.role))
               throw addressError(
                 403,
                 'FORBIDDEN',

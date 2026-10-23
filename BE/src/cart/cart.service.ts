@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { canActAsBuyer } from '../auth/buyer-access.js';
 import { PrismaService } from '../prisma.service.js';
 import {
   displayVariants,
@@ -115,7 +116,7 @@ export class CartService {
     });
     if (!actor?.isActive)
       throw cartError(401, 'UNAUTHORIZED', 'Vui lòng đăng nhập lại.');
-    if (actor.role !== Role.USER)
+    if (!canActAsBuyer(actor.role))
       throw cartError(
         403,
         'FORBIDDEN',

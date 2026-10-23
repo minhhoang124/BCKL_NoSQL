@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/useAuth';
+import { hasBuyerAccess } from '../../utils/buyerAccess';
 import { getAuthSessionVersion } from '../../services/apiClient';
 import { orderApi } from '../../services/orderApi';
 import type {
@@ -19,7 +20,7 @@ function useRead<T>(
   const enabled =
     !loading &&
     Boolean(
-      user?.isActive && user.role === (scope === 'buyer' ? 'USER' : 'SELLER'),
+      scope === 'buyer' ? hasBuyerAccess(user) : user?.isActive && user.role === 'SELLER',
     );
   const [nonce, setNonce] = useState(0);
   const key = JSON.stringify([

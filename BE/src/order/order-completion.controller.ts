@@ -1,3 +1,4 @@
+import { BuyerAccess } from '../auth/buyer-access.js';
 import {
   Body,
   Controller,
@@ -34,6 +35,7 @@ import {
 } from './order-completion.http.js';
 @ApiTags('buyer-order-completion')
 @ApiBearerAuth()
+@BuyerAccess()
 @Roles(Role.USER)
 @UseGuards(JwtAuthGuard, RolesGuard, OrderCompletionRateGuard)
 @UseFilters(OrderCompletionExceptionFilter)

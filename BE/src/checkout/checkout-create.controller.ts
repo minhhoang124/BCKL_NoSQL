@@ -1,3 +1,4 @@
+import { BuyerAccess } from '../auth/buyer-access.js';
 import {
   Body,
   Controller,
@@ -40,6 +41,7 @@ import {
 
 @ApiTags('buyer-checkout')
 @ApiBearerAuth()
+@BuyerAccess()
 @Roles(Role.USER)
 @UseGuards(JwtAuthGuard, RolesGuard, CheckoutCreateIngressGuard)
 @UseFilters(CheckoutExceptionFilter)

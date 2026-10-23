@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { hasBuyerAccess } from '../utils/buyerAccess';
 import { useAuth } from '../contexts/useAuth';
 import { ApiError } from '../services/apiClient';
 import { addressApi } from '../services/addressApi';
@@ -22,7 +23,7 @@ function messageFor(error: unknown) {
 export function AddressBookPage() {
   const { user } = useAuth();
   if (!user) return null;
-  if (user.role !== 'USER' || !user.isActive) return <p role="alert">Chỉ tài khoản người mua đang hoạt động được quản lý địa chỉ.</p>;
+  if (!hasBuyerAccess(user)) return <p role="alert">Chỉ tài khoản người mua đang hoạt động được quản lý địa chỉ.</p>;
   // A session change remounts the page and clears all personal data and draft state.
   return <AddressBookContent key={user.id} user={user} />;
 }

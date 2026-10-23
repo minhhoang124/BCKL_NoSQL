@@ -1,3 +1,4 @@
+import { BuyerAccess } from '../auth/buyer-access.js';
 import {
   Body,
   Controller,
@@ -84,6 +85,7 @@ export class OrderCancellationController {
     );
   }
   @Post('orders/:orderId/cancel')
+  @BuyerAccess()
   @Roles(Role.USER)
   @HttpCode(200)
   @Header('Cache-Control', 'no-store')

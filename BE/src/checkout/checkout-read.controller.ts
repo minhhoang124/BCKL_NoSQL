@@ -1,3 +1,4 @@
+import { BuyerAccess } from '../auth/buyer-access.js';
 import {
   Body,
   Controller,
@@ -58,6 +59,7 @@ import {
     'RATE_LIMITED; Retry-After giây. Bucket preview/lookup riêng theo User, per-instance.',
 })
 @UseGuards(JwtAuthGuard, RolesGuard, CheckoutReadRateGuard)
+@BuyerAccess()
 @Roles(Role.USER)
 @UseFilters(CheckoutExceptionFilter)
 @Controller()

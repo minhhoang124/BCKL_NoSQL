@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { hasBuyerAccess } from '../../utils/buyerAccess';
 import { useAuth } from '../../contexts/useAuth';
 import { ApiError } from '../../services/apiClient';
 import styles from './Header.module.css';
@@ -46,7 +47,7 @@ export function Header() {
         {user ? (
           <>
             <Link to="/account">Tài khoản ({user.fullName || user.email})</Link>
-            {user.role === 'USER' && user.isActive && <Link to="/cart">Giỏ hàng</Link>}
+            {hasBuyerAccess(user) && <Link to="/cart">Giỏ hàng</Link>}
             {user.role === 'SELLER' && <Link to="/seller">Kênh người bán</Link>}
             {user.role === 'ADMIN' && <Link to="/admin">Quản trị</Link>}
             <button

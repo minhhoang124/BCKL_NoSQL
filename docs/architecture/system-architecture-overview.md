@@ -1,5 +1,20 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Đồng bộ 23/10/2026:** nhận develop `65ad255` sau merge #94/#108/#102/#104/#107. Backend ghi
+Attributes đã có trên develop; các nhãn chưa merge ngày 22/10 bên dưới là lịch
+sử. Editor UI chưa được nghiệm thu. Đợt quyền mua bổ sung vẫn mặc định tắt,
+chưa thay schema hoặc quy trình cấp quyền bán sau duyệt Store.
+
+**Một tài khoản mua/bán — 23/10/2026, quyền mua bổ sung IN_PROGRESS:** thêm policy
+quyền Buyer đánh dấu riêng, cho SELLER dùng tài nguyên mua của chính mình chỉ
+khi cờ server được bật; mặc định tắt. Service vẫn đọc quyền/tài khoản trong
+transaction; SQL ownership, audit BUYER và receipt cũ không đổi. Không schema,
+onboarding mới; Web nối policy Buyer qua cờ build mặc định tắt, không đổi Auth
+role thật hoặc hash/receipt Order. Chưa hoàn thành SCOPE-ROLE-001. Migration membership
+và cấp quyền sau duyệt phải review riêng, không suy Seller legacy đã được duyệt.
+[Bản đồ/thiết kế chuyển đổi](account-buyer-seller-rollout.md),
+[kiểm thử và giới hạn](../testing/account-buyer-access-2026-10-23.md).
+
 **Đối chiếu SRS và phạm vi định lượng — 23/10/2026:** Backend Attributes #94
 đã merge tại `a91db91`; chưa đồng nghĩa editor Admin hoàn chỉnh. Nhóm chốt
 7 truy vấn phát triển đủ nhãn trên 86 sản phẩm (602 cặp), giữ retrieval và

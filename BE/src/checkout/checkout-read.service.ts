@@ -1,5 +1,6 @@
 import { HttpException, Injectable, Logger } from '@nestjs/common';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { canActAsBuyer } from '../auth/buyer-access.js';
 import { PrismaService } from '../prisma.service.js';
 import {
   displayVariants,
@@ -236,7 +237,7 @@ export class CheckoutReadService {
         });
         if (!actor?.isActive)
           throw checkoutError(401, 'UNAUTHORIZED', 'Vui lòng đăng nhập lại.');
-        if (actor.role !== Role.USER)
+        if (!canActAsBuyer(actor.role))
           throw checkoutError(
             403,
             'FORBIDDEN',
