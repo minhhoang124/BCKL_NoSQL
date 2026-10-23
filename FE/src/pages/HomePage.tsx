@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { marketplaceApi } from '../services/marketplaceApi';
 import type { Brand, Category, Product } from '../types/marketplace';
 import { ProductCard } from '../components/ProductCard/ProductCard';
@@ -94,7 +94,7 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
       <label><input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} /> Còn hàng</label>
       <button disabled={loading}>{loading ? 'Đang tìm…' : 'Tìm kiếm'}</button>
     </form>
-    <p className={styles.hint}>Tìm bằng ảnh cần endpoint upload/query image từ Search Service; contract hiện tại mới chốt hybrid text nên chưa bật nút giả.</p>
+    <p className={styles.hint}>{import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' ? <Link to="/search/image">Tìm sản phẩm bằng ảnh JPEG/PNG</Link> : 'Tìm kiếm bằng ảnh chưa được bật ở bản triển khai này.'}</p>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {searched && <p>{products.length} kết quả{responseTime !== null ? ` · Search Service ${Math.round(responseTime)} ms` : ''}</p>}
     {!loading && !error && !products.length && nextCursor === null ? <div className={styles.empty}>Chưa có sản phẩm phù hợp.</div> : <section className={styles.grid}>{products.map((item) => <ProductCard key={item.id} product={item} />)}</section>}

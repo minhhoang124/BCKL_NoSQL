@@ -27,7 +27,17 @@ it('uses the same parent-category subtree filter for listing and keyword search'
   fireEvent.click(screen.getByRole('button', { name: 'Tìm kiếm' }));
   await waitFor(() => expect(search).toHaveBeenLastCalledWith({ query: 'headphones', topK: 24, candidateK: 100, categoryIds: [1] }));
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllEnvs(); });
+
+it.each([undefined, 'false', 'true'])('exposes image search only for the explicit enable flag %s', async (flag) => {
+  vi.stubEnv('VITE_IMAGE_SEARCH_ENABLED', flag);
+  vi.spyOn(marketplaceApi, 'publicProducts').mockResolvedValue({ items: [], nextCursor: null });
+  render(<MemoryRouter><HomePage /></MemoryRouter>);
+  await screen.findByRole('button', { name: 'Tìm kiếm' });
+  const link = screen.queryByRole('link', { name: 'Tìm sản phẩm bằng ảnh JPEG/PNG' });
+  if (flag === 'true') expect(link).toHaveAttribute('href', '/search/image');
+  else expect(link).not.toBeInTheDocument();
+});
 
 it('sends filters to Backend and follows the cursor even after an empty page', async () => {
   const list = vi.spyOn(marketplaceApi, 'publicProducts')

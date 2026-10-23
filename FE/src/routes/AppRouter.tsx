@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { PublicLayout } from "../layouts/PublicLayout";
 import { HomePage } from "../pages/HomePage";
+import { ImageSearchPage } from "../pages/ImageSearchPage";
 import { LoginPage } from "../pages/LoginPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { AccountPage } from "../pages/AccountPage";
@@ -56,6 +57,7 @@ export function AppRouter() {
       <Route element={<PublicLayout />}>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
+        {import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' && <Route path="/search/image" element={<ImageSearchPage />} />}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />

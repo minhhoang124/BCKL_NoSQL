@@ -1,7 +1,20 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
-**Đồng bộ 23/10/2026:** nhận develop `66c5756` sau merge Backend Attributes
-#94, toolkit #105 và Account settings #108. Các ghi chú “chưa merge” ngày22/10
+**Image Web live QA — 23/10/2026:** bản ghép QA Backend #102 và Web #104
+đạt5nhóm Chrome với CLIP/FAISS/Elasticsearch/PostgreSQL thật, dữ liệu tổng hợp
+trên DB/index mới. Có kiểm bấm đôi và lọc Product đã ẩn khi index stale.
+Chưa merge/bật cờ develop; không phải số liệu chất lượng tìm ảnh.
+[Source SHA, kết quả và giới hạn](../testing/image-search-live-browser-2026-10-23.md).
+
+**Web tìm ảnh — 23/10/2026, IN_PROGRESS:** thêm màn chọn/xem trước JPEG/PNG,
+gửi chủ động, dừng chờ và xử lý lỗi; cờ build mặc định tắt. Adapter kiểm response
+trước ProductCard; số thứ tự yêu cầu chặn phản hồi cũ, đổi phiên xóa ảnh truy vấn.
+Không đổi Backend/schema hoặc contract AI; gateway #102 đã merge tại09b332c.
+Test Frontend chưa thay bằng chứng CLIP/FAISS/PostgreSQL/Chrome xuyên suốt.
+[Luồng, biến và giới hạn QA](../testing/image-search-web-2026-10-23.md).
+
+**Đồng bộ 23/10/2026:** nhận develop `09b332c` sau merge Backend Attributes
+#94, toolkit #105, Account settings #108 và image gateway #102. Ghi chú “chưa merge” ngày22/10
 dưới đây là lịch sử của PR; API ghi
 Attributes đã có trên develop, nhưng chưa nghiệm thu editor UI của Hiền.
 Không thay contract hoặc schema tìm ảnh trong lượt đồng bộ này.
