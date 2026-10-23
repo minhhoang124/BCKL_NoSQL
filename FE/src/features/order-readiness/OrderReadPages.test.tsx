@@ -53,6 +53,7 @@ beforeEach(() => {
   // Preserve explicit read-only fallback coverage; command workspace has its
   // own production-route tests with the feature enabled/default.
   vi.stubEnv('VITE_BUYER_ORDER_COMMANDS_ENABLED', 'false');
+  vi.stubEnv('VITE_SELLER_ORDER_COMMANDS_ENABLED', 'false');
   api.mockReset();
   setAccessToken("fixture-only", buyer.id);
   auth = {

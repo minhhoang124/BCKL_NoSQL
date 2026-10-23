@@ -26,7 +26,7 @@ function pathId(value: string | undefined) {
     ? Number(value)
     : null;
 }
-/** Read routes and the merged, explicitly gated Seller command workspace. */
+/** Production Order routes; explicit false flags retain read-only fallbacks. */
 export function OrderReadPage({
   scope,
   detail = false,
@@ -62,10 +62,13 @@ export function OrderReadPage({
         <Link to={base(scope)}>Danh sách đơn</Link>
       </nav>
       <p>
-        {scope === "seller" && detail &&
-        import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED === "true"
-          ? "Kiểm thử xử lý đơn Seller; mỗi bước cần xác nhận, không tự gửi lại yêu cầu."
-          : scope === 'buyer' && detail && import.meta.env.VITE_BUYER_ORDER_COMMANDS_ENABLED !== 'false'
+        {scope === "seller" &&
+        detail &&
+        import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED !== "false"
+          ? "Xử lý đơn đã nhận; mỗi bước cần xác nhận riêng, không tự gửi lại yêu cầu."
+          : scope === "buyer" &&
+              detail &&
+              import.meta.env.VITE_BUYER_ORDER_COMMANDS_ENABLED !== "false"
             ? "Xem đơn đã lưu; hủy hoặc hoàn tất hợp lệ cần xác nhận riêng, không tự gửi lại yêu cầu."
             : "Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật trên màn này."}
       </p>
@@ -94,9 +97,10 @@ export function OrderReadPage({
         <div className={styles.content}>
           {detail ? (
             scope === "seller" &&
-            import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED === "true" ? (
+            import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED !== "false" ? (
               <SellerOrderWorkspace key={key} orderId={pathId(orderId)!} />
-            ) : scope === 'buyer' && import.meta.env.VITE_BUYER_ORDER_COMMANDS_ENABLED !== 'false' ? (
+            ) : scope === "buyer" &&
+              import.meta.env.VITE_BUYER_ORDER_COMMANDS_ENABLED !== "false" ? (
               <BuyerOrderWorkspace key={key} orderId={pathId(orderId)!} />
             ) : (
               <Detail key={key} scope={scope} orderId={pathId(orderId)!} />

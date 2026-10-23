@@ -9,6 +9,7 @@ import styles from "./SellerCommandReview.module.css";
 
 type Props = {
   connected?: boolean;
+  integrated?: boolean;
   session: VerifiedOrderSession | null;
   intent: PendingOrderIntent;
   orderNumber: string;
@@ -57,6 +58,7 @@ function Content({
   onResolve,
   onReload,
   connected,
+  integrated,
 }: Props) {
   const id = useId(),
     latch = useRef(false);
@@ -88,9 +90,11 @@ function Content({
       }
     >
       <p className={styles.preparation}>
-        {connected
-          ? "KIỂM THỬ QA — đối chiếu qua Backend."
-          : "BẢN CHUẨN BỊ — chưa nối giao dịch trên Web."}
+        {integrated
+          ? "Đối chiếu kết quả đã lưu trên hệ thống, không tự thực hiện lại lệnh cũ."
+          : connected
+            ? "KIỂM THỬ QA — đối chiếu qua Backend."
+            : "BẢN CHUẨN BỊ — chưa nối giao dịch trên Web."}
       </p>
       <h2 id={id}>Đối chiếu yêu cầu đang chờ</h2>
       <p>

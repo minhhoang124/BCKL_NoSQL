@@ -21,6 +21,7 @@ export type SellerReviewPhase =
   | "blocked";
 type Props = {
   connected?: boolean;
+  integrated?: boolean;
   session: VerifiedOrderSession | null;
   target: SellerReviewTarget;
   phase: SellerReviewPhase;
@@ -77,6 +78,7 @@ function ReviewContent({
   onCancel,
   onReload,
   connected,
+  integrated,
 }: Props) {
   const headingId = useId();
   const [confirmed, setConfirmed] = useState(false);
@@ -101,9 +103,11 @@ function ReviewContent({
       }
     >
       <p className={styles.preparation}>
-        {connected
-          ? "KIỂM THỬ QA — thao tác gọi API thật."
-          : "BẢN CHUẨN BỊ — chưa nối thao tác Order trên Web."}
+        {integrated
+          ? "Thao tác trên đơn đã lưu; kiểm tra thông tin và xác nhận trước khi gửi."
+          : connected
+            ? "KIỂM THỬ QA — thao tác gọi API thật."
+            : "BẢN CHUẨN BỊ — chưa nối thao tác Order trên Web."}
       </p>
       <h2 id={headingId}>{labels[target.command]}</h2>
       <p>

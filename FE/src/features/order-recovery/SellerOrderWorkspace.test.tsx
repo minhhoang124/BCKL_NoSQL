@@ -10,10 +10,14 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthContext, type AuthContextType } from "../../contexts/useAuth";
 import { AppRouter } from "../../routes/AppRouter";
-import { setAccessToken } from "../../services/apiClient";
+import {
+  getAuthSessionVersion,
+  setAccessToken,
+} from "../../services/apiClient";
 import {
   detailFixture,
   receiptFixture,
@@ -73,6 +77,110 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 describe("Seller QA route + confirmation/recovery", () => {
+  it("route remounts by orderId when following another pending Order, using its correct receipt identity", async () => {
+    const pending = createOrderIntentJournal(sessionStorage).prepare(
+      { id: seller.id, role: "SELLER" },
+      20,
+      "confirm",
+    );
+    transport.mockImplementation(async (url: string, options: RequestInit) => {
+      if (options.method === "POST")
+        return json({
+          outcome: "CLOSED_WITHOUT_EXECUTION",
+          resolutionId: 2,
+          orderId: 20,
+          command: "confirm",
+          resolvedAt: "2026-10-18T06:00:00.000Z",
+        });
+      return json(
+        url.endsWith("/seller/store")
+          ? { id: 4, sellerId: seller.id, status: "ACTIVE" }
+          : detailFixture(url.endsWith("/20") ? 20 : 19),
+      );
+    });
+    render(tree());
+    fireEvent.click(
+      await screen.findByRole("link", { name: "Đối chiếu đơn 20" }),
+    );
+    await screen.findByRole("heading", { name: "Đối chiếu yêu cầu đang chờ" });
+    expect(screen.getAllByText("FIXTURE-20").length).toBeGreaterThan(0);
+    expect(screen.queryByText("FIXTURE-19")).not.toBeInTheDocument();
+    expect(writes()).toHaveLength(0);
+    consent();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Đối chiếu / dừng yêu cầu cũ" }),
+    );
+    await screen.findByText(
+      "Đã đóng mã yêu cầu chưa thực hiện và tải lại đơn. Đóng mã không phải hủy đơn.",
+    );
+    expect(writes()).toHaveLength(1);
+    expect(writes()[0][0]).toMatch(/\/seller\/orders\/20\/resolve-command$/);
+    expect((writes()[0][1].headers as Headers).get("Idempotency-Key")).toBe(
+      pending.idempotencyKey,
+    );
+    expect(
+      sessionStorage.getItem(`bckl-order-command-journal-v1:${seller.id}`),
+    ).toBeNull();
+  });
+  it("Auth becomes inactive without a version bump: parent guard unmounts and fences a late response", async () => {
+    const version = getAuthSessionVersion();
+    const late = deferred<Response>();
+    const view = render(tree());
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Xác nhận đơn" }),
+      ).toBeEnabled(),
+    );
+    transport.mockImplementationOnce(() => late.promise);
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận đơn" }));
+    consent();
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận thao tác" }));
+    await waitFor(() => expect(writes()).toHaveLength(1));
+    auth = { ...auth, user: { ...seller, isActive: false } };
+    view.rerender(tree());
+    expect(getAuthSessionVersion()).toBe(version);
+    expect(
+      screen.queryByRole("region", { name: "Xử lý đơn Seller" }),
+    ).not.toBeInTheDocument();
+    await act(async () => {
+      late.resolve(json(receiptFixture()));
+    });
+    expect(
+      sessionStorage.getItem(`bckl-order-command-journal-v1:${seller.id}`),
+    ).not.toBeNull();
+    expect(screen.queryByText("Tên sản phẩm lúc mua")).not.toBeInTheDocument();
+    expect(writes()).toHaveLength(1);
+  });
+  it("default production flag mounts the real workspace, but GETs only until consent", async () => {
+    vi.stubEnv("VITE_SELLER_ORDER_COMMANDS_ENABLED", undefined);
+    render(tree());
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Xác nhận đơn" }),
+      ).toBeEnabled(),
+    );
+    expect(
+      screen.getByRole("region", { name: "Xử lý đơn Seller" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/KIỂM THỬ QA/)).not.toBeInTheDocument();
+    expect(writes()).toHaveLength(0);
+  });
+  it("StrictMode setup-cleanup-setup stays readable and never sends automatically", async () => {
+    render(<StrictMode>{tree()}</StrictMode>);
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Xác nhận đơn" }),
+      ).toBeEnabled(),
+    );
+    expect(writes()).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận đơn" }));
+    consent();
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận thao tác" }));
+    await screen.findByText(
+      "Đã ghi nhận lệnh và tải lại đơn. Mỗi bước tiếp theo cần xác nhận riêng.",
+    );
+    expect(writes()).toHaveLength(1);
+  });
   it("requires separate consent, permits cancel/reopen, sends once and shows fresh next step", async () => {
     render(tree());
     const button = await screen.findByRole("button", { name: "Xác nhận đơn" });
@@ -182,7 +290,7 @@ describe("Seller QA route + confirmation/recovery", () => {
     ).not.toBeNull();
     expect(screen.queryByText("Tên sản phẩm lúc mua")).not.toBeInTheDocument();
   });
-  it("default-off route stays read-only and never requests Store or POST", async () => {
+  it("explicit false kill-switch stays read-only and never requests Store or POST", async () => {
     vi.stubEnv("VITE_SELLER_ORDER_COMMANDS_ENABLED", "false");
     render(tree());
     await screen.findByText("Tên sản phẩm lúc mua");

@@ -1,5 +1,13 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Seller Order Web — 23/10/2026, runtime promotion:** route chi tiết nối ba
+bước xác nhận → đóng gói → sẵn sàng bàn giao, mặc định bật và có build
+kill-switch chỉ đọc. Không POST khi mount/reload; confirmation/resolve tách
+riêng, giữ key khi unknown và chỉ retryGET khi receipt đã biết. Không đổi
+Backend/schema/Auth. Chrome11case đạt trên QA; chưa Seller hủy/nhận hàng hoàn,
+Admin delivery UI hoặc full marketplace DONE. [Luồng/biến](seller-order-web-production.md),
+[bằng chứng/giới hạn](../testing/seller-order-web-production-2026-10-23.md).
+
 **#40 đồng bộ 20/10/2026:** nhận develop `2f78a98`; giữ toàn bộ route thật
 Address/Cart/Checkout/Order và Admin shell riêng. Màn mẫu chỉ ở `/dev` khi DEV,
 không thay nghiệp vụ thật. 680 FE PASS/6 live SKIP, build/lint PASS;

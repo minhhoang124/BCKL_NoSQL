@@ -7,6 +7,7 @@ import { SellerCommandReview } from "./SellerCommandReview";
 import { SellerResolutionReview } from "./SellerResolutionReview";
 import { createSellerOrderWorkflow } from "./sellerOrderWorkflow";
 import type { VerifiedOrderSession } from "./orderCommandCoordinator";
+import styles from "./SellerOrderWorkspace.module.css";
 
 function storage() {
   try {
@@ -18,7 +19,7 @@ function storage() {
     return { getItem: blocked, setItem: blocked, removeItem: blocked };
   }
 }
-/** QA opt-in route. GET only on mount; every POST requires separate consent. */
+/** Production route. GET only on mount; every POST requires separate consent. */
 export function SellerOrderWorkspace({ orderId }: { orderId: number }) {
   const { user, loading } = useAuth();
   const version = getAuthSessionVersion();
@@ -54,11 +55,19 @@ export function SellerOrderWorkspace({ orderId }: { orderId: number }) {
   const confirming = state.phase === "confirm-new";
   const pending = state.pending;
   return (
-    <>
+    <section className={styles.workspace} aria-label="Xử lý đơn Seller">
       <p>
-        KIỂM THỬ QA — ba bước chuẩn bị đơn đã nối API; chưa nghiệm thu toàn
-        luồng giao dịch.
+        Xác nhận, đóng gói và sẵn sàng bàn giao là ba thao tác riêng. Không tự
+        gửi lại khi mất phản hồi.
       </p>
+      {state.order &&
+        state.phase !== "ready" &&
+        state.phase !== "confirm-new" && (
+          <p className={styles.stale}>
+            Chi tiết bên dưới là lần tải trước; thao tác mới đang khóa cho đến
+            khi xác minh xong.
+          </p>
+        )}
       <button
         type="button"
         disabled={busy || confirming || state.phase === "blocked"}
@@ -124,6 +133,7 @@ export function SellerOrderWorkspace({ orderId }: { orderId: number }) {
       {confirming && state.command && state.order && session && (
         <SellerCommandReview
           connected
+          integrated
           session={session}
           fresh
           target={{
@@ -154,6 +164,7 @@ export function SellerOrderWorkspace({ orderId }: { orderId: number }) {
         ["unknown", "resolving"].includes(state.phase) && (
           <SellerResolutionReview
             connected
+            integrated
             session={session}
             intent={pending}
             orderNumber={state.order?.orderNumber ?? `Mã ${orderId}`}
@@ -167,6 +178,6 @@ export function SellerOrderWorkspace({ orderId }: { orderId: number }) {
             }}
           />
         )}
-    </>
+    </section>
   );
 }
