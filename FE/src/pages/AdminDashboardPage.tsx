@@ -15,8 +15,11 @@ import { AdminBrandEditor } from '../features/admin-brands/AdminBrandEditor';
 import styles from './AdminDashboardPage.module.css';
 import { AdminAccountsReader } from '../features/admin-accounts/AdminAccountsReader';
 import { createAccountReadApi } from '../features/admin-accounts/accountReadApi';
+import { AdminSystemHealth } from '../features/admin-system-health/AdminSystemHealth';
+import { createSystemHealthApi } from '../features/admin-system-health/systemHealthApi';
 
 const accountsReadApi = createAccountReadApi();
+const systemHealthApi = createSystemHealthApi();
 
 type ProductQueueItem = {
   id: number;
@@ -92,6 +95,7 @@ const navItems = [
   { to: '/admin/stores', label: 'Cửa hàng', icon: '⌂' },
   { to: '/admin/catalog', label: 'Danh mục & thương hiệu', icon: '▤' },
   { to: '/admin/users', label: 'Tài khoản', icon: '◎' },
+  { to: '/admin/system-health', label: 'Sức khỏe hệ thống', icon: '◉' },
   { to: '/admin/returns', label: 'Hậu mãi', icon: '↺', disabled: true },
 ];
 
@@ -1660,6 +1664,10 @@ function AdminConsole() {
             <Route
               path="users"
               element={<AdminAccountsReader api={accountsReadApi} embedded />}
+            />
+            <Route
+              path="system-health"
+              element={<AdminSystemHealth api={systemHealthApi} embedded />}
             />
             <Route
               path="returns"

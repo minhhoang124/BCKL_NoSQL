@@ -1,5 +1,33 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Admin Search health — 23/10/2026:** bản kết hợp sau Buyer Web giữ ba lớp:
+Backend đọc PostgreSQL và quan sát AI → parser/projection canonical ở Web →
+badge hiệu lực tự hết hạn, không làm mới timestamp gốc. 401/403 khóa mọi lần
+poll tiếp theo; kết quả phiên cũ không cập nhật phiên mới. Chrome thật10case
+đạt trên DB QA riêng; upstream503 là fixture lỗi có nhãn, không phải bằng chứng
+loaded Search READY trong lượt cũ. Lượt mới trên nền #106 đã đạt6nhóm Chrome
+với AI/CLIP/FAISS/Elasticsearch thật: READY, ngắt AI→UNKNOWN và thu hồi Admin→401,
+không poll tiếp. Index QA được provision mapping canonical trước ghi; health
+vẫn chỉ đọc, không tự sửa index sai.19migration QA, không database demo; chưa
+nghiệm thu toàn Admin G3 hoặc chất lượng truy hồi.
+[Bằng chứng và giới hạn](../testing/admin-health-web-runtime-2026-10-23.md).
+
+**Search health UI review fixes — 22/10/2026, IN_PROGRESS:** nhánh sửa riêng từ
+head97 `5bdc985` chặn polling sau401/403, tách badge còn hiệu lực khỏi raw
+snapshot lịch sử và reject envelope mâu thuẫn. FE dùng validator/projection
+sinh tĩnh từ canonical Backend, có test chống drift; expiry theo server anchor
+và elapsed high-watermark, không kéo TTL hoặc đổi Backend/AI. Chưa nhập bản sửa
+vào nhánh Hiền/develop, chưa browser nghiệm thu mới. [Bằng chứng và cách nhận](../testing/admin-health-review-fixes-2026-10-22.md).
+
+**Admin Search Health UI sau merge #89 — 22/10/2026:** nhánh Hiền đã rebase
+trên `develop e394c9e`, giữ đủ nền Admin/Checkout/Order và nối route
+`/admin/system-health` vào Backend thật. FE 952 PASS/6 live SKIP, lint/build đạt;
+20 Backend/DB E2E và một FastAPI thật (model/index cố ý chưa tải) đạt. READY,
+DEGRADED, UNAVAILABLE và UNKNOWN đều có kiểm diễn giải UI; READY/DEGRADED chưa
+có deployment model/index live nên không nhận all-ready. Attributes chỉ đọc hồi
+quy đạt; PR #94 write API chưa merge nên editor ghi vẫn khóa.
+[Bằng chứng và giới hạn](../testing/admin-search-health-ui-integration-2026-10-22.md).
+
 **Đồng bộ 23/10/2026:** nhận develop `65ad255` sau merge #94/#108/#102/#104/#107. Backend ghi
 Attributes đã có trên develop; các nhãn chưa merge ngày 22/10 bên dưới là lịch
 sử. Editor UI chưa được nghiệm thu. Đợt quyền mua bổ sung vẫn mặc định tắt,
@@ -137,6 +165,13 @@ chờ đúng durable job thay vì giả định một batch20 đã xử lý mọ
 bằng21job fixture của Category rỗng; worker/runtime/schema không đổi. Full
 670E2E PASS/20TODO trên QA riêng; không phải live dual-index nghiệm thu mới.
 [Root cause và bằng chứng](../testing/search-reconciliation-queue-regression-2026-10-21.md).
+
+**Admin Search Health UI — PREPARATION 22/10/2026:** nhánh local từ
+`develop be568e0` chuẩn bị route `/admin/system-health`, adapter chỉ gọi Backend,
+parser fail-closed và các trạng thái loading/error/UNKNOWN/stale/mobile theo
+contract đã merge #61. Dependency Backend #89 chưa merge nên live QA, PostgreSQL,
+AI/ES/FAISS và toàn G-OPERATE vẫn NOT_RUN; không dùng fixture làm số liệu live.
+[Phạm vi, checklist và thứ tự bàn giao](../testing/admin-search-health-ui-preparation-2026-10-22.md).
 
 **Tích hợp sau Accounts #86 — 21/10/2026:** #86 đã merge tại `e409335`.
 Nhánh #73 giữ cả reader Accounts production và Attributes DEV/read preparation;

@@ -594,7 +594,11 @@ Các mã ở cột cuối được hiểu có tiền tố FR trừ NFR. Alias ch
 
 ### 18.4 Ma trận truy vết triển khai
 
-Ma trận này ghi trạng thái tại 24/09/2026. CURRENT chỉ dùng cho phần đã merge và có bằng chứng phù hợp; một hàng có thể tách CURRENT/IN_PROGRESS/TARGET theo phạm vi con.
+Ma trận này được rà riêng phạm vi Admin gần nhất ngày **22/10/2026**; các miền
+khác vẫn giữ baseline lịch sử cho đến lượt đồng bộ riêng. `CURRENT/PASS` chỉ dùng
+cho phần đã merge và có bằng chứng runtime phù hợp. `PREPARATION` là code/test
+local chưa tích hợp API thật; `NOT_RUN/WAITING_BACKEND` không được trình bày như
+chức năng đã hoàn thành trong báo cáo.
 
 | Requirement | Use Case | API | Database | UI | Test | PR/commit | Status | Owner |
 |---|---|---|---|---|---|---|---|---|
@@ -607,7 +611,11 @@ Ma trận này ghi trạng thái tại 24/09/2026. CURRENT chỉ dùng cho phầ
 | PAY-01, ORD-01, CAN-01 | UC-HT04/07/11 | Payment/callback; Order/Shipping commands | Payment/Attempt, Order/History, Shipment, StockMovement | Payment result; order timeline; Seller order | TC-14–17/30–33/50–52 | Chưa có PR implementation | TARGET COD P0 và sandbox P1 | Hoàng; Hiền QA |
 | RET-01, REV-01, RPT-01 | UC-HT05/07/08/12 | Return/refund/review/dashboard | ReturnRequest, Refund, Adjustment, Review | Return/review/dashboard | TC-19/33/39–44/53/59/60 | Quy tắc PR #12; chưa có implementation | TARGET P0/P1 theo miền | Hoàng; Hiền nghiệp vụ/QA |
 | CHT-01, NOT-01 | UC-HT10/13 | Conversation/message/read; notification | Conversation, Message, ReadState, Notification | Chat/inbox/notification | TC-28/29/58 | Thiết kế PR #7; chưa có implementation | TARGET P0, email P1 | Hoàng; Hiền QA |
-| ADM-01, RPT-02 | UC-HT08/09/13 | Admin account/moderation/health/report | Audit, SearchLog, ClickLog | Admin dashboard/moderation | TC-03/35–37/48/52/58/60 | Chưa có PR implementation | TARGET giai đoạn 3 | Hiền triển khai; Hoàng API; Đạt Search health |
+| ADM-01 — Accounts đọc | UC-HT13 | `GET /admin/accounts` | User, Store; đọc DB QA riêng không mutation | Danh sách/tìm kiếm/lọc/cursor | Quyền, hai profile độc lập, logout/direct route, DB digest | PR #86 merge `e409335`; QA comment #86 | **CURRENT/PASS phạm vi đọc**; khóa/mở NOT_RUN | Hiền FE/QA; Hoàng API |
+| ADM-01 — Category Attributes đọc | UC-HT09 | Ba GET Admin theo Category/definition/options | Definition/Option/revision/usage | Reader list/detail/options | Inactive/filter/cursor/role/logout; DB digest | PR #77 merge `bf6f926`; PR #73 merge `be568e0` | **CURRENT/PASS phạm vi đọc**; CRUD/race/job/Search NOT_RUN | Hiền FE/QA; Hoàng API; Đạt Search boundary |
+| ADM-01 — Search Health | UC-HT08 | Dự kiến `GET /admin/system-health` qua Backend | PostgreSQL readiness + snapshot AI; không mutation | Route `/admin/system-health`, trạng thái readiness | 833 FE PASS/6 live SKIP; 10/10 test module; fixture desktop/mobile PASS; live QA NOT_RUN | Backend PR #89 chưa merge tại lượt 22/10; FE local chưa push | **PREPARATION**; WAITING_BACKEND/merge #89 | Hiền FE/QA; Hoàng Backend; Đạt AI health |
+| ADM-01 — Accounts khóa/mở và Attributes CRUD | UC-HT09/13 | Status hardening; Attributes CRUD theo #65 | Audit/reason/revision/CAS/job/session epoch | Editor và điều khiển ghi chưa bật | ACC-W01–06 và AT ghi/race/rollback/Search | #83/#91/#92 chưa hoàn tất; checklist local `47779bf` | **NOT_RUN/WAITING_BACKEND** | Hiền FE/QA; Hoàng API; Đạt Search boundary |
+| ADM-01, RPT-01/02 — Dashboard và hậu mãi | UC-HT08/12 | Chưa có contract/API đủ dùng | Audit, Return/Refund/Adjustment, SearchLog/ClickLog | Chưa nối dữ liệu thật | TC-19/33/39–44/60 | Chưa có PR bàn giao đầy đủ | **NOT_RUN/WAITING_BACKEND** | Hoàng contract/API; Hiền FE/QA; Đạt Search analytics |
 
 ## 19 Bộ ca kiểm thử nghiệm thu
 

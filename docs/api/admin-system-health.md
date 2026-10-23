@@ -1,4 +1,4 @@
-# Admin system health — Backend implementation v1, chưa merge
+# Admin system health — Backend implementation v1, đã merge #89
 
 21/10/2026. Triển khai điểm nối Backend theo contract #61 và AI runtime #79.
 Nhánh riêng từ develop `fa85f66`; không đổi payload Search/index hoặc schema DB.
@@ -54,7 +54,8 @@ phải bị từ chối trước projection. Đối chiếu canonical Pydantic t
 - Mỗi lần trả kiểm lại expiry; không kéo dài TTL probe chỉ vì FE poll/cache HIT.
   Timestamp tương lai quá5s hoặc clock Backend lùi khiến snapshot không tin cậy
   → UNKNOWN/AI_INVALID_RESPONSE. Giới hạn TTL producer60s giữ nguyên.
-- FE có thể poll30s. Chưa nối health UI hoặc bật deep probe từ trình duyệt.
+- FE có thể poll30s. Nhánh tích hợp của Hiền nối UI qua đúng endpoint Backend;
+  trình duyệt không bật deep probe và không gọi FastAPI trực tiếp.
 
 ## Đọc code và bằng chứng
 

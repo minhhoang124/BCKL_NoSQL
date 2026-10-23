@@ -13,6 +13,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, fetchApi } from '../services/apiClient';
 import { AdminDashboardPage } from './AdminDashboardPage';
+import { unknownHealth } from '../features/admin-system-health/systemHealth.fixtures';
 
 vi.mock('../services/apiClient', async (importOriginal) => ({
   ...await importOriginal<typeof import('../services/apiClient')>(),
@@ -247,6 +248,17 @@ describe('Admin product moderation', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Không có quyền đọc danh sách Admin');
     expect(screen.getByRole('searchbox')).toBeDisabled();
     expect(screen.queryByText(/Private diagnostic/)).not.toBeInTheDocument();
+  });
+
+  it('connects the system-health route to Backend only and labels UNKNOWN honestly', async () => {
+    vi.mocked(fetchApi).mockResolvedValueOnce(unknownHealth);
+    renderAdmin('/admin/system-health');
+    expect(await screen.findByText('Không kết nối được AI service')).toBeVisible();
+    expect(screen.getByRole('link', { name: /Sức khỏe hệ thống/ })).toHaveAttribute('href', '/admin/system-health');
+    expect(fetchApi).toHaveBeenCalledWith('/admin/system-health', expect.objectContaining({
+      method: 'GET', cache: 'no-store', retryOnUnauthorized: false,
+    }));
+    expect(screen.getByText(/không chứng minh outbox đã đồng bộ hết/i)).toBeVisible();
   });
 
   it('shows saved attributes, option labels and shipping fields for review', async () => {
