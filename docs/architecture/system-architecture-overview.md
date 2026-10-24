@@ -1,5 +1,30 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Tích hợp nền Chat —24/10/2026:** #110 đã merge tại `85881cb`, gồm TEXT REST,
+inbox và21migration tổng. #111 đồng bộ tại `a8359a4`, cây file nguyên byte so
+`bec6c6f`; conflict do squash không bỏ REST/realtime. Kiểm lại33Chat HTTP/socket,
+28FE và4nhóm Chrome đạt. Fullsuite cùng source:1282BEunit,861E2E/1SKIP/20TODO;
+1286FE/6liveSKIP. CI không khởi chạy vì billing; quyền ngoại lệ người dùng cho
+Codex/Gemini kiểm local rồi xét merge, không human approval giả. Hai cờ Chat
+vẫn false; Product context/Order/media và toànChat vẫn chưa hoàn tất.
+
+**Chat Web boundary —24/10/2026, tiếp tục #111:** siết kiểm phản hồi mở hội
+thoại/đã đọc/unread và merge lịch sử theo conversation + identity bất biến.
+Không thay Backend/schema hoặc quyền; malformed200 giữ pending, không suy đã
+gửi thành công. Đối kháng trước sửa5testFAIL, sau sửa28ChatFE và4nhóm Chrome
+QA đạt; #110/#111 vẫn chưa merge, tính năng mặc định tắt.
+[Kết quả/giới hạn](../testing/chat-web-realtime-2026-10-24.md).
+
+**Chat Web/realtime —24/10/2026, IN_PROGRESS:** nhánh riêng phụ thuộc #110
+nối inbox Buyer–Seller/history/read và Socket.IO qua ChatService đã lưu DB.
+Push sau commit, per-recipient canonical authorization/credential/expiry,
+join/leave generation và bounded gateway lifecycle; same-key pending journal
+giữ unknown qua reload, session fence và strict response/sequence validators.
+Route `/messages` theo cờ mặc định tắt; dùng palette cam chung, không sửa
+Admin/Address/Cart hoặc schema mới. Đã có Chrome hai tài khoản và HTTP/socket
+QA; chưa merge/Product context/media/Order card hoặc toàn Chat DONE.
+[Contract/biến](../api/chat-web-realtime.md), [kiểm thử/điểm dừng](../testing/chat-web-realtime-2026-10-24.md).
+
 **Chat inbox REST —23/10/2026, IN_PROGRESS trên #110:** bổ sung GET danh sách
 hội thoại theo ownership SQL, tin cuối/unread, cursor activity+ID, hạn100/trang.
 Đọc Serializable READ ONLY; không tự đánh dấu đọc, không trả key/hash/PII ngoài

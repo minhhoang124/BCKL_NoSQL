@@ -4,6 +4,8 @@ import { PrismaService } from '../prisma.service.js';
 import { chatSqlState } from './chat-sql-state.js';
 import { canActAsBuyer } from '../auth/buyer-access.js';
 import { inboxCursor, type ChatInboxPage } from './chat-inbox-page.js';
+import { ChatEvents } from './chat-events.js';
+import { credentialMatches } from '../auth/credential-version.js';
 import {
   assertCanOpenChat,
   assertCanReadChat,
@@ -32,7 +34,10 @@ const selectMessage = {
 
 @Injectable()
 export class ChatService {
-  constructor(private readonly db: PrismaService) {}
+  constructor(
+    private readonly db: PrismaService,
+    private readonly events: ChatEvents,
+  ) {}
 
   private async transaction<T>(run: (tx: Tx) => Promise<T>): Promise<T> {
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -200,6 +205,39 @@ export class ChatService {
     });
   }
 
+  /** A short read authorization fence, not the Message write transaction.
+   * Locks prevent a credential/owner change committing between the final
+   * authorization snapshot and the synchronous socket enqueue. No network await. */
+  authorizeDelivery(
+    actorId: number,
+    conversationId: number,
+    credentialVersion: number,
+    expires: number,
+    enqueue: () => void,
+  ) {
+    return this.db.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`SET LOCAL lock_timeout = '1s'`;
+        await tx.$executeRaw`SET LOCAL statement_timeout = '2s'`;
+        await tx.$queryRaw`SELECT id FROM users WHERE id=${actorId} FOR SHARE`;
+        await tx.$queryRaw`SELECT s.id FROM stores s JOIN chat_conversations c ON c."storeId"=s.id WHERE c.id=${conversationId} FOR SHARE OF s`;
+        await this.context(tx, actorId, conversationId);
+        const actor = await tx.user.findUnique({
+          where: { id: actorId },
+          select: { credentialVersion: true },
+        });
+        if (
+          !actor ||
+          !credentialMatches(credentialVersion, actor.credentialVersion) ||
+          expires <= Date.now()
+        )
+          return fail(401, 'UNAUTHORIZED');
+        enqueue();
+      },
+      { isolationLevel: 'ReadCommitted', maxWait: 2000, timeout: 4000 },
+    );
+  }
+
   open(actorId: number, storeId: number) {
     return this.transaction(async (tx) => {
       const rawActor = await this.actor(tx, actorId);
@@ -327,6 +365,10 @@ export class ChatService {
         select: selectMessage,
       });
       return { message, replay: false };
+    }).then((result) => {
+      if (!result.replay)
+        this.events.publish({ conversationId: id, message: result.message });
+      return result;
     });
   }
 
@@ -402,6 +444,9 @@ export class ChatService {
         lastReadMessageId: saved.lastReadMessageId,
         lastReadSequence: saved.lastReadSequence,
       };
+    }).then((result) => {
+      this.events.publish({ conversationId: id });
+      return result;
     });
   }
 }

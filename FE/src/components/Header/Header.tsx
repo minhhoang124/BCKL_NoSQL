@@ -48,6 +48,7 @@ export function Header() {
           <>
             <Link to="/account">Tài khoản ({user.fullName || user.email})</Link>
             {hasBuyerAccess(user) && <Link to="/cart">Giỏ hàng</Link>}
+            {import.meta.env.VITE_CHAT_ENABLED === 'true' && user.role !== 'ADMIN' && <Link to="/messages">Tin nhắn</Link>}
             {user.role === 'SELLER' && <Link to="/seller">Kênh người bán</Link>}
             {user.role === 'ADMIN' && <Link to="/admin">Quản trị</Link>}
             <button

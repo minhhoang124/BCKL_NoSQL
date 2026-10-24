@@ -21,6 +21,7 @@ import {
 import type { Request, Response } from 'express';
 import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from '../auth/auth.module.js';
 import { DatabaseModule } from '../database.module.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
@@ -30,6 +31,9 @@ import { ChatMessageRequestError } from './chat-message-request.js';
 import { ChatPolicyError } from './chat-policy.js';
 import { ChatService } from './chat.service.js';
 import { chatInboxPage } from './chat-inbox-page.js';
+import { ChatEvents } from './chat-events.js';
+import { ChatGateway } from './chat.gateway.js';
+import { ChatRate } from './chat-rate.js';
 
 const invalid = (): never => {
   throw new ChatMessageRequestError(400, 'CHAT_VALIDATION_ERROR');
@@ -108,10 +112,7 @@ class ChatFilter implements ExceptionFilter {
 
 @Injectable()
 class ChatLimit implements CanActivate {
-  private readonly buckets = new Map<
-    string,
-    { count: number; until: number }
-  >();
+  constructor(private readonly rate: ChatRate) {}
   canActivate(context: ExecutionContext) {
     const req = context
       .switchToHttp()
@@ -130,21 +131,7 @@ class ChatLimit implements CanActivate {
         : req.path.endsWith('/messages')
           ? 'send'
           : 'open';
-    const limit = { read: 60, send: 20, open: 10 }[group];
-    const now = Date.now();
-    for (const [key, bucket] of this.buckets)
-      if (bucket.until <= now) this.buckets.delete(key);
-    const key = `${req.user.userId}:${group}`;
-    let bucket = this.buckets.get(key);
-    if (!bucket) {
-      if (this.buckets.size >= 10000)
-        throw new HttpException({ code: 'CHAT_RATE_LIMITED' }, 429);
-      bucket = { count: 0, until: now + 60000 };
-      this.buckets.set(key, bucket);
-    }
-    if (bucket.count >= limit)
-      throw new HttpException({ code: 'CHAT_RATE_LIMITED' }, 429);
-    bucket.count++;
+    this.rate.consume(req.user.userId, group);
     return true;
   }
 }
@@ -290,10 +277,11 @@ class ChatController {
   imports: [
     AuthModule,
     DatabaseModule,
+    JwtModule.register({}),
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [ChatController],
-  providers: [ChatService, ChatLimit],
+  providers: [ChatService, ChatLimit, ChatEvents, ChatRate, ChatGateway],
 })
 export class ChatModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

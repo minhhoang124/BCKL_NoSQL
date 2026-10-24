@@ -1,0 +1,49 @@
+export type PendingMessage = {
+  version: 1;
+  actorId: number;
+  conversationId: number;
+  clientMessageId: string;
+  content: string;
+};
+const key = (actorId: number) => `chat-pending:v1:${actorId}`;
+export function loadPending(
+  actorId: number,
+): { value: PendingMessage; raw: string } | null {
+  const raw = sessionStorage.getItem(key(actorId));
+  if (raw === null) return null;
+  const value = JSON.parse(raw) as PendingMessage;
+  if (
+    !value ||
+    Object.keys(value).sort().join() !==
+      ["version", "actorId", "conversationId", "clientMessageId", "content"]
+        .sort()
+        .join() ||
+    value.version !== 1 ||
+    value.actorId !== actorId ||
+    !Number.isInteger(value.conversationId) ||
+    value.conversationId < 1 ||
+    value.conversationId > 2147483647 ||
+    typeof value.clientMessageId !== "string" ||
+    !/^[!-~]{1,128}$/.test(value.clientMessageId) ||
+    typeof value.content !== "string" ||
+    !value.content.trim() ||
+    [...value.content].length > 2000
+  )
+    throw Error("Dữ liệu tin chờ không hợp lệ; chưa gửi thêm tin.");
+  return { value, raw };
+}
+export function preparePending(value: PendingMessage) {
+  if (loadPending(value.actorId)) throw Error("Còn tin chờ xác minh.");
+  const raw = JSON.stringify(value);
+  sessionStorage.setItem(key(value.actorId), raw);
+  if (sessionStorage.getItem(key(value.actorId)) !== raw)
+    throw Error("Không lưu được mã gửi, chưa gửi tin.");
+  return { value: { ...value }, raw };
+}
+export function clearPending(actorId: number, raw: string) {
+  if (sessionStorage.getItem(key(actorId)) !== raw)
+    throw Error("Tin chờ đã đổi; không xóa yêu cầu khác.");
+  sessionStorage.removeItem(key(actorId));
+  if (sessionStorage.getItem(key(actorId)) !== null)
+    throw Error("Chưa xóa được mã chờ; chỉ gửi lại cùng mã.");
+}

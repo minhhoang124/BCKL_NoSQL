@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { formatPrice, marketplaceApi, mediaUrl } from '../services/marketplaceApi';
 import type { Product } from '../types/marketplace';
 import { ApiError } from '../services/apiClient';
@@ -28,6 +28,7 @@ export function ProductDetailPage() {
       <div className={styles.gallery}>{image ? <img src={mediaUrl(image.url)} alt={product.name} /> : <div className={styles.empty}>Chưa có ảnh</div>}</div>
       <div className={styles.panel}><span className={styles.badge}>{product.category.name}</span><h1>{product.name}</h1><p>{product.brand?.name ?? 'Không thương hiệu'} · {product.store?.name}</p><strong className={styles.price}>{formatPrice(product.minPrice ?? product.variants[0]?.price)}</strong><p>{product.inStock ? 'Còn hàng' : 'Hết hàng'}</p><p>{product.description || 'Sản phẩm chưa có mô tả.'}</p></div>
     </section>
+    {import.meta.env.VITE_CHAT_ENABLED === 'true' && product.store && <Link to={`/messages?storeId=${product.store.id}`}>Chat với cửa hàng</Link>}
     {!!product.attributes?.length && <section className={styles.panel}><h2>Thông số</h2>{product.attributes.map((item) => <div className={styles.row} key={item.id}><span>{item.name}</span><strong>{String(item.value)}</strong></div>)}</section>}
   </div>;
 }

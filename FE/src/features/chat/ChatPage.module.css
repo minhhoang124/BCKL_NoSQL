@@ -1,0 +1,130 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--market-space-3, 24px);
+  color: var(--market-ink, #20242b);
+  font-family: var(--market-font, sans-serif);
+}
+.page h1,
+.page h2 {
+  color: inherit;
+}
+.columns {
+  display: grid;
+  grid-template-columns: minmax(220px, 30%) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.columns aside,
+.thread {
+  border: 1px solid var(--market-line, #ccd0d5);
+  background: var(--market-surface, #fff);
+  border-radius: var(--market-radius, 6px);
+  padding: 18px;
+  min-width: 0;
+}
+.conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 0;
+  color: inherit;
+  border-bottom: 1px solid var(--border-color, #ccd0d5);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.conversation span {
+  max-height: 3em;
+  overflow: hidden;
+}
+.conversation[aria-current="page"] {
+  border-left: 4px solid #c34d0a;
+  padding-left: 10px;
+}
+.page button {
+  padding: 10px 14px;
+  border: 1px solid #b34409;
+  border-radius: 8px;
+  color: #8b3002;
+  background: #fff4ed;
+  cursor: pointer;
+}
+.page button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.page :focus-visible {
+  outline: 3px solid #e97832;
+  outline-offset: 3px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.messages {
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 500px;
+  overflow: auto;
+}
+.messages li {
+  padding: 12px;
+  border-radius: 12px;
+  width: min(85%, 520px);
+  overflow-wrap: anywhere;
+  color: #20242b;
+}
+.messages p {
+  margin: 6px 0;
+  white-space: pre-wrap;
+}
+.messages time,
+.thread small {
+  font-size: 0.8rem;
+}
+.own {
+  align-self: flex-end;
+  background: #fff0df;
+  border: 1px solid #e97832;
+}
+.peer {
+  align-self: flex-start;
+  background: #f1f3f5;
+  border: 1px solid #b9c0c9;
+}
+.thread form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+.thread textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid #7c8592;
+  border-radius: 8px;
+  background: #fff;
+  color: #20242b;
+  font: inherit;
+}
+@media (max-width: 700px) {
+  .page {
+    padding: 12px;
+  }
+  .columns {
+    grid-template-columns: 1fr;
+  }
+  .columns aside {
+    max-height: 260px;
+    overflow: auto;
+  }
+  .messages {
+    max-height: 420px;
+  }
+}

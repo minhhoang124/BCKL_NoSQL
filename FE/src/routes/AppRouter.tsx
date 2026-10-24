@@ -22,6 +22,7 @@ import { CartPage } from '../pages/CartPage';
 import { AddressBookPage } from '../pages/AddressBookPage';
 import { CheckoutPage } from '../features/order-flow/CheckoutPage';
 import { OrderReadPage } from '../features/order-readiness/OrderReadPages';
+import { ChatPage } from '../features/chat/ChatPage';
 
 export function AppRouter() {
   return (
@@ -55,6 +56,7 @@ export function AppRouter() {
       />
 
       <Route element={<PublicLayout />}>
+        {import.meta.env.VITE_CHAT_ENABLED === 'true' && <Route path="/messages/:conversationId?" element={<ProtectedRoute allowedRoles={['USER','SELLER']}><ChatPage /></ProtectedRoute>} />}
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         {import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' && <Route path="/search/image" element={<ImageSearchPage />} />}
