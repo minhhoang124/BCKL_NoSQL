@@ -1,5 +1,21 @@
 # Thiết kế Chat trực tiếp giữa User và Seller
 
+## Lát cắt Product context — 24/10/2026, chưa nghiệm thu
+
+Message tham chiếu Product bằng `contextProductId` nullable, không lưu tên/ảnh/
+giá hoặc dữ liệu nháp vào lịch sử. TEXT cũ giữ nguyên hash và wire shape.
+PRODUCT_CONTEXT dùng cùng khóa gửi, sequence, quota và transaction; Backend
+đọc Product thuộc Store của Conversation và áp cùng public-listing policy.
+Replay cùng key trả receipt cũ sau kiểm quyền gửi; không tạo thêm Message.
+Tham chiếu không FK tới Product để việc xóa/ẩn không xóa lịch sử; ID không tái
+sử dụng. Nội dung placeholder cố định, không chứa chi tiết Product.
+Response chỉ thêm `productContext:{productId,storeId}` cho tin tham chiếu;
+Web tải thẻ qua public GET hiện có, kiểm đúng product/store, no-store và timeout.
+404/ẩn/Store khóa không hiển thị thông tin cũ hoặc nháp. Không tự gửi khi mở
+route; người dùng xác nhận chia sẻ, journal giữ ID/key qua mất response.
+Không Search/outbox mới, không index nội dung Chat. Migration mới additive;
+không sửa hai migration đã merge. Order card triển khai riêng sau lát cắt này.
+
 ## Quyết định triển khai 23/10/2026
 
 Hoàng chốt triển khai ổn định cho phạm vi khóa luận sau khi được hỏi về

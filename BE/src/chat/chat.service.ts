@@ -7,6 +7,10 @@ import { inboxCursor, type ChatInboxPage } from './chat-inbox-page.js';
 import { ChatEvents } from './chat-events.js';
 import { credentialMatches } from '../auth/credential-version.js';
 import {
+  isPublicListing,
+  listingInclude,
+} from '../product/product-public-policy.js';
+import {
   assertCanOpenChat,
   assertCanReadChat,
   assertCanSendChat,
@@ -29,8 +33,22 @@ const selectMessage = {
   senderId: true,
   senderType: true,
   content: true,
+  contextProductId: true,
   createdAt: true,
 } as const;
+
+function presentMessage<T extends { contextProductId: number | null }>(
+  row: T,
+  storeId: number,
+) {
+  const { contextProductId, ...message } = row;
+  return contextProductId === null
+    ? message
+    : {
+        ...message,
+        productContext: { productId: contextProductId, storeId },
+      };
+}
 
 @Injectable()
 export class ChatService {
@@ -196,7 +214,9 @@ export class ChatService {
           buyer: { id: row.buyerId, fullName: row.buyer.fullName },
           lastSequence: row.lastSequence,
           lastMessageAt: row.lastMessageAt,
-          lastMessage: row.messages[0] ?? null,
+          lastMessage: row.messages[0]
+            ? presentMessage(row.messages[0], row.storeId)
+            : null,
           lastReadSequence: row.readStates[0]?.lastReadSequence ?? 0,
           unreadCount: unread.get(row.id) ?? 0,
         })),
@@ -302,9 +322,14 @@ export class ChatService {
 
   send(actorId: number, id: number, body: unknown) {
     const input = prepareChatMessage(id, actorId, body);
-    if (input.payload.type !== 'TEXT')
-      return fail(400, 'CHAT_VALIDATION_ERROR');
-    const content = input.payload.content;
+    const contextProductId =
+      input.payload.type === 'PRODUCT_CONTEXT'
+        ? input.payload.contextProductId
+        : null;
+    const content =
+      input.payload.type === 'TEXT'
+        ? input.payload.content
+        : 'Đã chia sẻ sản phẩm';
     return this.transaction(async (tx) => {
       const { actor, conversation, store } = await this.context(
         tx,
@@ -347,7 +372,25 @@ export class ChatService {
           where: { id: existing.id },
           select: selectMessage,
         });
-        return { message, replay: true };
+        return { message: presentMessage(message, store.id), replay: true };
+      }
+      if (contextProductId !== null) {
+        // Kill-switch stops new shares, never prevents recovery of an existing receipt.
+        if (process.env.CHAT_PRODUCT_CONTEXT_ENABLED !== 'true')
+          return fail(400, 'CHAT_VALIDATION_ERROR');
+        const product = await tx.product.findUnique({
+          where: { id: contextProductId },
+          include: listingInclude,
+        });
+        const categories = await tx.category.findMany({
+          select: { id: true, parentId: true, isActive: true },
+        });
+        if (
+          !product ||
+          product.storeId !== store.id ||
+          !isPublicListing(product, categories)
+        )
+          return fail(404, 'CHAT_PRODUCT_UNAVAILABLE');
       }
       if (conversation.lastSequence === 2147483647)
         return fail(409, 'CHAT_SEQUENCE_EXHAUSTED');
@@ -358,13 +401,14 @@ export class ChatService {
           senderId: actorId,
           senderType: actor.role === 'USER' ? 'BUYER' : 'SELLER',
           content,
+          contextProductId,
           clientMessageId: input.clientMessageId,
           payloadHash: input.payloadHash,
           hashVersion: 1,
         },
         select: selectMessage,
       });
-      return { message, replay: false };
+      return { message: presentMessage(message, store.id), replay: false };
     }).then((result) => {
       if (!result.replay)
         this.events.publish({ conversationId: id, message: result.message });
@@ -400,7 +444,9 @@ export class ChatService {
       const selected = rows.slice(0, page.limit);
       const cursor = selected.at(-1)?.sequence ?? null;
       return {
-        items: forward ? selected : selected.reverse(),
+        items: (forward ? selected : selected.reverse()).map((row) =>
+          presentMessage(row, conversation.storeId),
+        ),
         highWatermark: conversation.lastSequence,
         hasMore,
         nextBeforeSequence: !forward && hasMore ? cursor : null,

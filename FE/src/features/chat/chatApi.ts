@@ -8,6 +8,7 @@ export type Message = {
   senderType: "BUYER" | "SELLER";
   content: string;
   createdAt: string;
+  productContext?: { productId: number; storeId: number };
 };
 export type InboxItem = {
   id: number;
@@ -69,6 +70,10 @@ function date(value: unknown): string {
   return value;
 }
 export function parseMessage(value: unknown, conversationId: number): Message {
+  const hasContext =
+    !!value &&
+    typeof value === "object" &&
+    Object.hasOwn(value, "productContext");
   const row = shape(value, [
     "id",
     "conversationId",
@@ -77,6 +82,7 @@ export function parseMessage(value: unknown, conversationId: number): Message {
     "senderType",
     "content",
     "createdAt",
+    ...(hasContext ? ["productContext"] : []),
   ]);
   if (
     integer(row.conversationId) !== conversationId ||
@@ -85,6 +91,15 @@ export function parseMessage(value: unknown, conversationId: number): Message {
     return bad();
   const content = text(row.content);
   if (!content.trim() || [...content].length > 2000) return bad();
+  let productContext: Message["productContext"];
+  if (hasContext) {
+    const context = shape(row.productContext, ["productId", "storeId"]);
+    if (content !== "Đã chia sẻ sản phẩm") return bad();
+    productContext = {
+      productId: integer(context.productId),
+      storeId: integer(context.storeId),
+    };
+  }
   return {
     id: integer(row.id),
     conversationId,
@@ -93,6 +108,7 @@ export function parseMessage(value: unknown, conversationId: number): Message {
     senderType: row.senderType as Message["senderType"],
     content,
     createdAt: date(row.createdAt),
+    ...(productContext ? { productContext } : {}),
   };
 }
 export function parseHistory(
@@ -196,7 +212,9 @@ export function parseInbox(value: unknown): {
       (!lastMessage && (lastSequence !== 0 || lastMessageAt !== null)) ||
       (lastMessage &&
         (lastMessage.sequence !== lastSequence ||
-          lastMessage.createdAt !== lastMessageAt))
+          lastMessage.createdAt !== lastMessageAt ||
+          (lastMessage.productContext &&
+            lastMessage.productContext.storeId !== store.id)))
     )
       return bad();
     return {
@@ -301,15 +319,28 @@ export const chatApi = {
     actorId: number,
     clientMessageId: string,
     content: string,
+    contextProductId?: number,
   ) {
     const row = shape(
-      await call(`/${id}/messages`, { clientMessageId, type: "TEXT", content }),
+      await call(
+        `/${id}/messages`,
+        contextProductId === undefined
+          ? { clientMessageId, type: "TEXT", content }
+          : { clientMessageId, type: "PRODUCT_CONTEXT", contextProductId },
+      ),
       ["message", "replay"],
     );
     if (typeof row.replay !== "boolean") return bad();
     const message = parseMessage(row.message, id);
-    if (message.senderId !== actorId || message.content !== content.trim())
+    if (
+      message.senderId !== actorId ||
+      message.content !==
+        (contextProductId === undefined
+          ? content.trim()
+          : "Đã chia sẻ sản phẩm")
+    )
       return bad();
+    if (message.productContext?.productId !== contextProductId) return bad();
     return message;
   },
   async read(id: number, message: Message) {
@@ -323,7 +354,8 @@ export const chatApi = {
     if (
       sequence < message.sequence ||
       (sequence === message.sequence && messageId !== message.id)
-    ) return bad();
+    )
+      return bad();
   },
 };
 
@@ -333,14 +365,20 @@ export function mergeMessages(
 ): Message[] {
   const result = new Map<number, Message>();
   const identities = new Map<number, number>();
-  const conversationId = previous[0]?.conversationId ?? incoming[0]?.conversationId;
+  const conversationId =
+    previous[0]?.conversationId ?? incoming[0]?.conversationId;
   for (const message of [...previous, ...incoming]) {
     const old = result.get(message.sequence);
     if (
       message.conversationId !== conversationId ||
-      (old && (old.id !== message.id ||
-        old.senderId !== message.senderId || old.senderType !== message.senderType ||
-        old.content !== message.content || old.createdAt !== message.createdAt)) ||
+      (old &&
+        (old.id !== message.id ||
+          old.senderId !== message.senderId ||
+          old.senderType !== message.senderType ||
+          old.content !== message.content ||
+          old.createdAt !== message.createdAt ||
+          old.productContext?.productId !== message.productContext?.productId ||
+          old.productContext?.storeId !== message.productContext?.storeId)) ||
       (identities.has(message.id) &&
         identities.get(message.id) !== message.sequence)
     )

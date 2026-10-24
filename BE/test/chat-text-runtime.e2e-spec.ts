@@ -58,6 +58,7 @@ describe('Chat TEXT runtime: actual HTTP and PostgreSQL', () => {
         ![
           '/bckl_order_resolution_test_chat_text_20261023_v941',
           '/bckl_order_resolution_test_attributes_20261019_v943',
+          '/bckl_order_resolution_test_attributes_20261019_v944',
         ].includes(url.pathname))
     )
       throw Error('Chat requires exact isolated QA target');
@@ -546,7 +547,10 @@ describe('Chat TEXT runtime: actual HTTP and PostgreSQL', () => {
     ).toMatchObject({
       content: {
         'application/json': {
-          schema: { required: ['clientMessageId', 'type', 'content'] },
+          schema: { required: ['clientMessageId', 'type'], oneOf: [
+            { required: ['content'], properties: { type: { enum: ['TEXT'] } } },
+            { required: ['contextProductId'], properties: { type: { enum: ['PRODUCT_CONTEXT'] } } },
+          ] },
         },
       },
     });

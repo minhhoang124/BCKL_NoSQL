@@ -52,10 +52,10 @@ const page = (items: Message[] = []) => ({
   nextBeforeSequence: null,
   nextAfterSequence: null,
 });
-function view() {
+function view(entry = "/messages/7") {
   return render(
     <StrictMode>
-      <MemoryRouter initialEntries={["/messages/7"]}>
+      <MemoryRouter initialEntries={[entry]}>
         <Routes>
           <Route path="/messages/:conversationId" element={<ChatPage />} />
         </Routes>
@@ -73,9 +73,40 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
   sessionStorage.clear();
 });
 describe("Chat UI session/unknown outcome boundaries", () => {
+  it("shares only on explicit consent, keeps typed text and blocks duplicate context clicks", async () => {
+    vi.stubEnv("VITE_CHAT_PRODUCT_CONTEXT_ENABLED", "true");
+    const send = vi
+      .spyOn(chatApi, "send")
+      .mockResolvedValue({
+        ...message,
+        content: "Đã chia sẻ sản phẩm",
+        productContext: { productId: 8, storeId: 4 },
+      });
+    view("/messages/7?productId=8");
+    const button = await screen.findByRole("button", {
+      name: "Chia sẻ sản phẩm #8",
+    });
+    await waitFor(() => expect(button).toBeEnabled());
+    expect(send).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText("Nội dung tin nhắn"), {
+      target: { value: "Keep my draft" },
+    });
+    fireEvent.click(button);
+    fireEvent.click(button);
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Đã chia sẻ sản phẩm #8" }),
+      ).toBeDisabled(),
+    );
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("Nội dung tin nhắn")).toHaveValue(
+      "Keep my draft",
+    );
+  });
   it("loads in StrictMode, renders hostile text safely and does not mark read merely by opening", async () => {
     vi.mocked(chatApi.history).mockResolvedValue(
       page([{ ...message, content: "<img src=x onerror=alert(1)>" }]),

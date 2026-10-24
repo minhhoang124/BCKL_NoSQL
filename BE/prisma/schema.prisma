@@ -184,6 +184,7 @@ model ChatMessage {
   senderType      String
   clientMessageId String           @db.VarChar(128)
   content         String
+  contextProductId Int?
   payloadHash     String           @db.VarChar(64)
   hashVersion     Int              @default(1)
   createdAt       DateTime         @default(now())

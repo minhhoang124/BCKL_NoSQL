@@ -220,14 +220,15 @@ class ChatController {
     schema: {
       type: 'object',
       additionalProperties: false,
-      required: ['clientMessageId', 'type', 'content'],
+      required: ['clientMessageId', 'type'],
       properties: {
         clientMessageId: {
           type: 'string',
           pattern: '^[!-~]{1,128}$',
           maxLength: 128,
         },
-        type: { type: 'string', enum: ['TEXT'] },
+        type: { type: 'string', enum: ['TEXT', 'PRODUCT_CONTEXT'] },
+        contextProductId: { type: 'integer', minimum: 1, maximum: 2147483647 },
         content: {
           type: 'string',
           minLength: 1,
@@ -236,6 +237,16 @@ class ChatController {
             'Trim trước kiểm tra; giới hạn theo Unicode code points.',
         },
       },
+      oneOf: [
+        {
+          required: ['content'],
+          properties: { type: { type: 'string', enum: ['TEXT'] } },
+        },
+        {
+          required: ['contextProductId'],
+          properties: { type: { type: 'string', enum: ['PRODUCT_CONTEXT'] } },
+        },
+      ],
     },
   })
   send(

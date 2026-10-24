@@ -1,5 +1,14 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Chat Product context —24/10/2026, IN_PROGRESS:** nhánh riêng thêm nullable
+Product reference trên Message, không snapshot tên/ảnh/giá hoặc Product FK xóa
+history. Shared transaction/public-listing policy chặn sai Store/ẩn; history
+chỉ reference, Web hydrate public current và redact khi mất quyền. Same-key
+journal/replay giữ nguyên, chỉ chia sẻ khi xác nhận, không mất TEXT draft.
+Migration22 additive, hai cờ context false; chưa Order/media hoặc toànChatDONE.
+[Contract/biến/rollout](../api/chat-product-context.md),
+[Bằng chứng/giới hạn](../testing/chat-product-context-2026-10-24.md).
+
 **Tích hợp nền Chat —24/10/2026:** #110 đã merge tại `85881cb`, gồm TEXT REST,
 inbox và21migration tổng. #111 đồng bộ tại `a8359a4`, cây file nguyên byte so
 `bec6c6f`; conflict do squash không bỏ REST/realtime. Kiểm lại33Chat HTTP/socket,

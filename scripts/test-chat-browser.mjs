@@ -19,7 +19,7 @@ assert.equal(target.hostname, "127.0.0.1");
 assert.equal(target.port, "5549");
 assert.equal(
   target.pathname,
-  "/bckl_order_resolution_test_chat_text_20261023_v941",
+  "/bckl_order_resolution_test_attributes_20261019_v944",
 );
 assert(
   !target.hash &&
@@ -47,6 +47,10 @@ for (const file of [
   "FE/src/features/chat/ChatPage.tsx",
   "FE/src/features/chat/chatApi.ts",
   "FE/src/features/chat/chatPending.ts",
+  "FE/src/features/chat/ChatProductCard.tsx",
+  "FE/src/features/chat/chatProductProjection.ts",
+  "BE/prisma/schema.prisma",
+  "BE/prisma/migrations/20261024110000_chat_product_context/migration.sql",
   "FE/src/features/chat/ChatPage.module.css",
   "scripts/test-chat-browser.mjs",
   "pnpm-lock.yaml",
@@ -78,6 +82,9 @@ const frontend = "http://127.0.0.1:5189";
 process.env.FRONTEND_URL = frontend;
 process.env.CHAT_TEXT_ENABLED = "true";
 process.env.VITE_CHAT_ENABLED = "true";
+process.env.CHAT_PRODUCT_CONTEXT_ENABLED = 'true';
+process.env.VITE_CHAT_PRODUCT_CONTEXT_ENABLED = 'true';
+process.env.UPLOAD_ROOT = path.join(values.output, 'qa-uploads');
 for (const flag of [
   "SEARCH_SYNC_ENABLED",
   "SEARCH_RECONCILIATION_ENABLED",
@@ -86,6 +93,8 @@ for (const flag of [
 ])
   process.env[flag] = "false";
 await mkdir(values.output, { recursive: true });
+await mkdir(path.join(process.env.UPLOAD_ROOT, 'products'), { recursive: true });
+await writeFile(path.join(process.env.UPLOAD_ROOT, 'products', 'qa-chat-only.png'), await be('sharp')({ create: { width: 32, height: 32, channels: 3, background: '#ff6b00' } }).png().toBuffer());
 const results = [];
 let app, vite, browser;
 const marker = `chatqa-${randomUUID().slice(0, 12)}`,
@@ -102,6 +111,7 @@ try {
     await Test.createTestingModule({ imports: [AppModule] }).compile()
   ).createNestApplication({ bodyParser: false });
   configureApp(app);
+  app.useStaticAssets(process.env.UPLOAD_ROOT, { prefix: '/uploads/' });
   await app.listen(0, "127.0.0.1");
   const api = await app.getUrl(),
     db = app.get(PrismaService),
@@ -147,7 +157,7 @@ try {
         sellerStatus: "ACTIVE",
         moderationStatus: "APPROVED",
         images: {
-          create: { url: "/uploads/qa-chat-only.jpg", isPrimary: true },
+          create: { url: "/uploads/products/qa-chat-only.png", isPrimary: true },
         },
         shippingProfile: { create: { packageWeightGrams: 100 } },
         variants: {
@@ -181,7 +191,7 @@ try {
           name: `Bắt đầu hội thoại với cửa hàng #${store.id}`,
         })
         .click();
-      await a.waitForURL(/\/messages\/\d+$/);
+      await a.waitForURL((url) => /^\/messages\/\d+$/.test(url.pathname));
       const conversationId = Number(
         new URL(a.url()).pathname.split("/").at(-1),
       );
@@ -353,6 +363,54 @@ try {
           0,
         );
       }
+      // Product context is explicitly shared after all baseline TEXT assertions.
+      if (name === 'desktop-light') {
+        await a.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+        await login(a, buyer.email);
+      }
+      await a.goto(`${frontend}/messages/${conversationId}?productId=${product.id}`);
+      await b.goto(`${frontend}/messages/${conversationId}`);
+      const share = a.getByRole('button', { name: `Chia sẻ sản phẩm #${product.id}`, exact: true });
+      await share.waitFor();
+      await a.waitForFunction(() => ![...document.querySelectorAll('button')].find((v) => v.textContent.startsWith('Chia sẻ sản phẩm'))?.disabled);
+      const contextRequests = [];
+      if (name === 'desktop-dark') await a.route(`**/chat/conversations/${conversationId}/messages`, async (route) => {
+        if (route.request().method() !== 'POST') return route.continue();
+        contextRequests.push(route.request().postDataJSON());
+        const response = await route.fetch();
+        if (contextRequests.length === 1) {
+          assert.equal(response.status(), 201);
+          return route.abort('failed'); // Response lost only after actual PostgreSQL commit.
+        }
+        return route.fulfill({ response });
+      });
+      await share.dblclick();
+      if (name === 'desktop-dark') {
+        await a.getByRole('button', { name: 'Gửi lại cùng mã', exact: true }).waitFor();
+        await a.reload();
+        await a.getByRole('button', { name: 'Gửi lại cùng mã', exact: true }).waitFor();
+        assert.equal(contextRequests.length, 1);
+        await a.getByRole('button', { name: 'Gửi lại cùng mã', exact: true }).click();
+        await a.getByRole('button', { name: `Đã chia sẻ sản phẩm #${product.id}`, exact: true }).waitFor();
+        assert.deepEqual(contextRequests[0], contextRequests[1]);
+        await a.unrouteAll({ behavior: 'wait' });
+      }
+      const card = b.getByRole('article', { name: `Sản phẩm ${product.id}`, exact: true });
+      await card.getByRole('link', { name: 'QA Chat product', exact: true }).waitFor({ timeout: 7000 });
+      await card.locator('img').scrollIntoViewIfNeeded();
+      await card.locator('img').evaluate((img) => Promise.race([
+        img.decode(), new Promise((_, reject) => setTimeout(() => reject(Error('QA image decode timeout')), 8000)),
+      ]));
+      assert(await card.locator('img').evaluate((img) => img.naturalWidth > 0));
+      await b.screenshot({ path: path.join(values.output, `${name}-context-product.png`), fullPage: true });
+      assert.equal(await db.chatMessage.count({ where: { conversationId, contextProductId: product.id } }), 1);
+      await a.reload();
+      await a.getByRole('article', { name: `Sản phẩm ${product.id}`, exact: true }).waitFor();
+      await db.product.update({ where: { id: product.id }, data: { sellerStatus: 'HIDDEN', name: 'PRIVATE HIDDEN PRODUCT' } });
+      await b.reload();
+      await b.getByText('Sản phẩm không còn khả dụng hoặc chưa tải được.', { exact: true }).waitFor();
+      assert.equal(await b.getByText('PRIVATE HIDDEN PRODUCT', { exact: true }).count(), 0);
+      await b.screenshot({ path: path.join(values.output, `${name}-context-hidden.png`), fullPage: true });
       assert.deepEqual(browserErrors, []);
       results.push({ name, result: "PASS", conversationId });
     } finally {
@@ -368,7 +426,7 @@ try {
         marker,
         groups: results,
         limitations: [
-          "No Product context/media/Order card",
+          "No media/Order card; Product context has real public HTTP hydrate and hidden redaction",
           "Single-instance realtime; REST catch-up supports restart/other instance",
           "Pagination fixture labeled; not 31 Web sends",
         ],

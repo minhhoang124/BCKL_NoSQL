@@ -4,6 +4,7 @@ export type PendingMessage = {
   conversationId: number;
   clientMessageId: string;
   content: string;
+  contextProductId?: number;
 };
 const key = (actorId: number) => `chat-pending:v1:${actorId}`;
 export function loadPending(
@@ -15,7 +16,16 @@ export function loadPending(
   if (
     !value ||
     Object.keys(value).sort().join() !==
-      ["version", "actorId", "conversationId", "clientMessageId", "content"]
+      [
+        "version",
+        "actorId",
+        "conversationId",
+        "clientMessageId",
+        "content",
+        ...(Object.hasOwn(value, "contextProductId")
+          ? ["contextProductId"]
+          : []),
+      ]
         .sort()
         .join() ||
     value.version !== 1 ||
@@ -27,7 +37,12 @@ export function loadPending(
     !/^[!-~]{1,128}$/.test(value.clientMessageId) ||
     typeof value.content !== "string" ||
     !value.content.trim() ||
-    [...value.content].length > 2000
+    [...value.content].length > 2000 ||
+    (Object.hasOwn(value, "contextProductId") &&
+      (!Number.isInteger(value.contextProductId) ||
+        value.contextProductId! < 1 ||
+        value.contextProductId! > 2147483647 ||
+        value.content !== "Đã chia sẻ sản phẩm"))
   )
     throw Error("Dữ liệu tin chờ không hợp lệ; chưa gửi thêm tin.");
   return { value, raw };

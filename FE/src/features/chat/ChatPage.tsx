@@ -22,6 +22,7 @@ import {
 } from "./chatApi";
 import { clearPending, loadPending, preparePending } from "./chatPending";
 import styles from "./ChatPage.module.css";
+import { ChatProductCard } from "./ChatProductCard";
 
 const explain = (error: unknown) =>
   error instanceof Error ? error.message : "Không thể kết nối Chat.";
@@ -133,7 +134,15 @@ function ChatSession({
     try {
       const result = await chatApi.open(storeId, actorId);
       if (live.current && session === getAuthSessionVersion()) {
-        navigate(`/messages/${result.id}`);
+        const product = query.get("productId");
+        navigate(
+          `/messages/${result.id}` +
+            (product &&
+            /^[1-9]\d*$/.test(product) &&
+            Number(product) <= 2147483647
+              ? `?productId=${product}`
+              : ""),
+        );
         void load();
       }
     } catch (e) {
@@ -190,6 +199,12 @@ function ChatSession({
             actorId={actorId}
             id={id}
             session={session}
+            productId={
+              /^[1-9]\d*$/.test(query.get("productId") ?? "") &&
+              Number(query.get("productId")) <= 2147483647
+                ? Number(query.get("productId"))
+                : undefined
+            }
             onChange={() => {
               void load();
             }}
@@ -208,11 +223,13 @@ function ChatThread({
   id,
   session,
   onChange,
+  productId,
 }: {
   actorId: number;
   id: number;
   session: number;
   onChange: () => void;
+  productId?: number;
 }) {
   const [initialPending] = useState(() => {
     try {
@@ -230,6 +247,7 @@ function ChatThread({
     [busy, setBusy] = useState(false),
     [connection, setConnection] = useState(0),
     [readBusy, setReadBusy] = useState(false);
+  const [sharedProduct, setSharedProduct] = useState<number | null>(null);
   const [pending, setPending] = useState<ReturnType<typeof loadPending>>(
       initialPending.value,
     ),
@@ -358,7 +376,7 @@ function ChatThread({
       socket.current = null;
     };
   }, [actorId, id, current, sync, connection]);
-  const send = async () => {
+  const send = async (contextProductId?: number) => {
     if (sending.current || storageBlocked || !ready || !current()) return;
     sending.current = true;
     setBusy(true);
@@ -367,23 +385,40 @@ function ChatThread({
       if (candidate && candidate.value.conversationId !== id)
         throw Error("Còn tin chờ ở hội thoại khác.");
       if (!candidate) {
-        if (!content.trim() || [...content.trim()].length > 2000)
+        if (
+          contextProductId === undefined &&
+          (!content.trim() || [...content.trim()].length > 2000)
+        )
           throw Error("Nhập 1–2.000 ký tự.");
         candidate = preparePending({
           version: 1,
           actorId,
           conversationId: id,
           clientMessageId: crypto.randomUUID(),
-          content: content.trim(),
+          content:
+            contextProductId === undefined
+              ? content.trim()
+              : "Đã chia sẻ sản phẩm",
+          ...(contextProductId === undefined ? {} : { contextProductId }),
         });
       }
       setPending(candidate);
       const value = candidate.value;
-      await chatApi.send(id, actorId, value.clientMessageId, value.content);
+      if (value.contextProductId === undefined)
+        await chatApi.send(id, actorId, value.clientMessageId, value.content);
+      else
+        await chatApi.send(
+          id,
+          actorId,
+          value.clientMessageId,
+          value.content,
+          value.contextProductId,
+        );
       if (!current()) return;
       clearPending(actorId, candidate.raw);
       setPending(null);
-      setContent("");
+      if (value.contextProductId === undefined) setContent("");
+      else setSharedProduct(value.contextProductId);
       await sync();
       if (current()) onChangeRef.current();
     } catch (e) {
@@ -473,6 +508,9 @@ function ChatThread({
                   : "Khách hàng"}
             </span>
             <p>{message.content}</p>
+            {message.productContext && (
+              <ChatProductCard {...message.productContext} />
+            )}
             <time dateTime={message.createdAt}>
               {new Date(message.createdAt).toLocaleString("vi-VN")}
             </time>
@@ -508,6 +546,23 @@ function ChatThread({
           void send();
         }}
       >
+        {import.meta.env.VITE_CHAT_PRODUCT_CONTEXT_ENABLED === "true" &&
+          productId && (
+            <button
+              type="button"
+              disabled={
+                !ready ||
+                busy ||
+                !!pending ||
+                storageBlocked ||
+                sharedProduct === productId
+              }
+              onClick={() => void send(productId)}
+            >
+              {sharedProduct === productId ? "Đã chia sẻ" : "Chia sẻ"} sản phẩm
+              #{productId}
+            </button>
+          )}
         <label htmlFor="chat-message">Nội dung tin nhắn</label>
         <textarea
           id="chat-message"
