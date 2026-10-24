@@ -1,5 +1,12 @@
 # Chat Buyer–Seller: luồng và readiness trước code
 
+**Cập nhật23/10/2026:** Hoàng đã trả lời gate sequence/suspended theo hướng
+ổn định và mở rộng cho khóa luận; quyết định hiện tại ở `chat-domain-design.md`
+và `../api/chat-text-runtime.md`. Nhánh riêng đã có REST TEXT/local PostgreSQL,
+hai migration mới và kiểm thử; chưa merge, chưa UI/realtime. Các mục PROPOSED/
+NOT_RUN trong tài liệu09/10 dưới đây là lịch sử, không phải kết quả của nhánh
+runtime mới. Không nhận quyết định của Hoàng thành approval schema của Hiền.
+
 Ngày 09/10/2026. **PROPOSED / CHỜ HIỀN REVIEW**. Đây là đặc tả triển khai,
 không phải Chat đã chạy. Không tạo migration/schema/API trong task này.
 Nguồn: SRS v3.1 FR-CHT-01, UC-HT10, D08;

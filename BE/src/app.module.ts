@@ -14,6 +14,7 @@ import { CartModule } from './cart/cart.module.js';
 import { OrderModule } from './order/order.module.js';
 import { CheckoutModule } from './checkout/checkout.module.js';
 import { AdminSystemHealthModule } from './health/admin-system-health.module.js';
+import { ChatModule } from './chat/chat.controller.js';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AdminSystemHealthModule } from './health/admin-system-health.module.js'
     OrderModule,
     CheckoutModule,
     AdminSystemHealthModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

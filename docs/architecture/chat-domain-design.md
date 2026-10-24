@@ -1,5 +1,22 @@
 # Thiết kế Chat trực tiếp giữa User và Seller
 
+## Quyết định triển khai 23/10/2026
+
+Hoàng chốt triển khai ổn định cho phạm vi khóa luận sau khi được hỏi về
+sequence theo hội thoại và chính sách Store tạm khóa. Thay quy tắc cursor
+`(createdAt,id)` cũ bằng **sequence tăng riêng trong khóa hàng Conversation**;
+ID toàn hệ thống chỉ định danh, không chứng minh thứ tự commit.
+Read nhận Message ID rồi resolve sequence đúng hội thoại, không bao giờ lùi.
+Store SUSPENDED chỉ cho gửi nếu server tìm thấy Order đúng buyer/store có trước
+history SUSPENDED gần nhất; không có history/bằng chứng thì read-only. Account
+owner inactive không nhận tin mới; Buyer active vẫn đọc lịch sử của mình.
+
+Đợt runtime đầu: PostgreSQL + REST TEXT/open/history/read. Không tự gửi context
+khi mở; Product context, inbox UI, realtime và ảnh/video/Order-sharing chưa được
+nhận là đã triển khai. Các đoạn dưới mô tả mục tiêu toàn Chat, không phải DONE.
+Adapter quyền giữ USER/SELLER hiện hành, không tự sửa Auth/membership trong Chat.
+Xem [contract REST runtime](../api/chat-text-runtime.md).
+
 Tài liệu này định nghĩa phạm vi MVP, mô hình dữ liệu, phân quyền và hợp đồng tích hợp cho chức năng Chat. Đây là chức năng bắt buộc của bản bảo vệ nhưng phải được giới hạn để không ảnh hưởng luồng thương mại điện tử và tìm kiếm cốt lõi.
 
 ## 1. Mục tiêu
@@ -186,8 +203,8 @@ Chỉ phát sự kiện thành công sau khi Message đã được commit. Khi W
 
 ## 9. Phân trang, thứ tự và chưa đọc
 
-- Lịch sử dùng cursor theo `(createdAt, id)`, không tải toàn bộ Conversation.
-- Thứ tự ổn định theo `createdAt` rồi `id`.
+- Lịch sử dùng cursor sequence riêng từng Conversation, không tải toàn bộ.
+- Thứ tự commit trong một Conversation được cấp dưới khóa DB hàng hội thoại.
 - Danh sách Conversation sắp xếp theo `lastMessageAt` giảm dần.
 - Unread count được tính từ `lastReadMessageId` hoặc duy trì counter có cơ chế đối chiếu.
 - Mở Conversation không tự đánh dấu đã đọc nếu client chưa xác nhận đã hiển thị tin.

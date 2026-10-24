@@ -152,8 +152,63 @@ model User {
   orderCommandResolutions OrderCommandResolution[]
   attributeAuditActions   CategoryAttributeAudit[]
   accountSecurityEvents   AccountSecurityEvent[]
+  chatConversations       ChatConversation[]
+  chatMessages            ChatMessage[]
+  chatReadStates          ChatReadState[]
 
   @@map("users")
+}
+
+model ChatConversation {
+  id            Int             @id @default(autoincrement())
+  buyerId       Int
+  storeId       Int
+  lastSequence  Int             @default(0)
+  lastMessageAt DateTime?
+  createdAt     DateTime        @default(now())
+  buyer         User            @relation(fields: [buyerId], references: [id], onDelete: Restrict)
+  store         Store           @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  messages      ChatMessage[]
+  readStates    ChatReadState[]
+
+  @@unique([buyerId, storeId])
+  @@index([storeId, id])
+  @@map("chat_conversations")
+}
+
+model ChatMessage {
+  id              Int              @id @default(autoincrement())
+  conversationId  Int
+  sequence        Int
+  senderId        Int
+  senderType      String
+  clientMessageId String           @db.VarChar(128)
+  content         String
+  payloadHash     String           @db.VarChar(64)
+  hashVersion     Int              @default(1)
+  createdAt       DateTime         @default(now())
+  conversation    ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Restrict)
+  sender          User             @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  readStates      ChatReadState[]
+
+  @@unique([conversationId, sequence])
+  @@unique([conversationId, senderId, clientMessageId])
+  @@unique([conversationId, id, sequence])
+  @@map("chat_messages")
+}
+
+model ChatReadState {
+  conversationId    Int
+  userId            Int
+  lastReadMessageId Int
+  lastReadSequence  Int
+  updatedAt         DateTime         @default(now())
+  conversation      ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Restrict)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  lastReadMessage   ChatMessage      @relation(fields: [conversationId, lastReadMessageId, lastReadSequence], references: [conversationId, id, sequence], onDelete: Restrict)
+
+  @@id([conversationId, userId])
+  @@map("chat_read_states")
 }
 
 model RefreshToken {
@@ -184,18 +239,19 @@ model AccountSecurityEvent {
 }
 
 model Store {
-  id            Int                  @id @default(autoincrement())
-  sellerId      Int                  @unique
-  name          String
-  description   String?
-  status        StoreStatus          @default(PENDING)
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
-  seller        User                 @relation(fields: [sellerId], references: [id], onDelete: Restrict)
-  products      Product[]
-  variants      ProductVariant[]
-  statusHistory StoreStatusHistory[]
-  orders        Order[]
+  id                Int                  @id @default(autoincrement())
+  sellerId          Int                  @unique
+  name              String
+  description       String?
+  status            StoreStatus          @default(PENDING)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  seller            User                 @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  products          Product[]
+  variants          ProductVariant[]
+  statusHistory     StoreStatusHistory[]
+  orders            Order[]
+  chatConversations ChatConversation[]
 
   @@index([status])
   @@map("stores")

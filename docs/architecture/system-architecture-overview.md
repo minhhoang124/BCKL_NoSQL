@@ -1,5 +1,22 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Chat inbox REST —23/10/2026, IN_PROGRESS trên #110:** bổ sung GET danh sách
+hội thoại theo ownership SQL, tin cuối/unread, cursor activity+ID, hạn100/trang.
+Đọc Serializable READ ONLY; không tự đánh dấu đọc, không trả key/hash/PII ngoài
+tên/ID cần hiển thị. Một tài khoản có hai ngữ cảnh mua/bán vẫn theo capability
+server, không đổi JWT/role. Cursor là boundary, không cấp quyền; inbox live cần
+refresh khi tin mới đổi thứ tự giữa hai trang. Không migration mới trong đợt
+inbox này. Chưa merge/Chat Web/realtime hoặc nghiệm thu toàn FR-CHT-01.
+[Contract](../api/chat-text-runtime.md), [kiểm thử](../testing/chat-text-runtime-2026-10-23.md).
+
+**Chat TEXT runtime — 23/10/2026, IN_PROGRESS trên nhánh riêng:** Hoàng chốt
+sequence theo hội thoại. REST dùng policy đã có + Serializable transaction,
+khóa Conversation trước replay/cấp sequence; DB giữ lịch sử bất biến, con trỏ
+đọc chỉ tiến và counter phải khớp history khi commit. Hai migration mới, không
+đổi Product/Search/Auth. API mở/text/history/read đã có bản local kiểm thử,
+chưa merge, chưa inbox UI/realtime/media/Order card, chưa Chat DONE.
+[Contract và giới hạn](../api/chat-text-runtime.md).
+
 **COD browser journey — 23/10/2026:** trên nền #100, kiểm thật Address → Cart →
 Checkout → Seller chuẩn bị → Admin delivery HTTP mô phỏng → Buyer hoàn tất;
 nhánh mất response/reload rồi hủy hoàn kho, đổi giá/thiếu kho đều đạt. 4nhóm
