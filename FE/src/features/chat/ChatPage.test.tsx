@@ -77,15 +77,56 @@ afterEach(() => {
   sessionStorage.clear();
 });
 describe("Chat UI session/unknown outcome boundaries", () => {
-  it("shares only on explicit consent, keeps typed text and blocks duplicate context clicks", async () => {
-    vi.stubEnv("VITE_CHAT_PRODUCT_CONTEXT_ENABLED", "true");
+  it("shares Order only on consent, doubleclick once, loss/reload reuses exact key and leaves draft intact", async () => {
+    vi.stubEnv("VITE_CHAT_ORDER_CONTEXT_ENABLED", "true");
     const send = vi
       .spyOn(chatApi, "send")
+      .mockRejectedValueOnce(Error("Order response lost"))
       .mockResolvedValue({
         ...message,
-        content: "Đã chia sẻ sản phẩm",
-        productContext: { productId: 8, storeId: 4 },
+        content: "Đã chia sẻ đơn hàng",
+        orderContext: { orderId: 8, storeId: 4 },
       });
+    const first = view("/messages/7?orderId=8");
+    const share = await screen.findByRole("button", {
+      name: "Chia sẻ đơn hàng #8",
+    });
+    await waitFor(() => expect(share).toBeEnabled());
+    expect(send).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText("Nội dung tin nhắn"), {
+      target: { value: "Keep draft" },
+    });
+    fireEvent.click(share);
+    fireEvent.click(share);
+    await screen.findByText("Order response lost");
+    expect(send).toHaveBeenCalledTimes(1);
+    const saved = loadPending(2)!;
+    expect(saved.value.contextOrderId).toBe(8);
+    first.unmount();
+    view("/messages/7?orderId=8");
+    const retry = await screen.findByRole("button", {
+      name: "Gửi lại cùng mã",
+    });
+    await waitFor(() => expect(retry).toBeEnabled());
+    expect(send).toHaveBeenCalledTimes(1);
+    fireEvent.click(retry);
+    await waitFor(() => expect(loadPending(2)).toBeNull());
+    expect(send).toHaveBeenLastCalledWith(
+      7,
+      2,
+      saved.value.clientMessageId,
+      "Đã chia sẻ đơn hàng",
+      undefined,
+      8,
+    );
+  });
+  it("shares only on explicit consent, keeps typed text and blocks duplicate context clicks", async () => {
+    vi.stubEnv("VITE_CHAT_PRODUCT_CONTEXT_ENABLED", "true");
+    const send = vi.spyOn(chatApi, "send").mockResolvedValue({
+      ...message,
+      content: "Đã chia sẻ sản phẩm",
+      productContext: { productId: 8, storeId: 4 },
+    });
     view("/messages/7?productId=8");
     const button = await screen.findByRole("button", {
       name: "Chia sẻ sản phẩm #8",

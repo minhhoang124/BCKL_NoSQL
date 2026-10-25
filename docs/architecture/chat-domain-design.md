@@ -1,5 +1,30 @@
 # Thiết kế Chat trực tiếp giữa User và Seller
 
+## Lát cắt Order context — 24/10/2026, IN_PROGRESS
+
+Chia sẻ đơn bằng `ORDER_CONTEXT/contextOrderId`, không chép địa chỉ, điện thoại,
+Payment, reason hay receipt vào Message. Backend đối chiếu cả `buyerId` và
+`storeId` của Order với Conversation; Seller không thể gửi đơn của khách khác
+dù cùng Store. TEXT/Product cũ giữ nguyên hash. ID tham chiếu không có FK xóa
+lịch sử, hai context loại trừ nhau và placeholder cố định được CHECK ở DB.
+
+POST `/chat/conversations/order` nhận duy nhất orderId, suy cặp Buyer–Store từ
+DB rồi kiểm actor hiện hành; không tự gửi tin. Store SUSPENDED chỉ gửi/chia sẻ
+Order có trước lần khóa gần nhất, owner phải active; CLOSED chỉ đọc lịch sử.
+Replay sau kiểm quyền trả đúng receipt cũ, không tạo sequence/tin/push mới.
+
+GET `/chat/conversations/:id/messages/:messageId/order-context` chỉ hydrate
+Order đã được chia sẻ trong đúng Message/Conversation. Allowlist: orderId,
+storeId, orderNumber, status, total (Decimal string), currency VND, createdAt,
+viewer BUYER/SELLER và tối đa 5 dòng tên/số lượng từ OrderItem snapshot.
+Không gọi API chi tiết đơn đầy đủ để dựng thẻ Chat. Không đánh dấu đọc hoặc
+thay đổi Order/kho/Search. Push chỉ báo có tin, thẻ riêng tải lại qua REST có
+kiểm quyền. Cờ Backend/Web context mặc định false, migrate trước bật.
+
+Web mở hội thoại từ đơn bằng thao tác chủ động, chia sẻ lần nữa bằng nút xác
+nhận; journal giữ ID/key (không lưu PII) khi mất response. Session/unmount fence
+chặn kết quả tài khoản cũ. Không nhận toàn Chat DONE, media/video chưa có.
+
 ## Lát cắt Product context — 24/10/2026, chưa nghiệm thu
 
 Message tham chiếu Product bằng `contextProductId` nullable, không lưu tên/ảnh/

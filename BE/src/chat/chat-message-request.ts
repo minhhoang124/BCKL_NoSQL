@@ -11,7 +11,8 @@ export class ChatMessageRequestError extends Error {
 }
 type Payload =
   | Readonly<{ type: 'TEXT'; content: string }>
-  | Readonly<{ type: 'PRODUCT_CONTEXT'; contextProductId: number }>;
+  | Readonly<{ type: 'PRODUCT_CONTEXT'; contextProductId: number }>
+  | Readonly<{ type: 'ORDER_CONTEXT'; contextOrderId: number }>;
 export type PreparedChatMessage = Readonly<{
   conversationId: number;
   senderId: number;
@@ -94,6 +95,12 @@ export function prepareChatMessage(
     payload = Object.freeze({
       type: 'PRODUCT_CONTEXT',
       contextProductId: id(body.contextProductId),
+    });
+  } else if (body.type === 'ORDER_CONTEXT') {
+    if (keys !== 'clientMessageId,contextOrderId,type') invalid();
+    payload = Object.freeze({
+      type: 'ORDER_CONTEXT',
+      contextOrderId: id(body.contextOrderId),
     });
   } else invalid();
   const canonical = JSON.stringify({ conversationId, payload, senderId });

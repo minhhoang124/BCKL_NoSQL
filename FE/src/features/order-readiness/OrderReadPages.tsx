@@ -39,7 +39,10 @@ export function OrderReadPage({
   const { orderId } = useParams();
   const [params] = useSearchParams();
   if (loading) return <p role="status">Đang xác minh phiên…</p>;
-  if (!user?.isActive || (scope === "buyer" ? !hasBuyerAccess(user) : user.role !== "SELLER"))
+  if (
+    !user?.isActive ||
+    (scope === "buyer" ? !hasBuyerAccess(user) : user.role !== "SELLER")
+  )
     return (
       <p role="alert">
         Cần tài khoản đang hoạt động và đúng vai trò để xem đơn.
@@ -62,6 +65,13 @@ export function OrderReadPage({
         {" · "}
         <Link to={base(scope)}>Danh sách đơn</Link>
       </nav>
+      {detail &&
+        import.meta.env.VITE_CHAT_ENABLED === "true" &&
+        import.meta.env.VITE_CHAT_ORDER_CONTEXT_ENABLED === "true" && (
+          <Link to={`/messages?orderId=${pathId(orderId)}&orderScope=${scope}`}>
+            Trao đổi về đơn hàng
+          </Link>
+        )}
       <p>
         {scope === "seller" &&
         detail &&

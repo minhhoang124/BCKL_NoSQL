@@ -1,4 +1,18 @@
 import { ApiError, fetchApi } from "../../services/apiClient";
+import { ORDER_STATUSES, type OrderStatus } from "../../types/order";
+
+export type OrderCard = {
+  orderId: number;
+  storeId: number;
+  orderNumber: string;
+  status: OrderStatus;
+  total: string;
+  currency: "VND";
+  createdAt: string;
+  viewer: "BUYER" | "SELLER";
+  lineCount: number;
+  items: { name: string; quantity: number }[];
+};
 
 export type Message = {
   id: number;
@@ -9,6 +23,7 @@ export type Message = {
   content: string;
   createdAt: string;
   productContext?: { productId: number; storeId: number };
+  orderContext?: { orderId: number; storeId: number };
 };
 export type InboxItem = {
   id: number;
@@ -83,6 +98,11 @@ export function parseMessage(value: unknown, conversationId: number): Message {
     "content",
     "createdAt",
     ...(hasContext ? ["productContext"] : []),
+    ...(!!value &&
+    typeof value === "object" &&
+    Object.hasOwn(value, "orderContext")
+      ? ["orderContext"]
+      : []),
   ]);
   if (
     integer(row.conversationId) !== conversationId ||
@@ -92,6 +112,15 @@ export function parseMessage(value: unknown, conversationId: number): Message {
   const content = text(row.content);
   if (!content.trim() || [...content].length > 2000) return bad();
   let productContext: Message["productContext"];
+  let orderContext: Message["orderContext"];
+  if (Object.hasOwn(row, "orderContext")) {
+    if (hasContext || content !== "Đã chia sẻ đơn hàng") return bad();
+    const context = shape(row.orderContext, ["orderId", "storeId"]);
+    orderContext = {
+      orderId: integer(context.orderId),
+      storeId: integer(context.storeId),
+    };
+  }
   if (hasContext) {
     const context = shape(row.productContext, ["productId", "storeId"]);
     if (content !== "Đã chia sẻ sản phẩm") return bad();
@@ -109,6 +138,7 @@ export function parseMessage(value: unknown, conversationId: number): Message {
     content,
     createdAt: date(row.createdAt),
     ...(productContext ? { productContext } : {}),
+    ...(orderContext ? { orderContext } : {}),
   };
 }
 export function parseHistory(
@@ -214,7 +244,9 @@ export function parseInbox(value: unknown): {
         (lastMessage.sequence !== lastSequence ||
           lastMessage.createdAt !== lastMessageAt ||
           (lastMessage.productContext &&
-            lastMessage.productContext.storeId !== store.id)))
+            lastMessage.productContext.storeId !== store.id) ||
+          (lastMessage.orderContext &&
+            lastMessage.orderContext.storeId !== store.id)))
     )
       return bad();
     return {
@@ -243,6 +275,55 @@ async function call(path: string, body?: unknown) {
   });
 }
 export const chatApi = {
+  async openOrder(
+    orderId: number,
+    actorId: number,
+    expectedViewer?: "BUYER" | "SELLER",
+  ) {
+    const row = shape(await call("/order", { orderId }), [
+      "id",
+      "buyerId",
+      "storeId",
+      "lastSequence",
+      "lastMessageAt",
+      "createdAt",
+      "orderId",
+      "viewer",
+    ]);
+    if (
+      row.orderId !== orderId ||
+      (expectedViewer !== undefined && row.viewer !== expectedViewer) ||
+      !["BUYER", "SELLER"].includes(String(row.viewer)) ||
+      (row.viewer === "BUYER"
+        ? row.buyerId !== actorId
+        : row.buyerId === actorId)
+    )
+      return bad();
+    integer(row.buyerId);
+    integer(row.storeId);
+    date(row.createdAt);
+    const sequence = integer(row.lastSequence, true);
+    if (row.lastMessageAt !== null) date(row.lastMessageAt);
+    if ((sequence === 0) !== (row.lastMessageAt === null)) return bad();
+    return { id: integer(row.id) };
+  },
+  async orderCard(
+    conversationId: number,
+    messageId: number,
+    orderId: number,
+    storeId: number,
+    signal?: AbortSignal,
+  ): Promise<OrderCard> {
+    const raw = await fetchApi<unknown>(
+      `/chat/conversations/${conversationId}/messages/${messageId}/order-context`,
+      {
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(10000)])
+          : AbortSignal.timeout(10000),
+      },
+    );
+    return parseOrderCard(raw, orderId, storeId);
+  },
   async inbox(cursor?: string) {
     return parseInbox(
       await call(cursor ? "?cursor=" + encodeURIComponent(cursor) : ""),
@@ -320,13 +401,18 @@ export const chatApi = {
     clientMessageId: string,
     content: string,
     contextProductId?: number,
+    contextOrderId?: number,
   ) {
+    if (contextProductId !== undefined && contextOrderId !== undefined)
+      return bad();
     const row = shape(
       await call(
         `/${id}/messages`,
-        contextProductId === undefined
-          ? { clientMessageId, type: "TEXT", content }
-          : { clientMessageId, type: "PRODUCT_CONTEXT", contextProductId },
+        contextOrderId !== undefined
+          ? { clientMessageId, type: "ORDER_CONTEXT", contextOrderId }
+          : contextProductId === undefined
+            ? { clientMessageId, type: "TEXT", content }
+            : { clientMessageId, type: "PRODUCT_CONTEXT", contextProductId },
       ),
       ["message", "replay"],
     );
@@ -335,12 +421,15 @@ export const chatApi = {
     if (
       message.senderId !== actorId ||
       message.content !==
-        (contextProductId === undefined
-          ? content.trim()
-          : "Đã chia sẻ sản phẩm")
+        (contextOrderId !== undefined
+          ? "Đã chia sẻ đơn hàng"
+          : contextProductId === undefined
+            ? content.trim()
+            : "Đã chia sẻ sản phẩm")
     )
       return bad();
     if (message.productContext?.productId !== contextProductId) return bad();
+    if (message.orderContext?.orderId !== contextOrderId) return bad();
     return message;
   },
   async read(id: number, message: Message) {
@@ -358,6 +447,59 @@ export const chatApi = {
       return bad();
   },
 };
+
+export function parseOrderCard(
+  value: unknown,
+  orderId: number,
+  storeId: number,
+): OrderCard {
+  const row = shape(value, [
+    "orderId",
+    "storeId",
+    "orderNumber",
+    "status",
+    "total",
+    "currency",
+    "createdAt",
+    "viewer",
+    "lineCount",
+    "items",
+  ]);
+  if (
+    integer(row.orderId) !== orderId ||
+    integer(row.storeId) !== storeId ||
+    !ORDER_STATUSES.includes(row.status as OrderStatus) ||
+    row.currency !== "VND" ||
+    !["BUYER", "SELLER"].includes(String(row.viewer)) ||
+    typeof row.orderNumber !== "string" ||
+    !row.orderNumber.trim() ||
+    row.orderNumber.length > 128 ||
+    typeof row.total !== "string" ||
+    !/^(0|[1-9]\d{0,11})\.\d{2}$/.test(row.total) ||
+    !Array.isArray(row.items)
+  )
+    return bad();
+  const lineCount = integer(row.lineCount, true);
+  if (row.items.length !== Math.min(5, lineCount)) return bad();
+  const items = row.items.map((raw) => {
+    const item = shape(raw, ["name", "quantity"]);
+    const name = text(item.name);
+    if (!name.trim() || name.length > 1000) return bad();
+    return { name, quantity: integer(item.quantity) };
+  });
+  return {
+    orderId,
+    storeId,
+    orderNumber: row.orderNumber,
+    status: row.status as OrderStatus,
+    total: row.total,
+    currency: "VND",
+    createdAt: date(row.createdAt),
+    viewer: row.viewer as "BUYER" | "SELLER",
+    lineCount,
+    items,
+  };
+}
 
 export function mergeMessages(
   previous: Message[],
@@ -378,7 +520,9 @@ export function mergeMessages(
           old.content !== message.content ||
           old.createdAt !== message.createdAt ||
           old.productContext?.productId !== message.productContext?.productId ||
-          old.productContext?.storeId !== message.productContext?.storeId)) ||
+          old.productContext?.storeId !== message.productContext?.storeId ||
+          old.orderContext?.orderId !== message.orderContext?.orderId ||
+          old.orderContext?.storeId !== message.orderContext?.storeId)) ||
       (identities.has(message.id) &&
         identities.get(message.id) !== message.sequence)
     )

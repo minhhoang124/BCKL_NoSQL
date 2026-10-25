@@ -177,6 +177,35 @@ class ChatController {
     chatPage(req.originalUrl, false);
     return this.chat.open(actor.userId, bodyId(body, 'storeId'));
   }
+  @Post('order')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['orderId'],
+      properties: {
+        orderId: { type: 'integer', minimum: 1, maximum: 2147483647 },
+      },
+    },
+  })
+  openOrder(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Body() body: unknown,
+    @Req() req: Request,
+  ) {
+    chatPage(req.originalUrl, false);
+    return this.chat.openOrder(actor.userId, bodyId(body, 'orderId'));
+  }
+  @Get(':id/messages/:messageId/order-context')
+  orderCard(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id') id: string,
+    @Param('messageId') messageId: string,
+    @Req() req: Request,
+  ) {
+    chatPage(req.originalUrl, false);
+    return this.chat.orderCard(actor.userId, integer(id), integer(messageId));
+  }
   @Get(':id')
   detail(
     @CurrentUser() actor: AuthenticatedUser,
@@ -227,7 +256,11 @@ class ChatController {
           pattern: '^[!-~]{1,128}$',
           maxLength: 128,
         },
-        type: { type: 'string', enum: ['TEXT', 'PRODUCT_CONTEXT'] },
+        type: {
+          type: 'string',
+          enum: ['TEXT', 'PRODUCT_CONTEXT', 'ORDER_CONTEXT'],
+        },
+        contextOrderId: { type: 'integer', minimum: 1, maximum: 2147483647 },
         contextProductId: { type: 'integer', minimum: 1, maximum: 2147483647 },
         content: {
           type: 'string',
@@ -238,6 +271,10 @@ class ChatController {
         },
       },
       oneOf: [
+        {
+          required: ['contextOrderId'],
+          properties: { type: { type: 'string', enum: ['ORDER_CONTEXT'] } },
+        },
         {
           required: ['content'],
           properties: { type: { type: 'string', enum: ['TEXT'] } },

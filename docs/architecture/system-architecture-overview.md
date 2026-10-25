@@ -1,5 +1,18 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Chat Order context —24/10/2026, IN_PROGRESS:** nhánh riêng sau #112 thêm
+reference Order không snapshot PII vào history. Backend đối chiếu cả Buyer và
+Store của Conversation; card GET gắn Message đã lưu, chỉ projection tên/quantity
+snapshot, tổng tiền Decimal và trạng thái hiện tại. Mở/chia sẻ chủ động từ Order
+Web, cùng key/journal/replay, session fence; migration23 additive, hai cờ false.
+SUSPENDED chỉ gửi đơn có trước khóa, CLOSED mở lại lịch sử không cấp quyền gửi.
+PR #113: 1283BEunit,883E2E/1SKIP/20TODO,1323FE/6liveSKIP và4nhóm Chrome
+đạt trên QA5549; source runtime cff9462, browser driver4247bd7. Gemini Medium
+đã rà source độc lập, không giả human approval; CI không started do billing.
+Chưa merge, media/video/Chat resolver hoặc toàn Chat DONE.
+[API/biến/rollout](../api/chat-order-context.md),
+[bằng chứng và giới hạn](../testing/chat-order-context-2026-10-24.md).
+
 **Chat Product context —24/10/2026, IN_PROGRESS:** nhánh riêng thêm nullable
 Product reference trên Message, không snapshot tên/ảnh/giá hoặc Product FK xóa
 history. Shared transaction/public-listing policy chặn sai Store/ẩn; history

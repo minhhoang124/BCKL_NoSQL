@@ -5,6 +5,37 @@ import {
 } from './chat-message-request.js';
 const body = { clientMessageId: 'message-1', type: 'TEXT', content: ' Hello ' };
 describe('Chat message request preparation — no persistence or authorization', () => {
+  it('Order identity is immutable and disjoint from Product/TEXT hash domains', () => {
+    const raw = {
+      clientMessageId: 'order-1',
+      type: 'ORDER_CONTEXT',
+      contextOrderId: 3,
+    };
+    const prepared = prepareChatMessage(1, 2, raw);
+    raw.contextOrderId = 4;
+    expect(prepared.payload).toEqual({
+      type: 'ORDER_CONTEXT',
+      contextOrderId: 3,
+    });
+    expect(Object.isFrozen(prepared.payload)).toBe(true);
+    for (const other of [
+      raw,
+      { ...raw, contextOrderId: 0 },
+      { ...raw, contextProductId: 3 },
+      { ...raw, content: 'private' },
+    ]) {
+      expect(() =>
+        assertChatReplayMatches(prepared, prepareChatMessage(1, 2, other)),
+      ).toThrow();
+    }
+    expect(prepared.payloadHash).not.toBe(
+      prepareChatMessage(1, 2, {
+        clientMessageId: 'order-1',
+        type: 'PRODUCT_CONTEXT',
+        contextProductId: 3,
+      }).payloadHash,
+    );
+  });
   it('trims text, hashes fixed payload and returns immutable data', () => {
     const p = prepareChatMessage(1, 2, body);
     expect(p.payload).toEqual({ type: 'TEXT', content: 'Hello' });

@@ -93,6 +93,7 @@ describe('Chat realtime: actual sockets + HTTP + PostgreSQL', () => {
           '/bckl_order_resolution_test_chat_text_20261023_v941',
           '/bckl_order_resolution_test_attributes_20261019_v943',
           '/bckl_order_resolution_test_attributes_20261019_v944',
+          '/bckl_order_resolution_test_attributes_20261019_v945',
         ].includes(target.pathname))
     )
       throw Error('Realtime requires exact isolated QA target');

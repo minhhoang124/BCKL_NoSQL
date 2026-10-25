@@ -34,14 +34,16 @@ const selectMessage = {
   senderType: true,
   content: true,
   contextProductId: true,
+  contextOrderId: true,
   createdAt: true,
 } as const;
 
-function presentMessage<T extends { contextProductId: number | null }>(
-  row: T,
-  storeId: number,
-) {
-  const { contextProductId, ...message } = row;
+function presentMessage<
+  T extends { contextProductId: number | null; contextOrderId: number | null },
+>(row: T, storeId: number) {
+  const { contextProductId, contextOrderId, ...message } = row;
+  if (contextOrderId !== null)
+    return { ...message, orderContext: { orderId: contextOrderId, storeId } };
   return contextProductId === null
     ? message
     : {
@@ -293,6 +295,147 @@ export class ChatService {
     });
   }
 
+  /** Opening from an Order derives BOTH participants from canonical data.
+   * This does not send a message or mark anything read. */
+  openOrder(actorId: number, orderId: number) {
+    return this.transaction(async (tx) => {
+      const rawActor = await this.actor(tx, actorId);
+      if (process.env.CHAT_ORDER_CONTEXT_ENABLED !== 'true')
+        return fail(404, 'CHAT_ORDER_UNAVAILABLE');
+      const order = await tx.order.findUnique({
+        where: { id: orderId },
+        select: {
+          id: true,
+          buyerId: true,
+          storeId: true,
+          createdAt: true,
+          store: {
+            select: {
+              id: true,
+              sellerId: true,
+              status: true,
+              seller: { select: { isActive: true } },
+            },
+          },
+        },
+      });
+      if (!order) return fail(404, 'CHAT_ORDER_UNAVAILABLE');
+      const store = {
+        ...order.store,
+        ownerIsActive: order.store.seller.isActive,
+      };
+      const actor =
+        rawActor.id !== store.sellerId && canActAsBuyer(rawActor.role)
+          ? { ...rawActor, role: 'USER' as const }
+          : rawActor;
+      const pair = { buyerId: order.buyerId, storeId: order.storeId };
+      // Identical 404 for a missing Order and a foreign participant.
+      try {
+        assertCanReadChat(actor, store, pair);
+      } catch (error) {
+        if (error instanceof ChatPolicyError && error.status === 404)
+          return fail(404, 'CHAT_ORDER_UNAVAILABLE');
+        throw error;
+      }
+      const select = {
+        id: true,
+        buyerId: true,
+        storeId: true,
+        lastSequence: true,
+        lastMessageAt: true,
+        createdAt: true,
+      } as const;
+      const existing = await tx.chatConversation.findUnique({
+        where: { buyerId_storeId: pair },
+        select,
+      });
+      if (!existing) {
+        const prior = await this.orderPredatesSuspension(
+          tx,
+          store.id,
+          store.status,
+          order.createdAt,
+        );
+        assertCanSendChat(actor, store, pair, prior);
+      }
+      return {
+        ...(existing ??
+          (await tx.chatConversation.create({ data: pair, select }))),
+        orderId,
+        viewer:
+          actor.role === 'USER' ? ('BUYER' as const) : ('SELLER' as const),
+      };
+    });
+  }
+
+  private async orderPredatesSuspension(
+    tx: Tx,
+    storeId: number,
+    status: string,
+    createdAt: Date,
+  ) {
+    if (status !== 'SUSPENDED') return false;
+    const suspension = await tx.storeStatusHistory.findFirst({
+      where: { storeId, toStatus: 'SUSPENDED' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: { createdAt: true },
+    });
+    return !!suspension && createdAt < suspension.createdAt;
+  }
+
+  /** Only hydrate a persisted reference. Never return the full Order DTO (PII).
+   * Immutable OrderItem snapshots survive Product/address edits. */
+  orderCard(actorId: number, id: number, messageId: number) {
+    return this.transaction(async (tx) => {
+      const { actor, conversation } = await this.context(tx, actorId, id);
+      const message = await tx.chatMessage.findFirst({
+        where: {
+          id: messageId,
+          conversationId: id,
+          contextOrderId: { not: null },
+        },
+        select: { contextOrderId: true },
+      });
+      if (!message?.contextOrderId) return fail(404, 'CHAT_ORDER_UNAVAILABLE');
+      const order = await tx.order.findFirst({
+        where: {
+          id: message.contextOrderId,
+          buyerId: conversation.buyerId,
+          storeId: conversation.storeId,
+        },
+        select: {
+          id: true,
+          orderNumber: true,
+          status: true,
+          total: true,
+          createdAt: true,
+          items: {
+            orderBy: { id: 'asc' },
+            take: 5,
+            select: { productNameSnapshot: true, quantity: true },
+          },
+          _count: { select: { items: true } },
+        },
+      });
+      if (!order) return fail(404, 'CHAT_ORDER_UNAVAILABLE');
+      return {
+        orderId: order.id,
+        storeId: conversation.storeId,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        total: order.total.toFixed(2),
+        currency: 'VND',
+        createdAt: order.createdAt,
+        viewer: actor.role === 'USER' ? 'BUYER' : 'SELLER',
+        lineCount: order._count.items,
+        items: order.items.map((item) => ({
+          name: item.productNameSnapshot,
+          quantity: item.quantity,
+        })),
+      };
+    });
+  }
+
   detail(actorId: number, id: number) {
     return this.transaction(async (tx) => {
       const { conversation } = await this.context(tx, actorId, id);
@@ -326,10 +469,16 @@ export class ChatService {
       input.payload.type === 'PRODUCT_CONTEXT'
         ? input.payload.contextProductId
         : null;
+    const contextOrderId =
+      input.payload.type === 'ORDER_CONTEXT'
+        ? input.payload.contextOrderId
+        : null;
     const content =
       input.payload.type === 'TEXT'
         ? input.payload.content
-        : 'Đã chia sẻ sản phẩm';
+        : input.payload.type === 'PRODUCT_CONTEXT'
+          ? 'Đã chia sẻ sản phẩm'
+          : 'Đã chia sẻ đơn hàng';
     return this.transaction(async (tx) => {
       const { actor, conversation, store } = await this.context(
         tx,
@@ -392,6 +541,29 @@ export class ChatService {
         )
           return fail(404, 'CHAT_PRODUCT_UNAVAILABLE');
       }
+      if (contextOrderId !== null) {
+        if (process.env.CHAT_ORDER_CONTEXT_ENABLED !== 'true')
+          return fail(400, 'CHAT_VALIDATION_ERROR');
+        const order = await tx.order.findFirst({
+          where: {
+            id: contextOrderId,
+            buyerId: conversation.buyerId,
+            storeId: store.id,
+          },
+          select: { createdAt: true },
+        });
+        if (!order) return fail(404, 'CHAT_ORDER_UNAVAILABLE');
+        if (
+          store.status === 'SUSPENDED' &&
+          !(await this.orderPredatesSuspension(
+            tx,
+            store.id,
+            store.status,
+            order.createdAt,
+          ))
+        )
+          return fail(409, 'CHAT_READ_ONLY');
+      }
       if (conversation.lastSequence === 2147483647)
         return fail(409, 'CHAT_SEQUENCE_EXHAUSTED');
       const message = await tx.chatMessage.create({
@@ -402,6 +574,7 @@ export class ChatService {
           senderType: actor.role === 'USER' ? 'BUYER' : 'SELLER',
           content,
           contextProductId,
+          contextOrderId,
           clientMessageId: input.clientMessageId,
           payloadHash: input.payloadHash,
           hashVersion: 1,
