@@ -75,7 +75,7 @@ def main():
     old = {(source[f"B{n}"], source[f"D{n}"]): source.get(f"G{n}") for n in range(2, 1034)}
     by_key, proposed = validate_records(review, baseline, old)
     assert digest(PREVIOUS / "results.xlsx") == review["sourceSnapshotSha256"]
-    protocol = ROOT.parent.parent / "ai-assisted-evaluation-protocol-proposal-2026-10-21.md"
+    protocol = ROOT / "protocol-proposal.snapshot.md"
     assert digest(protocol) == review["protocolProposalSha256"]
     csv_rows = list(csv.DictReader((ROOT / "review.csv").open(encoding="utf-8", newline="")))
     assert len(csv_rows) == 57

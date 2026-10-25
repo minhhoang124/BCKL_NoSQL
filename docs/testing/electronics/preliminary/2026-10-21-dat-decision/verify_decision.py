@@ -123,7 +123,7 @@ def main():
     decision = json.loads((ROOT / "decision.json").read_text(encoding="utf-8"))
     inputs = {"baseline-labels.jsonl": PENDING / "baseline-labels.jsonl",
               "review.json": PENDING / "review.json",
-              "protocol-proposal.md": DOCS / "ai-assisted-evaluation-protocol-proposal-2026-10-21.md",
+              "protocol-proposal.md": PENDING / "protocol-proposal.snapshot.md",
               "evaluation-lock-v2.json": DOCS / "evaluation-lock-v2.json"}
     inputs.update({n: PILOT / n for n in
                    ("metrics-summary.csv", "metrics-per-query.csv", "provenance.json")})

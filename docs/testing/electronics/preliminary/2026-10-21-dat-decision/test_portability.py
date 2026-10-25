@@ -90,6 +90,20 @@ class PortabilityTests(unittest.TestCase):
                                                    str(ROOT / "verify_decision.py")],
                                                   env=env, capture_output=True))
 
+    def test_modified_historical_protocol_is_rejected(self):
+        with tempfile.TemporaryDirectory(prefix="evaluation-tamper-") as scratch:
+            target = Path(scratch)
+            for rel in self.paths:
+                destination = target / rel
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(REPO / rel, destination)
+            snapshot = target / REL.parent / "2026-10-21-pending-57" / "protocol-proposal.snapshot.md"
+            snapshot.write_bytes(snapshot.read_bytes() + b"\nTampered historical input\n")
+            result = subprocess.run([sys.executable, str(target / REL / "verify_decision.py")],
+                                    env=dict(os.environ, PYTHONIOENCODING="utf-8"), capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(b"protocol-proposal.md", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

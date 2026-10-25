@@ -25,7 +25,15 @@ Không cần yêu cầu Hiền xác nhận lại 975 nhãn để thực hiện p
    independent/consensus của protocol cũ, không ghi G-OPERATE hoặc #32 DONE.
 
 Đây là phiên bản quyết định riêng kế thừa các quy tắc kỹ thuật của
-[đề xuất trước](../../ai-assisted-evaluation-protocol-proposal-2026-10-21.md).
+[đề xuất trước](../2026-10-21-pending-57/protocol-proposal.snapshot.md).
+
+Snapshot này phục hồi nguyên byte từ commit `98a14b4`, SHA-256
+`eb9ccd85c724f3c643b6cc4b0fb65611a6d968f901e37b0e0f261f8c50380e56`,
+đúng inputSha256 đã chốt trong decision.json ngày21/10. Verifier kiểm bản chụp
+lịch sử này thay vì tài liệu sống đã đổi theo quyết định phạm vi7query ngày23/10.
+Không đổi hash đã chốt, nhãn, retrieval, chỉ số hoặc publication gate. Quyết định
+ngày23/10 vẫn nằm ở [tài liệu hiện hành](../../evaluation-scope-7q-2026-10-23.md);
+các yêu cầu12query trong snapshot chỉ là lịch sử, không có hiệu lực mới.
 Tài liệu/gói cũ được giữ bất biến để kiểm lịch sử; chữ DRAFT trong đề xuất cũ
 không phủ nhận quyết định riêng của Đạt ở phiên bản này.
 
