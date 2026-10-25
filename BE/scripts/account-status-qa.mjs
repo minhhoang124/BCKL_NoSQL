@@ -11,6 +11,7 @@ export function accountStatusQaTarget(raw) {
       '/bckl_order_resolution_test_accounts_20261024_v946',
       '/bckl_order_resolution_test_attributes_20261019_v947',
       '/bckl_order_resolution_test_attributes_20261019_v948',
+      '/bckl_order_resolution_test_attributes_20261019_v949',
     ].includes(url.pathname) ||
     url.hash ||
     [...url.searchParams].some(

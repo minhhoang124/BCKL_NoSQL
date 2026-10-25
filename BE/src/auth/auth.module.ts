@@ -12,6 +12,7 @@ import { AdminAccountController } from './admin-account.controller.js';
 import { AdminAccountListService } from './admin-account-list.service.js';
 import { AccountSettingsService } from './account-settings.service.js';
 import { AccountSettingsGuard } from './account-settings.http.js';
+import { AccountStatusRecoveryService } from './account-status-recovery.service.js';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AccountSettingsGuard } from './account-settings.http.js';
     AdminAccountListService,
     AccountSettingsService,
     AccountSettingsGuard,
+    AccountStatusRecoveryService,
   ],
   exports: [AuthService, JwtAuthGuard, RolesGuard],
 })

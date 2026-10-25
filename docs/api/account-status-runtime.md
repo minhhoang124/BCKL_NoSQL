@@ -1,5 +1,9 @@
 # Accounts khóa/mở — runtime đang triển khai, 24/10/2026
 
+**Cập nhật25/10:** #114 đã merge `d508c61`. Phần IN_PROGRESS dưới đây là ghi nhận
+trước tích hợp. Contract3fields vẫn tương thích nhưng không có durable recovery;
+Web mới dùng UUID và đối chiếu theo [contract tiếp nối](account-status-recovery.md).
+
 IN_PROGRESS trên `codex/account-status-hardening`, đã đồng bộ develop e543875 sau #113. Chưa merge/chưa nối UI ghi/chưa nghiệm thu Accounts hoàn chỉnh. Thay thế path PATCH yếu cũ bằng strict command; không giữ đường bypass bool-only.
 
 ## API và tương thích

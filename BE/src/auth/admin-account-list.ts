@@ -66,7 +66,9 @@ export function configureAccountListHttp(app: INestApplication): void {
     if (/^\/admin\/accounts(?:\/|$)/i.test(request.path))
       response.setHeader('Cache-Control', 'no-store');
     if (
-      /^\/admin\/accounts\/[^/]+\/status\/?$/i.test(request.path) &&
+      /^\/admin\/accounts\/[^/]+\/status(?:\/reconcile)?\/?$/i.test(
+        request.path,
+      ) &&
       request.originalUrl.includes('?')
     ) {
       response
@@ -76,7 +78,9 @@ export function configureAccountListHttp(app: INestApplication): void {
     }
     if (
       ['GET', 'HEAD'].includes(request.method) &&
-      /^\/admin\/accounts(?:\/[^/]+\/status)?\/?$/i.test(request.path)
+      /^\/admin\/accounts(?:\/[^/]+\/status(?:\/history)?)?\/?$/i.test(
+        request.path,
+      )
     ) {
       // Set before guards, validation and JSON parsing, including error replies.
       response.setHeader('Cache-Control', 'no-store');

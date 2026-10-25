@@ -12,6 +12,7 @@ describe('Accounts migration — real SQL baseline upgrade', () => {
       '/bckl_order_resolution_test_accounts_20261024_v946',
       '/bckl_order_resolution_test_attributes_20261019_v947',
       '/bckl_order_resolution_test_attributes_20261019_v948',
+      '/bckl_order_resolution_test_attributes_20261019_v949',
     ]).toContain(url.pathname);
     const db = new Client({ connectionString: url.toString() });
     await db.connect();
@@ -21,9 +22,14 @@ describe('Accounts migration — real SQL baseline upgrade', () => {
       await db.query(`CREATE SCHEMA "${schema}"`);
       await db.query(`SET search_path TO "${schema}"`);
       const directory = new URL('../prisma/migrations/', import.meta.url);
-      const migrations = (await readdir(directory))
+      const allMigrations = (await readdir(directory))
         .filter((name) => /^\d/.test(name))
         .sort();
+      // This historical probe remains SQL23→24 when later migrations are added.
+      const migrations = allMigrations.slice(
+        0,
+        allMigrations.indexOf('20261024180000_account_status_hardening') + 1,
+      );
       expect(migrations.at(-1)).toBe('20261024180000_account_status_hardening');
       expect(migrations).toHaveLength(24);
       for (const migration of migrations.slice(0, -1)) {
@@ -82,6 +88,44 @@ describe('Accounts migration — real SQL baseline upgrade', () => {
       await expect(
         db.query('UPDATE users SET "statusRevision"=0 WHERE id=1'),
       ).rejects.toMatchObject({ code: '23514' });
+      // Synthetic pre-recovery status/audit fixture; not a runtime status call.
+      await db.query(
+        'UPDATE users SET "statusRevision"=2,"credentialVersion"=8 WHERE id=2',
+      );
+      await db.query(`INSERT INTO account_status_history ("actorId","targetId","beforeActive","afterActive","fromRevision","toRevision","fromCredentialVersion","toCredentialVersion",reason)
+        VALUES (1,2,true,false,1,2,7,8,'Synthetic pre-recovery status audit')`);
+      const beforeRecovery = {
+        users: (await db.query('SELECT * FROM users ORDER BY id')).rows,
+        audit: (
+          await db.query('SELECT * FROM account_status_history ORDER BY id')
+        ).rows,
+        refresh: (await db.query('SELECT * FROM refresh_tokens ORDER BY id'))
+          .rows,
+      };
+      await db.query(
+        await readFile(
+          new URL(
+            '20261025150000_account_status_command_receipts/migration.sql',
+            directory,
+          ),
+          'utf8',
+        ),
+      );
+      expect({
+        users: (await db.query('SELECT * FROM users ORDER BY id')).rows,
+        audit: (
+          await db.query('SELECT * FROM account_status_history ORDER BY id')
+        ).rows,
+        refresh: (await db.query('SELECT * FROM refresh_tokens ORDER BY id'))
+          .rows,
+      }).toEqual(beforeRecovery);
+      expect(
+        (
+          await db.query(
+            'SELECT count(*)::int AS n FROM account_status_commands',
+          )
+        ).rows[0].n,
+      ).toBe(0);
     } finally {
       await db.end();
     }

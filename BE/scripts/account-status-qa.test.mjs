@@ -7,6 +7,7 @@ test('accepts exact isolated Accounts target with optional public schema', () =>
     'accounts_20261024_v946',
     'attributes_20261019_v947',
     'attributes_20261019_v948',
+    'attributes_20261019_v949',
   ]) {
     const base = `postgresql://127.0.0.1:5549/bckl_order_resolution_test_${database}`;
     assert.equal(accountStatusQaTarget(base).port, '5549');

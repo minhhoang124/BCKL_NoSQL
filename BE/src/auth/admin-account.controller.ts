@@ -6,6 +6,8 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Post,
+  HttpCode,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -26,6 +28,7 @@ import type { AuthenticatedUser } from './auth.types.js';
 import { AdminAccountListService } from './admin-account-list.service.js';
 import { parseAccountListQuery } from './admin-account-list.js';
 import { ApiQuery } from '@nestjs/swagger';
+import { AccountStatusRecoveryService } from './account-status-recovery.service.js';
 
 @ApiTags('admin-accounts')
 @ApiBearerAuth()
@@ -36,6 +39,7 @@ export class AdminAccountController {
   constructor(
     private readonly auth: AuthService,
     private readonly accounts: AdminAccountListService,
+    private readonly recovery: AccountStatusRecoveryService,
   ) {}
 
   @Get()
@@ -82,5 +86,25 @@ export class AdminAccountController {
     @Param('userId', ParseIntPipe) userId: number,
   ) {
     return this.auth.getAccountStatus(request.user, userId);
+  }
+
+  @Get(':userId/status/history')
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'beforeRevision', required: false, type: Number })
+  history(
+    @Req() request: Request & { user: AuthenticatedUser },
+    @Param('userId', ParseIntPipe) id: number,
+  ) {
+    return this.recovery.history(request.user, id, request.originalUrl);
+  }
+
+  @Post(':userId/status/reconcile')
+  @HttpCode(200)
+  reconcile(
+    @Req() request: Request & { user: AuthenticatedUser },
+    @Param('userId', ParseIntPipe) id: number,
+    @Body() body: unknown,
+  ) {
+    return this.recovery.reconcile(request.user, id, body);
   }
 }

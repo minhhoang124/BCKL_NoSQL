@@ -1,5 +1,15 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Accounts —25/10/2026:** nền #114 đã merge `d508c61`, gồm revision/reason,
+audit bất biến, bảo vệ Admin và thu hồi phiên. Nhánh tiếp nối
+`codex/account-status-audit-recovery` thêm migration25, command receipt/fence,
+GET lịch sử, POST đối chiếu và dialog Web thật. Mặc định cờ
+`VITE_ADMIN_ACCOUNT_STATUS_ENABLED=false`; chưa tính là đã triển khai rộng.
+Đối chiếu chỉ trả receipt hoặc đóng mã, không tự khóa/mở tài khoản. Các ghi nhận
+“#114 chưa merge” phía dưới là lịch sử trước tích hợp.
+[Contract và rollout](../api/account-status-recovery.md),
+[kiểm thử và giới hạn](../testing/account-status-recovery-2026-10-25.md).
+
 **Tích hợp 25/10/2026:** #113 đã merge tại `e543875`, thêm Order context;
 hai cờ tính năng vẫn false. #114 Accounts đang đồng bộ/kiểm lại trên nền này,
 chưa merge. Fixture portable và hướng dẫn đã có, chưa phải Accounts UI ghi.

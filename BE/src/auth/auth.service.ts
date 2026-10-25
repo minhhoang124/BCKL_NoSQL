@@ -29,6 +29,12 @@ import {
 } from './account-status.input.js';
 import { waitForTransactionRetry } from '../product/transaction-conflict.js';
 import { isAccountStatusConflict } from './account-status-sql.js';
+import {
+  matchStatusIntent,
+  reasonDigest,
+  statusIntentData,
+  statusReceipt,
+} from './account-status-command.js';
 
 export const publicUserSelect = {
   id: true,
@@ -217,6 +223,14 @@ export class AuthService {
     if (!Number.isInteger(userId) || userId < 1 || userId > 2147483647)
       throw new BadRequestException('ID không hợp lệ');
     const input = accountStatusInput(raw);
+    const command = input.commandId
+      ? statusIntentData(actor.userId, userId, {
+          commandId: input.commandId,
+          expectedRevision: input.expectedRevision,
+          isActive: input.isActive,
+          reasonDigest: reasonDigest(input.reason),
+        })
+      : null;
     const conflict = (code: string) =>
       new ConflictException({ statusCode: 409, code, message: code });
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -234,6 +248,22 @@ export class AuthService {
               where: { id: userId },
             });
             if (!existing) throw new NotFoundException();
+            if (command) {
+              const recorded = await tx.accountStatusCommand.findUnique({
+                where: {
+                  actorId_commandId: {
+                    actorId: actor.userId,
+                    commandId: command.commandId,
+                  },
+                },
+              });
+              if (recorded) {
+                matchStatusIntent(recorded, command);
+                const receipt = await statusReceipt(tx, recorded);
+                if (!receipt) throw conflict('ACCOUNT_COMMAND_CLOSED');
+                return { commandId: command.commandId, ...receipt };
+              }
+            }
             if (existing.statusRevision !== input.expectedRevision)
               throw conflict('ACCOUNT_REVISION_CONFLICT');
             const view = {
@@ -241,12 +271,21 @@ export class AuthService {
               isActive: existing.isActive,
               statusRevision: existing.statusRevision,
             };
-            if (existing.isActive === input.isActive)
-              return {
+            if (existing.isActive === input.isActive) {
+              const receipt = {
                 account: view,
                 auditId: null,
                 searchReconciliation: null,
               };
+              if (command)
+                await tx.accountStatusCommand.create({
+                  data: { ...command, outcome: 'NOOP', receipt },
+                });
+              return {
+                ...receipt,
+                ...(command ? { commandId: command.commandId } : {}),
+              };
+            }
             if (!input.isActive && actor.userId === userId)
               throw conflict('ACCOUNT_SELF_LOCK_FORBIDDEN');
             if (
@@ -297,12 +336,25 @@ export class AuthService {
             const job = ownedStore
               ? await this.searchReconciliation.enqueueSeller(tx, userId)
               : null;
-            return {
+            const receipt = {
               account: updated,
               auditId: audit.id.toString(),
               searchReconciliation: job
                 ? { jobId: job.id.toString(), status: job.status }
                 : null,
+            };
+            if (command)
+              await tx.accountStatusCommand.create({
+                data: {
+                  ...command,
+                  outcome: 'APPLIED',
+                  auditId: audit.id,
+                  receipt,
+                },
+              });
+            return {
+              ...receipt,
+              ...(command ? { commandId: command.commandId } : {}),
             };
           },
           {

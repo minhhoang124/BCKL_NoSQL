@@ -155,6 +155,8 @@ model User {
   accountSecurityEvents   AccountSecurityEvent[]
   accountStatusActions    AccountStatusHistory[]   @relation("AccountStatusActor")
   accountStatusHistory    AccountStatusHistory[]   @relation("AccountStatusTarget")
+  statusCommandActions    AccountStatusCommand[]   @relation("StatusCommandActor")
+  statusCommandTargets    AccountStatusCommand[]   @relation("StatusCommandTarget")
   chatConversations       ChatConversation[]
   chatMessages            ChatMessage[]
   chatReadStates          ChatReadState[]
@@ -174,11 +176,34 @@ model AccountStatusHistory {
   toCredentialVersion   Int
   reason                String   @db.VarChar(500)
   createdAt             DateTime @default(now())
-  actor                 User     @relation("AccountStatusActor", fields: [actorId], references: [id], onDelete: Restrict)
-  target                User     @relation("AccountStatusTarget", fields: [targetId], references: [id], onDelete: Restrict)
+  actor                 User     @relation("AccountStatusActor", fields: [actorId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  target                User     @relation("AccountStatusTarget", fields: [targetId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  command               AccountStatusCommand?
 
-  @@unique([targetId, toRevision])
+  @@unique([targetId, toRevision], map: "account_status_history_target_revision_key")
   @@map("account_status_history")
+}
+
+model AccountStatusCommand {
+  id               BigInt   @id @default(autoincrement())
+  actorId          Int
+  commandId        String   @db.VarChar(36)
+  targetId         Int
+  expectedRevision Int
+  desiredActive    Boolean
+  reasonDigest     String   @db.VarChar(64)
+  requestHash      String   @db.VarChar(64)
+  outcome          String   @db.VarChar(8)
+  auditId          BigInt?  @unique
+  receipt          Json?
+  createdAt        DateTime @default(now())
+  actor            User     @relation("StatusCommandActor", fields: [actorId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  target           User     @relation("StatusCommandTarget", fields: [targetId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  audit            AccountStatusHistory? @relation(fields: [auditId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([actorId, commandId])
+  @@index([targetId, createdAt], map: "account_status_commands_target_created")
+  @@map("account_status_commands")
 }
 
 model ChatConversation {

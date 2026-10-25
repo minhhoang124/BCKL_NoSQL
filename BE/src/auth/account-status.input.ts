@@ -4,7 +4,14 @@ export interface AccountStatusInput {
   isActive: boolean;
   expectedRevision: number;
   reason: string;
+  commandId?: string;
 }
+
+export const accountCommandId = (value: unknown): value is string =>
+  typeof value === 'string' &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(
+    value,
+  );
 
 export function accountStatusInput(body: unknown): AccountStatusInput {
   const bad = () =>
@@ -14,8 +21,11 @@ export function accountStatusInput(body: unknown): AccountStatusInput {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw bad();
   const value = body as Record<string, unknown>;
   if (
-    Object.keys(value).sort().join(',') !==
-      'expectedRevision,isActive,reason' ||
+    ![
+      'expectedRevision,isActive,reason',
+      'commandId,expectedRevision,isActive,reason',
+    ].includes(Object.keys(value).sort().join(',')) ||
+    (Object.hasOwn(value, 'commandId') && !accountCommandId(value.commandId)) ||
     typeof value.isActive !== 'boolean' ||
     !Number.isInteger(value.expectedRevision) ||
     (value.expectedRevision as number) < 1 ||
@@ -41,5 +51,8 @@ export function accountStatusInput(body: unknown): AccountStatusInput {
     isActive: value.isActive,
     expectedRevision: value.expectedRevision as number,
     reason,
+    ...(Object.hasOwn(value, 'commandId')
+      ? { commandId: value.commandId as string }
+      : {}),
   };
 }

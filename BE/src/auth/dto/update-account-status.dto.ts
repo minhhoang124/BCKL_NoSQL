@@ -1,7 +1,21 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsInt, IsString, Min, Max } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsInt,
+  IsString,
+  Min,
+  Max,
+  IsOptional,
+  IsUUID,
+} from 'class-validator';
 
 export class UpdateAccountStatusDto {
+  @ApiPropertyOptional({
+    description: 'UUIDv4 required for durable Web commands and reconciliation.',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  commandId?: string;
   @ApiProperty()
   @IsBoolean()
   isActive!: boolean;

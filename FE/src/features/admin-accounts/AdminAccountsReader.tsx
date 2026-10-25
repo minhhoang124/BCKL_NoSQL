@@ -5,7 +5,7 @@ import { normalizeAccountSearch } from './accountReadApi';
 import type { AccountPage, AccountQuery, AccountReadApi, AccountRole } from './accountReadApi';
 import styles from './AdminAccountsLayout.module.css';
 
-interface Props { api?: AccountReadApi; pageSize?: number; embedded?: boolean }
+interface Props { api?: AccountReadApi; pageSize?: number; embedded?: boolean; onManage?: (id: number) => void }
 const roles = { USER: 'Người mua', SELLER: 'Người bán', ADMIN: 'Quản trị viên' };
 const storeStatuses = { PENDING: 'Chờ duyệt', ACTIVE: 'Hoạt động', REJECTED: 'Đã từ chối', SUSPENDED: 'Tạm khóa', CLOSED: 'Đã đóng' };
 export function AdminAccountsReader(props: Props) {
@@ -15,7 +15,7 @@ export function AdminAccountsReader(props: Props) {
   if (!Number.isInteger(props.pageSize ?? 50) || (props.pageSize ?? 50) < 1 || (props.pageSize ?? 50) > 100) return <p role="alert">Giới hạn trang không hợp lệ.</p>;
   return <AccountScreen key={`${user.id}:${getAuthSessionVersion()}`} {...props} />;
 }
-function AccountScreen({ api, pageSize = 50, embedded = false }: Props) {
+function AccountScreen({ api, pageSize = 50, embedded = false, onManage }: Props) {
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('ALL');
   const [active, setActive] = useState('ALL');
@@ -33,9 +33,9 @@ function AccountScreen({ api, pageSize = 50, embedded = false }: Props) {
   const reset = () => { setSearch(''); setRole('ALL'); setActive('ALL'); setValidation(''); setApplied({}); setAttempt(previous => previous + 1); };
   return <section className={`${styles.layout} ${embedded ? styles.embedded : ''}`} aria-label="Accounts chỉ đọc"><div className={styles.pageContent}>
     <header className={styles.header}><div><p className={styles.eyebrow}>BCKL / ADMIN · ACCOUNTS</p>
-      <h1>Quản lý tài khoản — chỉ đọc</h1><p>Danh sách, tìm kiếm và phân trang theo Backend; không thay đổi tài khoản.</p></div>
-      <span className={styles.preparationBadge}>Chưa bật khóa/mở</span></header>
-    <aside className={styles.notice}>Khóa/mở nâng cấp còn chờ API bảo vệ, lý do và audit. Trạng thái Store không phải trạng thái tài khoản.</aside>
+      <h1>{onManage ? 'Quản lý tài khoản' : 'Quản lý tài khoản — chỉ đọc'}</h1><p>{onManage ? 'Xem trạng thái, lịch sử và xác nhận khóa/mở tài khoản.' : 'Danh sách, tìm kiếm và phân trang theo Backend; không thay đổi tài khoản.'}</p></div>
+      <span className={styles.preparationBadge}>{onManage ? 'Có lịch sử và đối chiếu' : 'Chưa bật khóa/mở'}</span></header>
+    <aside className={styles.notice}>{onManage ? 'Khóa và mở tài khoản đều yêu cầu đăng nhập lại. Thao tác không thay đổi trạng thái Store.' : 'Khóa/mở nâng cấp còn chờ API bảo vệ, lý do và audit. Trạng thái Store không phải trạng thái tài khoản.'}</aside>
     <form className={styles.filters} aria-label="Bộ lọc Accounts" onSubmit={event => { event.preventDefault(); if (api && !blocked) apply(); }}>
       <label className={styles.field}>Tìm theo tên hoặc email<input type="search" disabled={!api || blocked} value={search} onChange={event => setSearch(event.target.value)} placeholder="Tìm trên Backend, không lọc riêng trang đang thấy" /></label>
       <label className={styles.field}>Vai trò<select disabled={!api || blocked} value={role} onChange={event => setRole(event.target.value)}>
@@ -48,7 +48,7 @@ function AccountScreen({ api, pageSize = 50, embedded = false }: Props) {
     <p>Bộ lọc chỉ được áp dụng khi bấm Tìm kiếm. Các dòng đang thấy thuộc bộ lọc đã áp dụng.</p>
     {validation && <p role="alert" className={styles.notice}>{validation}</p>}
     {!api ? <section className={styles.panel}><div className={styles.empty}><h2>Chưa kết nối API Accounts</h2><p>Chưa có dữ liệu thật; không hiển thị số 0 thay kết quả chưa tải.</p></div></section> :
-      <AccountResults key={`${JSON.stringify(applied)}:${pageSize}:${attempt}`} api={api} query={{ ...applied, limit: pageSize }} onBlocked={() => setBlocked(true)} />}
+      <AccountResults key={`${JSON.stringify(applied)}:${pageSize}:${attempt}`} api={api} query={{ ...applied, limit: pageSize }} onBlocked={() => setBlocked(true)} onManage={onManage} />}
   </div></section>;
 }
 function errorMessage(error: unknown) {
@@ -57,7 +57,7 @@ function errorMessage(error: unknown) {
   if (error instanceof ApiError && error.status === 400) return 'Bộ lọc bị từ chối. Kiểm tra lại hoặc xóa bộ lọc.';
   return 'Không tải được danh sách. Hãy thử tải lại từ trang đầu.';
 }
-function AccountResults({ api, query, onBlocked }: { api: AccountReadApi; query: AccountQuery; onBlocked: () => void }) {
+function AccountResults({ api, query, onBlocked, onManage }: { api: AccountReadApi; query: AccountQuery; onBlocked: () => void; onManage?: (id: number) => void }) {
   const [page, setPage] = useState<AccountPage>({ items: [], nextCursor: null });
   const [busy, setBusy] = useState(true);
   const [ready, setReady] = useState(false);
@@ -97,12 +97,13 @@ function AccountResults({ api, query, onBlocked }: { api: AccountReadApi; query:
     {ready && !error && <><p role="status" className={styles.footer}>Đã tải {page.items.length} dòng{page.nextCursor === null ? ' — hết trang tại lần đọc này' : ' — còn trang tiếp theo'}. Không phải tổng toàn hệ thống.</p>
       {!page.items.length ? <div className={styles.empty}><h3>Không có tài khoản phù hợp</h3></div> :
         <table className={styles.table}><caption className={styles.srOnly}>Tài khoản từ bộ lọc Backend đã áp dụng</caption>
-          <thead><tr><th scope="col">Tài khoản</th><th scope="col">Vai trò</th><th scope="col">Trạng thái tài khoản</th><th scope="col">Cửa hàng</th></tr></thead>
+          <thead><tr><th scope="col">Tài khoản</th><th scope="col">Vai trò</th><th scope="col">Trạng thái tài khoản</th><th scope="col">Cửa hàng</th>{onManage && <th scope="col">Thao tác</th>}</tr></thead>
           <tbody>{page.items.map(account => <tr key={account.id}>
             <td data-label="Tài khoản"><div className={styles.identity}><span className={styles.avatar} aria-hidden="true">{(account.fullName || account.email).slice(0, 1).toLocaleUpperCase('vi')}</span>
               <div><strong>{account.fullName || 'Chưa có tên hiển thị'}</strong><span>{account.email}</span><small>ID {account.id}</small></div></div></td>
             <td data-label="Vai trò">{roles[account.role]}</td><td data-label="Trạng thái tài khoản"><span className={account.isActive ? styles.active : styles.locked}>{account.isActive ? 'Đang hoạt động' : 'Đã khóa'}</span></td>
             <td data-label="Cửa hàng">{account.store ? <>{account.store.name}<br /><small>Store #{account.store.id} · {storeStatuses[account.store.status]}</small></> : 'Chưa có Store'}</td>
+            {onManage && <td data-label="Thao tác"><button type="button" className={styles.secondary} disabled={blocked} onClick={() => onManage(account.id)}>Quản lý tài khoản #{account.id}</button></td>}
           </tr>)}</tbody></table>}
       {page.nextCursor !== null && <div className={styles.footer}><button className={styles.secondary} disabled={busy || blocked} onClick={() => void load(page.nextCursor!)}>Tải thêm tài khoản</button></div>}
     </>}

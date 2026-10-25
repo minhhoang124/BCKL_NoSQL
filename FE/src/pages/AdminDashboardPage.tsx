@@ -14,6 +14,7 @@ import { mediaUrl } from '../services/marketplaceApi';
 import { AdminBrandEditor } from '../features/admin-brands/AdminBrandEditor';
 import styles from './AdminDashboardPage.module.css';
 import { AdminAccountsReader } from '../features/admin-accounts/AdminAccountsReader';
+import { AdminAccountStatusWorkspace } from '../features/admin-accounts/AdminAccountStatusWorkspace';
 import { createAccountReadApi } from '../features/admin-accounts/accountReadApi';
 import { AdminSystemHealth } from '../features/admin-system-health/AdminSystemHealth';
 import { createSystemHealthApi } from '../features/admin-system-health/systemHealthApi';
@@ -1663,7 +1664,7 @@ function AdminConsole() {
             />
             <Route
               path="users"
-              element={<AdminAccountsReader api={accountsReadApi} embedded />}
+              element={import.meta.env.VITE_ADMIN_ACCOUNT_STATUS_ENABLED === 'true' ? <AdminAccountStatusWorkspace embedded /> : <AdminAccountsReader api={accountsReadApi} embedded />}
             />
             <Route
               path="system-health"

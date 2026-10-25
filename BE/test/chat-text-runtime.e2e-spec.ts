@@ -62,6 +62,7 @@ describe('Chat TEXT runtime: actual HTTP and PostgreSQL', () => {
           '/bckl_order_resolution_test_attributes_20261019_v947',
           '/bckl_order_resolution_test_attributes_20261019_v945',
           '/bckl_order_resolution_test_attributes_20261019_v948',
+          '/bckl_order_resolution_test_attributes_20261019_v949',
         ].includes(url.pathname))
     )
       throw Error('Chat requires exact isolated QA target');
