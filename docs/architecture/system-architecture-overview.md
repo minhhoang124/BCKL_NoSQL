@@ -1,5 +1,11 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Hậu mãi/Dashboard —25/10/2026, TARGET:**
+[Contract chung](../api/dashboard-aftersales-contract.md) thống nhất gross theo
+COMPLETED, adjustment hoàn tiền hiệu lực cùng/sau completion, nhiều request sau
+reject/cancel nhưng một refund thành công mỗi item. Chưa có migration/API; cần
+kiểm lock graph, completion hook cả Buyer/system và full QA trước nghiệm thu.
+
 **Accounts —25/10/2026:** nền #114 đã merge `d508c61`, gồm revision/reason,
 audit bất biến, bảo vệ Admin và thu hồi phiên. Nhánh tiếp nối
 `codex/account-status-audit-recovery` thêm migration25, command receipt/fence,
