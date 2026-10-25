@@ -121,6 +121,8 @@ describe('Search Hydrate & Filter API (e2e)', () => {
         where: {
           email: { startsWith: marker },
           attributeAuditActions: { none: {} },
+          accountStatusActions: { none: {} },
+          accountStatusHistory: { none: {} },
         },
       });
     }
@@ -1546,7 +1548,13 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       const disabled = await request(app.getHttpServer())
         .patch(`/admin/accounts/${sellerId}/status`)
         .auth(tokens.admin, { type: 'bearer' })
-        .send({ isActive: false })
+        .send({
+          isActive: false,
+          expectedRevision: (
+            await prisma.user.findUniqueOrThrow({ where: { id: sellerId } })
+          ).statusRevision,
+          reason: 'QA Search owner deactivation',
+        })
         .expect(200);
       await settleReconciliation([reconciliationJobId(disabled)]);
       expect(
@@ -1559,9 +1567,22 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       const enabled = await request(app.getHttpServer())
         .patch(`/admin/accounts/${sellerId}/status`)
         .auth(tokens.admin, { type: 'bearer' })
-        .send({ isActive: true })
+        .send({
+          isActive: true,
+          expectedRevision: (
+            await prisma.user.findUniqueOrThrow({ where: { id: sellerId } })
+          ).statusRevision,
+          reason: 'QA Search owner reactivation',
+        })
         .expect(200);
       await settleReconciliation([reconciliationJobId(enabled)]);
+      // Unlock does not resurrect old tokens. Reauthenticate the fixture for
+      // later tests rather than weakening canonical credential revocation.
+      await request(app.getHttpServer()).get('/auth/me')
+        .auth(tokens.seller, { type: 'bearer' }).expect(401);
+      const sellerLogin = await request(app.getHttpServer()).post('/auth/login')
+        .send({ email: `${marker}-seller@example.com`, password: 'StrongPass123!' }).expect(200);
+      tokens.seller = sellerLogin.body.accessToken as string;
 
       const attribute = await request(app.getHttpServer())
         .post(`/admin/categories/${categoryId}/attributes`)

@@ -8,10 +8,16 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { AuthService } from './auth.service.js';
 import { Roles } from './decorators/roles.decorator.js';
+import { accountStatusInput } from './account-status.input.js';
 import { UpdateAccountStatusDto } from './dto/update-account-status.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { RolesGuard } from './guards/roles.guard.js';
@@ -53,10 +59,28 @@ export class AdminAccountController {
     description: 'Account state and durable search reconciliation job',
   })
   @Patch(':userId/status')
+  @ApiBody({ type: UpdateAccountStatusDto })
   updateStatus(
+    @Req() request: Request & { user: AuthenticatedUser },
     @Param('userId', ParseIntPipe) userId: number,
-    @Body() dto: UpdateAccountStatusDto,
+    @Body() body: unknown,
   ) {
-    return this.auth.updateAccountStatus(userId, dto.isActive);
+    return this.auth.updateAccountStatus(
+      request.user,
+      userId,
+      accountStatusInput(body),
+    );
+  }
+
+  @Get(':userId/status')
+  @ApiOkResponse({
+    description:
+      'Canonical status/revision for an explicit Admin command; no secret or audit reason.',
+  })
+  status(
+    @Req() request: Request & { user: AuthenticatedUser },
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.auth.getAccountStatus(request.user, userId);
   }
 }

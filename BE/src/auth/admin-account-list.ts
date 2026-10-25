@@ -63,9 +63,20 @@ export function parseAccountListQuery(url: string): AccountListQuery {
 
 export function configureAccountListHttp(app: INestApplication): void {
   app.use((request: Request, response: Response, next: () => void) => {
+    if (/^\/admin\/accounts(?:\/|$)/i.test(request.path))
+      response.setHeader('Cache-Control', 'no-store');
+    if (
+      /^\/admin\/accounts\/[^/]+\/status\/?$/i.test(request.path) &&
+      request.originalUrl.includes('?')
+    ) {
+      response
+        .status(400)
+        .json({ statusCode: 400, message: 'Status không nhận query.' });
+      return;
+    }
     if (
       ['GET', 'HEAD'].includes(request.method) &&
-      /^\/admin\/accounts\/?$/i.test(request.path)
+      /^\/admin\/accounts(?:\/[^/]+\/status)?\/?$/i.test(request.path)
     ) {
       // Set before guards, validation and JSON parsing, including error replies.
       response.setHeader('Cache-Control', 'no-store');

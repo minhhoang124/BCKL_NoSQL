@@ -107,7 +107,10 @@ describe('Order sharing: canonical Buyer–Store, real HTTP Checkout/PostgreSQL'
       process.env.GITHUB_ACTIONS !== 'true' &&
       (url.hostname !== '127.0.0.1' ||
         url.port !== '5549' ||
-        url.pathname !== '/bckl_order_resolution_test_attributes_20261019_v945')
+        ![
+          '/bckl_order_resolution_test_attributes_20261019_v945',
+          '/bckl_order_resolution_test_attributes_20261019_v948',
+        ].includes(url.pathname))
     )
       throw Error('Exact Order context QA required');
     process.env.CHAT_TEXT_ENABLED = 'true';

@@ -132,6 +132,7 @@ model User {
   email                   String                   @unique
   passwordHash            String
   credentialVersion       Int                      @default(1)
+  statusRevision          Int                      @default(1)
   fullName                String?
   role                    Role                     @default(USER)
   isActive                Boolean                  @default(true)
@@ -152,11 +153,32 @@ model User {
   orderCommandResolutions OrderCommandResolution[]
   attributeAuditActions   CategoryAttributeAudit[]
   accountSecurityEvents   AccountSecurityEvent[]
+  accountStatusActions    AccountStatusHistory[]   @relation("AccountStatusActor")
+  accountStatusHistory    AccountStatusHistory[]   @relation("AccountStatusTarget")
   chatConversations       ChatConversation[]
   chatMessages            ChatMessage[]
   chatReadStates          ChatReadState[]
 
   @@map("users")
+}
+
+model AccountStatusHistory {
+  id                    BigInt   @id @default(autoincrement())
+  actorId               Int
+  targetId              Int
+  beforeActive          Boolean
+  afterActive           Boolean
+  fromRevision          Int
+  toRevision            Int
+  fromCredentialVersion Int
+  toCredentialVersion   Int
+  reason                String   @db.VarChar(500)
+  createdAt             DateTime @default(now())
+  actor                 User     @relation("AccountStatusActor", fields: [actorId], references: [id], onDelete: Restrict)
+  target                User     @relation("AccountStatusTarget", fields: [targetId], references: [id], onDelete: Restrict)
+
+  @@unique([targetId, toRevision])
+  @@map("account_status_history")
 }
 
 model ChatConversation {

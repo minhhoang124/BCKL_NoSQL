@@ -1,5 +1,19 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Tích hợp 25/10/2026:** #113 đã merge tại `e543875`, thêm Order context;
+hai cờ tính năng vẫn false. #114 Accounts đang đồng bộ/kiểm lại trên nền này,
+chưa merge. Fixture portable và hướng dẫn đã có, chưa phải Accounts UI ghi.
+
+**Accounts status —24/10/2026, IN_PROGRESS trên nhánh riêng:** strict reason/revision,
+canonical actor recheck sau DB advisory/User locks trong Serializable; state,
+audit append-only, thu hồi refresh/credentialVersion và durable owner invalidation
+cùng transaction. Dùng nền cv của password/login/refresh đã merge, không thêm
+sessionEpoch cạnh tranh; unlock cũng rotate để không phục sinh phiên legacy.
+Migration mới, không đổi GET list exact8fields, không đổi Store/Order/kho.
+Chưa merge, chưa UI ghi; fixture portable đã có; không Accounts DONE.
+[Contract/rollout](../api/account-status-runtime.md),
+[Kiểm thử và giới hạn](../testing/account-status-hardening-2026-10-25.md).
+
 **Chat Order context —24/10/2026, IN_PROGRESS:** nhánh riêng sau #112 thêm
 reference Order không snapshot PII vào history. Backend đối chiếu cả Buyer và
 Store của Conversation; card GET gắn Message đã lưu, chỉ projection tên/quantity

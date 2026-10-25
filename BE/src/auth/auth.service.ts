@@ -1,6 +1,11 @@
 import {
   ConflictException,
+  BadRequestException,
+  ForbiddenException,
+  HttpException,
   Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -18,6 +23,12 @@ import type {
 import { LoginDto } from './dto/login.dto.js';
 import { PublicAccountType, RegisterDto } from './dto/register.dto.js';
 import { credentialMatches } from './credential-version.js';
+import {
+  accountStatusInput,
+  type AccountStatusInput,
+} from './account-status.input.js';
+import { waitForTransactionRetry } from '../product/transaction-conflict.js';
+import { isAccountStatusConflict } from './account-status-sql.js';
 
 export const publicUserSelect = {
   id: true,
@@ -162,35 +173,162 @@ export class AuthService {
     return user;
   }
 
-  async updateAccountStatus(userId: number, isActive: boolean) {
-    return this.prisma.$transaction(async (tx) => {
-      const existing = await tx.user.findUniqueOrThrow({
-        where: { id: userId },
-        select: { id: true, role: true, isActive: true },
-      });
-      if (existing.isActive === isActive) {
-        return { ...existing, searchReconciliation: null };
+  private async statusActor(
+    tx: Prisma.TransactionClient,
+    actor: AuthenticatedUser,
+  ) {
+    const current = await tx.user.findUnique({ where: { id: actor.userId } });
+    if (
+      !current?.isActive ||
+      current.credentialVersion !== actor.credentialVersion
+    )
+      throw new UnauthorizedException('Phiên quản trị không còn hiệu lực');
+    if (current.role !== Role.ADMIN) throw new ForbiddenException();
+  }
+
+  async getAccountStatus(actor: AuthenticatedUser, userId: number) {
+    if (!Number.isInteger(userId) || userId < 1 || userId > 2147483647)
+      throw new BadRequestException('ID không hợp lệ');
+    return this.prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`SET TRANSACTION READ ONLY`;
+        await tx.$executeRaw`SET LOCAL statement_timeout = '5s'`;
+        await this.statusActor(tx, actor);
+        const account = await tx.user.findUnique({
+          where: { id: userId },
+          select: { id: true, isActive: true, statusRevision: true },
+        });
+        if (!account) throw new NotFoundException();
+        return account;
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+        maxWait: 2000,
+        timeout: 7000,
+      },
+    );
+  }
+
+  async updateAccountStatus(
+    actor: AuthenticatedUser,
+    userId: number,
+    raw: AccountStatusInput,
+  ) {
+    if (!Number.isInteger(userId) || userId < 1 || userId > 2147483647)
+      throw new BadRequestException('ID không hợp lệ');
+    const input = accountStatusInput(raw);
+    const conflict = (code: string) =>
+      new ConflictException({ statusCode: 409, code, message: code });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await this.prisma.$transaction(
+          async (tx) => {
+            await tx.$executeRaw`SET LOCAL lock_timeout = '2s'`;
+            await tx.$executeRaw`SET LOCAL statement_timeout = '5s'`;
+            // One DB-scoped gate shared by all supported status writers. No RAM lock.
+            // SELECT only an integer: the pg adapter cannot deserialize PostgreSQL void.
+            await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(190311, 1)`;
+            await tx.$queryRaw`SELECT id FROM users WHERE id IN (${actor.userId}, ${userId}) ORDER BY id FOR UPDATE`;
+            await this.statusActor(tx, actor);
+            const existing = await tx.user.findUnique({
+              where: { id: userId },
+            });
+            if (!existing) throw new NotFoundException();
+            if (existing.statusRevision !== input.expectedRevision)
+              throw conflict('ACCOUNT_REVISION_CONFLICT');
+            const view = {
+              id: existing.id,
+              isActive: existing.isActive,
+              statusRevision: existing.statusRevision,
+            };
+            if (existing.isActive === input.isActive)
+              return {
+                account: view,
+                auditId: null,
+                searchReconciliation: null,
+              };
+            if (!input.isActive && actor.userId === userId)
+              throw conflict('ACCOUNT_SELF_LOCK_FORBIDDEN');
+            if (
+              !input.isActive &&
+              existing.role === Role.ADMIN &&
+              (await tx.user.count({
+                where: { role: Role.ADMIN, isActive: true },
+              })) <= 1
+            )
+              throw conflict('LAST_ACTIVE_ADMIN');
+            if (
+              existing.statusRevision === 2147483647 ||
+              existing.credentialVersion === 2147483647
+            )
+              throw conflict('ACCOUNT_VERSION_EXHAUSTED');
+            // Rotate on BOTH transitions: unlock also revokes legacy inactive sessions.
+            const updated = await tx.user.update({
+              where: { id: userId },
+              data: {
+                isActive: input.isActive,
+                statusRevision: { increment: 1 },
+                credentialVersion: { increment: 1 },
+              },
+              select: { id: true, isActive: true, statusRevision: true },
+            });
+            await tx.refreshToken.updateMany({
+              where: { userId, revokedAt: null },
+              data: { revokedAt: new Date() },
+            });
+            const audit = await tx.accountStatusHistory.create({
+              data: {
+                actorId: actor.userId,
+                targetId: userId,
+                beforeActive: existing.isActive,
+                afterActive: input.isActive,
+                fromRevision: existing.statusRevision,
+                toRevision: updated.statusRevision,
+                fromCredentialVersion: existing.credentialVersion,
+                toCredentialVersion: existing.credentialVersion + 1,
+                reason: input.reason,
+              },
+              select: { id: true },
+            });
+            const ownedStore = await tx.store.findUnique({
+              where: { sellerId: userId },
+              select: { id: true },
+            });
+            const job = ownedStore
+              ? await this.searchReconciliation.enqueueSeller(tx, userId)
+              : null;
+            return {
+              account: updated,
+              auditId: audit.id.toString(),
+              searchReconciliation: job
+                ? { jobId: job.id.toString(), status: job.status }
+                : null,
+            };
+          },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+            maxWait: 3000,
+            timeout: 8000,
+          },
+        );
+      } catch (error) {
+        if (error instanceof HttpException) throw error;
+        if (isAccountStatusConflict(error)) {
+          if (attempt < 2) {
+            await waitForTransactionRetry(attempt);
+            continue;
+          }
+          throw conflict('ACCOUNT_STATUS_IN_PROGRESS');
+        }
+        throw new ServiceUnavailableException({
+          statusCode: 503,
+          code: 'ACCOUNT_STATUS_UNAVAILABLE',
+          message:
+            'Chưa rõ kết quả. Đọc lại trạng thái và lịch sử, không tự gửi lại.',
+        });
       }
-      const user = await tx.user.update({
-        where: { id: userId },
-        data: { isActive },
-        select: publicUserSelect,
-      });
-      // Ownership is canonical even if the account's current role changed.
-      const ownedStore = await tx.store.findUnique({
-        where: { sellerId: userId },
-        select: { id: true },
-      });
-      const job = ownedStore
-        ? await this.searchReconciliation.enqueueSeller(tx, userId)
-        : null;
-      return {
-        ...user,
-        searchReconciliation: job
-          ? { jobId: job.id.toString(), status: job.status }
-          : null,
-      };
-    });
+    }
+    throw conflict('ACCOUNT_STATUS_IN_PROGRESS');
   }
 
   getRefreshCookieOptions() {
