@@ -15,6 +15,13 @@ import { registerAccountSettingsHttp } from './auth/account-settings.http.js';
 export function configureApp(app: INestApplication): void {
   // Apply before guards/validation as sensitive Admin failures must not be cached either.
   app.use((req: Request, res: Response, next: NextFunction) => {
+    if (/^\/(?:admin|seller)\/dashboard(?:\/|$)/i.test(req.path)) {
+      res.setHeader('Cache-Control', 'no-store');
+      if (['GET', 'HEAD'].includes(req.method) &&
+          (req.headers['transfer-encoding'] !== undefined || (req.headers['content-length'] !== undefined && req.headers['content-length'] !== '0'))) {
+        res.status(400).json({ statusCode: 400, code: 'DASHBOARD_BODY_NOT_ALLOWED' }); return;
+      }
+    }
     if (/^\/(?:seller\/|admin\/)?aftersales(?:\/|$)/i.test(req.path)) {
       res.setHeader('Cache-Control', 'no-store');
     }

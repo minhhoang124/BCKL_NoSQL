@@ -10,7 +10,10 @@ export async function isolatedD07Database(source: string) {
   const local =
     url.hostname === '127.0.0.1' &&
     url.port === '5549' &&
-    url.pathname === '/bckl_order_resolution_test_attributes_20261019_v950' &&
+    [
+      '/bckl_order_resolution_test_attributes_20261019_v950',
+      '/bckl_order_resolution_test_attributes_20261019_v951',
+    ].includes(url.pathname) &&
     url.username === 'bckl_qa_migrator_20261021';
   const ci =
     process.env.GITHUB_ACTIONS === 'true' &&

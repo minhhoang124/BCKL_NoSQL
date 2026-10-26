@@ -45,7 +45,10 @@ describe('Aftersales HTTP/PostgreSQL runtime and command fences', () => {
       !(
         url.hostname === '127.0.0.1' &&
         url.port === '5549' &&
-        url.pathname === '/bckl_order_resolution_test_attributes_20261019_v950'
+        [
+          '/bckl_order_resolution_test_attributes_20261019_v950',
+          '/bckl_order_resolution_test_attributes_20261019_v951',
+        ].includes(url.pathname)
       ) &&
       !(
         process.env.GITHUB_ACTIONS === 'true' &&

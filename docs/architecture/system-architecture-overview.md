@@ -1,6 +1,13 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
-**Hậu mãi Backend —26/10/2026, IN_PROGRESS:** nhánh riêng thêm migration26/27,
+**Dashboard Backend —26/10/2026, branch implementation:** API Admin/Seller đọc
+PostgreSQL RepeatableRead READ ONLY, gross theo completedAt và refund theo
+RevenueAdjustment.effectiveAt từ nguồn hậu mãi #119 đã merge. Shipping/pending
+riêng; snapshot lỗi loại khỏi cả gross/refund và có endpoint đối chiếu. Phân
+quyền Store canonical, chuỗi tiền exact, day/month/quarter UTC+7. Chưa Dashboard
+UI hoặc settlement. [API và nguồn chỉ số](../api/dashboard-runtime.md).
+
+**Hậu mãi Backend —26/10/2026, #119 đã merge `5802ae4`:** thêm migration26/27,
 ReturnRequest/audit/command receipt, refund mô phỏng/adjustment; API Buyer–Store–
 Admin và explicit reconcile không tự thực thi. Full refund/item một lần trên
 mọi request/key, return chỉ nhập kho khi nhận hàng RESTOCKABLE. Buyer/system

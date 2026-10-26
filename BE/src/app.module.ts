@@ -16,6 +16,7 @@ import { CheckoutModule } from './checkout/checkout.module.js';
 import { AdminSystemHealthModule } from './health/admin-system-health.module.js';
 import { ChatModule } from './chat/chat.controller.js';
 import { AftersalesModule } from './aftersales/aftersales-controller.js';
+import { DashboardModule } from './dashboard/dashboard.controller.js';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AftersalesModule } from './aftersales/aftersales-controller.js';
     AdminSystemHealthModule,
     ChatModule,
     AftersalesModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

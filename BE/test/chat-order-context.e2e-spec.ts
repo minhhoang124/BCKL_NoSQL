@@ -112,6 +112,7 @@ describe('Order sharing: canonical Buyer–Store, real HTTP Checkout/PostgreSQL'
           '/bckl_order_resolution_test_attributes_20261019_v948',
           '/bckl_order_resolution_test_attributes_20261019_v949',
           '/bckl_order_resolution_test_attributes_20261019_v950',
+          '/bckl_order_resolution_test_attributes_20261019_v951',
         ].includes(url.pathname))
     )
       throw Error('Exact Order context QA required');

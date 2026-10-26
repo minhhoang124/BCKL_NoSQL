@@ -1,9 +1,10 @@
 # API hậu mãi P1 —26/10/2026
 
-IN_PROGRESS trên `codex/aftersales-runtime`, base develop `f260192` sau #117.
+Backend #119 đã merge tại `5802ae4`, base develop `f260192` sau #117.
 Backend runtime, không phải UI hoặc hoàn tiền thật. Theo
 [contract tiền chung](dashboard-aftersales-contract.md); Dashboard đọc cùng
-RefundRecord/RevenueAdjustment ở bước tiếp theo, chưa có aggregate API trong PR này.
+RefundRecord/RevenueAdjustment trong [API Dashboard](dashboard-runtime.md) trên
+nhánh riêng; chưa có aggregate API trong PR hậu mãi.
 
 ## Rollout và dữ liệu
 
