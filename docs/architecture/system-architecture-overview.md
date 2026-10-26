@@ -1,5 +1,15 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Hậu mãi Backend —26/10/2026, IN_PROGRESS:** nhánh riêng thêm migration26/27,
+ReturnRequest/audit/command receipt, refund mô phỏng/adjustment; API Buyer–Store–
+Admin và explicit reconcile không tự thực thi. Full refund/item một lần trên
+mọi request/key, return chỉ nhập kho khi nhận hàng RESTOCKABLE. Buyer/system
+completion cùng Order lock kích hoạt adjustment chờ; không đổi Payment.PAID.
+QA1411unit,940E2E/1SKIP/20TODO,26HTTP/PG app-role và9fixture guards đạt; D07
+suite dùng private DB để không trộn queue giữ lại. Chưa UI/Dashboard/tiền thật,
+chưa nhận toàn hậu mãi DONE. [API/rollout](../api/aftersales-runtime.md),
+[bằng chứng/giới hạn](../testing/aftersales-runtime-2026-10-26.md).
+
 **Hậu mãi/Dashboard —25/10/2026, TARGET:**
 [Contract chung](../api/dashboard-aftersales-contract.md) thống nhất gross theo
 COMPLETED, adjustment hoàn tiền hiệu lực cùng/sau completion, nhiều request sau

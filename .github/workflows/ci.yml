@@ -128,6 +128,8 @@ jobs:
 
       - name: Check Address Cart QA safety guards
         run: pnpm --dir BE qa:address-cart:guards
+      - name: Check Aftersales QA safety guards
+        run: pnpm --dir BE qa:aftersales:guards
       - name: Set up Python for evaluation tools
         uses: actions/setup-python@v5
         with:

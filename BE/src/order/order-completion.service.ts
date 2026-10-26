@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { activateAftersaleAdjustments } from '../aftersales/aftersales-service.js';
 import { assertOrderCommandNotClosed } from './order-command-fence.js';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -208,6 +209,7 @@ export class OrderCompletionService {
             });
             if (changed.count !== 1)
               throw orderCommandError(409, 'INVALID_ORDER_TRANSITION');
+            await activateAftersaleAdjustments(tx, order.id, now);
             await tx.orderStatusHistory.create({
               data: {
                 orderId: order.id,

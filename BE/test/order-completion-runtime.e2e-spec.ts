@@ -10,6 +10,7 @@ import request from 'supertest';
 import { vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/configure-app.js';
+import { isolatedD07Database } from './helpers/isolated-d07-database.js';
 import { PrismaService } from '../src/prisma.service.js';
 
 describe('Buyer completion / durable D07 runtime — real PostgreSQL', () => {
@@ -33,6 +34,7 @@ describe('Buyer completion / durable D07 runtime — real PostgreSQL', () => {
   const key = () => marker + '-key-' + serial++;
   const runtimes: INestApplication[] = [];
   const oldEnabled = process.env.ORDER_AUTO_COMPLETE_ENABLED;
+  const originalDatabaseUrl = process.env.DATABASE_URL;
   const post = (
     command = 'complete',
     body: unknown = {},
@@ -175,6 +177,9 @@ describe('Buyer completion / durable D07 runtime — real PostgreSQL', () => {
       )
     )
       throw new Error('Dedicated test database required');
+    const isolated = await isolatedD07Database(process.env.DATABASE_URL!);
+    process.env.DATABASE_URL = isolated.url;
+    console.info('D07 queue-isolated database=' + isolated.name);
     process.env.ORDER_COMMAND_RATE_PER_MINUTE = '60000';
     app = await start();
     other = await start();
@@ -217,47 +222,54 @@ describe('Buyer completion / durable D07 runtime — real PostgreSQL', () => {
   });
   afterEach(() => vi.restoreAllMocks());
   afterAll(async () => {
-    if (prisma) {
-      await prisma.$transaction(async (tx) => {
-        await tx.stockMovement.deleteMany({
-          where: { orderItem: { orderId: { in: orders } } },
+    try {
+      if (prisma) {
+        await prisma.$transaction(async (tx) => {
+          await tx.stockMovement.deleteMany({
+            where: { orderItem: { orderId: { in: orders } } },
+          });
+          await tx.orderCompletionJob.deleteMany({
+            where: { orderId: { in: orders } },
+          });
+          await tx.orderStatusHistory.deleteMany({
+            where: { orderId: { in: orders } },
+          });
+          await tx.orderCommand.deleteMany({
+            where: { orderId: { in: orders } },
+          });
+          await tx.payment.deleteMany({ where: { orderId: { in: orders } } });
+          await tx.orderItem.deleteMany({ where: { orderId: { in: orders } } });
+          await tx.deliveryAttempt.deleteMany({
+            where: { orderId: { in: orders } },
+          });
+          await tx.order.deleteMany({ where: { id: { in: orders } } });
         });
-        await tx.orderCompletionJob.deleteMany({
-          where: { orderId: { in: orders } },
+        await prisma.checkout.deleteMany({ where: { id: { in: checkouts } } });
+        await prisma.cartItem.deleteMany({ where: { cartId: { in: carts } } });
+        await prisma.cart.deleteMany({ where: { id: { in: carts } } });
+        await prisma.userAddress.deleteMany({
+          where: { id: { in: addresses } },
         });
-        await tx.orderStatusHistory.deleteMany({
-          where: { orderId: { in: orders } },
-        });
-        await tx.orderCommand.deleteMany({
-          where: { orderId: { in: orders } },
-        });
-        await tx.payment.deleteMany({ where: { orderId: { in: orders } } });
-        await tx.orderItem.deleteMany({ where: { orderId: { in: orders } } });
-        await tx.deliveryAttempt.deleteMany({
-          where: { orderId: { in: orders } },
-        });
-        await tx.order.deleteMany({ where: { id: { in: orders } } });
-      });
-      await prisma.checkout.deleteMany({ where: { id: { in: checkouts } } });
-      await prisma.cartItem.deleteMany({ where: { cartId: { in: carts } } });
-      await prisma.cart.deleteMany({ where: { id: { in: carts } } });
-      await prisma.userAddress.deleteMany({ where: { id: { in: addresses } } });
-      await prisma.searchOutbox.deleteMany({ where: { productId } });
-      await prisma.productVariant.deleteMany({ where: { id: variantId } });
-      await prisma.product.deleteMany({ where: { id: productId } });
-      await prisma.category.deleteMany({ where: { id: categoryId } });
-      await prisma.store.deleteMany({ where: { id: storeId } });
-      await prisma.user.deleteMany({ where: { id: { in: users } } });
+        await prisma.searchOutbox.deleteMany({ where: { productId } });
+        await prisma.productVariant.deleteMany({ where: { id: variantId } });
+        await prisma.product.deleteMany({ where: { id: productId } });
+        await prisma.category.deleteMany({ where: { id: categoryId } });
+        await prisma.store.deleteMany({ where: { id: storeId } });
+        await prisma.user.deleteMany({ where: { id: { in: users } } });
+      }
+      for (const instance of runtimes) await instance.close();
+      if (oldEnabled === undefined)
+        delete process.env.ORDER_AUTO_COMPLETE_ENABLED;
+      else process.env.ORDER_AUTO_COMPLETE_ENABLED = oldEnabled;
+      await other?.close();
+      await app?.close();
+      if (previousRate === undefined)
+        delete process.env.ORDER_COMMAND_RATE_PER_MINUTE;
+      else process.env.ORDER_COMMAND_RATE_PER_MINUTE = previousRate;
+    } finally {
+      if (originalDatabaseUrl === undefined) delete process.env.DATABASE_URL;
+      else process.env.DATABASE_URL = originalDatabaseUrl;
     }
-    for (const instance of runtimes) await instance.close();
-    if (oldEnabled === undefined)
-      delete process.env.ORDER_AUTO_COMPLETE_ENABLED;
-    else process.env.ORDER_AUTO_COMPLETE_ENABLED = oldEnabled;
-    await other?.close();
-    await app?.close();
-    if (previousRate === undefined)
-      delete process.env.ORDER_COMMAND_RATE_PER_MINUTE;
-    else process.env.ORDER_COMMAND_RATE_PER_MINUTE = previousRate;
   });
 
   async function runtime(delaySeconds?: string) {

@@ -1,5 +1,9 @@
 # Contract chung hậu mãi và Dashboard —25/10/2026
 
+Cập nhật26/10: Backend hậu mãi đã có implementation/QA trên nhánh riêng,
+[contract runtime](aftersales-runtime.md); chưa merge/nghiệm thu UI. Dashboard
+vẫn TARGET. Các ghi nhận “chưa API” dưới đây là mốc lập contract trước triển khai.
+
 TARGET, chưa có migration/API runtime. Phạm vi theo
 [implementation-scope](../project/implementation-scope.md#hậu-mãi-cơ-bản) và
 [nghiệp vụ](../analysis/marketplace-business-processes.md). Không chuyển P1 sang

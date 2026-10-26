@@ -13,6 +13,7 @@ describe('Accounts migration — real SQL baseline upgrade', () => {
       '/bckl_order_resolution_test_attributes_20261019_v947',
       '/bckl_order_resolution_test_attributes_20261019_v948',
       '/bckl_order_resolution_test_attributes_20261019_v949',
+      '/bckl_order_resolution_test_attributes_20261019_v950',
     ]).toContain(url.pathname);
     const db = new Client({ connectionString: url.toString() });
     await db.connect();
@@ -125,6 +126,37 @@ describe('Accounts migration — real SQL baseline upgrade', () => {
             'SELECT count(*)::int AS n FROM account_status_commands',
           )
         ).rows[0].n,
+      ).toBe(0);
+      // Actual additive aftersales upgrade25→26→27 on the retained legacy schema.
+      const beforeAftersales = {
+        users: (await db.query('SELECT * FROM users ORDER BY id')).rows,
+        stores: (await db.query('SELECT * FROM stores ORDER BY id')).rows,
+        audit: (
+          await db.query('SELECT * FROM account_status_history ORDER BY id')
+        ).rows,
+        refresh: (await db.query('SELECT * FROM refresh_tokens ORDER BY id'))
+          .rows,
+      };
+      for (const name of [
+        '20261025190000_aftersales_runtime',
+        '20261026080000_aftersales_receipt_history_binding',
+      ]) {
+        await db.query(
+          await readFile(new URL(name + '/migration.sql', directory), 'utf8'),
+        );
+      }
+      expect({
+        users: (await db.query('SELECT * FROM users ORDER BY id')).rows,
+        stores: (await db.query('SELECT * FROM stores ORDER BY id')).rows,
+        audit: (
+          await db.query('SELECT * FROM account_status_history ORDER BY id')
+        ).rows,
+        refresh: (await db.query('SELECT * FROM refresh_tokens ORDER BY id'))
+          .rows,
+      }).toEqual(beforeAftersales);
+      expect(
+        (await db.query('SELECT count(*)::int AS n FROM refund_records'))
+          .rows[0].n,
       ).toBe(0);
     } finally {
       await db.end();

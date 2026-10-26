@@ -157,6 +157,8 @@ model User {
   accountStatusHistory    AccountStatusHistory[]   @relation("AccountStatusTarget")
   statusCommandActions    AccountStatusCommand[]   @relation("StatusCommandActor")
   statusCommandTargets    AccountStatusCommand[]   @relation("StatusCommandTarget")
+  aftersaleHistory        AftersaleHistory[]
+  aftersaleCommands       AftersaleCommand[]
   chatConversations       ChatConversation[]
   chatMessages            ChatMessage[]
   chatReadStates          ChatReadState[]
@@ -767,7 +769,7 @@ model DeliveryAttempt {
 }
 
 model OrderItem {
-  id                  Int             @id @default(autoincrement())
+  id                  Int                @id @default(autoincrement())
   orderId             Int
   productId           Int
   variantId           Int
@@ -775,14 +777,16 @@ model OrderItem {
   productNameSnapshot String
   skuSnapshot         String
   optionSnapshot      Json
-  unitPrice           Decimal         @db.Decimal(14, 2)
+  unitPrice           Decimal            @db.Decimal(14, 2)
   quantity            Int
-  lineTotal           Decimal         @db.Decimal(14, 2)
-  createdAt           DateTime        @default(now())
-  order               Order           @relation(fields: [orderId, storeId], references: [id, storeId], onDelete: Restrict)
-  product             Product         @relation(fields: [productId, storeId], references: [id, storeId], onDelete: Restrict)
-  variant             ProductVariant  @relation(fields: [variantId, productId, storeId], references: [id, productId, storeId], onDelete: Restrict)
+  lineTotal           Decimal            @db.Decimal(14, 2)
+  createdAt           DateTime           @default(now())
+  order               Order              @relation(fields: [orderId, storeId], references: [id, storeId], onDelete: Restrict)
+  product             Product            @relation(fields: [productId, storeId], references: [id, storeId], onDelete: Restrict)
+  variant             ProductVariant     @relation(fields: [variantId, productId, storeId], references: [id, productId, storeId], onDelete: Restrict)
   stockMovements      StockMovement[]
+  aftersaleRequests   AftersaleRequest[]
+  refund              RefundRecord?
 
   @@unique([id, variantId])
   @@index([orderId])
@@ -803,9 +807,96 @@ model Payment {
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
   order     Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  refunds   RefundRecord[]
 
   @@index([status, createdAt])
   @@map("payments")
+}
+
+model AftersaleRequest {
+  id          Int                @id @default(autoincrement())
+  orderItemId Int
+  kind        String             @db.VarChar(24)
+  state       String             @default("PENDING") @db.VarChar(24)
+  revision    Int                @default(1)
+  reasonCode  String             @db.VarChar(32)
+  description String             @db.VarChar(1000)
+  deadlineAt  DateTime           @db.Timestamp(3)
+  receivedAt  DateTime?          @db.Timestamp(3)
+  restockable Boolean?
+  createdAt   DateTime           @default(now()) @db.Timestamp(3)
+  updatedAt   DateTime           @default(now()) @db.Timestamp(3)
+  item        OrderItem          @relation(fields: [orderItemId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  history     AftersaleHistory[]
+  refund      RefundRecord?
+
+  @@unique([id, orderItemId], map: "aftersale_requests_id_orderitemid_key")
+  @@index([orderItemId, id])
+  @@index([state, id])
+  @@map("aftersale_requests")
+}
+
+model AftersaleHistory {
+  id           BigInt           @id @default(autoincrement())
+  requestId    Int
+  actorId      Int
+  fromState    String?          @db.VarChar(24)
+  toState      String           @db.VarChar(24)
+  fromRevision Int
+  toRevision   Int
+  reason       String           @db.VarChar(1000)
+  createdAt    DateTime         @default(now()) @db.Timestamp(3)
+  request      AftersaleRequest @relation(fields: [requestId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  actor        User             @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([requestId, toRevision])
+  @@map("aftersale_history")
+}
+
+model AftersaleCommand {
+  id          BigInt   @id @default(autoincrement())
+  actorId     Int
+  commandId   String   @db.VarChar(36)
+  action      String   @db.VarChar(16)
+  targetId    Int
+  requestHash String   @db.VarChar(64)
+  outcome     String   @db.VarChar(8)
+  receipt     Json?
+  createdAt   DateTime @default(now()) @db.Timestamp(3)
+  actor       User     @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([actorId, commandId])
+  @@map("aftersale_commands")
+}
+
+model RefundRecord {
+  id          BigInt             @id @default(autoincrement())
+  requestId   Int                @unique
+  orderItemId Int                @unique
+  paymentId   Int
+  amount      Decimal            @db.Decimal(14, 2)
+  currency    String             @default("VND") @db.VarChar(3)
+  mode        String             @default("SIMULATED") @db.VarChar(16)
+  succeededAt DateTime           @default(now()) @db.Timestamp(3)
+  request     AftersaleRequest   @relation(fields: [requestId, orderItemId], references: [id, orderItemId], onDelete: Restrict, onUpdate: NoAction)
+  item        OrderItem          @relation(fields: [orderItemId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  payment     Payment            @relation(fields: [paymentId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  adjustment  RevenueAdjustment?
+
+  @@unique([requestId, orderItemId])
+  @@map("refund_records")
+}
+
+model RevenueAdjustment {
+  id          BigInt       @id @default(autoincrement())
+  refundId    BigInt       @unique
+  amount      Decimal      @db.Decimal(14, 2)
+  effectiveAt DateTime?    @db.Timestamp(3)
+  createdAt   DateTime     @default(now()) @db.Timestamp(3)
+  refund      RefundRecord @relation(fields: [refundId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@index([effectiveAt, id])
+  @@map("revenue_adjustments")
 }
 
 model OrderStatusHistory {
