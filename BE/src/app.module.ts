@@ -19,6 +19,7 @@ import { AftersalesModule } from './aftersales/aftersales-controller.js';
 import { DashboardModule } from './dashboard/dashboard.controller.js';
 import { StoreApplicationModule } from './store/application.controller.js';
 import { ReviewModule } from './review/review.controller.js';
+import { NotificationModule } from './notification/notification.controller.js';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ReviewModule } from './review/review.controller.js';
     DashboardModule,
     StoreApplicationModule,
     ReviewModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

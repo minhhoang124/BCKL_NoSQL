@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { hasBuyerAccess } from '../../utils/buyerAccess';
+import { NotificationBadge } from '../../features/notifications/NotificationsPage';
 import { useAuth } from '../../contexts/useAuth';
 import { ApiError } from '../../services/apiClient';
 import styles from './Header.module.css';
@@ -48,6 +49,7 @@ export function Header() {
           <>
             <Link to="/account">Tài khoản ({user.fullName || user.email})</Link>
             {hasBuyerAccess(user) && <Link to="/cart">Giỏ hàng</Link>}
+            <NotificationBadge />
             {import.meta.env.VITE_CHAT_ENABLED === 'true' && user.role !== 'ADMIN' && <Link to="/messages">Tin nhắn</Link>}
             {user.role === 'SELLER' && <Link to="/seller">Kênh người bán</Link>}
             {user.role === 'USER' && import.meta.env.VITE_SELLER_ONBOARDING_ENABLED === 'true' && <Link to="/account/store-application">Mở Store</Link>}

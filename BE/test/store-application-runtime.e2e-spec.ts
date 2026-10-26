@@ -44,7 +44,7 @@ describe('Store application real HTTP/PG, grant and recovery', () => {
     const local =
       u.hostname === '127.0.0.1' &&
       u.port === '5549' &&
-      ['/bckl_order_resolution_test_attributes_20261019_v953','/bckl_order_resolution_test_attributes_20261019_v955'].includes(u.pathname);
+      ['/bckl_order_resolution_test_attributes_20261019_v953','/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957'].includes(u.pathname);
     const ci =
       process.env.GITHUB_ACTIONS === 'true' &&
       ['localhost', '127.0.0.1'].includes(u.hostname) &&

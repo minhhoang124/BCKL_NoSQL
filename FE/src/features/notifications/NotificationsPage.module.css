@@ -1,0 +1,59 @@
+.inbox {
+  max-width: 900px;
+  margin: 24px auto;
+  padding: 20px;
+  color: var(--text-primary, #202b39);
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 12px 0;
+}
+.toolbar button,
+.toolbar select {
+  padding: 10px;
+  font: inherit;
+  border-radius: 6px;
+}
+.list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.list li {
+  border: 1px solid #a4adb7;
+  border-radius: 10px;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.list h2 {
+  font-size: 1.15rem;
+  margin: 0 0 8px;
+}
+.unread {
+  border-left: 5px solid #00897b !important;
+}
+.read {
+  border-left: 5px solid #88939e !important;
+}
+.inbox button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.inbox :focus-visible {
+  outline: 3px solid #00897b;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .inbox {
+    margin: 8px;
+    padding: 12px;
+  }
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

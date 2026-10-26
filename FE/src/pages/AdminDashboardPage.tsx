@@ -105,6 +105,7 @@ const navItems = [
   { to: '/admin/users', label: 'Tài khoản', icon: '◎' },
   { to: '/admin/system-health', label: 'Sức khỏe hệ thống', icon: '◉' },
   { to: '/admin/returns', label: 'Hậu mãi', icon: '↺', disabled: false },
+  ...(import.meta.env.VITE_NOTIFICATIONS_ENABLED === 'true' ? [{to:'/account/notifications',label:'Thông báo',icon:'♧'}] : []),
   ...(import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED==='true'?[{to:'/admin/reviews',label:'Đánh giá',icon:'☆'}]:[]),
 ];
 

@@ -1,5 +1,13 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Thông báo in-app —27/10/2026, nhánh từ `f271318` (#125 đã merge):**
+read model từ sáu nguồn lịch sử đã commit, dedupe và khóa recipient trước cấp
+id, own inbox/read state có mốc, Web lọc/phân trang/badge. 1541 unit,
+1025 E2E (1 SKIP/20 TODO), 22 HTTP app-role và 9 nhóm Chrome đạt.
+Các cờ mặc định tắt; chỉ tính tích hợp sau merge. Chưa email adapter P1,
+Auth P1 hoặc thanh toán sandbox. [Contract](../api/notifications-runtime.md),
+[bằng chứng/giới hạn](../testing/notifications-2026-10-27.md).
+
 **Web Review —26/10/2026, nhánh từ `6ca8bcd` (#124 Backend đã merge):**
 Buyer tạo/sửa theo OrderItem, Product aggregate/page, Seller reply, Admin hide/
 audit riêng; journal không nội dung và explicit reconcile sau timeout. 46test

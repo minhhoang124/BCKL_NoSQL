@@ -169,8 +169,29 @@ model User {
   productReviewReplies    ProductReviewReply[]
   productReviewAudits     ProductReviewAudit[]
   productReviewCommands   ProductReviewCommand[]
+  notifications          Notification[]
 
   @@map("users")
+}
+
+model Notification {
+  id BigInt @id @default(autoincrement())
+  recipientId Int
+  audience String @db.VarChar(8)
+  sourceKind String @db.VarChar(16)
+  sourceId BigInt
+  channel String @default("IN_APP") @db.VarChar(8)
+  title String @db.VarChar(160)
+  text String @db.VarChar(400)
+  link String @db.VarChar(200)
+  eventAt DateTime @db.Timestamp(3)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  readAt DateTime? @db.Timestamp(3)
+  recipient User @relation(fields:[recipientId],references:[id],onDelete:Restrict,onUpdate:NoAction)
+  @@unique([recipientId,sourceKind,sourceId,channel],map:"notification_event_recipient_channel_key")
+  @@index([recipientId,audience,id],map:"notifications_recipient_audience_id_idx")
+  @@index([recipientId,readAt,id],map:"notifications_recipient_read_id_idx")
+  @@map("notifications")
 }
 
 model AccountStatusHistory {
