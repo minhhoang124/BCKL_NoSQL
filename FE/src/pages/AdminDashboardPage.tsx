@@ -18,6 +18,7 @@ import { AdminAccountStatusWorkspace } from '../features/admin-accounts/AdminAcc
 import { createAccountReadApi } from '../features/admin-accounts/accountReadApi';
 import { AdminSystemHealth } from '../features/admin-system-health/AdminSystemHealth';
 import { createSystemHealthApi } from '../features/admin-system-health/systemHealthApi';
+import { Dashboard } from '../features/dashboard/Dashboard';
 
 const accountsReadApi = createAccountReadApi();
 const systemHealthApi = createSystemHealthApi();
@@ -279,15 +280,7 @@ function OverviewPage() {
           </Link>
         </div>
       </section>
-      <div className={styles.infoBanner}>
-        <span>ⓘ</span>
-        <p>
-          <b>Phạm vi đang kết nối:</b> Product moderation, Store review và
-          Category/Brand API. Backend đã có API khóa/mở tài khoản, nhưng giao
-          diện tài khoản và API danh sách còn thiếu. Hậu mãi và thống kê hệ
-          thống chưa được nối trong màn này.
-        </p>
-      </div>
+      <Dashboard scope="ADMIN" />
     </>
   );
 }

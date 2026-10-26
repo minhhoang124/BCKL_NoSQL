@@ -1,5 +1,12 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Dashboard Web —26/10/2026, nhánh tích hợp:** Admin `/admin` và Seller tab
+Thống kê gọi API #120 đã merge tại `7f735a6`; gross/refund/net/shipping/pending
+và đối chiếu tách nghĩa, exact BigInt cents, session/generation fences. Không
+mutation, không UI hậu mãi. Full FE1381PASS/6liveSKIP,35Dashboard và9nhóm Chrome
+QA đạt; Argon Medium review NONE P1/P2. Chưa nhận toàn dự án DONE.
+[Luồng/biến](dashboard-web-workflow.md), [bằng chứng/giới hạn](../testing/dashboard-web-2026-10-26.md).
+
 **Dashboard Backend —26/10/2026, branch implementation:** API Admin/Seller đọc
 PostgreSQL RepeatableRead READ ONLY, gross theo completedAt và refund theo
 RevenueAdjustment.effectiveAt từ nguồn hậu mãi #119 đã merge. Shipping/pending
