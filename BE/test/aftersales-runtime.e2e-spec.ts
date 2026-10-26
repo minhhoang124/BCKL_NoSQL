@@ -48,6 +48,7 @@ describe('Aftersales HTTP/PostgreSQL runtime and command fences', () => {
         [
           '/bckl_order_resolution_test_attributes_20261019_v950',
           '/bckl_order_resolution_test_attributes_20261019_v951',
+          '/bckl_order_resolution_test_attributes_20261019_v952',
         ].includes(url.pathname)
       ) &&
       !(
@@ -148,7 +149,7 @@ describe('Aftersales HTTP/PostgreSQL runtime and command fences', () => {
             lineTotal: '100000.00',
             productNameSnapshot: 'Original QA item',
             skuSnapshot: variant.skuCode,
-            optionSnapshot: {},
+            optionSnapshot: [],
           },
         },
       },
@@ -168,6 +169,17 @@ describe('Aftersales HTTP/PostgreSQL runtime and command fences', () => {
     return { buyer, seller, admin, store, product, variant, order, item };
   }
   type Fixture = Awaited<ReturnType<typeof fixture>>;
+  it('keeps Aftersales QA snapshots readable by the canonical Buyer Order API', async () => {
+    const f = await fixture();
+    const result = await http()
+      .get(`/orders/${f.order.id}`)
+      .auth(f.buyer.token, { type: 'bearer' })
+      .expect(200)
+      .expect('Cache-Control', 'no-store');
+    expect(result.body.items).toHaveLength(1);
+    expect(result.body.items[0].options).toEqual([]);
+    expect(result.body.items[0].id).toBe(f.item.id);
+  });
   const post = (path: string, token: string, body: unknown) =>
     http()
       .post(path)

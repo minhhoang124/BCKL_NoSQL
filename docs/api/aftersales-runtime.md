@@ -6,6 +6,11 @@ Backend runtime, không phải UI hoặc hoàn tiền thật. Theo
 RefundRecord/RevenueAdjustment trong [API Dashboard](dashboard-runtime.md) trên
 nhánh riêng; chưa có aggregate API trong PR hậu mãi.
 
+Ghi nhận trên mô tả Backend #119 phía trên là ranh giới PR đó. Dashboard API
+#120 và Web #121 đã merge. Nhánh Web hậu mãi tiếp nối từ `428700b` có
+[luồng Buyer–Seller–Admin](../architecture/aftersales-web-workflow.md), giữ
+hoàn tiền mô phỏng; không đổi protocol Backend.
+
 ## Rollout và dữ liệu
 
 Migrate26 `20261025190000_aftersales_runtime` và27
@@ -89,8 +94,9 @@ HTTP200 `{commandId,outcome,receipt,current}`. APPLIED receipt exact:
 ```
 
 `refund=null` nếu bước đó chưa ghi refund. Receipt là kết quả lịch sử, current
-có thể đã ở revision khác. Với target create, replay/reconcile current có thể
-null vì target là item, không phải request; lấy request.id từ receipt rồi GET.
+có thể đã ở revision khác. Initial create trả current là projection request
+vừa tạo; replay/reconcile create có thể trả null vì target là item, không phải
+request. Client phải hỗ trợ cả hai và lấy request.id từ receipt rồi GET.
 Không suy từ current rằng command đã chạy. Không diễn giải SIMULATED là đã
 chuyển tiền về ngân hàng/ví. Không gọi Search index đã đồng bộ từ receipt này.
 

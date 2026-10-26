@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Link } from 'react-router-dom';
 import type {
   OrderDetail,
   OrderList,
@@ -312,6 +313,7 @@ export function OrderDetailPanel({
                   {orderMoney(item.unitPrice)} / món ·{" "}
                   {orderMoney(item.lineTotal)}
                 </p>
+                {context.scope === 'buyer' && context.fresh && !context.busy && !context.outcomeUnknown && source === 'api' && ['DELIVERED', 'COMPLETED'].includes(order.status) && order.payment?.status === 'PAID' && import.meta.env.VITE_AFTERSALES_ENABLED !== 'false' && <Link to={`/account/aftersales?orderId=${order.id}&itemId=${item.id}`}>Yêu cầu hỗ trợ cho mặt hàng này</Link>}
               </li>
             ))}
           </ul>

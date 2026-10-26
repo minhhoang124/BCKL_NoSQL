@@ -19,6 +19,7 @@ import { createAccountReadApi } from '../features/admin-accounts/accountReadApi'
 import { AdminSystemHealth } from '../features/admin-system-health/AdminSystemHealth';
 import { createSystemHealthApi } from '../features/admin-system-health/systemHealthApi';
 import { Dashboard } from '../features/dashboard/Dashboard';
+import { AftersalesPage } from '../features/aftersales/AftersalesPage';
 
 const accountsReadApi = createAccountReadApi();
 const systemHealthApi = createSystemHealthApi();
@@ -98,7 +99,7 @@ const navItems = [
   { to: '/admin/catalog', label: 'Danh mục & thương hiệu', icon: '▤' },
   { to: '/admin/users', label: 'Tài khoản', icon: '◎' },
   { to: '/admin/system-health', label: 'Sức khỏe hệ thống', icon: '◉' },
-  { to: '/admin/returns', label: 'Hậu mãi', icon: '↺', disabled: true },
+  { to: '/admin/returns', label: 'Hậu mãi', icon: '↺', disabled: false },
 ];
 
 async function readError(error: unknown) {
@@ -1492,35 +1493,6 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
   );
 }
 
-function UnsupportedPage({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <>
-      <PageHeading
-        eyebrow="CHƯA TRIỂN KHAI GIAO DIỆN"
-        title={title}
-        description={description}
-      />
-      <section className={styles.unsupported}>
-        <span>◷</span>
-        <h2>Chức năng chưa được nghiệm thu</h2>
-        <p>
-          Giao diện và API hậu mãi chưa được tích hợp trong đợt bàn giao này.
-          {' '}Trang không dùng dữ liệu mẫu để thay cho chức năng thật.
-        </p>
-        <Link className={styles.secondaryButton} to="/admin">
-          Quay lại tổng quan
-        </Link>
-      </section>
-    </>
-  );
-}
-
 export function AdminDashboardPage() {
   const { user } = useAuth();
   if (!user || user.role !== 'ADMIN' || !user.isActive)
@@ -1666,10 +1638,7 @@ function AdminConsole() {
             <Route
               path="returns"
               element={
-                <UnsupportedPage
-                  title="Xử lý hậu mãi"
-                  description="Xem yêu cầu trả hàng, quyết định phương án và ghi nhận hoàn tiền mô phỏng."
-                />
+                <AftersalesPage scope="ADMIN" />
               }
             />
             <Route path="*" element={<OverviewPage />} />

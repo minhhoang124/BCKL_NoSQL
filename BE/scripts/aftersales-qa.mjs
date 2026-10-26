@@ -157,7 +157,7 @@ async function main() {
                   lineTotal: '100000.00',
                   productNameSnapshot: 'Synthetic aftersales item',
                   skuSnapshot: marker,
-                  optionSnapshot: {},
+                  optionSnapshot: [],
                 },
               },
             },

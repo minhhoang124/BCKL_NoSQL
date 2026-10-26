@@ -20,6 +20,7 @@ export function AccountPage() {
         <p>Trạng thái: {user.isActive ? 'Hoạt động' : 'Đã khóa'}</p>
         {hasBuyerAccess(user) && <p><Link to="/account/addresses">Quản lý địa chỉ nhận hàng</Link></p>}
         {hasBuyerAccess(user) && <p><Link to="/account/orders">Đơn mua của tôi</Link></p>}
+        {hasBuyerAccess(user) && <p><Link to="/account/aftersales">Yêu cầu hậu mãi của tôi</Link></p>}
       </div>
       {import.meta.env.VITE_ACCOUNT_SETTINGS_ENABLED === 'true' && <AccountSettings />}
     </div>

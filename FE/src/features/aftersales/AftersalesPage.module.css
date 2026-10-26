@@ -1,0 +1,129 @@
+.page {
+  max-width: 1240px;
+  margin: 1.5rem auto;
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
+  color: #17213a;
+  min-width: 0;
+}
+.page h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.8rem;
+}
+.page h2 {
+  font-size: 1.2rem;
+}
+.page p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 1rem;
+}
+.panel {
+  background: #fff;
+  border: 1px solid #d1d9e5;
+  border-radius: 0.8rem;
+  padding: 1rem;
+  min-width: 0;
+}
+.page form {
+  display: grid;
+  gap: 0.8rem;
+}
+.page label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+.page input,
+.page textarea,
+.page select,
+.page button {
+  font: inherit;
+  border: 1px solid #c2ccdc;
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.8rem;
+  background: #fff;
+  color: inherit;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.page textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+.page button {
+  cursor: pointer;
+  width: fit-content;
+  font-weight: 600;
+}
+.page button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.page .check {
+  display: flex;
+  align-items: start;
+  gap: 0.7rem;
+  line-height: 1.5;
+  font-weight: 400;
+}
+.check input {
+  margin-top: 0.3rem;
+  flex-shrink: 0;
+}
+.page :focus-visible {
+  outline: 3px solid #6790e5;
+  outline-offset: 2px;
+}
+.page li {
+  margin: 0.8rem 0;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid #e0e5ed;
+  overflow-wrap: anywhere;
+}
+.notice {
+  border-left: 3px solid #a37c0b;
+  padding: 0.7rem 1rem;
+  background: #fff8df;
+}
+.error {
+  color: #a32132;
+  background: #fff1f3;
+  border: 1px solid #cf7784;
+  padding: 0.8rem;
+  border-radius: 0.5rem;
+}
+.success {
+  color: #19513d;
+  background: #edf9f2;
+  padding: 0.8rem;
+  border-radius: 0.5rem;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.confirmation {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 2px solid #ae8836;
+  border-radius: 0.6rem;
+}
+@media (max-width: 720px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .page {
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+  }
+  .page h1 {
+    font-size: 1.4rem;
+  }
+}

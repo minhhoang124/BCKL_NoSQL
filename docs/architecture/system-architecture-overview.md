@@ -1,5 +1,13 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Hậu mãi Web —26/10/2026, nhánh tích hợp trên `428700b`:** Buyer tạo/rút/khiếu
+nại, Seller quyết định, Admin xử lý bất đồng và nhận hàng; lịch sử, biên nhận
+mô phỏng và phục hồi có đồng ý, không tự replay ghi. Full FE1423PASS/6liveSKIP,
+42test hậu mãi,27HTTP/PostgreSQL và9nhóm Chrome đạt; Argon Medium rà delta
+parser không P1/P2. #120/#121 Dashboard đã merge; hoàn tiền dùng chung nguồn.
+Chưa tiền thật/thông báo tự động hoặc toàn dự án DONE.
+[Luồng](aftersales-web-workflow.md), [QA/giới hạn](../testing/aftersales-web-2026-10-26.md).
+
 **Dashboard Web —26/10/2026, nhánh tích hợp:** Admin `/admin` và Seller tab
 Thống kê gọi API #120 đã merge tại `7f735a6`; gross/refund/net/shipping/pending
 và đối chiếu tách nghĩa, exact BigInt cents, session/generation fences. Không
