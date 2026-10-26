@@ -314,6 +314,7 @@ export function OrderDetailPanel({
                   {orderMoney(item.lineTotal)}
                 </p>
                 {context.scope === 'buyer' && context.fresh && !context.busy && !context.outcomeUnknown && source === 'api' && ['DELIVERED', 'COMPLETED'].includes(order.status) && order.payment?.status === 'PAID' && import.meta.env.VITE_AFTERSALES_ENABLED !== 'false' && <Link to={`/account/aftersales?orderId=${order.id}&itemId=${item.id}`}>Yêu cầu hỗ trợ cho mặt hàng này</Link>}
+                {context.scope === 'buyer' && context.fresh && !context.busy && !context.outcomeUnknown && source === 'api' && order.status === 'COMPLETED' && import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED === 'true' && <p><Link to={`/account/reviews?itemId=${item.id}`}>Đánh giá mặt hàng này</Link></p>}
               </li>
             ))}
           </ul>

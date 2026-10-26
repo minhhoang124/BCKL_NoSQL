@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { formatPrice, marketplaceApi, mediaUrl } from '../services/marketplaceApi';
 import type { Product } from '../types/marketplace';
-import { ApiError } from '../services/apiClient';
+import { ApiError, AuthSessionChangedError } from '../services/apiClient';
 import styles from './Marketplace.module.css';
+import { PublicProductReviews } from '../features/product-reviews/PublicProductReviews';
 
 export function ProductDetailPage() {
   const { id } = useParams();
@@ -12,7 +13,14 @@ export function ProductDetailPage() {
   useEffect(() => {
     if (invalidId) return;
     let active = true;
+    // This endpoint returns public data only. Bootstrap/login may rotate the
+    // session epoch while the initial GET is in flight; retry that read once.
     marketplaceApi.publicProduct(productId)
+      .catch((error: unknown) => {
+        if (active && error instanceof AuthSessionChangedError)
+          return marketplaceApi.publicProduct(productId);
+        throw error;
+      })
       .then((product) => { if (active) setResult({ id: productId, product }); })
       .catch((e) => { if (active) setResult({ id: productId, error: e instanceof ApiError ? e.message : 'Không thể tải sản phẩm.' }); });
     return () => { active = false; };
@@ -30,5 +38,6 @@ export function ProductDetailPage() {
     </section>
     {import.meta.env.VITE_CHAT_ENABLED === 'true' && product.store && <Link to={`/messages?storeId=${product.store.id}&productId=${product.id}`}>Chat với cửa hàng</Link>}
     {!!product.attributes?.length && <section className={styles.panel}><h2>Thông số</h2>{product.attributes.map((item) => <div className={styles.row} key={item.id}><span>{item.name}</span><strong>{String(item.value)}</strong></div>)}</section>}
+    {import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED === 'true' && <PublicProductReviews productId={product.id} />}
   </div>;
 }

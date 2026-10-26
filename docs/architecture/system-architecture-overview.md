@@ -1,5 +1,12 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Web Review —26/10/2026, nhánh từ `6ca8bcd` (#124 Backend đã merge):**
+Buyer tạo/sửa theo OrderItem, Product aggregate/page, Seller reply, Admin hide/
+audit riêng; journal không nội dung và explicit reconcile sau timeout. 46test
+tập trung,1536FE/6liveSKIP và12nhóm Chrome app-role đạt. Chỉ coi tích
+hợp sau merge. Chưa thông báo/AuthP1/payment sandbox. Hai cờ Review mặc địnhfalse.
+[Bằng chứng/giới hạn](../testing/product-review-web-2026-10-26.md).
+
 **Review Backend —26/10/2026, nhánh riêng từ `76a5d71`:** migration/API đánh
 giá OrderItem COMPLETED trong window mặc định30ngày; Seller reply một lần,
 Admin hide có audit; revision/idempotency/explicit reconcile, aggregate PG chỉ

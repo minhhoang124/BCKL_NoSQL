@@ -22,6 +22,7 @@ import { createSystemHealthApi } from '../features/admin-system-health/systemHea
 import { Dashboard } from '../features/dashboard/Dashboard';
 import { AftersalesPage } from '../features/aftersales/AftersalesPage';
 import { StoreApplicationPage } from '../features/seller-onboarding/StoreApplicationPage';
+import { ReviewPage } from '../features/product-reviews/ReviewPage';
 
 const accountsReadApi = createAccountReadApi();
 const systemHealthApi = createSystemHealthApi();
@@ -104,6 +105,7 @@ const navItems = [
   { to: '/admin/users', label: 'Tài khoản', icon: '◎' },
   { to: '/admin/system-health', label: 'Sức khỏe hệ thống', icon: '◉' },
   { to: '/admin/returns', label: 'Hậu mãi', icon: '↺', disabled: false },
+  ...(import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED==='true'?[{to:'/admin/reviews',label:'Đánh giá',icon:'☆'}]:[]),
 ];
 
 async function readError(error: unknown) {
@@ -1649,6 +1651,7 @@ function AdminConsole() {
             />
             <Route path="stores" element={<StorePage notify={showToast} />} />
             <Route path="store-applications" element={<StoreApplicationPage scope="ADMIN" />} />
+            <Route path="reviews" element={<ReviewPage scope="ADMIN" />} />
             <Route
               path="catalog"
               element={<CatalogPage notify={showToast} />}
