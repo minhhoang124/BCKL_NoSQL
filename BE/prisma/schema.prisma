@@ -166,6 +166,9 @@ model User {
   storeApplicationCommands StoreApplicationCommand[]
   sellerGrant             StoreSellerGrant? @relation("SellerGrantOwner")
   sellerGrantsApproved    StoreSellerGrant[] @relation("SellerGrantAdmin")
+  productReviewReplies    ProductReviewReply[]
+  productReviewAudits     ProductReviewAudit[]
+  productReviewCommands   ProductReviewCommand[]
 
   @@map("users")
 }
@@ -867,6 +870,8 @@ model OrderItem {
   stockMovements      StockMovement[]
   aftersaleRequests   AftersaleRequest[]
   refund              RefundRecord?
+  review              ProductReview?
+  reviewCommands      ProductReviewCommand[]
 
   @@unique([id, variantId])
   @@index([orderId])
@@ -874,6 +879,70 @@ model OrderItem {
   @@index([variantId])
   @@index([storeId])
   @@map("order_items")
+}
+
+model ProductReview {
+  id          Int @id @default(autoincrement())
+  orderItemId Int @unique
+  revision    Int @default(1)
+  rating      Int
+  body        String @db.VarChar(2000)
+  hidden      Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  reply       ProductReviewReply?
+  audits      ProductReviewAudit[]
+  @@index([hidden, id])
+  @@map("product_reviews")
+}
+
+model ProductReviewReply {
+  reviewId Int @id
+  actorId Int
+  body String @db.VarChar(2000)
+  createdAt DateTime @default(now())
+  review ProductReview @relation(fields: [reviewId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  @@map("product_review_replies")
+}
+
+model ProductReviewAudit {
+  id BigInt @id @default(autoincrement())
+  reviewId Int
+  actorId Int
+  revision Int
+  action String @db.VarChar(8)
+  rating Int
+  body String @db.VarChar(2000)
+  hidden Boolean
+  replyBody String? @db.VarChar(2000)
+  reason String? @db.VarChar(500)
+  createdAt DateTime @default(now())
+  review ProductReview @relation(fields: [reviewId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  command ProductReviewCommand?
+  @@unique([reviewId, revision])
+  @@map("product_review_audits")
+}
+
+model ProductReviewCommand {
+  id BigInt @id @default(autoincrement())
+  actorId Int
+  commandId String @db.Uuid
+  scope String @db.VarChar(8)
+  action String @db.VarChar(8)
+  orderItemId Int
+  requestHash String @db.VarChar(64)
+  outcome String @db.VarChar(8)
+  auditId BigInt? @unique
+  receipt Json?
+  createdAt DateTime @default(now())
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  audit ProductReviewAudit? @relation(fields: [auditId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  @@unique([actorId, commandId])
+  @@map("product_review_commands")
 }
 
 model Payment {

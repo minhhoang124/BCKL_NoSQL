@@ -18,6 +18,7 @@ import { ChatModule } from './chat/chat.controller.js';
 import { AftersalesModule } from './aftersales/aftersales-controller.js';
 import { DashboardModule } from './dashboard/dashboard.controller.js';
 import { StoreApplicationModule } from './store/application.controller.js';
+import { ReviewModule } from './review/review.controller.js';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { StoreApplicationModule } from './store/application.controller.js';
     AftersalesModule,
     DashboardModule,
     StoreApplicationModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [AppService],

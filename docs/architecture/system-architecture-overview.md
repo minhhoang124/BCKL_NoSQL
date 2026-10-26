@@ -1,5 +1,13 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Review Backend —26/10/2026, nhánh riêng từ `76a5d71`:** migration/API đánh
+giá OrderItem COMPLETED trong window mặc định30ngày; Seller reply một lần,
+Admin hide có audit; revision/idempotency/explicit reconcile, aggregate PG chỉ
+nội dung hiển thị. Refund không xóa Review. 1510unit và22HTTP/PG app-role đạt;
+full E2E cuối1003PASS/1SKIP/20TODO. Chưa Web Review/Chrome/thông báo, chưa tính toàn
+chức năng hoàn thành. [Contract](../api/product-review-runtime.md),
+[bằng chứng/giới hạn](../testing/product-review-2026-10-26.md).
+
 **Seller onboarding —26/10/2026, nhánh từ `169df59`:** User gửi hồ sơ,
 Admin từ chối/duyệt, Owner sửa/nộp lại cùng Store; cấp quyền Seller và thu hồi
 phiên cùng giao dịch, giữ Buyer capability. Có API/Web, revision/audit/grant,
