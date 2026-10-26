@@ -1,0 +1,15 @@
+{
+  "applicationCommit": "a49da9c319af1ddbea82ee7387d55d915acd735e",
+  "editorSha256": "135aadd77ef259c978faf9124ff0097145ff8da1a5d23a522ca3e5e0df4ac27c",
+  "environment": "Chrome headless / Vite / real Backend3014 / dedicated PostgreSQL22migrations",
+  "fixture": { "categoryId": 3, "definitionId": 113, "definitions": 105, "options": 105, "source": "direct SQL QA-only fixture" },
+  "unit": { "passed": 131, "files": 8, "newPaginationTests": 7 },
+  "live": [
+    { "case": "definitions100plus5", "result": "PASS", "afterId": 212, "uniqueRows": 105, "draftRetained": true, "exhaustedButtonHidden": true },
+    { "case": "options100plus5", "result": "PASS", "afterId": 210, "uniqueRows": 105, "draftRetained": true, "exhaustedButtonHidden": true },
+    { "case": "parentRevisionChangedBetweenOptionPages", "result": "PASS", "oldRevision": 108, "newRevision": 109, "mixedPageRejected": true, "draftRetained": true, "savesBlocked": true, "fixtureLabelRestored": true }
+  ],
+  "fourApiSmoke": { "result": "PASS", "definitionId": 218, "optionId": 216, "auditRevisions": [1,2,3,4], "sourceCommitVerified": "a49da9c319af1ddbea82ee7387d55d915acd735e" },
+  "productOrderTableFingerprintsUnchanged": true,
+  "limits": ["List is not an immutable cross-page snapshot", "No load/performance claim", "Search propagation NOT_RUN", "Physical mobile NOT_RUN", "Earlier session/fault tests retain their original source baseline"]
+}

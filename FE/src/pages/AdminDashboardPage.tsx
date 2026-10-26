@@ -16,6 +16,7 @@ import styles from './AdminDashboardPage.module.css';
 import { AdminAccountsReader } from '../features/admin-accounts/AdminAccountsReader';
 import { AdminAccountStatusWorkspace } from '../features/admin-accounts/AdminAccountStatusWorkspace';
 import { createAccountReadApi } from '../features/admin-accounts/accountReadApi';
+import { AdminCategoryAttributesEditor } from '../features/admin-category-attributes/AdminCategoryAttributesEditor';
 import { AdminSystemHealth } from '../features/admin-system-health/AdminSystemHealth';
 import { createSystemHealthApi } from '../features/admin-system-health/systemHealthApi';
 import { Dashboard } from '../features/dashboard/Dashboard';
@@ -1062,7 +1063,8 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
   const [form, setForm] = useState({ name: '', slug: '', parentId: '' });
   const [brandForm, setBrandForm] = useState({ name: '', slug: '' });
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState<'categories' | 'brands'>('categories');
+  const [tab, setTab] = useState<'categories' | 'brands' | 'attributes'>('categories');
+  const [attributeCategoryId, setAttributeCategoryId] = useState('');
   const [editorOpened, setEditorOpened] = useState(false);
   const [editorLocked, setEditorLocked] = useState(false);
   const [brandRevision, setBrandRevision] = useState(0);
@@ -1256,6 +1258,13 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
         >
           Thương hiệu <span>{brands.length}</span>
         </button>
+        <button
+          className={tab === 'attributes' ? styles.activeTab : ''}
+          disabled={catalogBusy}
+          onClick={() => setTab('attributes')}
+        >
+          Thuộc tính
+        </button>
       </div>
       {tab === 'categories' ? (
         <div className={styles.catalogGrid}>
@@ -1391,7 +1400,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
             </p>
           </section>
         </div>
-      ) : (
+      ) : tab === 'brands' ? (
         <div className={styles.catalogGrid}>
           <section className={styles.panel}>
             <div className={styles.panelHead}>
@@ -1478,6 +1487,18 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
             </p>
           </section>
         </div>
+      ) : (
+        <section className={styles.panel}>
+          <div className={styles.panelHead}><div><h2>Thuộc tính ngành hàng</h2><p>Chọn ngành hàng rồi quản lý định nghĩa và lựa chọn bằng API thật.</p></div></div>
+          <label className={styles.fieldLabel} htmlFor="attribute-category">Ngành hàng</label>
+          <select id="attribute-category" className={styles.input} disabled={catalogBusy || loading || !ready}
+            value={attributeCategoryId} onChange={event => setAttributeCategoryId(event.target.value)}>
+            <option value="">Chọn ngành hàng</option>
+            {categories.map(category => <option value={category.id} key={category.id}>{category.name} · #{category.id}</option>)}
+          </select>
+          {attributeCategoryId ? <AdminCategoryAttributesEditor key={attributeCategoryId} categoryId={Number(attributeCategoryId)} disabled={busy || loading || !ready}
+            onLockChange={onEditorLock} /> : <p className={styles.formHint}>Chưa chọn ngành hàng. Không có thao tác ghi nào được gửi.</p>}
+        </section>
       )}
       {/* Keep the editor mounted across Catalog tabs so drafts/unknown locks survive. */}
       {editorOpened && <div hidden={tab !== 'brands'}>

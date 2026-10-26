@@ -73,7 +73,7 @@ export function createAttributeReadApi(request: ReadRequester = fetchApi): Attri
     const combined = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(15000)]);
     combined.throwIfAborted();
     try {
-      const value = await request(path, { method: 'GET', cache: 'no-store', retryOnUnauthorized: false, signal: combined });
+      const value = await request(path, { method: 'GET', cache: 'no-store', retryOnUnauthorized: true, signal: combined });
       combined.throwIfAborted();
       if (getAuthSessionVersion() !== session) throw new AuthSessionChangedError();
       return value;

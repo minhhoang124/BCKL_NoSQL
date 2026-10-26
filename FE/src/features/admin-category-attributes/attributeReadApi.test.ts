@@ -8,12 +8,12 @@ const definitionFixture = (id = 1) => ({ id, categoryId: 12, name: `Thuộc tín
 const optionFixture = (id = 1) => ({ id, attributeDefinitionId: 1, value: `Lựa chọn ${id}`, slug: `lua-chon-${id}`, sortOrder: 0, isActive: false, referencedProductCount: 0 });
 afterEach(() => { setAccessToken(null); vi.restoreAllMocks(); });
 describe('Attributes read adapter', () => {
-  it('GET only, no cache/refresh, default includes inactive; preserves zero/false', async () => {
+  it('GET only, no cache, allows session refresh; preserves zero/false', async () => {
     const request = vi.fn().mockResolvedValue({ items: [definitionFixture()], nextCursor: null });
     const result = await createAttributeReadApi(request).list(12);
     expect(result.items[0].usage.referencedProductCount).toBe(0);
     expect(result.items[0].isRequired).toBe(false);
-    expect(request).toHaveBeenCalledWith('/admin/categories/12/attributes?limit=50', expect.objectContaining({ method: 'GET', cache: 'no-store', retryOnUnauthorized: false }));
+    expect(request).toHaveBeenCalledWith('/admin/categories/12/attributes?limit=50', expect.objectContaining({ method: 'GET', cache: 'no-store', retryOnUnauthorized: true }));
     expect(request.mock.calls[0][1].body).toBeUndefined();
   });
   it('serializes false and cursor and validates options ownership/revision', async () => {
