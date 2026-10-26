@@ -22,6 +22,19 @@ class HashGuardTests(unittest.TestCase):
     def test_valid_bytes(self):
         self.assertEqual(verify_hashes(self.root), 1)
 
+    def test_portable_nested_posix_paths(self):
+        (self.root / "runtime").mkdir()
+        (self.root / "runtime" / "nested.json").write_bytes(b"{}\n")
+        self.manifest({"sample.json": self.digest, "runtime/nested.json": self.digest})
+        self.assertEqual(verify_hashes(self.root), 2)
+
+    def test_portable_manifest_rejects_backslash(self):
+        (self.root / "runtime").mkdir()
+        (self.root / "runtime" / "nested.json").write_bytes(b"{}\n")
+        self.manifest({"sample.json": self.digest, "runtime\\nested.json": self.digest})
+        with self.assertRaises(AssertionError):
+            verify_hashes(self.root)
+
     def test_changed_bytes_fail(self):
         (self.root / "sample.json").write_text('{"changed":true}\n')
         with self.assertRaises(AssertionError):

@@ -61,8 +61,8 @@ Những đường dẫn dưới là chỗ thay bằng đường dẫn tuyệt đ
 ```sh
 python3 scripts/qa/run_search_live.py \
   --checkout /absolute/source-checkout \
-  --head 06eb4fd072c409a173ee2b239ef9c8c364bade9e \
-  --run-name qa20261023a \
+  --head FULL_SOURCE_COMMIT_SHA \
+  --run-name qa20261025a \
   --output /absolute/new-evidence-directory \
   --python /absolute/AI_CLIP/.venv/bin/python \
   --image /absolute/query-fixture.jpg \
@@ -71,11 +71,13 @@ python3 scripts/qa/run_search_live.py \
   --pg-container dat-search-live-qa-local
 ```
 
-Để kiểm gateway #102: checkout đúng
-`3cc0e9fe961062cfb5eb1b94186b91006d41e724`, đổi `--head` tương ứng, thêm
-`--image-gateway`, dùng **run-name/output mới**. Không cherry-pick gateway lên
-develop rồi vẫn ghi bằng chứng là develop nguyên bản. Khi kiểm commit khác,
-ghi đúng SHA40hex và trạng thái mới, không tiếp tục nhận bằng chứng23/10.
+Thay `FULL_SOURCE_COMMIT_SHA` bằng SHA40hex từ `git rev-parse HEAD` trong
+checkout nguồn, không phải SHA của bộ công cụ nếu dùng hai checkout khác nhau.
+Để kiểm gateway ảnh trên commit đã có #102, thêm `--image-gateway`, dùng
+**run-name/output mới**. `3cc0e9fe961062cfb5eb1b94186b91006d41e724` và
+`06eb4fd072c409a173ee2b239ef9c8c364bade9e` chỉ là các source lịch sử đã báo cáo.
+Không cherry-pick gateway lên develop rồi ghi là develop nguyên bản, hoặc dùng
+kết quả lịch sử để nhận commit mới đã đạt.
 
 Runner tự migrate/generate/build, tạo FAISS `IndexIDMap2(IndexFlatIP(512))` rỗng,
 khởi động FastAPI/model thật và ES mới, chạy Nest/HTTP thật, rồi dừng dịch vụ.
@@ -88,7 +90,7 @@ ES proxy chỉ chuyển tiếp hoặc ngắt TCP; không giả ACK thành công.
 
 | Nhóm | Điều kiện đạt |
 | --- | --- |
-| Khởi tạo | 17migrations, role false:false:false; CLIP và FAISS tải, vectorCount0 |
+| Khởi tạo | Toàn bộ migration đúng tên/checksum của commit nguồn, không thiếu/thừa/lỗi; role false:false:false; CLIP và FAISS tải, vectorCount0 |
 | UPSERT | Hai productId do PostgreSQL sinh xuất hiện đúng ở ES/FAISS512, không trùng |
 | Image candidate | JPEG/PNG200; ảnh hỏng400; GIF415; AI ngắt kết nối503; no-store; không đổi các hàng nghiệp vụ đã snapshot |
 | Stale image | AI vẫn trả Product A bị ẩn bằng fixture SQL; Backend loại A, giữ B trước khi index cập nhật |
@@ -98,7 +100,7 @@ ES proxy chỉ chuyển tiếp hoặc ngắt TCP; không giả ACK thành công.
 | STALE | Giữ lịch gửi Bv2 trước dispatch, Bv3 tới trước; v2 đến muộn trảSTALE,byte FAISS/state và docsES không đổi |
 | DELETE/tombstone | Store fixture SUSPENDED rồi hủy → DELETE v5; ES/FAISS bỏ A; UPSERT v3 cũ không hồi sinh |
 
-Đây là6nhóm trên develop,8nhóm khi thêm image gateway, **không phải số test
+Đây là6nhóm cơ bản,8nhóm khi thêm `--image-gateway`, **không phải số test
 toàn repo**. Mutation fixture SQL về visibility/Store là fault setup có nhãn,
 không thay test Seller/Admin HTTP của các suite khác. Mọi purchase/cancel và
 Outbox→AI→hai index đều thật.
@@ -106,7 +108,8 @@ Outbox→AI→hai index đều thật.
 ## Kiểm tra và bàn giao
 
 ```sh
-python3 scripts/qa/verify_search_live.py /absolute/new-evidence-directory
+python3 scripts/qa/verify_search_live.py /absolute/new-evidence-directory \
+  --checkout /absolute/source-checkout --head FULL_SOURCE_COMMIT_SHA
 python3 -m unittest discover -s scripts/qa -p 'test_*.py' -v
 node --check scripts/qa/search-live.mjs
 ```
@@ -115,6 +118,19 @@ Output có `manifest.json` (khác publication run-manifest của #25), log lện
 snapshot DB allowlist, trace HTTP không token/ảnh multipart, proof ID/hash/state,
 runtime FAISS và `SHA256SUMS.json`. Verifier đối chiếu các file/invariants đã lưu,
 không là chữ ký của bên thứ ba hoặc thay cho chạy lại dịch vụ.
+
+Runner mới ghi `migration-provenance.json`: danh sách migration và SHA-256 SQL
+từ Git commit `--head`, cùng tên/checksum/trạng thái thực trong `_prisma_migrations`.
+Không cố định 17, 19 hay 25. Verifier đọc lại đúng Git object của SHA đã kiểm,
+không lấy số migration từ HEAD hiện tại hoặc chỉ tin vào tổng tự khai trong JSON.
+Máy nhận cần có commit đó trong checkout/repository Git (fetch trước nếu thiếu).
+SQL checkout được đối chiếu trước khi mở Docker; chỉ chấp nhận byte Git hoặc
+chuyển LF sang CRLF của checkout sạch, không chấp nhận sửa nội dung SQL.
+Thiếu/thừa/trùng tên, checksum sai, migration chưa xong/đã rollback đều bị từ chối.
+
+Gói lịch sử không có provenance này phải kiểm bằng verifier lịch sử tương ứng,
+hoặc chạy một lượt mới bằng runner mới. Không tự thêm provenance, đổi số 17
+thành số hiện tại hoặc sửa hash gói cũ để nhận đó là bằng chứng mới.
 
 Giữ nguyên gói lỗi và gói đạt riêng, không ghi đè để làm xanh. Runner giữ DB,
 container ES đã dừng, FAISS/state/output để kiểm chứng; không tự xóa dữ liệu.

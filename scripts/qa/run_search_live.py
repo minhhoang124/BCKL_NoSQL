@@ -14,6 +14,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from migration_provenance import source_inventory, verify_migrations
+
 if sys.flags.optimize:
     raise RuntimeError("QA safety checks require Python without -O/PYTHONOPTIMIZE")
 
@@ -41,6 +43,7 @@ assert (
     == args.head
 )
 assert all(not (root / p).exists() for p in [".env", "BE/.env", "AI_CLIP/.env"])
+expected_migrations = source_inventory(root, args.head)
 for p in [args.python, args.image, args.image_model, args.text_model]:
     assert p.exists(), "An explicit external dependency is missing"
 image_revision = args.image_model.name
@@ -139,7 +142,7 @@ def command(label, argv, cwd=root):
     )
     raw = redact(p.stdout + p.stderr)
     record = f"HEAD={args.head}\nCOMMAND={' '.join(map(str, argv))}\n{raw}\nEXIT_STATUS={p.returncode}\nSECONDS={time.monotonic() - start:.2f}\n"
-    (output / (label + ".log")).write_text(record)
+    (output / (label + ".log")).write_text(record, encoding="utf-8")
     print(f"END {label} exit={p.returncode}", flush=True)
     print(raw[-3000:], flush=True)
     if p.returncode:
@@ -318,15 +321,28 @@ try:
         ],
     )
     command("live-search", ["node", str(kit / "search-live.mjs")])
-    summary = {
+    migration_proof = {
+        "schemaVersion": 1,
         "sourceCommit": args.head,
-        "database": database,
-        "migrations": int(
+        "expected": expected_migrations,
+        "applied": json.loads(
             admin(
-                "SELECT count(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL;",
+                "SELECT coalesce(json_agg(json_build_object('name',migration_name,"
+                "'checksum',checksum,'finished',finished_at IS NOT NULL,"
+                "'rolledBack',rolled_back_at IS NOT NULL) ORDER BY migration_name), '[]')"
+                " FROM _prisma_migrations;",
                 database,
             )
         ),
+    }
+    migration_count = verify_migrations(migration_proof, root, args.head)
+    (output / "migration-provenance.json").write_text(
+        json.dumps(migration_proof, indent=2) + "\n", encoding="utf-8"
+    )
+    summary = {
+        "sourceCommit": args.head,
+        "database": database,
+        "migrations": migration_count,
         "roleFlags": admin(
             f"SELECT rolsuper || ':' || rolcreatedb || ':' || rolcreaterole FROM pg_roles WHERE rolname='{role}';"
         ),
@@ -359,8 +375,10 @@ finally:
             print(f"STOP {name} exit={p.returncode}", flush=True)
     # Preserve DBs, indexes, fault evidence and stopped containers for inspection.
     hashes = {
-        str(p.relative_to(output)): hashlib.sha256(p.read_bytes()).hexdigest()
+        p.relative_to(output).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in sorted(output.rglob("*"))
         if p.is_file() and p.name != "SHA256SUMS.json"
     }
-    (output / "SHA256SUMS.json").write_text(json.dumps(hashes, indent=2) + "\n")
+    (output / "SHA256SUMS.json").write_text(
+        json.dumps(hashes, indent=2) + "\n", encoding="utf-8"
+    )

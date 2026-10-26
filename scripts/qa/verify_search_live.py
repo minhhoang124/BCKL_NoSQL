@@ -1,9 +1,11 @@
 """Verify a local Search evidence directory, not retrieval quality or Web acceptance."""
 
+import argparse
 import hashlib
 import json
-import sys
 from pathlib import Path
+
+from migration_provenance import verify_migrations
 
 
 def read(root, name):
@@ -17,9 +19,11 @@ def verify_hashes(root):
     expected = set()
     for relative, digest in hashes.items():
         target = root / relative
-        assert not Path(relative).is_absolute() and ".." not in Path(relative).parts, (
-            "Unsafe evidence path"
-        )
+        assert (
+            "\\" not in relative
+            and not Path(relative).is_absolute()
+            and ".." not in Path(relative).parts
+        ), "Unsafe evidence path"
         assert target.is_file() and not target.is_symlink(), (
             "Missing or symlink evidence"
         )
@@ -29,7 +33,7 @@ def verify_hashes(root):
         )
         expected.add(relative)
     actual = {
-        str(p.relative_to(root))
+        p.relative_to(root).as_posix()
         for p in root.rglob("*")
         if p.is_file() and p.name != "SHA256SUMS.json"
     }
@@ -37,7 +41,7 @@ def verify_hashes(root):
     return len(hashes)
 
 
-def verify(root):
+def verify(root, checkout=None, expected_head=None):
     root = Path(root)
     count = verify_hashes(root)
     manifest = read(root, "manifest")
@@ -47,7 +51,20 @@ def verify(root):
     assert len(ids) == 2 and len(set(ids)) == 2
     assert manifest["result"] == summary["status"] == "PASS"
     assert summary["sourceCommit"] == manifest["sourceCommit"]
-    assert summary["migrations"] == 17 and summary["roleFlags"] == "false:false:false"
+    source_head = expected_head or manifest["sourceCommit"]
+    assert manifest["sourceCommit"] == source_head, "Unexpected source commit"
+    assert (root / "migration-provenance.json").is_file(), (
+        "Missing migration provenance; rerun new runner, do not relabel historical evidence"
+    )
+    migration_count = verify_migrations(
+        read(root, "migration-provenance"),
+        checkout or Path(__file__).resolve().parents[2],
+        source_head,
+    )
+    assert (
+        type(summary["migrations"]) is int and summary["migrations"] == migration_count
+    )
+    assert summary["roleFlags"] == "false:false:false"
     assert manifest["precisionRecallCalculated"] is False
     required = {
         "initial_outbox_to_real_dual_index",
@@ -124,7 +141,7 @@ def verify(root):
     )
     assert retries[0]["request"] == retries[1]["request"] == retries[2]["request"]
     assert retries[2]["response"]["outcome"] == "STALE"
-    assert "EXIT_STATUS=0" in (root / "live-search.log").read_text()
+    assert "EXIT_STATUS=0" in (root / "live-search.log").read_text(encoding="utf-8")
     return {
         "status": "PASS",
         "sourceCommit": manifest["sourceCommit"],
@@ -135,4 +152,13 @@ def verify(root):
 
 
 if __name__ == "__main__":
-    print(json.dumps(verify(Path(sys.argv[1])), ensure_ascii=False))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("evidence", type=Path)
+    parser.add_argument("--checkout", type=Path)
+    parser.add_argument(
+        "--head", help="Expected full commit SHA of the tested application"
+    )
+    args = parser.parse_args()
+    print(
+        json.dumps(verify(args.evidence, args.checkout, args.head), ensure_ascii=False)
+    )
