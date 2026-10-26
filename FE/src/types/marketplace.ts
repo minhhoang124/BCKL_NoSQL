@@ -5,6 +5,7 @@ export interface Store {
   name: string;
   description: string | null;
   status: StoreStatus;
+  application?: { revision: number } | null;
   seller?: { id: number; email: string; fullName: string | null };
   statusHistory?: Array<{ id: number; toStatus: StoreStatus; reason: string | null; createdAt: string }>;
 }

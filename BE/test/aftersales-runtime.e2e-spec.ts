@@ -49,6 +49,7 @@ describe('Aftersales HTTP/PostgreSQL runtime and command fences', () => {
           '/bckl_order_resolution_test_attributes_20261019_v950',
           '/bckl_order_resolution_test_attributes_20261019_v951',
           '/bckl_order_resolution_test_attributes_20261019_v952',
+          '/bckl_order_resolution_test_attributes_20261019_v953',
         ].includes(url.pathname)
       ) &&
       !(

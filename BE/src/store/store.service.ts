@@ -11,6 +11,10 @@ import { SearchReconciliationService } from '../search/search-reconciliation.ser
 import { CreateStoreDto } from './dto/create-store.dto.js';
 import { ReviewStoreDto } from './dto/review-store.dto.js';
 import { UpdateStoreDto } from './dto/update-store.dto.js';
+import { onboardingEnabled } from './application-input.js';
+import type { AuthenticatedUser } from '../auth/auth.types.js';
+import { credentialMatches } from '../auth/credential-version.js';
+import { UnauthorizedException } from '@nestjs/common';
 
 @Injectable()
 export class StoreService {
@@ -20,6 +24,10 @@ export class StoreService {
   ) {}
 
   async createForSeller(sellerId: number, dto: CreateStoreDto) {
+    if (onboardingEnabled())
+      throw new ConflictException({
+        code: 'STORE_APPLICATION_WORKFLOW_REQUIRED',
+      });
     try {
       return await this.prisma.$transaction(async (tx) => {
         const store = await tx.store.create({
@@ -55,7 +63,7 @@ export class StoreService {
   async getForSeller(sellerId: number) {
     const store = await this.prisma.store.findUnique({
       where: { sellerId },
-      include: { statusHistory: { orderBy: { createdAt: 'asc' } } },
+      include: { statusHistory: { orderBy: { createdAt: 'asc' } }, application:{select:{revision:true}} },
     });
     if (!store) throw new NotFoundException('Seller chưa có cửa hàng');
     return store;
@@ -66,55 +74,83 @@ export class StoreService {
       include: {
         seller: { select: { id: true, email: true, fullName: true } },
         statusHistory: { orderBy: { createdAt: 'asc' } },
+        application:{select:{revision:true}},
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     });
   }
 
-  async updateForSeller(sellerId: number, dto: UpdateStoreDto) {
+  async updateForSeller(
+    sellerId: number,
+    dto: UpdateStoreDto,
+    identity?: AuthenticatedUser,
+  ) {
     if (dto.name === undefined && dto.description === undefined) {
       throw new BadRequestException('Cần ít nhất một trường để cập nhật');
     }
 
-    const result = await this.prisma.store.updateMany({
-      where: {
-        sellerId,
-        status: {
-          in: [StoreStatus.PENDING, StoreStatus.REJECTED, StoreStatus.ACTIVE],
-        },
+    return this.prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`SET LOCAL lock_timeout = '1s'`;
+        // The same first-submit User latch closes the absent-Store TOCTOU gap.
+        await tx.$queryRaw`SELECT id FROM users WHERE id=${sellerId} FOR UPDATE`;
+        const owner = await tx.user.findUnique({ where: { id: sellerId } });
+        if (
+          !owner?.isActive ||
+          owner.role !== 'SELLER' ||
+          (identity &&
+            !credentialMatches(
+              identity.credentialVersion,
+              owner.credentialVersion,
+            ))
+        )
+          throw new UnauthorizedException();
+        const current = await tx.store.findUnique({
+          where: { sellerId },
+          include: { application: { select: { storeId: true } } },
+        });
+        if (!current) throw new NotFoundException('Seller chưa có cửa hàng');
+        await tx.$queryRaw`SELECT id FROM stores WHERE id=${current.id} FOR UPDATE`;
+        const latest = await tx.store.findUniqueOrThrow({
+          where: { id: current.id },
+          include: { application: { select: { storeId: true } } },
+        });
+        if (latest.application)
+          throw new ConflictException({
+            code: 'STORE_APPLICATION_WORKFLOW_REQUIRED',
+          });
+        if (
+          latest.status === StoreStatus.SUSPENDED ||
+          latest.status === StoreStatus.CLOSED
+        )
+          throw new ForbiddenException(
+            'Store đang bị khóa hoặc đã đóng, Seller không thể tự cập nhật',
+          );
+        return tx.store.update({
+          where: { id: latest.id },
+          data: {
+            ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
+            ...(dto.description !== undefined
+              ? { description: this.normalizeOptionalText(dto.description) }
+              : {}),
+          },
+        });
       },
-      data: {
-        ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
-        ...(dto.description !== undefined
-          ? { description: this.normalizeOptionalText(dto.description) }
-          : {}),
-      },
-    });
-    if (result.count === 0) {
-      const current = await this.prisma.store.findUnique({
-        where: { sellerId },
-        select: { status: true },
-      });
-      if (!current) throw new NotFoundException('Seller chưa có cửa hàng');
-      if (
-        current.status === StoreStatus.SUSPENDED ||
-        current.status === StoreStatus.CLOSED
-      ) {
-        throw new ForbiddenException(
-          'Store đang bị khóa hoặc đã đóng, Seller không thể tự cập nhật',
-        );
-      }
-      throw new ConflictException(
-        'Trạng thái Store vừa thay đổi, vui lòng tải lại và thử lại',
-      );
-    }
-    return this.prisma.store.findUniqueOrThrow({ where: { sellerId } });
+      { maxWait: 2000, timeout: 5000 },
+    );
   }
 
   async resubmit(sellerId: number) {
     return this.prisma.$transaction(async (tx) => {
-      const store = await tx.store.findUnique({ where: { sellerId } });
+      const store = await tx.store.findUnique({
+        where: { sellerId },
+        include: { application: { select: { storeId: true } } },
+      });
       if (!store) throw new NotFoundException('Seller chưa có cửa hàng');
+      if (store.application)
+        throw new ConflictException({
+          code: 'STORE_APPLICATION_WORKFLOW_REQUIRED',
+        });
       if (store.status !== StoreStatus.REJECTED) {
         throw new ConflictException(
           'Chỉ Store bị từ chối mới được nộp lại để duyệt',
@@ -149,8 +185,15 @@ export class StoreService {
     }
 
     const result = await this.prisma.$transaction(async (tx) => {
-      const store = await tx.store.findUnique({ where: { id: storeId } });
+      const store = await tx.store.findUnique({
+        where: { id: storeId },
+        include: { application: { select: { storeId: true } } },
+      });
       if (!store) throw new NotFoundException('Không tìm thấy Store');
+      if (store.application)
+        throw new ConflictException({
+          code: 'STORE_APPLICATION_WORKFLOW_REQUIRED',
+        });
       if (!this.isAllowedAdminTransition(store.status, dto.status)) {
         throw new ConflictException(
           `Không thể chuyển Store từ ${store.status} sang ${dto.status}`,

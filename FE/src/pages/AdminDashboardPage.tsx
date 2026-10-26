@@ -21,6 +21,7 @@ import { AdminSystemHealth } from '../features/admin-system-health/AdminSystemHe
 import { createSystemHealthApi } from '../features/admin-system-health/systemHealthApi';
 import { Dashboard } from '../features/dashboard/Dashboard';
 import { AftersalesPage } from '../features/aftersales/AftersalesPage';
+import { StoreApplicationPage } from '../features/seller-onboarding/StoreApplicationPage';
 
 const accountsReadApi = createAccountReadApi();
 const systemHealthApi = createSystemHealthApi();
@@ -66,6 +67,7 @@ type StoreRecord = {
   name: string;
   description?: string | null;
   status: string;
+  application?: { revision: number } | null;
   seller?: { email?: string; fullName?: string | null };
   statusHistory?: Array<{
     fromStatus?: string;
@@ -97,6 +99,7 @@ const navItems = [
   { to: '/admin', label: 'Tổng quan', icon: '▦', end: true },
   { to: '/admin/products', label: 'Duyệt sản phẩm', icon: '◇' },
   { to: '/admin/stores', label: 'Cửa hàng', icon: '⌂' },
+  ...(import.meta.env.VITE_SELLER_ONBOARDING_ENABLED==='true'?[{to:'/admin/store-applications',label:'Duyệt mở Store',icon:'▣'}]:[]),
   { to: '/admin/catalog', label: 'Danh mục & thương hiệu', icon: '▤' },
   { to: '/admin/users', label: 'Tài khoản', icon: '◎' },
   { to: '/admin/system-health', label: 'Sức khỏe hệ thống', icon: '◉' },
@@ -925,7 +928,8 @@ function StorePage({ notify }: { notify: (toast: Toast) => void }) {
               }
             />
             <div className={styles.storeActions}>
-              {store.status === 'PENDING' && (
+              {store.application && <Link to={`/admin/store-applications?storeId=${store.id}`}>Mở hồ sơ và quyết định có kiểm tra phiên bản</Link>}
+              {!store.application && store.status === 'PENDING' && (
                 <>
                   <button
                     className={styles.approveButton}
@@ -943,7 +947,7 @@ function StorePage({ notify }: { notify: (toast: Toast) => void }) {
                   </button>
                 </>
               )}
-              {store.status === 'ACTIVE' && (
+              {!store.application && store.status === 'ACTIVE' && (
                 <button
                   className={styles.rejectButton}
                   disabled={busyId !== null || loading || needsReload}
@@ -952,7 +956,7 @@ function StorePage({ notify }: { notify: (toast: Toast) => void }) {
                   Tạm khóa
                 </button>
               )}
-              {store.status === 'SUSPENDED' && (
+              {!store.application && store.status === 'SUSPENDED' && (
                 <button
                   className={styles.approveButton}
                   disabled={busyId !== null || loading || needsReload}
@@ -961,7 +965,7 @@ function StorePage({ notify }: { notify: (toast: Toast) => void }) {
                   Mở lại hoạt động
                 </button>
               )}
-              {store.status === 'REJECTED' && (
+              {!store.application && store.status === 'REJECTED' && (
                 <p className={styles.formHint}>
                   Chờ người bán chỉnh sửa và nộp lại hồ sơ.
                 </p>
@@ -1644,6 +1648,7 @@ function AdminConsole() {
               element={<ProductReviewPage notify={showToast} />}
             />
             <Route path="stores" element={<StorePage notify={showToast} />} />
+            <Route path="store-applications" element={<StoreApplicationPage scope="ADMIN" />} />
             <Route
               path="catalog"
               element={<CatalogPage notify={showToast} />}

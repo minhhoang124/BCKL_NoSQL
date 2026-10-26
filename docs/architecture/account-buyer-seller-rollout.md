@@ -1,5 +1,11 @@
 # Một tài khoản mua và bán — chuyển đổi theo từng đợt
 
+**26/10/2026 — onboarding runtime đang triển khai trên nhánh riêng từ169df59:**
+Application/grant/revision/command recovery, đăng ký mode mới không tự cấp SELLER;
+duyệt atomic Store/role/session/Search. Không tự backfill legacy. Cần QA Web,
+review đúng mã và gate trước tích hợp. [Contract/rollout](../api/seller-onboarding-runtime.md),
+[thiết kế](seller-onboarding-runtime.md). Các phần ngày23/10 phía dưới là lịch sử.
+
 Ngày 23/10/2026. Yêu cầu đã chốt `SCOPE-ROLE-001`, không đề nghị bỏ hoặc hạ P0.
 Nền triển khai `develop 06eb4fd`. Hoàng phụ trách, Hiền review Auth/dữ liệu/nghiệp vụ;
 Đạt review khi đổi điều kiện public/index. Không sửa các PR đang chờ review.

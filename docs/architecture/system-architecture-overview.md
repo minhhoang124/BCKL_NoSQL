@@ -1,5 +1,14 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Seller onboarding —26/10/2026, nhánh từ `169df59`:** User gửi hồ sơ,
+Admin từ chối/duyệt, Owner sửa/nộp lại cùng Store; cấp quyền Seller và thu hồi
+phiên cùng giao dịch, giữ Buyer capability. Có API/Web, revision/audit/grant,
+đối chiếu sau timeout; legacy Store giữ luồng cũ. 1466 unit, 981 E2E
+(1 SKIP/20 TODO), 22 HTTP app-role, 36 FE tập trung và 9 nhóm Chrome đạt.
+Chỉ coi tích hợp sau merge; rollout mặc định tắt, chưa KYC/thuế/ngân hàng thật.
+[Thiết kế](seller-onboarding-runtime.md),
+[bằng chứng/giới hạn](../testing/seller-onboarding-2026-10-26.md).
+
 **Hậu mãi Web —26/10/2026, nhánh tích hợp trên `428700b`:** Buyer tạo/rút/khiếu
 nại, Seller quyết định, Admin xử lý bất đồng và nhận hàng; lịch sử, biên nhận
 mô phỏng và phục hồi có đồng ý, không tự replay ghi. Full FE1423PASS/6liveSKIP,

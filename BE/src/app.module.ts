@@ -17,6 +17,7 @@ import { AdminSystemHealthModule } from './health/admin-system-health.module.js'
 import { ChatModule } from './chat/chat.controller.js';
 import { AftersalesModule } from './aftersales/aftersales-controller.js';
 import { DashboardModule } from './dashboard/dashboard.controller.js';
+import { StoreApplicationModule } from './store/application.controller.js';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { DashboardModule } from './dashboard/dashboard.controller.js';
     ChatModule,
     AftersalesModule,
     DashboardModule,
+    StoreApplicationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

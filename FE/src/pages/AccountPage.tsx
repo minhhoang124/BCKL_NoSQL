@@ -21,6 +21,7 @@ export function AccountPage() {
         {hasBuyerAccess(user) && <p><Link to="/account/addresses">Quản lý địa chỉ nhận hàng</Link></p>}
         {hasBuyerAccess(user) && <p><Link to="/account/orders">Đơn mua của tôi</Link></p>}
         {hasBuyerAccess(user) && <p><Link to="/account/aftersales">Yêu cầu hậu mãi của tôi</Link></p>}
+        {user.role!=='ADMIN' && (user.role==='SELLER'||import.meta.env.VITE_SELLER_ONBOARDING_ENABLED==='true') && <p><Link to="/account/store-application">Đăng ký / quản lý hồ sơ Store</Link></p>}
       </div>
       {import.meta.env.VITE_ACCOUNT_SETTINGS_ENABLED === 'true' && <AccountSettings />}
     </div>

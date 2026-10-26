@@ -51,7 +51,7 @@ export class StoreController {
   @ApiNotFoundResponse({ description: 'Seller chưa có cửa hàng' })
   @Patch()
   update(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateStoreDto) {
-    return this.stores.updateForSeller(user.userId, dto);
+    return this.stores.updateForSeller(user.userId, dto, user);
   }
 
   @ApiOkResponse({ description: 'Store bị từ chối đã được nộp lại để duyệt' })

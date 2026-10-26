@@ -23,6 +23,7 @@ import type {
 import { LoginDto } from './dto/login.dto.js';
 import { PublicAccountType, RegisterDto } from './dto/register.dto.js';
 import { credentialMatches } from './credential-version.js';
+import { onboardingEnabled } from '../store/application-input.js';
 import {
   accountStatusInput,
   type AccountStatusInput,
@@ -77,7 +78,7 @@ export class AuthService {
           passwordHash,
           fullName: dto.fullName?.trim(),
           role:
-            dto.accountType === PublicAccountType.SELLER
+            !onboardingEnabled() && dto.accountType === PublicAccountType.SELLER
               ? Role.SELLER
               : Role.USER,
         },

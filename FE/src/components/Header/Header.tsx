@@ -50,6 +50,7 @@ export function Header() {
             {hasBuyerAccess(user) && <Link to="/cart">Giỏ hàng</Link>}
             {import.meta.env.VITE_CHAT_ENABLED === 'true' && user.role !== 'ADMIN' && <Link to="/messages">Tin nhắn</Link>}
             {user.role === 'SELLER' && <Link to="/seller">Kênh người bán</Link>}
+            {user.role === 'USER' && import.meta.env.VITE_SELLER_ONBOARDING_ENABLED === 'true' && <Link to="/account/store-application">Mở Store</Link>}
             {user.role === 'ADMIN' && <Link to="/admin">Quản trị</Link>}
             <button
               type="button"

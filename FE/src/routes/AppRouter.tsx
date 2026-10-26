@@ -24,6 +24,7 @@ import { CheckoutPage } from '../features/order-flow/CheckoutPage';
 import { OrderReadPage } from '../features/order-readiness/OrderReadPages';
 import { ChatPage } from '../features/chat/ChatPage';
 import { AftersalesPage } from '../features/aftersales/AftersalesPage';
+import { StoreApplicationPage } from '../features/seller-onboarding/StoreApplicationPage';
 
 export function AppRouter() {
   return (
@@ -90,6 +91,7 @@ export function AppRouter() {
 
         <Route path="/account/orders" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><OrderReadPage scope="buyer" /></ProtectedRoute>} />
         <Route path="/account/aftersales" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><AftersalesPage scope="BUYER" /></ProtectedRoute>} />
+        <Route path="/account/store-application" element={<ProtectedRoute allowedRoles={['USER','SELLER']}><StoreApplicationPage /></ProtectedRoute>} />
         <Route path="/seller/aftersales" element={<ProtectedRoute allowedRoles={['SELLER']}><AftersalesPage scope="SELLER" /></ProtectedRoute>} />
         <Route path="/account/orders/:orderId" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><OrderReadPage scope="buyer" detail /></ProtectedRoute>} />
         <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" /></ProtectedRoute>} />

@@ -162,6 +162,10 @@ model User {
   chatConversations       ChatConversation[]
   chatMessages            ChatMessage[]
   chatReadStates          ChatReadState[]
+  storeApplicationAudits  StoreApplicationAudit[]
+  storeApplicationCommands StoreApplicationCommand[]
+  sellerGrant             StoreSellerGrant? @relation("SellerGrantOwner")
+  sellerGrantsApproved    StoreSellerGrant[] @relation("SellerGrantAdmin")
 
   @@map("users")
 }
@@ -303,9 +307,85 @@ model Store {
   statusHistory     StoreStatusHistory[]
   orders            Order[]
   chatConversations ChatConversation[]
+  application       StoreApplication?
+  sellerGrant       StoreSellerGrant?
 
+  @@unique([id, sellerId], map: "stores_id_sellerId_key")
   @@index([status])
   @@map("stores")
+}
+
+model StoreApplication {
+  storeId       Int @id
+  revision      Int @default(1)
+  contactName   String @db.VarChar(100)
+  contactPhone  String @db.VarChar(20)
+  pickupAddress String @db.VarChar(500)
+  returnAddress String @db.VarChar(500)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  store         Store @relation(fields: [storeId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  audits        StoreApplicationAudit[]
+  commands      StoreApplicationCommand[]
+
+  @@map("store_applications")
+}
+
+model StoreApplicationAudit {
+  id           BigInt @id @default(autoincrement())
+  storeId      Int
+  actorId      Int
+  action       String @db.VarChar(12)
+  fromRevision Int
+  toRevision   Int
+  fromStatus   StoreStatus?
+  toStatus     StoreStatus
+  reason       String @db.VarChar(500)
+  createdAt    DateTime @default(now())
+  application  StoreApplication @relation(fields: [storeId], references: [storeId], onDelete: Restrict, onUpdate: NoAction)
+  actor        User @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  command      StoreApplicationCommand?
+  grant        StoreSellerGrant?
+
+  @@unique([storeId, toRevision])
+  @@map("store_application_audits")
+}
+
+model StoreSellerGrant {
+  storeId    Int @id
+  ownerId    Int @unique
+  adminId    Int
+  auditId    BigInt @unique
+  promoted   Boolean
+  createdAt  DateTime @default(now())
+  store      Store @relation(fields: [storeId, ownerId], references: [id, sellerId], onDelete: Restrict, onUpdate: NoAction, map: "store_grant_owner_fk")
+  owner      User @relation("SellerGrantOwner", fields: [ownerId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  admin      User @relation("SellerGrantAdmin", fields: [adminId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  audit      StoreApplicationAudit @relation(fields: [auditId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([storeId, ownerId])
+  @@map("store_seller_grants")
+}
+
+model StoreApplicationCommand {
+  id          BigInt @id @default(autoincrement())
+  actorId     Int
+  commandId   String @db.Uuid
+  scope       String @db.VarChar(8)
+  action      String @db.VarChar(12)
+  targetId    Int
+  requestHash String @db.VarChar(64)
+  outcome     String @db.VarChar(8)
+  storeId     Int?
+  auditId     BigInt? @unique
+  receipt     Json?
+  createdAt   DateTime @default(now())
+  actor       User @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  application StoreApplication? @relation(fields: [storeId], references: [storeId], onDelete: Restrict, onUpdate: NoAction)
+  audit       StoreApplicationAudit? @relation(fields: [auditId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([actorId, commandId])
+  @@map("store_application_commands")
 }
 
 model StoreStatusHistory {
