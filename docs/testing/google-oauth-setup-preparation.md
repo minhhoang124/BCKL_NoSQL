@@ -1,8 +1,9 @@
 # Chuẩn bị Google OAuth — 27/10/2026
 
-**Trạng thái: chưa triển khai runtime Google trong #127; nhóm chưa tạo Client
-ID.** Không dùng kết quả mock hoặc review AI để nhận nghiệm thu đăng nhập
-Google. Tài liệu này chuẩn bị phần Auth P1 tiếp theo, không thay đổi SRS.
+**Cập nhật 27/10:** #127 đã merge; nhóm đã tạo Client ID, giữ secret riêng và
+đăng nhập Google thật trên nhánh OAuth kế tiếp. Xem [runtime/QA](google-oauth-2026-10-27.md).
+Các mục dưới là checklist cấu hình và thiết kế; không thay đổi SRS hoặc nhận
+nghiệm thu production bằng kết quả mock/review AI.
 
 ## Nhóm chuẩn bị trên Google Cloud
 
@@ -11,8 +12,8 @@ Google. Tài liệu này chuẩn bị phần Auth P1 tiếp theo, không thay đ
 2. Tạo OAuth Client loại **Web application**. Chỉ xin `openid email profile`;
    đăng nhập không cần quyền Gmail/Drive, offline access hoặc Google refresh token.
 3. Backend repo mặc định cổng **3001**, không có prefix `/api/v1`. Đích callback
-   dự kiến `http://localhost:3001/auth/google/callback`; đây là **đề xuất cho PR
-   runtime sau**, chưa phải route đang có. Đăng ký URI cuối sau khi chốt contract,
+   đã chốt `http://localhost:3001/auth/google/callback` cho nhánh runtime OAuth.
+   Đăng ký đúng URI trong contract,
    khớp chính xác scheme/host/port/path. Không trộn localhost và 127.0.0.1.
 4. Nếu triển khai GIS trên Web, cấu hình JavaScript origin đúng origin Web
    (local thường `http://localhost:5173`). Server code flow không cần tự thêm

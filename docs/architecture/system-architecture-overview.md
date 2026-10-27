@@ -1,5 +1,14 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Google OAuth —27/10/2026, nhánh từ `d789afa` (#127 đã merge):** login code/
+PKCE/state/nonce bằng thư viện Google, identity theo provider+sub; không auto
+ghép email. LINK yêu cầu password+live refresh/CV, revoke và audit nguyên tử.
+1604unit,1062E2E/1SKIP/20TODO,1599FE/6SKIP,20HTTP và5nhóm Chrome giả lập đạt.
+Google thật đã được user xác nhận và đối chiếu DB QA riêng; chưa production
+hoặc đầy đủ live LINK/hai Gmail. Cờ mặc địnhfalse; OTP/payment chưa triển khai.
+Chỉ coi tích hợp sau merge. [Contract](../api/auth-google-oauth.md),
+[QA và giới hạn](../testing/google-oauth-2026-10-27.md).
+
 **Auth email/reset —27/10/2026, nhánh từ `59bba47` (#126 đã merge):**
 token một lần purpose/email/CV/expiry, reset nguyên tử với audit và revoke,
 Web explicit consent/no-auto-replay. Delta Mailpit/gate:1589unit,

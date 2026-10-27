@@ -4,6 +4,7 @@ import { hasBuyerAccess } from '../utils/buyerAccess';
 import styles from './AccountPage.module.css';
 import { AccountSettings } from '../features/account-settings/AccountSettings';
 import { EmailVerificationSettings } from '../features/auth-email/EmailRecoveryPages';
+import { GoogleLink } from '../features/auth-google/GoogleAuth';
 
 export function AccountPage() {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ export function AccountPage() {
       </div>
       {import.meta.env.VITE_ACCOUNT_SETTINGS_ENABLED === 'true' && <AccountSettings />}
       {import.meta.env.VITE_AUTH_EMAIL_ENABLED === 'true' && <EmailVerificationSettings />}
+      <GoogleLink />
     </div>
   );
 }

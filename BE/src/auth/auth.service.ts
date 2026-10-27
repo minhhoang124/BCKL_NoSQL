@@ -394,6 +394,18 @@ export class AuthService {
     };
   }
 
+  // Internal federation entry point, not an HTTP API. Caller has validated the
+  // provider identity and holds this User lock in the same transaction.
+  async createFederatedSession(tx: Prisma.TransactionClient, userId: number, expectedVersion: number) {
+    await tx.$queryRaw`SELECT id FROM users WHERE id=${userId} FOR UPDATE`;
+    const current=await tx.user.findUnique({where:{id:userId}});
+    if(!current?.isActive || current.credentialVersion!==expectedVersion) throw new UnauthorizedException();
+    const user=await tx.user.findUniqueOrThrow({where:{id:userId},select:publicUserSelect});
+    const tokens=await this.signTokens(user,current.credentialVersion);
+    await tx.refreshToken.create({data:{tokenHash:this.hashToken(tokens.refreshToken),userId,expiresAt:this.refreshExpiry()}});
+    return {user,...tokens};
+  }
+
   private async createSession(
     identity: Pick<PublicUser, 'id'>,
     expectedPasswordHash: string,

@@ -19,6 +19,9 @@ import {
 } from './email-recovery.controller.js';
 import { AuthEmailRecoveryService } from './email-recovery.service.js';
 import { AuthEmailDelivery } from './email-delivery.js';
+import { GoogleOAuthController, GoogleOAuthGuard } from './google-oauth.controller.js';
+import { GoogleOAuthService } from './google-oauth.service.js';
+import { GoogleOAuthProvider } from './google-oauth.provider.js';
 
 @Module({
   imports: [
@@ -31,8 +34,10 @@ import { AuthEmailDelivery } from './email-delivery.js';
     AuthController,
     AdminAccountController,
     AuthEmailRecoveryController,
+    GoogleOAuthController,
   ],
   providers: [
+    GoogleOAuthService, GoogleOAuthProvider, GoogleOAuthGuard,
     AuthEmailRecoveryService,
     AuthEmailDelivery,
     AuthEmailRateGuard,

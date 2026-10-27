@@ -6,6 +6,7 @@ import { fetchApi, ApiError, getAuthSessionVersion } from '../services/apiClient
 import type { SessionResponse } from '../types/auth';
 import { ErrorMessage } from '../components/ErrorMessage/ErrorMessage';
 import styles from './AuthForm.module.css';
+import { GoogleLogin } from '../features/auth-google/GoogleAuth';
 import { AuthLayout } from '../components/AuthLayout/AuthLayout';
 
 export function LoginPage() {
@@ -78,6 +79,9 @@ export function LoginPage() {
     <AuthLayout><div className={styles.container}>
       <h1 className={styles.title}>Đăng nhập</h1>
       <p className={styles.subtitle}>Chào mừng bạn trở lại với BCKL.</p>
+      {new URLSearchParams(location.search).get('google') === 'collision' && <p role="alert">Email đã có tài khoản BCKL. Hãy đăng nhập bằng mật khẩu rồi vào Tài khoản để chủ động liên kết Google.</p>}
+      {new URLSearchParams(location.search).get('google') === 'linked' && <p role="status">Đã liên kết Google và thu hồi các phiên cũ. Hãy đăng nhập lại.</p>}
+      {new URLSearchParams(location.search).get('google') === 'failed' && <p role="alert">Đăng nhập Google chưa hoàn tất hoặc đã hết hạn. Bạn có thể chủ động bắt đầu lại.</p>}
       {location.state?.accountNotice === 'password-changed' && <p role="status">Đã đổi mật khẩu. Hãy đăng nhập bằng mật khẩu mới.</p>}
       {location.state?.accountNotice === 'session-expired' && <p role="alert">Phiên đăng nhập đã hết hiệu lực. Hãy đăng nhập lại.</p>}
       {location.state?.accountNotice === 'password-unknown' && <p role="alert">Chưa rõ kết quả đổi mật khẩu. Không gửi lại tự động; hãy thử đăng nhập bằng mật khẩu mới, hoặc mật khẩu cũ nếu chưa được đổi.</p>}
@@ -95,6 +99,7 @@ export function LoginPage() {
           {busy ? 'Đang xử lý...' : 'Đăng nhập'}
         </button>
       </form>
+      <GoogleLogin />
       <p className={styles.linkText}>
         {import.meta.env.VITE_AUTH_EMAIL_ENABLED === 'true' && <><Link to="/forgot-password">Quên mật khẩu?</Link><br /></>}
         Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>

@@ -132,6 +132,8 @@ model User {
   email                   String                   @unique
   emailVerifiedAt         DateTime?
   authEmailTokens         AuthEmailToken[]
+  googleIdentity          GoogleIdentity?
+  googleLinkChallenges    GoogleOAuthChallenge[]
   passwordHash            String
   credentialVersion       Int                      @default(1)
   statusRevision          Int                      @default(1)
@@ -174,6 +176,36 @@ model User {
   notifications          Notification[]
 
   @@map("users")
+}
+
+model GoogleIdentity {
+  id String @id @default(uuid()) @db.Uuid
+  userId Int @unique
+  provider String @default("GOOGLE") @db.VarChar(12)
+  subject String @db.VarChar(255)
+  emailSnapshot String @db.VarChar(254)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  user User @relation(fields:[userId],references:[id],onDelete:Restrict,onUpdate:NoAction)
+  @@unique([provider,subject])
+  @@map("google_identities")
+}
+
+model GoogleOAuthChallenge {
+  id String @id @default(uuid()) @db.Uuid
+  stateHash String @unique @db.VarChar(64)
+  proofHash String @db.VarChar(64)
+  nonceHash String @db.VarChar(64)
+  purpose String @db.VarChar(8)
+  actorId Int?
+  credentialVersion Int?
+  sessionHash String? @db.VarChar(64)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  expiresAt DateTime @db.Timestamp(3)
+  claimedAt DateTime? @db.Timestamp(3)
+  completedAt DateTime? @db.Timestamp(3)
+  actor User? @relation(fields:[actorId],references:[id],onDelete:Restrict,onUpdate:NoAction)
+  @@index([expiresAt])
+  @@map("google_oauth_challenges")
 }
 
 model Notification {
