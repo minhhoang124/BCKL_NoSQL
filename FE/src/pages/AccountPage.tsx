@@ -5,6 +5,7 @@ import styles from './AccountPage.module.css';
 import { AccountSettings } from '../features/account-settings/AccountSettings';
 import { EmailVerificationSettings } from '../features/auth-email/EmailRecoveryPages';
 import { GoogleLink } from '../features/auth-google/GoogleAuth';
+import { PhoneOtpSettings } from '../features/phone-otp/PhoneOtpSettings';
 
 export function AccountPage() {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ export function AccountPage() {
       {import.meta.env.VITE_ACCOUNT_SETTINGS_ENABLED === 'true' && <AccountSettings />}
       {import.meta.env.VITE_AUTH_EMAIL_ENABLED === 'true' && <EmailVerificationSettings />}
       <GoogleLink />
+      <PhoneOtpSettings />
     </div>
   );
 }

@@ -22,6 +22,8 @@ import { AuthEmailDelivery } from './email-delivery.js';
 import { GoogleOAuthController, GoogleOAuthGuard } from './google-oauth.controller.js';
 import { GoogleOAuthService } from './google-oauth.service.js';
 import { GoogleOAuthProvider } from './google-oauth.provider.js';
+import { PhoneOtpController,PhoneOtpGuard } from './phone-otp.controller.js';
+import { PhoneOtpService,PhoneOtpSandboxDelivery } from './phone-otp.service.js';
 
 @Module({
   imports: [
@@ -35,8 +37,10 @@ import { GoogleOAuthProvider } from './google-oauth.provider.js';
     AdminAccountController,
     AuthEmailRecoveryController,
     GoogleOAuthController,
+    PhoneOtpController,
   ],
   providers: [
+    PhoneOtpService,PhoneOtpSandboxDelivery,PhoneOtpGuard,
     GoogleOAuthService, GoogleOAuthProvider, GoogleOAuthGuard,
     AuthEmailRecoveryService,
     AuthEmailDelivery,

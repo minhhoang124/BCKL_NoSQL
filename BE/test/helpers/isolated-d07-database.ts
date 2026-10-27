@@ -13,7 +13,7 @@ export async function isolatedD07Database(source: string) {
     [
       '/bckl_order_resolution_test_attributes_20261019_v950',
       '/bckl_order_resolution_test_attributes_20261019_v951',
-      '/bckl_order_resolution_test_attributes_20261019_v953', '/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957', '/bckl_order_resolution_test_attributes_20261019_v959', '/bckl_order_resolution_test_attributes_20261019_v961',
+      '/bckl_order_resolution_test_attributes_20261019_v953', '/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957', '/bckl_order_resolution_test_attributes_20261019_v959', '/bckl_order_resolution_test_attributes_20261019_v961', '/bckl_order_resolution_test_attributes_20261019_v965',
     ].includes(url.pathname) &&
     url.username === 'bckl_qa_migrator_20261021';
   const ci =

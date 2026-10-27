@@ -69,7 +69,7 @@ describe('Product context: real HTTP/PostgreSQL, no snapshot of private Product'
           '/bckl_order_resolution_test_attributes_20261019_v949',
           '/bckl_order_resolution_test_attributes_20261019_v950',
           '/bckl_order_resolution_test_attributes_20261019_v951',
-          '/bckl_order_resolution_test_attributes_20261019_v953', '/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957', '/bckl_order_resolution_test_attributes_20261019_v959', '/bckl_order_resolution_test_attributes_20261019_v961',
+          '/bckl_order_resolution_test_attributes_20261019_v953', '/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957', '/bckl_order_resolution_test_attributes_20261019_v959', '/bckl_order_resolution_test_attributes_20261019_v961', '/bckl_order_resolution_test_attributes_20261019_v965',
         ].includes(url.pathname))
     )
       throw Error('Exact Product context QA required');

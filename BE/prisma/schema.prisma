@@ -132,6 +132,8 @@ model User {
   email                   String                   @unique
   emailVerifiedAt         DateTime?
   authEmailTokens         AuthEmailToken[]
+  phoneOtpChallenges      PhoneOtpChallenge[]
+  phoneContact            UserPhoneContact?
   googleIdentity          GoogleIdentity?
   googleLinkChallenges    GoogleOAuthChallenge[]
   passwordHash            String
@@ -176,6 +178,46 @@ model User {
   notifications          Notification[]
 
   @@map("users")
+}
+
+model PhoneOtpChallenge {
+  id String @id @default(uuid()) @db.Uuid
+  userId Int
+  phoneNumber String @db.VarChar(16)
+  codeHash String @db.VarChar(64)
+  credentialVersion Int
+  baseVersion Int
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  expiresAt DateTime @db.Timestamp(3)
+  attempts Int @default(0)
+  usedAt DateTime? @db.Timestamp(3)
+  revokedAt DateTime? @db.Timestamp(3)
+  exhaustedAt DateTime? @db.Timestamp(3)
+  appliedVersion Int?
+  user User @relation(fields:[userId],references:[id],onDelete:Restrict,onUpdate:NoAction)
+  contact UserPhoneContact?
+  @@index([userId,createdAt])
+  @@map("phone_otp_challenges")
+}
+
+model UserPhoneContact {
+  userId Int @id
+  phoneNumber String @db.VarChar(16)
+  channel String @default("SANDBOX") @db.VarChar(8)
+  version Int
+  lastChallengeId String @unique @db.Uuid
+  sandboxConfirmedAt DateTime @db.Timestamp(3)
+  user User @relation(fields:[userId],references:[id],onDelete:Restrict,onUpdate:NoAction)
+  challenge PhoneOtpChallenge @relation(fields:[lastChallengeId],references:[id],onDelete:Restrict,onUpdate:NoAction)
+  @@index([phoneNumber])
+  @@map("user_phone_contacts")
+}
+
+model PhoneOtpRate {
+  key String @id @db.VarChar(64)
+  windowStartedAt DateTime @db.Timestamp(3)
+  count Int
+  @@map("phone_otp_rates")
 }
 
 model GoogleIdentity {

@@ -12,7 +12,7 @@ import type { ErrorRequestHandler, Request, Response } from 'express';
 import type { AuthenticatedUser } from './auth.types.js';
 const write = (req: { method?: string; url?: string }) =>
   (req.method === 'POST' &&
-    /^\/auth\/(?:(?:email|password-reset)\/(?:request|confirm)|google\/(?:start|link))\/?$/i.test(
+    /^\/auth\/(?:(?:email|password-reset)\/(?:request|confirm)|phone-otp\/(?:request|confirm|reconcile)|google\/(?:start|link))\/?$/i.test(
       (req.url ?? '').split('?')[0],
     )) ||
   (req.method === 'PATCH' &&

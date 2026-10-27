@@ -1,5 +1,16 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**OTP điện thoại mô phỏng — 27/10/2026, nhánh từ `4a35b4a` (#128 đã merge):**
+challenge HMAC/TTL/bộ đếm bền, liên hệ theo User có version/evidence, khóa
+account+recipient trước User/challenge. Xác nhận và contact nguyên tử; explicit
+reconcile trả receipt hoặc đóng mã chưa dùng, không tự đổi số. Web consent,
+session epoch/journal CAS; không tự POST khi reload/timeout. 1636 unit,
+1081 E2E/1SKIP/20TODO,1619 FE/6liveSKIP,19 HTTP và 5 nhóm Chrome đạt;
+upgrade 34→35 giữ dữ liệu cũ, schema diff 0. **Không gửi SMS thật, không dùng
+liên hệ sandbox cho login/recovery/2FA/cấp quyền**. Cờ mặc định tắt; chỉ tính
+tích hợp sau merge, chưa hoàn thành thanh toán. [Contract](../api/auth-phone-otp-sandbox.md),
+[QA/giới hạn](../testing/phone-otp-sandbox-2026-10-27.md).
+
 **Google OAuth —27/10/2026, nhánh từ `d789afa` (#127 đã merge):** login code/
 PKCE/state/nonce bằng thư viện Google, identity theo provider+sub; không auto
 ghép email. LINK yêu cầu password+live refresh/CV, revoke và audit nguyên tử.
