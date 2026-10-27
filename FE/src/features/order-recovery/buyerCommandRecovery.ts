@@ -1,3 +1,4 @@
+import { cancellableUnpaidPayment } from '../vnpay/paymentPolicy';
 import { getAuthSessionVersion } from "../../services/apiClient";
 import { orderApi } from "../../services/orderApi";
 import {
@@ -162,7 +163,8 @@ function createBuyerCommandLifecycle(options: {
           ? await journal.upgradeLegacyComplete()
           : saved;
       current();
-      const handle = journal.prepareResolution(intent, total);
+      if(!order.payment)throw new OrderRecoveryBlockedError();
+      const handle = journal.prepareResolution(intent, total,order.payment.provider);
       state = Object.freeze({ phase: "resolving" });
       flight = new AbortController();
       const result = await sendBuyerResolution(handle, flight.signal);
@@ -218,8 +220,7 @@ function createBuyerCommandLifecycle(options: {
       if (
         (command === "cancel" &&
           (order.status !== "PENDING_CONFIRMATION" ||
-            order.payment?.provider !== "COD" ||
-            order.payment.status !== "UNPAID")) ||
+            !cancellableUnpaidPayment(order.payment))) ||
         (command === "complete" &&
           (order.status !== "DELIVERED" || order.payment?.status !== "PAID"))
       )
@@ -231,7 +232,7 @@ function createBuyerCommandLifecycle(options: {
         confirmed: true,
       });
       current();
-      const handle = await journal.prepareExecution(intent, order.total, body);
+      const handle = await journal.prepareExecution(intent, order.total, body,order.payment?.provider);
       current();
       state = Object.freeze({ phase: "executing" });
       flight = new AbortController();

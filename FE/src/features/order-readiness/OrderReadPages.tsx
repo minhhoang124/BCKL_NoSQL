@@ -19,6 +19,7 @@ import { useOrderDetail, useOrderList } from "./useOrderRead";
 import styles from "./OrderReadPages.module.css";
 import { SellerOrderWorkspace } from "../order-recovery/SellerOrderWorkspace";
 import { BuyerOrderWorkspace } from "../order-recovery/BuyerOrderWorkspace";
+import { VnpayPayment } from '../vnpay/VnpayPayment';
 
 const base = (scope: OrderScope) =>
   scope === "buyer" ? "/account/orders" : "/seller/orders";
@@ -222,6 +223,7 @@ function Detail({ scope, orderId }: { scope: OrderScope; orderId: number }) {
   const { state, reload, readKey } = useOrderDetail(scope, orderId);
   return (
     <>
+      {scope==='buyer'&&state.status==='ready'&&state.data.payment?.provider==='VNPAY'&&<VnpayPayment orderId={orderId} amount={state.data.total}/>}
       <button disabled={state.status === "loading"} onClick={reload}>
         Làm mới chi tiết đơn
       </button>

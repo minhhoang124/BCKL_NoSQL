@@ -30,7 +30,7 @@ export function resolveCheckoutReplay(
       'Không tìm thấy lần đặt hàng.',
     );
   // Classify provenance first: never compare a v1 hash to an unknown algorithm.
-  if (stored.hashVersion !== 1)
+  if (stored.hashVersion !== 1 && stored.hashVersion !== 2)
     throw checkoutError(
       409,
       'CHECKOUT_LEGACY_REVIEW_REQUIRED',
@@ -50,7 +50,7 @@ export function resolveCheckoutReplay(
     );
   if (
     stored.status !== 'COMPLETED' ||
-    stored.receiptVersion !== 1 ||
+    stored.receiptVersion !== stored.hashVersion ||
     !stored.completedAt ||
     !Number.isFinite(stored.completedAt.getTime())
   )
@@ -60,7 +60,7 @@ export function resolveCheckoutReplay(
       'Không thể đọc kết quả đặt hàng đã lưu.',
     );
   return {
-    ...validateCheckoutReceiptV1(stored.receiptJson, stored.id),
+    ...validateCheckoutReceiptV1(stored.receiptJson, stored.id,stored.hashVersion===2?'VNPAY':'COD'),
     replayed: true as const,
   };
 }

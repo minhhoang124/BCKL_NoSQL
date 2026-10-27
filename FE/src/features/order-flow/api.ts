@@ -3,20 +3,20 @@ import { fetchApi, ApiError } from '../../services/apiClient';
 export interface Address { id: number; recipientName: string; addressLine: string; ward: string; province: string; isDefault: boolean }
 export interface CartItem { variantId: number; quantity: number; available: boolean; currentUnitPrice?: string; productName?: string; unavailableReason: string | null }
 export interface Cart { groups: { store: { id: number; name: string }; items: CartItem[] }[]; unavailableItems: CartItem[] }
-export interface CheckoutBody { addressId: number; paymentProvider: 'COD'; items: { variantId: number; quantity: number; expectedUnitPrice: string }[] }
+export interface CheckoutBody { addressId: number; paymentProvider: 'COD'|'VNPAY'; items: { variantId: number; quantity: number; expectedUnitPrice: string }[] }
 export interface Preview { canCheckout: boolean; groups: { store: { id: number; name: string }; items: { variantId: number; unitPrice: string; quantity: number; errors: string[] }[] }[]; unavailableItems: { variantId: number }[]; totals: { total: string } | null }
-export interface Receipt { checkoutId: number; status: 'COMPLETED'; replayed: boolean; orders: { id: number; orderNumber: string; total: string; storeId: number; status: 'PENDING_CONFIRMATION'; payment: { provider: 'COD'; status: 'UNPAID'; amount: string; currency: 'VND' } }[] }
+export interface Receipt { checkoutId: number; status: 'COMPLETED'; replayed: boolean; orders: { id: number; orderNumber: string; total: string; storeId: number; status: 'PENDING_CONFIRMATION'; payment: { provider: 'COD'|'VNPAY'; status: 'UNPAID'; amount: string; currency: 'VND' } }[] }
 const pgId = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value > 0 && value <= 2147483647;
 function invalidReceipt(): never { throw new ApiError('Phản hồi chưa đủ để xác nhận thành công. Giữ yêu cầu cũ để đối chiếu, không tạo mã mới.', 502, 'INVALID_RECEIPT'); }
 // Minimum display/identity checks, not a substitute for Backend's full receipt
 // validator. Never discard a replay identity just because HTTP returned 200.
-export function validateReceipt(value: Receipt): Receipt {
+export function validateReceipt(value: Receipt,expectedProvider: 'COD'|'VNPAY'='COD'): Receipt {
   if (!value || !pgId(value.checkoutId) || value.status !== 'COMPLETED' || typeof value.replayed !== 'boolean' || !Array.isArray(value.orders) || !value.orders.length || value.orders.length > 50) invalidReceipt();
   const ids = new Set<number>();
   const stores = new Set<number>();
   for (const order of value.orders) {
     if (!order || !pgId(order.id) || ids.has(order.id) || !pgId(order.storeId) || typeof order.orderNumber !== 'string' || !order.orderNumber.trim() || typeof order.total !== 'string' || !/^[1-9][0-9]{0,11}\.00$/.test(order.total)) invalidReceipt();
-    if (stores.has(order.storeId) || order.status !== 'PENDING_CONFIRMATION' || !order.payment || order.payment.provider !== 'COD' || order.payment.status !== 'UNPAID' || order.payment.currency !== 'VND' || order.payment.amount !== order.total) invalidReceipt();
+    if (stores.has(order.storeId) || order.status !== 'PENDING_CONFIRMATION' || !order.payment || order.payment.provider !== expectedProvider || order.payment.status !== 'UNPAID' || order.payment.currency !== 'VND' || order.payment.amount !== order.total) invalidReceipt();
     ids.add(order.id);
     stores.add(order.storeId);
   }

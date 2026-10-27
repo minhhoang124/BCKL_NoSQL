@@ -141,10 +141,15 @@ export class OrderCancellationService {
             nextOrderCommandStatus(actorType, 'cancel', order.status);
             await tx.$queryRaw`SELECT id FROM payments WHERE "orderId" = ${orderId} FOR UPDATE`;
             const payment = await tx.payment.findUnique({ where: { orderId } });
+            // Same lock order as IPN: Order -> Payment -> PaymentTransaction.
+            if(payment?.provider==='VNPAY'){
+              await tx.$queryRaw`SELECT id FROM payment_transactions WHERE "paymentId"=${payment.id} FOR UPDATE`;
+              const attempt=await tx.paymentTransaction.findUnique({where:{paymentId:payment.id}});
+              if(attempt&&['SUCCEEDED','REVIEW_REQUIRED'].includes(attempt.status))throw orderCommandError(409,'PAYMENT_STATE_CONFLICT');
+            }
             if (
               !payment ||
-              payment.provider !== 'COD' ||
-              payment.status !== 'UNPAID' ||
+              !((payment.provider==='COD'&&payment.status==='UNPAID')||(payment.provider==='VNPAY'&&['UNPAID','PENDING','FAILED','CANCELLED','EXPIRED'].includes(payment.status))) ||
               payment.paidAt !== null ||
               payment.currency !== 'VND' ||
               !payment.amount.equals(order.total)
@@ -262,8 +267,8 @@ export class OrderCancellationService {
             const paid = await tx.payment.updateMany({
               where: {
                 id: payment.id,
-                status: 'UNPAID',
-                provider: 'COD',
+                status: payment.status,
+                provider: payment.provider,
                 paidAt: null,
               },
               data: { status: 'CANCELLED' },
@@ -287,7 +292,7 @@ export class OrderCancellationService {
               {
                 status: 'CANCELLED',
                 payment: {
-                  provider: 'COD',
+                  provider: payment.provider,
                   status: 'CANCELLED',
                   amount: payment.amount.toFixed(2),
                   currency: 'VND',

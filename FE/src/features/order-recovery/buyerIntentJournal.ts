@@ -275,6 +275,7 @@ export function createBuyerSettlementJournal(options: {
   function prepareResolution(
     intent: BuyerIntentV2,
     total: string,
+    paymentProvider?:'COD'|'VNPAY'|'MOMO',
   ): PreparedBuyerResolution {
     if (busy || settlementBlocked) blocked();
     const s = capture(),
@@ -298,6 +299,7 @@ export function createBuyerSettlementJournal(options: {
       hashVersion: saved.hashVersion,
       requestHash: saved.requestHash,
       total,
+      paymentProvider,
     });
     resolutions.set(handle, { session: s, raw });
     return handle;
@@ -340,6 +342,7 @@ export function createBuyerSettlementJournal(options: {
     intent: BuyerIntentV2,
     total: string,
     body: unknown,
+    paymentProvider?:'COD'|'VNPAY'|'MOMO',
   ): Promise<PreparedBuyerCommand> {
     if (busy || settlementBlocked) blocked();
     const s = capture(),
@@ -366,6 +369,7 @@ export function createBuyerSettlementJournal(options: {
           hashVersion: saved.hashVersion,
           requestHash: saved.requestHash,
           total,
+          paymentProvider,
         },
         body,
       );

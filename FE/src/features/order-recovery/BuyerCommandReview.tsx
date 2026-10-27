@@ -1,3 +1,4 @@
+import { cancellableUnpaidPayment } from '../vnpay/paymentPolicy';
 import { useEffect, useId, useRef, useState } from "react";
 import { getAuthSessionVersion } from "../../services/apiClient";
 import { validOrderId, validOrderMoney } from "../../services/orderResponse";
@@ -99,8 +100,7 @@ function ReviewContent({
   const policy = payment !== null && payment.currency === "VND" &&
     payment.amount === order.total && (
       command === "cancel"
-        ? order.status === "PENDING_CONFIRMATION" && payment.provider === "COD" &&
-          payment.status === "UNPAID" && payment.paidAt === null
+        ? order.status === "PENDING_CONFIRMATION" && cancellableUnpaidPayment(payment)
         : order.status === "DELIVERED" && payment.status === "PAID" &&
           typeof payment.paidAt === "string" &&
           Number.isFinite(Date.parse(payment.paidAt)) &&
@@ -151,7 +151,7 @@ function ReviewContent({
       <p>Đơn <strong>{order.orderNumber}</strong> · Tổng đã lưu: {orderMoney(order.total)}</p>
       {phase === "confirm-new" && <>
         <p>{command === "cancel"
-          ? "Chỉ hủy COD khi đơn còn chờ xác nhận. Hủy thành công không tự thêm hàng lại vào giỏ."
+          ? "Chỉ hủy đơn chưa thu tiền khi còn chờ xác nhận. Hủy thành công không tự thêm hàng lại vào giỏ; thanh toán đến muộn cần đối chiếu riêng."
           : "Chỉ xác nhận khi bạn đã thực sự nhận hàng. Đây là hoàn tất đơn, không phải yêu cầu giao hàng."}</p>
         {command === "cancel" && <>
           <label htmlFor={codeId}>Lý do hủy</label>

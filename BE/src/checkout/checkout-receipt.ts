@@ -12,7 +12,7 @@ export interface CheckoutReceiptV1 {
     storeId: number;
     status: 'PENDING_CONFIRMATION';
     payment: {
-      provider: 'COD';
+      provider: 'COD' | 'VNPAY';
       status: 'UNPAID';
       amount: string;
       currency: 'VND';
@@ -41,6 +41,7 @@ function validReceiptMoney(value: unknown): value is string {
 export function validateCheckoutReceiptV1(
   input: unknown,
   checkoutId: number,
+  provider:'COD'|'VNPAY'='COD',
 ): CheckoutReceiptV1 {
   if (
     !isPgId(checkoutId) ||
@@ -81,7 +82,7 @@ export function validateCheckoutReceiptV1(
           'amount',
           'currency',
         ]) ||
-        order.payment.provider !== 'COD' ||
+        order.payment.provider !== provider ||
         order.payment.status !== 'UNPAID' ||
         order.payment.currency !== 'VND' ||
         order.payment.amount !== order.total
@@ -98,7 +99,7 @@ export function validateCheckoutReceiptV1(
         status: 'PENDING_CONFIRMATION',
         total: order.total,
         payment: {
-          provider: 'COD',
+          provider,
           status: 'UNPAID',
           amount: order.total,
           currency: 'VND',

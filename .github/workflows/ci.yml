@@ -191,14 +191,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
-          cache-dependency-path: AI_CLIP/requirements.txt
 
       - name: Install AI Service dependencies
         working-directory: AI_CLIP
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          # Hosted CI has no GPU. Avoid multi-GB CUDA wheels/cache exhausting disk.
+          python -m pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --no-cache-dir -r requirements.txt
+          python -c "import torch; assert torch.version.cuda is None, 'CI requires the CPU-only PyTorch build'"
 
       - name: Run Ruff
         working-directory: AI_CLIP

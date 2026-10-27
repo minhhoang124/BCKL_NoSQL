@@ -18,8 +18,8 @@ export class CheckoutItemDto {
 export class CheckoutPreviewRequestDto {
   @ApiProperty({ type: 'integer', minimum: 1, maximum: 2147483647 })
   addressId!: number;
-  @ApiProperty({ enum: ['COD'] })
-  paymentProvider!: 'COD';
+  @ApiProperty({ enum: ['COD','VNPAY'] })
+  paymentProvider!: 'COD'|'VNPAY';
   @ApiProperty({
     type: [CheckoutItemDto],
     minItems: 1,
@@ -73,7 +73,7 @@ export class CheckoutTotalsDto {
 }
 export class CheckoutPreviewResponseDto {
   @ApiProperty() canCheckout!: boolean;
-  @ApiProperty({ enum: ['COD'] }) paymentProvider!: string;
+  @ApiProperty({ enum: ['COD','VNPAY'] }) paymentProvider!: string;
   @ApiProperty({ enum: ['VND'] }) currency!: string;
   @ApiProperty({ enum: ['DEMO_ZERO_V1'] }) shippingMode!: string;
   @ApiProperty({ type: [CheckoutPreviewGroupDto] })

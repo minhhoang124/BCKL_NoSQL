@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Link } from "react-router-dom";
+import { VnpayPayment } from '../vnpay/VnpayPayment';
 import { useAuth } from "../../contexts/useAuth";
 import { hasBuyerAccess } from "../../utils/buyerAccess";
 import { getAuthSessionVersion } from "../../services/apiClient";
@@ -107,6 +108,7 @@ function Workspace({
           Không dùng trạng thái cũ để gửi lại lệnh.
         </p>
       )}
+      {state.order?.payment?.provider==='VNPAY'&&<VnpayPayment orderId={orderId} amount={state.order.total}/>}
       {(state.order || state.phase === "loading") && (
         <OrderDetailPanel
           source="api"

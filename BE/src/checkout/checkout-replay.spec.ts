@@ -66,7 +66,7 @@ describe('Checkout replay classification (foundation, no HTTP/DB write)', () => 
       'CHECKOUT_NOT_FOUND',
     );
   });
-  it.each([null, 0, 2])(
+  it.each([null, 0, 3])(
     'rejects unknown hashVersion %s before comparing hashes',
     (hashVersion) => {
       expectFailure(
@@ -77,6 +77,11 @@ describe('Checkout replay classification (foundation, no HTTP/DB write)', () => 
       );
     },
   );
+  it('reads online v2 only with matching v2 receipt/provider and keeps COD v1 strict',()=>{
+    const v=stored();v.hashVersion=2;v.receiptVersion=2;v.receiptJson.orders[0]!.payment.provider='VNPAY';
+    expect(resolveCheckoutReplay(v,7)?.orders[0]?.payment.provider).toBe('VNPAY');
+    expect(()=>resolveCheckoutReplay({...v,hashVersion:1,receiptVersion:1},7)).toThrow();
+  });
   it('rejects same key with a different canonical request', () => {
     expectFailure(
       () => resolveCheckoutReplay(stored(), 7, 'b'.repeat(64)),

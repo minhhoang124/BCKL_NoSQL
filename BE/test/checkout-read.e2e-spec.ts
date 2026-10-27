@@ -611,7 +611,7 @@ describe('Checkout preview and receipt lookup HTTP (e2e; read-only scenarios)', 
     expect(before.body).toEqual(after.body);
     expect(JSON.stringify(after.body)).not.toContain(key);
   });
-  it.each([null, 2])(
+  it.each([null, 3])(
     'unknown hash provenance %s remains legacy 409, not recreated',
     async (hashVersion) => {
       const row = await prisma.checkout.create({
@@ -836,7 +836,7 @@ describe('Checkout preview and receipt lookup HTTP (e2e; read-only scenarios)', 
     expect(schemas.CheckoutPreviewRequestDto).toMatchObject({
       properties: {
         items: { minItems: 1, maxItems: 50 },
-        paymentProvider: { enum: ['COD'] },
+        paymentProvider: { enum: ['COD', 'VNPAY'] },
       },
     });
     expect(schemas.CheckoutItemDto).toMatchObject({

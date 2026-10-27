@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { OrderActorType, Prisma } from '@prisma/client';
 import { canActAsBuyer } from '../auth/buyer-access.js';
 import { requireVerifiedEmail } from '../auth/email-verification.policy.js';
+import { vnpayConfig } from '../payment/vnpay-config.js';
+import { vnpayAmount } from '../payment/vnpay-input.js';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
 import {
@@ -108,6 +110,7 @@ export class CheckoutCreateService {
             });
             const replay = resolveCheckoutReplay(stored, buyerId, requestHash);
             if (replay) return replay;
+            if(canonicalRequest.paymentProvider==='VNPAY')vnpayConfig();
             requireVerifiedEmail(actor.emailVerifiedAt);
             if (!countedIntent) {
               this.rate.consume(buyerId, 'intent');
@@ -318,7 +321,7 @@ export class CheckoutCreateService {
       };
     });
     const checkout = await tx.checkout.create({
-      data: { buyerId, idempotencyKey: key, requestHash, hashVersion: 1 },
+      data: { buyerId, idempotencyKey: key, requestHash, hashVersion: request.paymentProvider==='COD'?1:2 },
     });
     const balances = new Map<number, number>();
     for (const { item } of lines) {
@@ -349,6 +352,7 @@ export class CheckoutCreateService {
       orders: [],
     };
     for (const group of groups) {
+      if(request.paymentProvider==='VNPAY')vnpayAmount(group.subtotal.toFixed(2));
       const order = await tx.order.create({
         data: {
           orderNumber: `ORD-${randomUUID()}`,
@@ -413,7 +417,7 @@ export class CheckoutCreateService {
       await tx.payment.create({
         data: {
           orderId: order.id,
-          provider: 'COD',
+          provider: request.paymentProvider,
           status: 'UNPAID',
           amount: group.subtotal,
         },
@@ -434,7 +438,7 @@ export class CheckoutCreateService {
         status: 'PENDING_CONFIRMATION',
         total: group.subtotal.toFixed(2),
         payment: {
-          provider: 'COD',
+          provider: request.paymentProvider,
           status: 'UNPAID',
           amount: group.subtotal.toFixed(2),
           currency: 'VND',
@@ -463,13 +467,13 @@ export class CheckoutCreateService {
         'CART_CHANGED',
         'Giỏ hàng đã thay đổi. Vui lòng tải lại.',
       );
-    const validReceipt = validateCheckoutReceiptV1(receipt, checkout.id);
+    const validReceipt = validateCheckoutReceiptV1(receipt, checkout.id,request.paymentProvider);
     await tx.checkout.update({
       where: { id: checkout.id },
       data: {
         status: 'COMPLETED',
         completedAt: new Date(),
-        receiptVersion: 1,
+        receiptVersion: request.paymentProvider==='COD'?1:2,
         receiptJson: validReceipt as unknown as Prisma.InputJsonValue,
       },
     });

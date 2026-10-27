@@ -15,7 +15,7 @@ type Receipt<C extends string, R> = {
 export type BuyerCancellationReceipt = Receipt<'cancel', {
   status: 'CANCELLED';
   payment: {
-    provider: 'COD'; status: 'CANCELLED'; amount: string;
+    provider: 'COD'|'VNPAY'; status: 'CANCELLED'; amount: string;
     currency: 'VND'; paidAt: null;
   };
   cancellation: {
@@ -53,4 +53,5 @@ export type BuyerReceiptExpectation = Readonly<{
   orderId: number;
   actorId: number;
   total: string;
+  paymentProvider?: 'COD'|'VNPAY'|'MOMO';
 }>;

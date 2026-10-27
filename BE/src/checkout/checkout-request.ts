@@ -9,7 +9,7 @@ export interface CheckoutItemInput {
 }
 export interface CheckoutRequestInput {
   addressId: number;
-  paymentProvider: 'COD';
+  paymentProvider: 'COD' | 'VNPAY';
   items: CheckoutItemInput[];
 }
 export interface CanonicalCheckoutRequestV1 extends CheckoutRequestInput {
@@ -44,11 +44,11 @@ export function validateCheckoutKey(key: unknown): string {
   return key;
 }
 
-export function normalizeCheckoutRequest(input: unknown): CheckoutRequestInput {
+export function normalizeCheckoutRequest(input: unknown, allowVnpay=false): CheckoutRequestInput {
   if (
     !exactObject(input, ['addressId', 'paymentProvider', 'items']) ||
     !isPgId(input.addressId) ||
-    input.paymentProvider !== 'COD' ||
+    (input.paymentProvider !== 'COD' && !(allowVnpay && input.paymentProvider === 'VNPAY')) ||
     !Array.isArray(input.items)
   )
     invalidCheckout();
@@ -81,12 +81,13 @@ export function normalizeCheckoutRequest(input: unknown): CheckoutRequestInput {
     };
   });
   items.sort((a, b) => a.variantId - b.variantId);
-  return { addressId: input.addressId, paymentProvider: 'COD', items };
+  return { addressId: input.addressId, paymentProvider: input.paymentProvider as 'COD'|'VNPAY', items };
 }
 
 export function buildCheckoutRequestV1(buyerId: number, input: unknown) {
   if (!isPgId(buyerId)) invalidCheckout();
-  const request = normalizeCheckoutRequest(input);
+  // Parse/hash both providers even when rollout is off: committed v2 replay stays available.
+  const request = normalizeCheckoutRequest(input,true);
   const canonicalRequest: CanonicalCheckoutRequestV1 = { buyerId, ...request };
   // Reviewed recursive lexicographic order, expressed using a fixed allowlist.
   // No key, timestamp, current Cart/address/price or extra field enters v1.
@@ -101,7 +102,7 @@ export function buildCheckoutRequestV1(buyerId: number, input: unknown) {
     paymentProvider: request.paymentProvider,
   });
   return {
-    hashVersion: 1 as const,
+    hashVersion: request.paymentProvider==='COD'?1 as const:2 as const,
     requestHash: createHash('sha256')
       .update(canonicalJson, 'utf8')
       .digest('hex'),

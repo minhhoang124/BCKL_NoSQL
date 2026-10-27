@@ -32,6 +32,7 @@ export type BuyerExecutionIdentity = Readonly<{
   hashVersion: 1;
   requestHash: string;
   total: string;
+  paymentProvider?: 'COD'|'VNPAY'|'MOMO';
 }>;
 export type PreparedBuyerCommand = BuyerExecutionIdentity &
   Readonly<{ sessionVersion: number }>;
@@ -45,6 +46,7 @@ const fields = [
   "hashVersion",
   "requestHash",
   "total",
+  "paymentProvider",
 ] as const;
 function invalid(): never {
   throw new ApiError(
@@ -74,6 +76,7 @@ function snapshot(input: BuyerExecutionIdentity): BuyerExecutionIdentity {
     i.requestHash.length !== 64 ||
     /[^a-f0-9]/.test(i.requestHash) ||
     typeof i.total !== "string" ||
+    (i.paymentProvider!==undefined&&!['COD','VNPAY','MOMO'].includes(i.paymentProvider)) ||
     /^(0|[1-9][0-9]{0,11})\.00$/.exec(i.total)?.[0] !== i.total
   )
     invalid();

@@ -20,6 +20,7 @@ import { DashboardModule } from './dashboard/dashboard.controller.js';
 import { StoreApplicationModule } from './store/application.controller.js';
 import { ReviewModule } from './review/review.controller.js';
 import { NotificationModule } from './notification/notification.controller.js';
+import { VnpayModule } from './payment/vnpay.controller.js';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { NotificationModule } from './notification/notification.controller.js';
     StoreApplicationModule,
     ReviewModule,
     NotificationModule,
+    VnpayModule,
   ],
   controllers: [AppController],
   providers: [AppService],

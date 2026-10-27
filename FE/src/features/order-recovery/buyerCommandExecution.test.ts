@@ -442,7 +442,7 @@ describe("Buyer execute lifecycle — unmounted integration", () => {
       if (kind === "consent") request.confirmed = false;
       if (kind === "wrong-order") request.orderId = 102;
       if (kind === "state") request.order.status = "CONFIRMED";
-      if (kind === "payment") request.order.payment!.provider = "VNPAY";
+      if (kind === "payment") {request.order.payment!.provider = "VNPAY";request.order.payment!.status='REVIEW_REQUIRED';}
       if (kind === "role")
         session = { ...session, actor: { id: 7, role: "SELLER" } };
       const transport = vi.fn();

@@ -14,11 +14,12 @@ import {
   validateCheckoutKey,
 } from './checkout-request.js';
 import { resolveCheckoutReplay } from './checkout-replay.js';
+import { vnpayConfig } from '../payment/vnpay-config.js';
 
 type LineError = 'INSUFFICIENT_STOCK' | 'PRICE_CHANGED';
 export interface CheckoutPreview {
   canCheckout: boolean;
-  paymentProvider: 'COD';
+  paymentProvider: 'COD'|'VNPAY';
   currency: 'VND';
   shippingMode: 'DEMO_ZERO_V1';
   groups: {
@@ -55,7 +56,8 @@ export class CheckoutReadService {
   constructor(private readonly prisma: PrismaService) {}
 
   preview(buyerId: number, input: unknown): Promise<CheckoutPreview> {
-    const request = normalizeCheckoutRequest(input);
+    const request = normalizeCheckoutRequest(input,true);
+    if(request.paymentProvider==='VNPAY')vnpayConfig();
     return this.snapshot(buyerId, async (tx) => {
       const address = await tx.userAddress.findFirst({
         where: { id: request.addressId, userId: buyerId },
@@ -109,7 +111,7 @@ export class CheckoutReadService {
       });
       const result: CheckoutPreview = {
         canCheckout: true,
-        paymentProvider: 'COD',
+        paymentProvider: request.paymentProvider,
         currency: 'VND',
         shippingMode: 'DEMO_ZERO_V1',
         groups: [],

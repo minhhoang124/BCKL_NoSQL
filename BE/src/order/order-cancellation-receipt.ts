@@ -6,7 +6,7 @@ import {
 export interface CancellationResult {
   status: 'CANCELLED';
   payment: {
-    provider: 'COD';
+    provider: 'COD'|'VNPAY';
     status: 'CANCELLED';
     amount: string;
     currency: 'VND';
@@ -76,7 +76,7 @@ export function validateCancellationResult(
   const actor = object(cancellation.cancelledBy, ['type', 'id']);
   if (
     result.status !== 'CANCELLED' ||
-    pay.provider !== 'COD' ||
+    !['COD','VNPAY'].includes(String(pay.provider)) ||
     pay.status !== 'CANCELLED' ||
     pay.currency !== 'VND' ||
     pay.paidAt !== null ||

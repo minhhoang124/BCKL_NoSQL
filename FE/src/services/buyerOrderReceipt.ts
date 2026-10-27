@@ -81,7 +81,7 @@ export function validateBuyerCancellationReceipt(
   if (normalizedText.length < 1 || normalizedText.length > 500) invalid();
   const result = exact(r.result, ['status', 'payment', 'cancellation', 'timeline']);
   const p = payment(result.payment, expected.total);
-  if (result.status !== 'CANCELLED' || p.provider !== 'COD' ||
+  if (result.status !== 'CANCELLED' || (p.provider!=='COD'&&p.provider!=='VNPAY') || p.provider!==(expected.paymentProvider??'COD') ||
       p.status !== 'CANCELLED' || p.paidAt !== null) invalid();
   const c = exact(result.cancellation, ['cancelledBy', 'reasonCode', 'reasonText', 'cancelledAt']);
   const by = exact(c.cancelledBy, ['type', 'id']);

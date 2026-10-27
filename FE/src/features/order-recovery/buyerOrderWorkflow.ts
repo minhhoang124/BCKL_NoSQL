@@ -1,3 +1,4 @@
+import { cancellableUnpaidPayment } from '../vnpay/paymentPolicy';
 import { getAuthSessionVersion } from "../../services/apiClient";
 import { orderApi } from "../../services/orderApi";
 import { validOrderId } from "../../services/orderResponse";
@@ -50,9 +51,7 @@ export function buyerCanChoose(order: OrderDetail, command: BuyerCommand) {
     return false;
   return command === "cancel"
     ? order.status === "PENDING_CONFIRMATION" &&
-        payment.provider === "COD" &&
-        payment.status === "UNPAID" &&
-        payment.paidAt === null
+        cancellableUnpaidPayment(payment)
     : order.status === "DELIVERED" &&
         payment.status === "PAID" &&
         typeof payment.paidAt === "string" &&

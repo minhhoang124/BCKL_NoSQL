@@ -7,6 +7,7 @@ import type { BuyerCancellationReceipt, BuyerCompletionReceipt } from '../types/
 export type BuyerResolutionIdentity = Readonly<{
   actorId: number; orderId: number; command: 'cancel' | 'complete';
   idempotencyKey: string; hashVersion: 1; requestHash: string; total: string;
+  paymentProvider?: 'COD'|'VNPAY'|'MOMO';
 }>;
 export type PreparedBuyerResolution = BuyerResolutionIdentity & Readonly<{ sessionVersion: number }>;
 export type BuyerResolution = Readonly<
@@ -15,7 +16,7 @@ export type BuyerResolution = Readonly<
 >;
 const handles = new WeakSet<PreparedBuyerResolution>();
 const proofs = new WeakMap<BuyerResolution, PreparedBuyerResolution>();
-const fields = ['actorId', 'orderId', 'command', 'idempotencyKey', 'hashVersion', 'requestHash', 'total'] as const;
+const fields = ['actorId', 'orderId', 'command', 'idempotencyKey', 'hashVersion', 'requestHash', 'total','paymentProvider'] as const;
 function invalid(): never {
   throw new ApiError('Không xác minh được kết quả đối chiếu Buyer.', 502, 'INVALID_BUYER_RESOLUTION');
 }

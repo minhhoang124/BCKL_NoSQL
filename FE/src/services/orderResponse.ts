@@ -86,6 +86,7 @@ export function validateOrderPayment(value: unknown): OrderPayment {
       'EXPIRED',
       'REFUND_PENDING',
       'REFUNDED',
+      'REVIEW_REQUIRED',
     ].includes(p.status) ||
     !validOrderMoney(p.amount) ||
     p.currency !== 'VND' ||

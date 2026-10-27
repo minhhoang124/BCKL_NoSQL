@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
 import { ApiError } from '../../services/apiClient';
-import { clearMatchingIntent, errorMessage, initialIntent, intentSlot, lookupReceipt, money, read, rejectedWithoutCommit, saveIntent, validateReceipt, write } from './api';
+import { clearMatchingIntent, errorMessage, initialIntent, intentSlot, lookupReceipt, loadIntent, money, read, rejectedWithoutCommit, saveIntent, validateReceipt, write } from './api';
 import type { Address, Cart, CheckoutBody, Intent, Preview, Receipt } from './api';
 import styles from './OrderFlow.module.css';
 import { parseCartSelection } from './cartSelection';
@@ -18,6 +18,7 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressId, setAddressId] = useState(0);
+  const [provider,setProvider]=useState<'COD'|'VNPAY'>('COD');
   const [selection] = useState(() => parseCartSelection(search));
   const [selected, setSelected] = useState<number[]>(selection.ids);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -55,7 +56,7 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
     setLoading(true); setDataReady(false); setRefreshRequired(false); setPreview(null); setError(''); setReload(n => n + 1);
   }
   const selectedAddress = addresses.find(a => a.id === addressId);
-  const body: CheckoutBody = { addressId, paymentProvider: 'COD', items: items.filter(i => selected.includes(i.variantId) && i.available && i.currentUnitPrice).map(i => ({ variantId: i.variantId, quantity: i.quantity, expectedUnitPrice: i.currentUnitPrice! })) };
+  const body: CheckoutBody = { addressId, paymentProvider: provider, items: items.filter(i => selected.includes(i.variantId) && i.available && i.currentUnitPrice).map(i => ({ variantId: i.variantId, quantity: i.quantity, expectedUnitPrice: i.currentUnitPrice! })) };
   async function run(action: () => Promise<void>) {
     if (gate.current) return;
     gate.current = true; setBusy(true); setError('');
@@ -69,7 +70,9 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
     finally { gate.current = false; setBusy(false); }
   }
   async function accept(value: Receipt, key: string) {
-    validateReceipt(value);
+    const saved=loadIntent(slot),expected=(saved?.body as {paymentProvider?:string}|undefined)?.paymentProvider;
+    if(!saved||saved.key!==key||!['COD','VNPAY'].includes(expected??''))throw new ApiError('Yêu cầu chờ không khớp; giữ nguyên để đối chiếu.',502,'INVALID_RECEIPT');
+    validateReceipt(value,expected as 'COD'|'VNPAY');
     setReceipt(value); setIntent(null);
     try { clearMatchingIntent(slot, key); } catch { setStorageBlocked(true); setError('Đơn đã được tạo, nhưng chưa xóa được mã chờ trong trình duyệt. Không đặt lại; xem đơn bên dưới.'); }
   }
@@ -83,7 +86,8 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
     });
   }
   if (receipt) return <div className={styles.page}>
-    <h1>Đã ghi nhận đặt hàng COD</h1><p>{receipt.replayed ? 'Đã khôi phục biên nhận gốc; không đặt thêm đơn.' : 'Đơn đã được tạo thành công.'}</p>
+    <h1>Đã ghi nhận đặt hàng {receipt.orders[0]?.payment.provider==='VNPAY'?'VNPay sandbox':'COD'}</h1><p>{receipt.replayed ? 'Đã khôi phục biên nhận gốc; không đặt thêm đơn.' : 'Đơn đã được tạo thành công.'}</p>
+    {receipt.orders[0]?.payment.provider==='VNPAY'&&<p>Đơn chưa được thanh toán. Mở chi tiết từng đơn để chủ động tạo phiên VNPay sandbox.</p>}
     <p>Đây là biên nhận lúc đặt, không phải trạng thái giao hàng hiện tại.</p>
     {receipt.orders.map(o => <article className={styles.card} key={o.id}><h2>{o.orderNumber}</h2><p>{money(o.total)}</p><p>Mã đơn: {o.id}. <Link to={`/account/orders/${o.id}`}>Theo dõi đơn {o.orderNumber}</Link></p></article>)}
     {error && <p role="alert">{error}</p>}<Link to="/cart">Quay lại giỏ hàng</Link>
@@ -111,12 +115,13 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
       {!!cart?.unavailableItems.length && <p role="alert">Có {cart.unavailableItems.length} dòng không còn bán công khai; quay lại giỏ để xóa. Không hiển thị nội dung nháp.</p>}
       {!items.length && cart && <p>Giỏ chưa có mặt hàng mua được.</p>}
       </div><aside className={`${styles.card} ${styles.checkoutSummary}`} aria-label="Xác nhận thanh toán">
-      <h2>Thanh toán COD</h2><p>Kiểm tra lại giá và tồn kho trước khi đặt hàng.</p>
+      <h2>Thanh toán {provider==='COD'?'COD':'VNPay sandbox'}</h2><p>Kiểm tra lại giá và tồn kho trước khi đặt hàng.</p>
+      {import.meta.env.VITE_VNPAY_SANDBOX_ENABLED==='true'&&<label>Phương thức thanh toán<select value={provider} disabled={busy||!!intent||storageBlocked} onChange={e=>{setProvider(e.target.value as 'COD'|'VNPAY');setPreview(null);}}><option value="COD">Thanh toán khi nhận hàng (COD)</option><option value="VNPAY">VNPay sandbox — không tiền thật</option></select></label>}
       <button disabled={busy || !!intent || storageBlocked || refreshRequired || !!selectionError || !cart || !addressId || body.items.length < 1 || body.items.length > 50} onClick={() => void run(async () => { if (!selectionError && cart && dataReady && !loading && !refreshRequired) setPreview(await write<Preview>('/checkout/preview', body)); })}>Kiểm tra giá và kho</button>
       {preview && <section className={styles.card}>
         {preview.groups.flatMap(g => g.items).filter(i => i.errors.length).map(i => <p role="alert" key={i.variantId}>Mặt hàng #{i.variantId}: {i.errors.join(', ')}. Giá hiện tại {money(i.unitPrice)}.</p>)}
         {preview.canCheckout && preview.totals ? <h2>Tổng thanh toán: {money(preview.totals.total)}</h2> : <p role="alert">Chưa thể đặt hàng. Giá/kho hoặc mặt hàng đã thay đổi; tải lại giỏ để xác nhận.</p>}
-        <button disabled={busy || !!intent || storageBlocked || !preview.canCheckout || !preview.totals} onClick={submit}>Đặt hàng COD</button>
+        <button disabled={busy || !!intent || storageBlocked || !preview.canCheckout || !preview.totals} onClick={submit}>Đặt hàng {provider==='COD'?'COD':'VNPay sandbox'}</button>
         {!preview.canCheckout && <button disabled={busy || !!intent} onClick={reloadCart}>Tải lại giỏ và giá</button>}
       </section>}
       </aside></div></>}

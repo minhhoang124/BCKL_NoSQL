@@ -22,7 +22,8 @@ export interface OrderPayment {
     | 'CANCELLED'
     | 'EXPIRED'
     | 'REFUND_PENDING'
-    | 'REFUNDED';
+    | 'REFUNDED'
+    | 'REVIEW_REQUIRED';
   amount: string;
   currency: 'VND';
   paidAt: string | null;
