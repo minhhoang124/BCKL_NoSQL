@@ -27,6 +27,7 @@ import { AftersalesPage } from '../features/aftersales/AftersalesPage';
 import { StoreApplicationPage } from '../features/seller-onboarding/StoreApplicationPage';
 import { ReviewPage } from '../features/product-reviews/ReviewPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
+import { ForgotPasswordPage, EmailConfirmationPage } from '../features/auth-email/EmailRecoveryPages';
 
 export function AppRouter() {
   return (
@@ -66,6 +67,11 @@ export function AppRouter() {
         {import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' && <Route path="/search/image" element={<ImageSearchPage />} />}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        {import.meta.env.VITE_AUTH_EMAIL_ENABLED === 'true' && <>
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<EmailConfirmationPage reset />} />
+          <Route path="/verify-email" element={<EmailConfirmationPage />} />
+        </>}
         <Route path="/products/:id" element={<ProductDetailPage />} />
 
         {/* Protected Routes - Any logged in user */}

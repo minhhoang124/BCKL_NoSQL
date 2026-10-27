@@ -23,6 +23,7 @@ import { ProductImageStorageService } from '../src/product/product-image-storage
 import { ProductImageRepairService } from '../src/product/product-image-repair.service.js';
 import { ProductImageRepairWorker } from '../src/product/product-image-repair.worker.js';
 import { ProductService } from '../src/product/product.service.js';
+import { isolatedD07Database } from './helpers/isolated-d07-database.js';
 
 const PNG_1PX = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
@@ -47,8 +48,20 @@ describe('Search Hydrate & Filter API (e2e)', () => {
   const marker = `search-hydrate-${Date.now()}`;
   const backlogJobIds: bigint[] = [];
   const backlogCategoryIds: number[] = [];
+  const originalDatabaseUrl = process.env.DATABASE_URL;
+
+  // reconcileAll intentionally scans the complete database. A retained shared
+  // QA DB grows between runs and would also repair another suite's products.
+  // Give these global-scan probes their own fresh QA scope, without clearing
+  // shared data or weakening the reconciliation assertions.
+  afterAll(() => {
+    if (originalDatabaseUrl === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL = originalDatabaseUrl;
+  });
 
   beforeAll(async () => {
+    const isolated = await isolatedD07Database(process.env.DATABASE_URL ?? '');
+    process.env.DATABASE_URL = isolated.url;
     tempRoot = await mkdtemp(path.join(os.tmpdir(), 'bckl-search-'));
     process.env.UPLOAD_ROOT = tempRoot;
 
@@ -96,7 +109,7 @@ describe('Search Hydrate & Filter API (e2e)', () => {
       },
     });
     categoryId = leaf.id;
-  });
+  }, 30_000); // helper migration budget (20s) plus app and bcrypt fixture setup
 
   afterAll(async () => {
     vi.restoreAllMocks();

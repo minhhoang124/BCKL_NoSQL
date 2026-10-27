@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { hasBuyerAccess } from '../utils/buyerAccess';
 import styles from './AccountPage.module.css';
 import { AccountSettings } from '../features/account-settings/AccountSettings';
+import { EmailVerificationSettings } from '../features/auth-email/EmailRecoveryPages';
 
 export function AccountPage() {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ export function AccountPage() {
         {user.role!=='ADMIN' && (user.role==='SELLER'||import.meta.env.VITE_SELLER_ONBOARDING_ENABLED==='true') && <p><Link to="/account/store-application">Đăng ký / quản lý hồ sơ Store</Link></p>}
       </div>
       {import.meta.env.VITE_ACCOUNT_SETTINGS_ENABLED === 'true' && <AccountSettings />}
+      {import.meta.env.VITE_AUTH_EMAIL_ENABLED === 'true' && <EmailVerificationSettings />}
     </div>
   );
 }

@@ -92,7 +92,7 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
     <h1>Xác nhận mua hàng</h1><p>COD mô phỏng · Phí vận chuyển demo 0 ₫. Giỏ hàng không giữ kho.</p>
     <Link to="/cart">Quay lại giỏ hàng</Link> · <Link to="/account/addresses">Quản lý địa chỉ</Link>
     <p>Checkout đọc lại địa chỉ, giá và số lượng từ Backend. Thêm địa chỉ hoặc đổi lượng hàng ở màn tương ứng trước khi xác nhận.</p>
-    {error && <p className={styles.error} role="alert">{error}</p>}
+    {error && <p className={styles.error} role="alert">{error} {error.startsWith('Cần xác minh email trong Tài khoản') && <Link to="/account">Mở Tài khoản</Link>}</p>}
     {refreshRequired && !intent && <button disabled={busy || loading} onClick={reloadCart}>Tải lại giỏ và giá</button>}
     {selectionError && <p role="alert">{selectionError}</p>}
     {!selection.ids.length && !selection.error && !intent && <p>Chưa chọn món. Đánh dấu các món muốn mua bên dưới; không tự mua toàn bộ giỏ.</p>}

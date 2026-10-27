@@ -31,6 +31,25 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); sessionStorage.clear(); });
 describe('Checkout UI — mocked HTTP, not cross-service integration evidence', () => {
+  it('releases only the rejected checkout intent after an email precondition failure and never retries automatically', async () => {
+    api.mockImplementation(async path => {
+      if (path === '/cart') return basket;
+      if (path === '/me/addresses') return addresses;
+      if (path === '/checkout/preview') return { canCheckout: true, groups: [], unavailableItems: [], totals: { total: '20000.00' } };
+      if (path === '/checkouts') throw new ApiError('Verify email', 412, 'EMAIL_VERIFICATION_REQUIRED');
+      throw new Error(path);
+    });
+    show(<CheckoutPage />);
+    const preview = await screen.findByRole('button', { name: 'Kiểm tra giá và kho' });
+    await waitFor(() => expect(preview).toBeEnabled());
+    fireEvent.click(preview);
+    fireEvent.click(await screen.findByRole('button', { name: 'Đặt hàng COD' }));
+    await screen.findByText(/Cần xác minh email trong Tài khoản/);
+    expect(sessionStorage.getItem(slot)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Gửi lại cùng yêu cầu' })).not.toBeInTheDocument();
+    expect(api.mock.calls.filter(([path]) => path === '/checkouts')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: 'Mở Tài khoản' })).toHaveAttribute('href', '/account');
+  });
   it('does not show empty addresses or transaction uncertainty after a failed GET, and retry recovers', async () => {
     let fail = true;
     api.mockImplementation(async path => {

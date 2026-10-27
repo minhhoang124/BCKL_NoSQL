@@ -1,5 +1,15 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**Auth email/reset —27/10/2026, nhánh từ `59bba47` (#126 đã merge):**
+token một lần purpose/email/CV/expiry, reset nguyên tử với audit và revoke,
+Web explicit consent/no-auto-replay. Delta Mailpit/gate:1589unit,
+1042E2E (1SKIP/20TODO),78HTTP chọn Auth/Checkout/Store,
+1592FE/6liveSKIP. Mailpit local qua adapter HTTP; chặn Checkout mới và OWNER
+submit/resubmit nếu chưa verified khi cờ bật, giữ replay/reconcile cũ.
+Chưa nghiệm thu gửi thư ngoài hoặc OAuth/OTP
+hoặc toàn Auth P1. Cờ mặc địnhfalse. [Contract](../api/auth-email-recovery.md),
+[bằng chứng/giới hạn](../testing/auth-email-recovery-2026-10-27.md).
+
 **Thông báo in-app —27/10/2026, nhánh từ `f271318` (#125 đã merge):**
 read model từ sáu nguồn lịch sử đã commit, dedupe và khóa recipient trước cấp
 id, own inbox/read state có mốc, Web lọc/phân trang/badge. 1541 unit,

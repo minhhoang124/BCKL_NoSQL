@@ -44,7 +44,7 @@ describe('Store application real HTTP/PG, grant and recovery', () => {
     const local =
       u.hostname === '127.0.0.1' &&
       u.port === '5549' &&
-      ['/bckl_order_resolution_test_attributes_20261019_v953','/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957'].includes(u.pathname);
+      ['/bckl_order_resolution_test_attributes_20261019_v953','/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957', '/bckl_order_resolution_test_attributes_20261019_v959'].includes(u.pathname);
     const ci =
       process.env.GITHUB_ACTIONS === 'true' &&
       ['localhost', '127.0.0.1'].includes(u.hostname) &&
@@ -135,6 +135,50 @@ describe('Store application real HTTP/PG, grant and recovery', () => {
         rolcreatedb: false,
         rolcreaterole: false,
       });
+  });
+  it('requires verified email for submission but permits read/reconciliation and preserves committed receipts', async () => {
+    const old = process.env.AUTH_EMAIL_ENABLED;
+    process.env.AUTH_EMAIL_ENABLED = 'true';
+    try {
+      const owner = await actor(), body = command(profile);
+      const send = () => http().post('/account/store-application').auth(owner.token, { type: 'bearer' }).send(body);
+      const rejected = await send().expect(412);
+      expect(rejected.body.code).toBe('EMAIL_VERIFICATION_REQUIRED');
+      expect(await db.store.count({ where: { sellerId: owner.id } })).toBe(0);
+      expect(await db.storeApplicationCommand.count({ where: { actorId: owner.id } })).toBe(0);
+      await http().get('/account/store-application').auth(owner.token, { type: 'bearer' }).expect(200);
+      const closed = await http().post(`/account/store-application/commands/submit/${owner.id}/reconcile`)
+        .auth(owner.token, { type: 'bearer' }).send(proof('OWNER', 'submit', owner.id, body)).expect(200);
+      expect(closed.body.outcome).toBe('CLOSED');
+      await db.user.update({ where: { id: owner.id }, data: { emailVerifiedAt: new Date() } });
+      const s = await submit(owner);
+      await db.user.update({ where: { id: owner.id }, data: { emailVerifiedAt: null } });
+      const replay = await http().post('/account/store-application').auth(owner.token, { type: 'bearer' }).send(s.body).expect(200);
+      expect(replay.body).toEqual(s.result);
+      expect(await db.storeApplicationAudit.count({ where: { storeId: s.id } })).toBe(1);
+    } finally {
+      if (old === undefined) delete process.env.AUTH_EMAIL_ENABLED;
+      else process.env.AUTH_EMAIL_ENABLED = old;
+    }
+  });
+  it('requires verified email on resubmission but does not prevent Admin reviewing an existing application', async () => {
+    const old = process.env.AUTH_EMAIL_ENABLED;
+    process.env.AUTH_EMAIL_ENABLED = 'false';
+    try {
+      const f = await fixture();
+      process.env.AUTH_EMAIL_ENABLED = 'true';
+      await review(f.admin, f.id, command({ expectedRevision: 1, status: 'REJECTED' })).expect(200);
+      const body = command({ expectedRevision: 2 });
+      const send = () => http().post(`/account/store-application/${f.id}/resubmit`).auth(f.owner.token, { type: 'bearer' }).send(body);
+      await send().expect(412);
+      expect((await db.store.findUniqueOrThrow({ where: { id: f.id } })).status).toBe('REJECTED');
+      expect(await db.storeApplicationAudit.count({ where: { storeId: f.id } })).toBe(2);
+      await db.user.update({ where: { id: f.owner.id }, data: { emailVerifiedAt: new Date() } });
+      await send().expect(200);
+    } finally {
+      if (old === undefined) delete process.env.AUTH_EMAIL_ENABLED;
+      else process.env.AUTH_EMAIL_ENABLED = old;
+    }
   });
   it('public accountType SELLER remains USER in onboarding mode', async () => {
     const r = await http()

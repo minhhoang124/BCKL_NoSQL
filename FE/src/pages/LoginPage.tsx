@@ -96,6 +96,7 @@ export function LoginPage() {
         </button>
       </form>
       <p className={styles.linkText}>
+        {import.meta.env.VITE_AUTH_EMAIL_ENABLED === 'true' && <><Link to="/forgot-password">Quên mật khẩu?</Link><br /></>}
         Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
       </p>
     </div></AuthLayout>

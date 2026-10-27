@@ -13,6 +13,12 @@ import { AdminAccountListService } from './admin-account-list.service.js';
 import { AccountSettingsService } from './account-settings.service.js';
 import { AccountSettingsGuard } from './account-settings.http.js';
 import { AccountStatusRecoveryService } from './account-status-recovery.service.js';
+import {
+  AuthEmailRecoveryController,
+  AuthEmailRateGuard,
+} from './email-recovery.controller.js';
+import { AuthEmailRecoveryService } from './email-recovery.service.js';
+import { AuthEmailDelivery } from './email-delivery.js';
 
 @Module({
   imports: [
@@ -21,8 +27,15 @@ import { AccountStatusRecoveryService } from './account-status-recovery.service.
     JwtModule.register({}),
     SearchModule,
   ],
-  controllers: [AuthController, AdminAccountController],
+  controllers: [
+    AuthController,
+    AdminAccountController,
+    AuthEmailRecoveryController,
+  ],
   providers: [
+    AuthEmailRecoveryService,
+    AuthEmailDelivery,
+    AuthEmailRateGuard,
     AuthService,
     JwtStrategy,
     JwtAuthGuard,

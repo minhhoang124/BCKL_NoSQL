@@ -8,6 +8,7 @@ function demoUser(passwordHash: string): User {
   return {
     id: 42,
     email: 'admin.demo@example.com',
+    emailVerifiedAt: null,
     passwordHash,
     credentialVersion: 1,
     statusRevision: 1,

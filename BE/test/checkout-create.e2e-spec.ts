@@ -221,6 +221,39 @@ describe('COD create HTTP + real PostgreSQL transactions (two app instances)', (
       }),
     };
   }
+  it('requires canonical verified email for a new checkout and rolls back all business state', async () => {
+    const old = process.env.AUTH_EMAIL_ENABLED;
+    process.env.AUTH_EMAIL_ENABLED = 'true';
+    try {
+      const before = await state();
+      const rejected = await post().expect(412);
+      expect(rejected.body.code).toBe('EMAIL_VERIFICATION_REQUIRED');
+      expect(rejected.headers['cache-control']).toBe('no-store');
+      expect(await state()).toEqual(before);
+      await prisma.user.update({ where: { id: buyerId }, data: { emailVerifiedAt: new Date() } });
+      await post().expect(201);
+      expect(await prisma.order.count({ where: { buyerId } })).toBe(1);
+    } finally {
+      if (old === undefined) delete process.env.AUTH_EMAIL_ENABLED;
+      else process.env.AUTH_EMAIL_ENABLED = old;
+    }
+  });
+  it('replays a committed checkout when verification is enabled later, without reserving stock again', async () => {
+    const old = process.env.AUTH_EMAIL_ENABLED;
+    process.env.AUTH_EMAIL_ENABLED = 'false';
+    try {
+      const first = await post().expect(201);
+      const before = await state();
+      process.env.AUTH_EMAIL_ENABLED = 'true';
+      const replay = await post().expect(200);
+      expect(replay.body.checkoutId).toBe(first.body.checkoutId);
+      expect(replay.body.replayed).toBe(true);
+      expect(await state()).toEqual(before);
+    } finally {
+      if (old === undefined) delete process.env.AUTH_EMAIL_ENABLED;
+      else process.env.AUTH_EMAIL_ENABLED = old;
+    }
+  });
   it('integrates Cart/preview/create COD with Buyer and Seller lists without read mutations', async () => {
     const cart = await request(app.getHttpServer())
       .get('/cart')

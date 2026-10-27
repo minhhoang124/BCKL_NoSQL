@@ -33,7 +33,9 @@ const labels: Record<Status, string> = {
   CLOSED: "Đã đóng",
 };
 const message = (e: unknown) =>
-  e instanceof Error && e.name === "AbortError"
+  e instanceof ApiError && e.status === 412 && e.code === "EMAIL_VERIFICATION_REQUIRED"
+    ? "Cần xác minh email trong Tài khoản. Hồ sơ chưa được gửi; giữ mã và dùng Đối chiếu để đóng mã cũ trước khi gửi yêu cầu mới."
+    : e instanceof Error && e.name === "AbortError"
     ? "Chưa nhận được phản hồi đúng hạn. Giữ mã để đối chiếu."
     : e instanceof TypeError
       ? "Chưa nhận được kết quả từ máy chủ. Giữ mã và đối chiếu; không gửi lại."
@@ -508,7 +510,7 @@ function Workspace({
       )}
       {error && (
         <p role="alert" className={styles.error}>
-          {error}
+          {error} {error.startsWith("Cần xác minh email trong Tài khoản") && <Link to="/account">Mở Tài khoản</Link>}
         </p>
       )}
       {journal.error && <p role="alert">{journal.error}</p>}

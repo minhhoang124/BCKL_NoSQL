@@ -212,7 +212,10 @@ describe('Buyer completion / durable D07 runtime — real PostgreSQL', () => {
         },
       })
     ).id;
-  });
+    // isolatedD07Database permits up to 20s for a fresh migration, then this
+    // hook starts two Nest apps. Keep setup above that budget; test deadlines
+    // and all transaction/race assertions remain unchanged at 15s.
+  }, 30_000);
   beforeEach(async () => {
     await prisma.user.update({
       where: { id: admin.id },

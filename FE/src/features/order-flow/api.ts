@@ -39,10 +39,12 @@ export function lookupReceipt(key: string): Promise<Receipt> {
 // Only explicit rollback/business rejections release an intent. Network, 5xx,
 // throttling, 404 lookup and IN_PROGRESS are NOT proof of non-commit.
 export function rejectedWithoutCommit(error: unknown): boolean {
+  if (error instanceof ApiError && error.status === 412 && error.code === 'EMAIL_VERIFICATION_REQUIRED') return true;
   return error instanceof ApiError && [400, 404, 409].includes(error.status ?? 0) &&
     ['ADDRESS_NOT_FOUND', 'CART_ITEM_NOT_FOUND', 'CART_CHANGED', 'SELF_PURCHASE_FORBIDDEN', 'VARIANT_NOT_AVAILABLE', 'INSUFFICIENT_STOCK', 'PRICE_CHANGED', 'INVALID_ORDER_TRANSITION', 'ORDER_CANNOT_CANCEL', 'PAYMENT_STATE_CONFLICT', 'STORE_STATE_CONFLICT', 'STALE_DELIVERY_ATTEMPT', 'DELIVERY_ATTEMPT_LIMIT'].includes(error.code ?? '');
 }
 export function errorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.status === 412 && error.code === 'EMAIL_VERIFICATION_REQUIRED') return 'Cần xác minh email trong Tài khoản trước khi đặt hàng. Đơn chưa được tạo; tải lại giỏ sau khi xác minh rồi chủ động đặt lại.';
   return error instanceof ApiError ? error.message : 'Mất kết nối hoặc hết thời gian chờ. Chưa xác định yêu cầu đã được ghi nhận hay chưa.';
 }
 export type Intent = { path: string; key: string; body: object };

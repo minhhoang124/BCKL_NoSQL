@@ -130,6 +130,8 @@ enum SearchReconciliationStatus {
 model User {
   id                      Int                      @id @default(autoincrement())
   email                   String                   @unique
+  emailVerifiedAt         DateTime?
+  authEmailTokens         AuthEmailToken[]
   passwordHash            String
   credentialVersion       Int                      @default(1)
   statusRevision          Int                      @default(1)
@@ -302,6 +304,31 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+model AuthEmailToken {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            Int
+  purpose           String   @db.VarChar(20)
+  tokenHash         String   @unique @db.VarChar(64)
+  email             String   @db.VarChar(254)
+  credentialVersion Int
+  createdAt         DateTime @default(now()) @db.Timestamp(3)
+  expiresAt         DateTime @db.Timestamp(3)
+  usedAt            DateTime? @db.Timestamp(3)
+  revokedAt         DateTime? @db.Timestamp(3)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@index([userId, purpose, expiresAt])
+  @@map("auth_email_tokens")
+}
+
+model AuthEmailRate {
+  key               String @id @db.VarChar(64)
+  windowStartedAt   DateTime @db.Timestamp(3)
+  count             Int
+
+  @@map("auth_email_rates")
 }
 
 model AccountSecurityEvent {

@@ -11,6 +11,7 @@ import { Prisma, type StoreStatus } from '@prisma/client';
 import { PrismaService } from '../prisma.service.js';
 import type { AuthenticatedUser } from '../auth/auth.types.js';
 import { credentialMatches } from '../auth/credential-version.js';
+import { requireVerifiedEmail } from '../auth/email-verification.policy.js';
 import { isAccountStatusConflict } from '../auth/account-status-sql.js';
 import { waitForTransactionRetry } from '../product/transaction-conflict.js';
 import { SearchReconciliationService } from '../search/search-reconciliation.service.js';
@@ -281,6 +282,8 @@ export class StoreApplicationService {
               });
               return { commandId, outcome: 'CLOSED', receipt: null };
             }
+            if (scope === 'OWNER' && ['submit', 'resubmit'].includes(action))
+              requireVerifiedEmail(owner.emailVerifiedAt);
             const body = command!.body;
             if (action === 'submit' && store)
               return conflict('STORE_ALREADY_EXISTS');

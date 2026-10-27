@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OrderActorType, Prisma } from '@prisma/client';
 import { canActAsBuyer } from '../auth/buyer-access.js';
+import { requireVerifiedEmail } from '../auth/email-verification.policy.js';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
 import {
@@ -86,7 +87,7 @@ export class CheckoutCreateService {
             await tx.$queryRaw`SELECT id FROM users WHERE id = ${buyerId} FOR UPDATE`;
             const actor = await tx.user.findUnique({
               where: { id: buyerId },
-              select: { isActive: true, role: true },
+              select: { isActive: true, role: true, emailVerifiedAt: true },
             });
             if (!actor?.isActive)
               throw checkoutError(
@@ -107,6 +108,7 @@ export class CheckoutCreateService {
             });
             const replay = resolveCheckoutReplay(stored, buyerId, requestHash);
             if (replay) return replay;
+            requireVerifiedEmail(actor.emailVerifiedAt);
             if (!countedIntent) {
               this.rate.consume(buyerId, 'intent');
               countedIntent = true;

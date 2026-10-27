@@ -11,6 +11,10 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { ErrorRequestHandler, Request, Response } from 'express';
 import type { AuthenticatedUser } from './auth.types.js';
 const write = (req: { method?: string; url?: string }) =>
+  (req.method === 'POST' &&
+    /^\/auth\/(?:email|password-reset)\/(?:request|confirm)\/?$/i.test(
+      (req.url ?? '').split('?')[0],
+    )) ||
   (req.method === 'PATCH' &&
     /^\/auth\/profile\/?$/i.test((req.url ?? '').split('?')[0])) ||
   (req.method === 'POST' &&
@@ -20,16 +24,26 @@ export function registerAccountSettingsHttp(app: INestApplication) {
     if (/^\/auth(?:\/|$)/i.test(req.path))
       res.setHeader('Cache-Control', 'no-store');
     if (
+      /^\/auth\/email\/status\/?$/i.test(req.path) &&
+      (req.originalUrl.includes('?') ||
+        req.headers['transfer-encoding'] !== undefined ||
+        (req.headers['content-length'] !== undefined &&
+          req.headers['content-length'] !== '0'))
+    ) {
+      res
+        .status(400)
+        .json({ statusCode: 400, code: 'AUTH_EMAIL_INVALID_INPUT' });
+      return;
+    }
+    if (
       write(req) &&
       (req.originalUrl.includes('?') ||
         !/^application\/json(?:\s*;|\s*$)/i.test(req.get('content-type') ?? ''))
     ) {
-      res
-        .status(400)
-        .json({
-          statusCode: 400,
-          message: 'Không nhận query hoặc body khác JSON',
-        });
+      res.status(400).json({
+        statusCode: 400,
+        message: 'Không nhận query hoặc body khác JSON',
+      });
       return;
     }
     next();
@@ -48,12 +62,10 @@ export function registerAccountSettingsHttp(app: INestApplication) {
       error.type === 'entity.too.large'
         ? 413
         : 400;
-    res
-      .status(status)
-      .json({
-        statusCode: status,
-        message: 'Body tài khoản không hợp lệ hoặc quá lớn',
-      });
+    res.status(status).json({
+      statusCode: status,
+      message: 'Body tài khoản không hợp lệ hoặc quá lớn',
+    });
   };
   app.use(errors);
 }
