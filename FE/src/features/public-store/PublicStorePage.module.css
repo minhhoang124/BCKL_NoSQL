@@ -1,0 +1,21 @@
+.profile {
+  overflow-wrap: anywhere;
+  min-width: 0;
+  margin-block: 1rem;
+}
+.profile p {
+  white-space: pre-wrap;
+}
+.profile h1 {
+  margin-top: 0.65rem;
+}
+
+.profile {
+  background: var(--bg);
+}
+.profile span {
+  color: #263444;
+}
+.catalog {
+  color: #17202d;
+}

@@ -15,6 +15,10 @@ import { registerAccountSettingsHttp } from './auth/account-settings.http.js';
 export function configureApp(app: INestApplication): void {
   // Apply before guards/validation as sensitive Admin failures must not be cached either.
   app.use((req: Request, res: Response, next: NextFunction) => {
+    if (/^\/stores(?:\/|$)/i.test(req.path)) {
+      res.setHeader('Cache-Control','no-store');
+      if(['GET','HEAD'].includes(req.method)&&(req.headers['transfer-encoding']!==undefined||(req.headers['content-length']!==undefined&&req.headers['content-length']!=='0'))){res.status(400).json({statusCode:400,code:'PUBLIC_STORE_INVALID_INPUT'});return;}
+    }
     if (/^\/payments\/vnpay(?:\/|$)/i.test(req.path)) {
       res.setHeader('Cache-Control','no-store'); res.setHeader('Referrer-Policy','no-referrer');
     }

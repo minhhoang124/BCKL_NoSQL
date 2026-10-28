@@ -1,5 +1,7 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**28/10/2026 — QA phát hành và Store công khai đang triển khai trên nhánh riêng từ `532d79d`:** COD → Seller → Buyer → hậu mãi → Dashboard đã có bằng chứng Chrome/HTTP/PostgreSQL QA; Store công khai đang khép API/Web theo P0, chưa tính tích hợp trước merge. [Checkpoint SRS](../testing/release-srs-checkpoint-2026-10-28.md), [contract Store](../api/public-store.md), [hướng dẫn QA](../testing/local-qa-runbook-2026-10-28.md). Các đoạn theo nhánh/ngày phía dưới là checkpoint lịch sử, không thay ma trận hiện hành. Email thông báo nghiệp vụ, thống kê Search theo Store và nghiệm thu provider sandbox vẫn còn việc.
+
 **OTP điện thoại mô phỏng — 27/10/2026, nhánh từ `4a35b4a` (#128 đã merge):**
 challenge HMAC/TTL/bộ đếm bền, liên hệ theo User có version/evidence, khóa
 account+recipient trước User/challenge. Xác nhận và contact nguyên tử; explicit

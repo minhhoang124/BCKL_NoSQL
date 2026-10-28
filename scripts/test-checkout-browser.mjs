@@ -13,17 +13,17 @@ const { values } = parseArgs({
   options: {
     "playwright-module": { type: "string" },
     channel: { type: "string", default: "chrome" },
+    "integrated-aftersales": { type: "boolean", default: false },
     output: { type: "string", default: "artifacts/checkout-browser" },
     "evidence-output": { type: "string" },
   },
 });
 const db = new URL(process.env.DATABASE_URL ?? "");
+assert.equal(db.protocol, "postgresql:");
+assert.equal(db.username, "bckl_qa_app_20261021");
 assert.equal(db.hostname, "127.0.0.1");
 assert.equal(db.port, "5549");
-assert.equal(
-  db.pathname,
-  "/bckl_order_resolution_test_cod_journey_20261023_v924",
-);
+assert(["/bckl_order_resolution_test_cod_journey_20261023_v924", "/bckl_order_resolution_test_attributes_20261019_v971"].includes(db.pathname));
 assert(
   [...db.searchParams].every(([k, v]) => k === "schema" && v === "public"),
 );
@@ -83,7 +83,14 @@ try {
   await app.listen(0, "127.0.0.1");
   const api = await app.getUrl();
   const prisma = app.get(PrismaService);
+  const [qaRole] = await prisma.$queryRaw`SELECT rolsuper,rolcreatedb,rolcreaterole FROM pg_roles WHERE rolname=current_user`;
+  assert(!qaRole.rolsuper && !qaRole.rolcreatedb && !qaRole.rolcreaterole);
+  if (db.pathname.endsWith("_v971")) {
+    const [migrations] = await prisma.$queryRaw`SELECT count(*)::int AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL`;
+    assert.equal(migrations.n,36);
+  }
   process.env.VITE_API_URL = api;
+  if (values["integrated-aftersales"]) { process.env.VITE_AFTERSALES_ENABLED="true";  }
   vite = await createServer({
     root: path.join(root, "FE"),
     envDir: false,
@@ -589,6 +596,91 @@ try {
           version,
         );
         screens.push(await shot("09-completed"));
+        if (values["integrated-aftersales"]) {
+          // Same real COD Order, not a manufactured DELIVERED/COMPLETED fixture.
+          const sellerSession = await http("/auth/login", null, "POST", {email:seller.email,password});
+          const item = await prisma.orderItem.findFirstOrThrow({where:{orderId:id}});
+          const [dbClock] = await prisma.$queryRaw`SELECT clock_timestamp() AS now`;
+          const local = new Date(new Date(dbClock.now).getTime()+7*3600000).toISOString().slice(0,10);
+          const end = new Date(Date.parse(local+"T00:00:00Z")+86400000).toISOString().slice(0,10);
+          const summaryPath=`/seller/dashboard?from=${local}&to=${end}&bucket=day`;
+          const beforeRevenue=await http(summaryPath,sellerSession.accessToken);
+          assert.equal(beforeRevenue.totals.grossMerchandise,item.lineTotal.toFixed(2));
+          assert.equal(beforeRevenue.totals.effectiveRefundMerchandise,"0.00");
+          assert.equal(beforeRevenue.totals.netMerchandise,item.lineTotal.toFixed(2));
+          let aftersaleCreates=0;
+          const createEndpoint=api+`/aftersales/items/${item.id}/requests`;
+          const countCreates=r=>{if(r.method()==="POST"&&r.url()===createEndpoint)aftersaleCreates++;};
+          page.on("request",countCreates);
+          await page.getByRole("link",{name:"Yêu cầu hỗ trợ cho mặt hàng này",exact:true}).click();
+          const createForm=page.getByRole("region",{name:"Tạo yêu cầu hậu mãi"});
+          await createForm.getByLabel("Phương án").selectOption("REFUND_ONLY");
+          await createForm.getByLabel("Mô tả",{exact:true}).fill("QA sau COD thực tế: hàng nhận không đúng mô tả, kiểm hoàn tiền mô phỏng");
+          await createForm.getByRole("checkbox").check();
+          await createForm.locator("form").evaluate(form=>{form.requestSubmit();form.requestSubmit();});
+          await page.getByText("Đã ghi nhận thao tác cho yêu cầu #",{exact:false}).waitFor();
+          const requests=await prisma.aftersaleRequest.findMany({where:{orderItemId:item.id}});
+          assert.equal(requests.length,1); assert.equal(aftersaleCreates,1); const requestId=requests[0].id;
+          const aftersaleShot=await shot("10-aftersales-request-after-real-cod");
+          await sellerPage.goto(frontend+"/seller/aftersales");
+          await sellerPage.getByRole("button",{name:`Xem yêu cầu #${requestId}`,exact:true}).click();
+          await sellerPage.getByRole("button",{name:"Chấp thuận",exact:true}).click();
+          const decision=sellerPage.getByRole("form",{name:"Xác nhận xử lý hậu mãi"});
+          await decision.getByLabel("Lý do quyết định",{exact:true}).fill("QA đã đối chiếu hàng nhận và yêu cầu hoàn tiền mô phỏng");
+          await decision.getByRole("checkbox").check();
+          const approvalEndpoint=`${api}/seller/aftersales/requests/${requestId}/approve`;
+          const approvalPending=sellerPage.waitForRequest(r=>r.url()===approvalEndpoint&&r.method()==="POST");
+          await decision.getByRole("button",{name:/^Xác nhận /}).click();
+          const approvalRequest=await approvalPending, approvalBody=approvalRequest.postDataJSON();
+          await sellerPage.getByText("Đã ghi nhận thao tác cho yêu cầu #",{exact:false}).waitFor();
+          const replay=await http(`/seller/aftersales/requests/${requestId}/approve`,sellerSession.accessToken,"POST",approvalBody);
+          assert.equal(replay.outcome,"APPLIED");
+          assert.equal(await prisma.refundRecord.count({where:{requestId}}),1);
+          const refund=await prisma.refundRecord.findFirstOrThrow({where:{requestId}});
+          assert.equal(refund.amount.toFixed(2),item.lineTotal.toFixed(2));
+          assert.equal(await prisma.revenueAdjustment.count({where:{refundId:refund.id}}),1);
+          assert.equal((await prisma.productVariant.findUniqueOrThrow({where:{id:variant.id}})).stock,3);
+          assert.equal(await prisma.stockMovement.count({where:{variantId:variant.id}}),1);
+          assert.equal(await prisma.searchOutbox.count({where:{productId:product.id}}),1);
+          const afterRevenue=await http(summaryPath,sellerSession.accessToken);
+          assert.equal(afterRevenue.totals.grossMerchandise,item.lineTotal.toFixed(2));
+          assert.equal(afterRevenue.totals.effectiveRefundMerchandise,item.lineTotal.toFixed(2));
+          assert.equal(afterRevenue.totals.netMerchandise,"0.00");
+          assert.equal(afterRevenue.pendingRefundMerchandise,"0.00");
+          assert.equal(afterRevenue.dataQuality.invalidSnapshotOrderCount,0);
+          // Seller dashboard UI must read the same committed ledger, no mocked response.
+          await sellerPage.goto(frontend+"/seller");
+          await sellerPage.getByRole("button",{name:"Thống kê",exact:true}).click();
+          const dashboard=sellerPage.getByRole("region",{name:"Thống kê doanh thu và hoàn tiền"});
+          await dashboard.getByRole("table").waitFor();
+          await dashboard.getByLabel("Từ ngày",{exact:true}).fill(local);
+          await dashboard.getByLabel("Đến trước ngày",{exact:true}).fill(end);
+          await dashboard.getByLabel("Nhóm theo").selectOption("day");
+          const filteredPending=sellerPage.waitForResponse(r=>{
+            const u=new URL(r.url());return u.origin===api&&u.pathname==="/seller/dashboard"&&u.searchParams.get("from")===local&&u.searchParams.get("to")===end&&u.searchParams.get("bucket")==="day"&&r.request().method()==="GET"&&r.status()===200;
+          });
+          await dashboard.getByRole("button",{name:"Xem thống kê",exact:true}).click();
+          const filtered=await (await filteredPending).json();
+          assert.equal(filtered.totals.grossMerchandise,item.lineTotal.toFixed(2));
+          assert.equal(filtered.totals.effectiveRefundMerchandise,item.lineTotal.toFixed(2));
+          const normalizeMoney=x=>x.replace(/[\u00a0\u202f]/g," ");
+          const expectedMoney=normalizeMoney(new Intl.NumberFormat("vi-VN",{style:"currency",currency:"VND",maximumFractionDigits:0}).format(Number(item.lineTotal.toString())));
+          for(const [label,expected] of [["Doanh thu hàng hóa",expectedMoney],["Hoàn tiền có hiệu lực trong kỳ",expectedMoney],["Doanh thu thuần","0 ₫"]]){
+            const card=dashboard.locator("article").filter({has:sellerPage.getByText(label,{exact:true})});
+            await card.getByText(expected,{exact:true}).waitFor();
+            assert.equal(normalizeMoney(await card.locator("strong").innerText()),expected);
+          }
+          const dashboardShot=`${name}-11-dashboard-after-real-refund.png`;
+          await sellerPage.screenshot({path:path.join(values.output,dashboardShot),fullPage:true});
+          assert.equal((await prisma.order.findUniqueOrThrow({where:{id}})).status,"COMPLETED");
+          assert.equal((await prisma.payment.findUniqueOrThrow({where:{orderId:id}})).status,"PAID");
+          // Projection reads/replayed command must not add ledger rows or stock effects.
+          assert.equal(await prisma.refundRecord.count({where:{requestId}}),1);
+          assert.equal(await prisma.revenueAdjustment.count({where:{refundId:refund.id}}),1);
+          assert.equal(aftersaleCreates,1); page.off("request",countCreates);
+          results.push({name:"integrated-cod-aftersales-dashboard",result:"PASS",screens:[aftersaleShot,dashboardShot],orderId:id,requestId,refundMode:"SIMULATED",gross:item.lineTotal.toFixed(2),refund:refund.amount.toFixed(2),net:"0.00",inventoryUnchangedByRefundOnly:true});
+        }
+
         await sellerContext.close();
       } else {
         const cancel = page.getByRole("button", {

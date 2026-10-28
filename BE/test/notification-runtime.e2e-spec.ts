@@ -33,7 +33,7 @@ describe('Notification HTTP/PostgreSQL committed-event delivery and permissions'
     const local =
       u.hostname === '127.0.0.1' &&
       u.port === '5549' &&
-      ['/bckl_order_resolution_test_attributes_20261019_v957','/bckl_order_resolution_test_attributes_20261019_v959', '/bckl_order_resolution_test_attributes_20261019_v961', '/bckl_order_resolution_test_attributes_20261019_v965', '/bckl_order_resolution_test_attributes_20261019_v967'].includes(u.pathname);
+      ['/bckl_order_resolution_test_attributes_20261019_v957','/bckl_order_resolution_test_attributes_20261019_v959', '/bckl_order_resolution_test_attributes_20261019_v961', '/bckl_order_resolution_test_attributes_20261019_v965', '/bckl_order_resolution_test_attributes_20261019_v967', '/bckl_order_resolution_test_attributes_20261019_v971'].includes(u.pathname);
     const ci =
       process.env.GITHUB_ACTIONS === 'true' &&
       ['127.0.0.1', 'localhost'].includes(u.hostname) &&

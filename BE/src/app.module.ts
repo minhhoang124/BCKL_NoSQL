@@ -6,6 +6,7 @@ import { DatabaseModule } from './database.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { AccessModule } from './access/access.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
+import { PublicStoreModule } from './store/public-store.controller.js';
 import { StoreModule } from './store/store.module.js';
 import { ProductModule } from './product/product.module.js';
 import { SearchModule } from './search/search.module.js';
@@ -32,6 +33,7 @@ import { VnpayModule } from './payment/vnpay.controller.js';
     AuthModule,
     AccessModule,
     StoreModule,
+    PublicStoreModule,
     CatalogModule,
     ProductModule,
     SearchModule,

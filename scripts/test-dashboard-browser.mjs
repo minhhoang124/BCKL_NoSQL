@@ -18,10 +18,7 @@ const url = new URL(process.env.DATABASE_URL ?? "");
 assert.equal(url.protocol, "postgresql:");
 assert.equal(url.hostname, "127.0.0.1");
 assert.equal(url.port, "5549");
-assert.equal(
-  url.pathname,
-  "/bckl_order_resolution_test_attributes_20261019_v951",
-);
+assert(["/bckl_order_resolution_test_attributes_20261019_v951", "/bckl_order_resolution_test_attributes_20261019_v971"].includes(url.pathname));
 assert.equal(url.username, "bckl_qa_app_20261021");
 assert(!url.hash);
 assert(
@@ -105,7 +102,7 @@ try {
   );
   const [migrations] =
     await db.$queryRaw`SELECT count(*)::int AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL`;
-  assert.equal(migrations.n, 27);
+  assert.equal(migrations.n, url.pathname.endsWith("_v971") ? 36 : 27);
   vite = await createServer({
     root: path.join(root, "FE"),
     configFile: false,

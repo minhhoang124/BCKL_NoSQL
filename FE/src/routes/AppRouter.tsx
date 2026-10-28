@@ -5,6 +5,7 @@ import { ImageSearchPage } from "../pages/ImageSearchPage";
 import { LoginPage } from "../pages/LoginPage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { AccountPage } from "../pages/AccountPage";
+import { PublicStorePage } from '../features/public-store/PublicStorePage';
 import { ProductDetailPage } from "../pages/ProductDetailPage";
 import { SellerDashboardPage } from "../pages/SellerDashboardPage";
 import { AdminDashboardPage } from "../pages/AdminDashboardPage";
@@ -73,6 +74,7 @@ export function AppRouter() {
           <Route path="/verify-email" element={<EmailConfirmationPage />} />
         </>}
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/stores/:storeId" element={<PublicStorePage />} />
 
         {/* Protected Routes - Any logged in user */}
         <Route

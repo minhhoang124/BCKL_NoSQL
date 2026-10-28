@@ -45,7 +45,7 @@ Mọi thành viên và AI hỗ trợ phải đọc:
 
 ## Khởi động
 
-Các ứng dụng sẽ được bổ sung trong giai đoạn nền móng. Sao chép `.env.example` thành `.env` và không commit `.env`.
+Backend NestJS và Web React đã có các luồng tích hợp; xem [hướng dẫn local/QA](docs/testing/local-qa-runbook-2026-10-28.md) và [checkpoint chức năng, bằng chứng và phần còn thiếu](docs/testing/release-srs-checkpoint-2026-10-28.md). Cấu hình mẫu nằm ở `.env.example`; giữ mọi giá trị riêng ngoài Git. Khi kiểm thử, dùng checkout/database QA riêng và môi trường tiến trình đã xác minh, không dùng cấu hình database demo.
 
 ## Mốc kế hoạch nội bộ ban đầu
 
