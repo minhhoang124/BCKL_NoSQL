@@ -67,3 +67,5 @@ sourceId đúng audit/message, Admin pending hiện hành, audience/dedupe rõ r
 insert/mark-read lock cùng recipient và read-all có mốc. Không áp nguyên nhãn
 P1 của giả thuyết chưa thành code. Phải QA event commit muộn, rollback source,
 duplicate projectors, actor freshness, role demotion và main state bất biến.
+
+Email nghiệp vụ có lát cắt riêng ngày 28/10/2026 trên nhánh từ d5815d5; xem [contract và giới hạn](business-notification-email.md). Chỉ tính tích hợp sau merge; Mailpit QA không phải gửi thư ra ngoài.

@@ -13,6 +13,13 @@ import { registerAttributeWriteParser } from './catalog/admin-attribute-write.ht
 import { registerAccountSettingsHttp } from './auth/account-settings.http.js';
 
 export function configureApp(app: INestApplication): void {
+  // Preflight is transport negotiation, not a business write. Handle before body/query gates.
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+    exposedHeaders: ['Retry-After'],
+  });
+
   // Apply before guards/validation as sensitive Admin failures must not be cached either.
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (/^\/stores(?:\/|$)/i.test(req.path)) {
@@ -67,11 +74,6 @@ export function configureApp(app: INestApplication): void {
   });
   configureAccountListHttp(app);
   registerAccountSettingsHttp(app);
-  app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true,
-    exposedHeaders: ['Retry-After'],
-  });
   // Reject unsupported Order GET bodies before any JSON parser is registered.
   configureOrderListHttp(app);
   registerAttributeWriteParser(app);

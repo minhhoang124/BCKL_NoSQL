@@ -252,6 +252,7 @@ model GoogleOAuthChallenge {
 }
 
 model Notification {
+  emailJob NotificationEmailJob?
   id BigInt @id @default(autoincrement())
   recipientId Int
   audience String @db.VarChar(8)
@@ -1340,4 +1341,29 @@ model SearchReconciliationJob {
   @@index([status, nextAttemptAt])
   @@index([scope, scopeId, createdAt])
   @@map("search_reconciliation_jobs")
+}
+
+model NotificationEmailJob {
+  notificationId BigInt @id
+  provider String @db.VarChar(8)
+  fromEmail String @db.VarChar(254)
+  toEmail String @db.VarChar(254)
+  subject String @db.VarChar(200)
+  bodyText String @db.VarChar(1000)
+  payloadHash String @db.Char(64)
+  configFingerprint String @db.Char(64)
+  status String @default("QUEUED") @db.VarChar(24)
+  attempts Int @default(0)
+  leaseId String? @db.Uuid
+  leaseUntil DateTime? @db.Timestamp(3)
+  firstDispatchAt DateTime? @db.Timestamp(3)
+  attemptStartedAt DateTime? @db.Timestamp(3)
+  nextAttemptAt DateTime @default(now()) @db.Timestamp(3)
+  acceptedAt DateTime? @db.Timestamp(3)
+  providerMessageId String? @db.VarChar(128)
+  lastCode String? @db.VarChar(40)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  notification Notification @relation(fields:[notificationId],references:[id],onDelete:Restrict,onUpdate:NoAction)
+  @@index([status,nextAttemptAt,notificationId],map:"notification_email_jobs_due_idx")
+  @@map("notification_email_jobs")
 }

@@ -1,3 +1,5 @@
+import { NotificationEmailWorker } from './notification-email-worker.js';
+import { NotificationEmailTransport } from './notification-email-transport.js';
 import {
   Body,
   Controller,
@@ -46,7 +48,7 @@ export class NotificationController {
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [NotificationController],
-  providers: [NotificationProjector, NotificationService],
+  providers: [NotificationProjector, NotificationService, NotificationEmailWorker, NotificationEmailTransport],
   exports: [NotificationProjector],
 })
 export class NotificationModule {}

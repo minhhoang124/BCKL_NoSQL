@@ -39,7 +39,7 @@ describe('Auth email/reset real PostgreSQL', () => {
       !(
         u.hostname === '127.0.0.1' &&
         u.port === '5549' &&
-        ['/bckl_order_resolution_test_attributes_20261019_v959','/bckl_order_resolution_test_attributes_20261019_v961', '/bckl_order_resolution_test_attributes_20261019_v965', '/bckl_order_resolution_test_attributes_20261019_v967', '/bckl_order_resolution_test_attributes_20261019_v971'].includes(u.pathname)
+        ['/bckl_order_resolution_test_attributes_20261019_v959','/bckl_order_resolution_test_attributes_20261019_v961', '/bckl_order_resolution_test_attributes_20261019_v965', '/bckl_order_resolution_test_attributes_20261019_v967', '/bckl_order_resolution_test_attributes_20261019_v971', '/bckl_order_resolution_test_attributes_20261019_v973'].includes(u.pathname)
       ) &&
       !(
         process.env.GITHUB_ACTIONS === 'true' &&
