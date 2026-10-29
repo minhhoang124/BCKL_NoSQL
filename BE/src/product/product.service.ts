@@ -335,6 +335,11 @@ export class ProductService {
         const groupCount = await tx.productOptionGroup.count({
           where: { productId },
         });
+        if (await tx.productVariant.count({ where: { productId } })) {
+          throw new ConflictException(
+            'Không thể thêm nhóm phân loại sau khi đã tạo SKU',
+          );
+        }
         if (groupCount >= 2) {
           throw new BadRequestException(
             'Mỗi sản phẩm chỉ được có tối đa 2 nhóm phân loại',
@@ -514,35 +519,42 @@ export class ProductService {
       }
     }
 
-    return this.runSerializable(async (tx) => {
-      const variant = await tx.productVariant.create({
-        data: {
-          productId,
-          storeId: product.storeId,
-          skuCode: `SKU-${productId}-${randomUUID()}`,
-          sellerSku,
-          price,
-          stock: dto.stock,
-          isActive: dto.isActive ?? true,
-          optionSignature,
-        },
-      });
-      if (options.length) {
-        await tx.productVariantOptionValue.createMany({
-          data: options.map((option) => ({
-            variantId: variant.id,
+    try {
+      return await this.runSerializable(async (tx) => {
+        const variant = await tx.productVariant.create({
+          data: {
             productId,
-            optionGroupId: option.groupId,
-            optionValueId: option.id,
-          })),
+            storeId: product.storeId,
+            skuCode: `SKU-${productId}-${randomUUID()}`,
+            sellerSku,
+            price,
+            stock: dto.stock,
+            isActive: dto.isActive ?? true,
+            optionSignature,
+          },
         });
-      }
-      await this.incrementVersion(tx, product);
-      return tx.productVariant.findUniqueOrThrow({
-        where: { id: variant.id },
-        include: { optionValueLinks: true },
+        if (options.length) {
+          await tx.productVariantOptionValue.createMany({
+            data: options.map((option) => ({
+              variantId: variant.id,
+              productId,
+              optionGroupId: option.groupId,
+              optionValueId: option.id,
+            })),
+          });
+        }
+        await this.incrementVersion(tx, product);
+        return tx.productVariant.findUniqueOrThrow({
+          where: { id: variant.id },
+          include: { optionValueLinks: true },
+        });
       });
-    });
+    } catch (error: unknown) {
+      this.rethrowProductConstraint(
+        error,
+        'Tổ hợp phân loại hoặc Seller SKU đã tồn tại',
+      );
+    }
   }
 
   async upsertShippingProfile(

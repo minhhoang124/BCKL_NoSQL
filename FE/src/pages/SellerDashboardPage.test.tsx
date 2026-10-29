@@ -10,6 +10,7 @@ import type { Product } from '../types/marketplace';
 
 const products: Product[] = [1, 2].map((id) => ({ id, name: `Product ${id}`, description: `Description ${id}`, category: { id, name: `Category ${id}`, slug: `cat-${id}` }, brand: id === 1 ? { id: 1, name: 'Brand 1', slug: 'brand-1' } : null, images: [], variants: [] }));
 beforeEach(() => {
+  vi.spyOn(marketplaceApi, 'categoryAttributes').mockResolvedValue({ id: 1, attributeDefinitions: [] });
   vi.spyOn(marketplaceApi, 'myStore').mockResolvedValue({ id: 1, name: 'Store', description: null, status: 'ACTIVE' });
   vi.spyOn(marketplaceApi, 'myProducts').mockResolvedValue(products);
   vi.spyOn(marketplaceApi, 'categories').mockResolvedValue([1, 2].map((id) => ({ id, name: `Category ${id}`, slug: `cat-${id}`, parentId: null, isLeaf: true, children: [] })));

@@ -17,10 +17,15 @@ const { values } = parseArgs({
 const target = new URL(process.env.DATABASE_URL ?? "");
 assert.equal(target.hostname, "127.0.0.1");
 assert.equal(target.port, "5549");
-assert.equal(
-  target.pathname,
-  "/bckl_order_resolution_test_attributes_20261019_v945",
+assert.equal(target.protocol, "postgresql:");
+const integratedQa =
+  target.pathname === "/bckl_order_resolution_test_hardening_20261029" &&
+  target.username === "bckl_local_app";
+assert(
+  integratedQa ||
+    target.pathname === "/bckl_order_resolution_test_attributes_20261019_v945",
 );
+assert(target.searchParams.getAll("schema").length <= 1);
 assert(
   !target.hash &&
     [...target.searchParams].every(
@@ -109,6 +114,17 @@ try {
   await app.listen(0, "127.0.0.1");
   const api = await app.getUrl(),
     db = app.get(PrismaService);
+  const [identity] =
+    await db.$queryRaw`SELECT current_database() AS name,rolsuper,rolcreatedb,rolcreaterole FROM pg_roles WHERE rolname=current_user`;
+  assert.equal(identity.name, target.pathname.slice(1));
+  assert(
+    !identity.rolsuper && !identity.rolcreatedb && !identity.rolcreaterole,
+  );
+  if (integratedQa) {
+    const [migrations] =
+      await db.$queryRaw`SELECT count(*)::int AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;
+    assert.equal(migrations.n, 39);
+  }
   process.env.VITE_API_URL = api;
   vite = await createServer({
     root: path.join(root, "FE"),
@@ -188,7 +204,7 @@ try {
     });
     const auth = await fetch(api + "/auth/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Origin: frontend },
       body: JSON.stringify({ email: buyer.email, password }),
     });
     assert.equal(auth.status, 200);

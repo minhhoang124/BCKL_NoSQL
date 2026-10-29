@@ -28,7 +28,18 @@ export interface ProductVariant {
   inStock?: boolean;
   sellerSku?: string | null;
   optionValueIds?: number[];
+  optionSignature?: string;
+  skuCode?: string;
+  isActive?: boolean;
 }
+
+export interface ProductOptionGroup { id: number; name: string; position: number; values: Array<{ id: number; value: string; position: number }> }
+export interface ProductAttributeValue { attributeDefinitionId: number; optionId: number | null; textValue: string | null; numberValue: string | null; booleanValue: boolean | null }
+export interface AttributeDefinition {
+  id: number; name: string; dataType: 'TEXT' | 'NUMBER' | 'BOOLEAN' | 'SINGLE_SELECT'; isRequired: boolean; allowsCustom: boolean;
+  options: Array<{ id: number; value: string }>;
+}
+export interface AttributeInput { optionId?: number; textValue?: string; numberValue?: string; booleanValue?: boolean }
 
 export interface Product {
   id: number;
@@ -43,6 +54,8 @@ export interface Product {
   brand: Brand | null;
   images: ProductImage[];
   variants: ProductVariant[];
+  optionGroups?: ProductOptionGroup[];
+  attributeValues?: ProductAttributeValue[];
   minPrice?: string | null;
   maxPrice?: string | null;
   inStock?: boolean;

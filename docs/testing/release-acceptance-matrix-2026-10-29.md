@@ -1,5 +1,9 @@
 # Ma trận tám luồng nghiệm thu — bản tích hợp 29/10/2026
 
+**Nhánh tiếp theo sau PR135:** đã có browser multi-SKU/typed attributes và
+Chat chia sẻ Order, kèm hai sửa lỗi API có tái hiện. [Checkpoint](listing-chat-release-2026-10-29.md).
+Không lấy số liệu của branch mới thay CI/release đã merge nếu chưa tích hợp.
+
 **Bổ sung quyền ghi29/10:** Store9, Review12, Chat4, hậu mãi9 và listing/quyền
 ghi4 nhóm Chrome PASS; focused HTTP/PG146 PASS. [Chi tiết và giới hạn](release-write-journeys-2026-10-29.md).
 Các trạng thái NOT_RUN trong bảng ca bên dưới là baseline ban đầu, cần đọc

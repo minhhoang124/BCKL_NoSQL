@@ -7,6 +7,7 @@ import type { Brand, Category, Product, Store } from '../types/marketplace';
 import styles from './Marketplace.module.css';
 import { SearchAnalytics } from '../features/SearchAnalytics';
 import { Dashboard } from '../features/dashboard/Dashboard';
+import { ProductDetailsEditor } from '../features/seller-listing/ProductDetailsEditor';
 
 const flat = (nodes: Category[]): Category[] => nodes.flatMap((node) => [node, ...flat(node.children)]);
 const emptyDraft = { name: '', description: '', categoryId: '', brandId: '' };
@@ -31,6 +32,7 @@ export function SellerDashboardPage() {
       marketplaceApi.categories(), marketplaceApi.brands(),
     ]);
     setStore(storeResult); setProducts(productRows); setCategories(categoryRows); setBrands(brandRows);
+    setSelected(current => current ? productRows.find(item => item.id === current.id) ?? null : null);
   };
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -55,7 +57,6 @@ export function SellerDashboardPage() {
     const body = { name: draft.name, description: draft.description, categoryId: Number(draft.categoryId), brandId: draft.brandId ? Number(draft.brandId) : null };
     void run(() => selected ? marketplaceApi.updateProduct(selected.id, body) : marketplaceApi.createProduct(body), selected ? 'Đã cập nhật sản phẩm.' : 'Đã tạo sản phẩm nháp.', () => { setSelected(null); setDraft(emptyDraft); });
   };
-  const addVariant = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const data = new FormData(event.currentTarget); void run(() => marketplaceApi.addVariant(selected.id, { price: String(data.get('price')), stock: Number(data.get('stock')), sellerSku: String(data.get('sellerSku') || '') || null, optionValueIds: [] }), 'Đã thêm phiên bản bán.'); };
   const saveShipping = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const data = new FormData(event.currentTarget); void run(() => marketplaceApi.shipping(selected.id, { packageWeightGrams: Number(data.get('weight')) }), 'Đã lưu kiện hàng.'); };
   const upload = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const body = new FormData(event.currentTarget); body.set('isPrimary', 'true'); body.set('sortOrder', '0'); void run(() => marketplaceApi.addImage(selected.id, body), 'Đã tải ảnh chính.'); };
   return <div className={styles.page}>
@@ -73,7 +74,7 @@ export function SellerDashboardPage() {
         <label>Thương hiệu<select name="brandId" disabled={busy} value={draft.brandId} onChange={(e) => setDraft({ ...draft, brandId: e.target.value })}><option value="">Không thương hiệu</option>{brands.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
         <label>Mô tả<textarea name="description" rows={4} disabled={busy} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></label>
         <button disabled={busy}>Lưu sản phẩm</button><button type="button" disabled={busy} onClick={() => selectProduct(null)}>Tạo mới / bỏ chỉnh sửa</button></form>
-      {selected && <><form className={styles.form} onSubmit={upload}><h2>Ảnh chính</h2><input name="file" type="file" accept="image/jpeg,image/png,image/webp" required /><button disabled={busy}>Tải ảnh</button></form><form className={styles.form} onSubmit={addVariant}><h2>Phiên bản bán</h2><input name="price" inputMode="decimal" placeholder="Giá, ví dụ 199000" required /><input name="stock" type="number" min="0" placeholder="Tồn kho" required /><input name="sellerSku" placeholder="Mã Seller (tùy chọn)" /><button disabled={busy}>Thêm phiên bản</button></form><form className={styles.form} onSubmit={saveShipping}><h2>Kiện hàng</h2><input name="weight" type="number" min="1" placeholder="Khối lượng (gram)" required /><button disabled={busy}>Lưu kiện hàng</button></form></>}
+      {selected && <><form className={styles.form} onSubmit={upload}><h2>Ảnh chính</h2><input name="file" type="file" accept="image/jpeg,image/png,image/webp" required /><button disabled={busy}>Tải ảnh</button></form><ProductDetailsEditor key={selected.id} product={selected} busy={busy} run={run} /><form className={styles.form} onSubmit={saveShipping}><h2>Kiện hàng</h2><input name="weight" type="number" min="1" placeholder="Khối lượng (gram)" required /><button disabled={busy}>Lưu kiện hàng</button></form></>}
       </div>
     </section>}
   </div>;

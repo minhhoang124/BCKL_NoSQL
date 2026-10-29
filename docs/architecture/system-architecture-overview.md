@@ -1,5 +1,12 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**29/10/2026 — PR135 đã merge develop edab510, CI6/6; nhánh listing/Chat tiếp theo:**
+Demo đã nâng39 migrations sau backup và chạy source tích hợp. Listing có
+typed attributes/2 nhóm/nhiều SKU và Buyer chọn SKU vào giỏ; hai lỗi API
+race500 và thêm trục sau SKU được tái hiện/sửa. Chat Order browser4 nhóm đạt.
+Đây là branch đang nghiệm thu, chưa đồng nghĩa các gate staging/provider DONE.
+[Bằng chứng và giới hạn](../testing/listing-chat-release-2026-10-29.md).
+
 **29/10/2026 — delta VNPay trên candidate PR135:** portal SIT mới987 đạt6/6,
 một NCB sandbox đi hết OTP→IPN thật→DB PAID/SUCCEEDED→Web; sửa parser
 reference lạ,40 payment unit và21 HTTP/DB độc lập đạt. Chưa QC thủ công/

@@ -273,13 +273,30 @@ describe('Auth email/reset real PostgreSQL', () => {
   });
   it('quota bounds recipient without invalidating prior tokens or locking the account', async () => {
     const u = await actor();
-    for (let i = 0; i < 5; i++)
+    // The server uses fixed 15-minute PG windows. This real-time test may
+    // straddle a boundary; seven attempts still guarantee a denied request
+    // across at most two windows without assuming all calls share one bucket.
+    for (let i = 0; i < 7; i++)
       await recovery.request(
         'RESET_PASSWORD',
         u.email,
         'unique-' + randomUUID(),
       );
-    expect(mail.filter((m) => m.email === u.email)).toHaveLength(3);
+    const issued = await db.authEmailToken.findMany({
+      where: { userId: u.id, purpose: 'RESET_PASSWORD' },
+    });
+    const perWindow = new Map<number, number>();
+    for (const token of issued) {
+      const window = Math.floor(token.createdAt.getTime() / 900000);
+      perWindow.set(window, (perWindow.get(window) ?? 0) + 1);
+      expect(token.usedAt).toBeNull();
+      expect(token.revokedAt).toBeNull();
+    }
+    expect(perWindow.size).toBeLessThanOrEqual(2);
+    expect([...perWindow.values()].every(count => count <= 3)).toBe(true);
+    expect(issued.length).toBeGreaterThanOrEqual(3);
+    expect(issued.length).toBeLessThan(7);
+    expect(mail.filter((m) => m.email === u.email)).toHaveLength(issued.length);
     expect((await auth.login({ email: u.email, password })).user.id).toBe(u.id);
   });
   it('rolls back token consumption when credential version cannot advance', async () => {

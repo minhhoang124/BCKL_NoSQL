@@ -7,6 +7,7 @@ import { ProductDetailPage } from './ProductDetailPage';
 import { marketplaceApi } from '../services/marketplaceApi';
 import type { Product } from '../types/marketplace';
 import { AuthSessionChangedError } from '../services/apiClient';
+vi.mock('../contexts/useAuth', () => ({ useAuth: () => ({ user: null, loading: false }) }));
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 const product = (id: number): Product => ({ id, name: `Product ${id}`, description: null, category: { id: 1, name: 'Audio', slug: 'audio' }, brand: null, images: [], variants: [] });
 function View() {

@@ -1,5 +1,5 @@
 import { API_URL, fetchApi } from './apiClient';
-import type { Brand, Category, Page, Product, SearchResponse, Store, StoreStatus } from '../types/marketplace';
+import type { AttributeDefinition, AttributeInput, Brand, Category, Page, Product, SearchResponse, Store, StoreStatus } from '../types/marketplace';
 
 export const formatPrice = (value?: string | null) =>
   value?.trim() && Number.isFinite(Number(value)) && Number(value) > 0
@@ -29,6 +29,10 @@ export const marketplaceApi = {
   resubmitStore: () => fetchApi<Store>('/seller/store/resubmit', { method: 'POST' }),
   myProducts: () => fetchApi<Product[]>('/seller/products'),
   myProduct: (id: number) => fetchApi<Product>(`/seller/products/${id}`),
+  categoryAttributes: (id: number) => fetchApi<{ id: number; attributeDefinitions: AttributeDefinition[] }>(`/categories/${id}/attributes`),
+  addOptionGroup: (id: number, body: { name: string; position: number }) => fetchApi(`/seller/products/${id}/option-groups`, { method: 'POST', body: JSON.stringify(body) }),
+  addOptionValue: (id: number, groupId: number, body: { value: string; position: number }) => fetchApi(`/seller/products/${id}/option-groups/${groupId}/values`, { method: 'POST', body: JSON.stringify(body) }),
+  saveAttribute: (id: number, definitionId: number, body: AttributeInput) => fetchApi(`/seller/products/${id}/attributes/${definitionId}`, { method: 'PUT', body: JSON.stringify(body) }),
   createProduct: (body: Record<string, unknown>) => fetchApi<Product>('/seller/products', { method: 'POST', body: JSON.stringify(body) }),
   updateProduct: (id: number, body: Record<string, unknown>) => fetchApi<Product>(`/seller/products/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   addImage: (id: number, body: FormData) => fetchApi<Product>(`/seller/products/${id}/images`, { method: 'POST', body }),

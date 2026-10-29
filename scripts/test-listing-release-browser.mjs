@@ -11,6 +11,7 @@ const { values } = parseArgs({
   options: {
     output: { type: "string" },
     "playwright-module": { type: "string" },
+    "multi-sku": { type: "boolean", default: false },
   },
 });
 assert(values.output && values["playwright-module"]);
@@ -124,6 +125,20 @@ try {
     orders: await db.order.count(),
     stock: await db.stockMovement.count(),
   };
+  let attribute;
+  if (values["multi-sku"])
+    attribute = await db.categoryAttributeDefinition.create({
+      data: {
+        categoryId: category.id,
+        name: "Chất liệu",
+        slug: "material",
+        dataType: "SINGLE_SELECT",
+        isRequired: true,
+        allowsCustom: false,
+        options: { create: { value: "Cotton", slug: "cotton" } },
+      },
+      include: { options: true },
+    });
   async function page(email, target) {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 1000 },
@@ -172,13 +187,104 @@ try {
     .setInputFiles({ name: "qa.png", mimeType: "image/png", buffer: png });
   await s.getByRole("button", { name: "Tải ảnh", exact: true }).click();
   await s.getByText("Đã tải ảnh chính.", { exact: true }).waitFor();
-  await s.getByPlaceholder("Giá, ví dụ 199000").fill("25000");
-  await s.getByPlaceholder("Tồn kho", { exact: true }).fill("7");
-  await s.getByRole("button", { name: "Thêm phiên bản", exact: true }).click();
-  await s.getByText("Đã thêm phiên bản bán.", { exact: true }).waitFor();
+  if (values["multi-sku"]) {
+    for (const [name, options] of [
+      ["Màu sắc", ["Đen", "Trắng"]],
+      ["Kích thước", ["M", "L"]],
+    ]) {
+      await s.getByLabel("Tên nhóm phân loại", { exact: true }).fill(name);
+      await s
+        .getByRole("button", { name: "Thêm nhóm phân loại", exact: true })
+        .click();
+      await s
+        .getByRole("form", { name: `Giá trị ${name}`, exact: true })
+        .waitFor();
+      for (const option of options) {
+        await s
+          .getByLabel(`Giá trị mới cho ${name}`, { exact: true })
+          .fill(option);
+        await s
+          .getByRole("button", { name: `Thêm giá trị ${name}`, exact: true })
+          .click();
+        await s
+          .getByLabel(`Giá trị mới cho ${name}`, { exact: true })
+          .waitFor({ state: "visible" });
+        await s
+          .getByRole("button", { name: `Thêm giá trị ${name}`, exact: true })
+          .waitFor();
+        await s.waitForFunction(
+          () => !document.querySelector("input[name=value]:disabled"),
+        );
+      }
+    }
+    for (const [color, size, price, stock] of [
+      ["Đen", "M", "25000", "7"],
+      ["Đen", "L", "30000", "3"],
+      ["Trắng", "M", "35000", "0"],
+      ["Trắng", "L", "40000", "2"],
+    ]) {
+      await s
+        .getByLabel("Màu sắc cho SKU", { exact: true })
+        .selectOption({ label: color });
+      await s
+        .getByLabel("Kích thước cho SKU", { exact: true })
+        .selectOption({ label: size });
+      await s.getByPlaceholder("Giá, ví dụ 199000").fill(price);
+      await s.getByPlaceholder("Tồn kho", { exact: true }).fill(stock);
+      const response = s.waitForResponse(
+        (r) =>
+          r.url() === api + `/seller/products/${product.id}/variants` &&
+          r.request().method() === "POST",
+      );
+      await s
+        .getByRole("button", { name: "Thêm phiên bản", exact: true })
+        .dblclick();
+      assert.equal((await response).status(), 201);
+      await s
+        .getByRole("button", { name: "Thêm phiên bản", exact: true })
+        .waitFor({ state: "visible" });
+      await s.waitForFunction(
+        () => !document.querySelector("input[name=price]:disabled"),
+      );
+    }
+    assert.equal(
+      await db.productVariant.count({ where: { productId: product.id } }),
+      4,
+    );
+  } else {
+    await s.getByPlaceholder("Giá, ví dụ 199000").fill("25000");
+    await s.getByPlaceholder("Tồn kho", { exact: true }).fill("7");
+    await s
+      .getByRole("button", { name: "Thêm phiên bản", exact: true })
+      .click();
+    await s.getByText("Đã thêm phiên bản bán.", { exact: true }).waitFor();
+  }
   await s.getByPlaceholder("Khối lượng (gram)").fill("100");
   await s.getByRole("button", { name: "Lưu kiện hàng", exact: true }).click();
   await s.getByText("Đã lưu kiện hàng.", { exact: true }).waitFor();
+  if (attribute) {
+    const denied = s.waitForResponse(
+      (r) => r.url() === api + `/seller/products/${product.id}/submit`,
+    );
+    await s.getByRole("button", { name: "Gửi duyệt", exact: true }).click();
+    assert.equal((await denied).status(), 400);
+    assert.equal(
+      (await db.product.findUniqueOrThrow({ where: { id: product.id } }))
+        .moderationStatus,
+      "NOT_SUBMITTED",
+    );
+    await s
+      .getByLabel("Chất liệu", { exact: true })
+      .selectOption(String(attribute.options[0].id));
+    await s.getByRole("button", { name: "Lưu Chất liệu", exact: true }).click();
+    await s
+      .getByText("Đã lưu thuộc tính Chất liệu.", { exact: true })
+      .waitFor();
+    results.push({
+      name: "required_attribute_blocks_submit_then_single_select_saved",
+      result: "PASS",
+    });
+  }
   assert.equal((await fetch(api + "/products/" + product.id)).status, 404);
   await s.screenshot({
     path: path.join(output, "01-seller-draft.png"),
@@ -204,7 +310,7 @@ try {
   assert.equal(publicResponse.status, 200);
   const published = await publicResponse.json();
   assert.equal(published.store.id, store.id);
-  assert.equal(published.variants.length, 1);
+  assert.equal(published.variants.length, values["multi-sku"] ? 4 : 1);
   assert.equal(Number(published.variants[0].price), 25000);
   assert.equal(published.variants[0].inStock, true);
   assert.equal(
@@ -287,6 +393,135 @@ try {
   );
   assert.equal(await db.order.count(), baseline.orders);
   assert.equal(await db.stockMovement.count(), baseline.stock);
+  if (values["multi-sku"]) {
+    const variants = await db.productVariant.findMany({
+      where: { productId: product.id },
+      orderBy: { id: "asc" },
+    });
+    await db.userAddress.create({
+      data: {
+        userId: buyer.id,
+        recipientName: "QA Buyer",
+        phone: "0900000000",
+        province: "QA",
+        ward: "QA",
+        addressLine: "QA simulated address",
+        isDefault: true,
+      },
+    });
+    const b = await page(buyer.email, `/products/${product.id}`);
+    await b
+      .getByLabel("Màu sắc muốn mua", { exact: true })
+      .selectOption({ label: "Trắng" });
+    await b
+      .getByLabel("Kích thước muốn mua", { exact: true })
+      .selectOption({ label: "M" });
+    assert(
+      await b
+        .getByRole("button", { name: "Lưu vào giỏ", exact: true })
+        .isDisabled(),
+    );
+    await b
+      .getByLabel("Màu sắc muốn mua", { exact: true })
+      .selectOption({ label: "Đen" });
+    await b
+      .getByLabel("Kích thước muốn mua", { exact: true })
+      .selectOption({ label: "L" });
+    await b.getByLabel("Số lượng trong giỏ", { exact: true }).fill("2");
+    let puts = 0;
+    b.on("request", (r) => {
+      if (
+        r.url() === api + `/cart/items/${variants[1].id}` &&
+        r.method() === "PUT"
+      )
+        puts++;
+    });
+    await b
+      .getByRole("button", { name: "Lưu vào giỏ", exact: true })
+      .dblclick();
+    await b.getByText("Đã lưu số lượng 2 vào giỏ.", { exact: true }).waitFor();
+    assert.equal(puts, 1);
+    await b
+      .getByRole("link", { name: "Xem giỏ và thanh toán", exact: true })
+      .click();
+    await b
+      .getByLabel(`Chọn biến thể ${variants[1].id}`, { exact: true })
+      .check();
+    await b
+      .getByRole("link", { name: "Tiếp tục thanh toán", exact: true })
+      .click();
+    await b
+      .getByRole("button", { name: "Kiểm tra giá và kho", exact: true })
+      .click();
+    const checkout = b.waitForResponse(
+      (r) => r.url() === api + "/checkouts" && r.request().method() === "POST",
+    );
+    await b
+      .getByRole("button", { name: "Đặt hàng COD", exact: true })
+      .dblclick();
+    assert.equal((await checkout).status(), 201);
+    await b
+      .getByRole("heading", { name: "Đã ghi nhận đặt hàng COD", exact: true })
+      .waitFor();
+    const orders = await db.order.findMany({
+      where: { buyerId: buyer.id },
+      include: { items: true },
+    });
+    assert.equal(orders.length, 1);
+    assert.equal(orders[0].items.length, 1);
+    assert.equal(orders[0].items[0].variantId, variants[1].id);
+    assert.equal(orders[0].items[0].quantity, 2);
+    assert.equal(orders[0].items[0].unitPrice.toString(), "30000");
+    assert.equal(orders[0].items[0].lineTotal.toString(), "60000");
+    const stocks = await db.productVariant.findMany({
+      where: { productId: product.id },
+      orderBy: { id: "asc" },
+      select: { stock: true },
+    });
+    assert.deepEqual(
+      stocks.map((x) => x.stock),
+      [7, 1, 0, 2],
+    );
+    assert.equal(
+      await db.stockMovement.count({
+        where: { orderItemId: orders[0].items[0].id, quantityDelta: -2 },
+      }),
+      1,
+    );
+    await b.screenshot({
+      path: path.join(output, "03-buyer-multi-sku-cod.png"),
+      fullPage: true,
+    });
+    results.push({
+      name: "buyer_selected_sku_out_of_stock_guard_single_put_single_order_correct_stock",
+      result: "PASS",
+      orderId: orders[0].id,
+    });
+    await s.reload();
+    await s.getByRole("button", { name: /^Sản phẩm \(/ }).click();
+    await s
+      .getByText(marker, { exact: true })
+      .locator("..")
+      .locator("..")
+      .getByRole("button", { name: "Chỉnh sửa", exact: true })
+      .click();
+    await s.getByLabel("Màu sắc cho SKU", { exact: true }).waitFor();
+    for (const viewport of [
+      { width: 390, height: 844 },
+      { width: 1440, height: 1000 },
+    ]) {
+      await s.setViewportSize(viewport);
+      await s.screenshot({
+        path: path.join(output, `seller-${viewport.width}.png`),
+        fullPage: true,
+      });
+      assert(
+        await s.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      );
+    }
+  }
   assert.deepEqual(errors, []);
 } catch (e) {
   results.push({ name: "run", result: "FAIL", message: e.message });
@@ -311,8 +546,9 @@ try {
         head,
         driverSha256,
         results,
-        scope:
-          "Single default variant; no options/attributes editor or external Search; real Web writes, API denial probes; synthetic actors/catalog",
+        scope: values["multi-sku"]
+          ? "Real multi-SKU/required attribute/approval/Buyer COD; synthetic actors, catalog and address; no external Search in this driver"
+          : "Single default variant; real Web writes, API denial probes; synthetic actors/catalog",
       },
       null,
       2,
