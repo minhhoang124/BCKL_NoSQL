@@ -113,7 +113,7 @@ describe('Order sharing: canonical Buyer–Store, real HTTP Checkout/PostgreSQL'
           '/bckl_order_resolution_test_attributes_20261019_v949',
           '/bckl_order_resolution_test_attributes_20261019_v950',
           '/bckl_order_resolution_test_attributes_20261019_v951',
-          '/bckl_order_resolution_test_attributes_20261019_v953', '/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957', '/bckl_order_resolution_test_attributes_20261019_v959', '/bckl_order_resolution_test_attributes_20261019_v961', '/bckl_order_resolution_test_attributes_20261019_v965', '/bckl_order_resolution_test_attributes_20261019_v967', '/bckl_order_resolution_test_attributes_20261019_v971', '/bckl_order_resolution_test_attributes_20261019_v973',
+          '/bckl_order_resolution_test_attributes_20261019_v953', '/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957', '/bckl_order_resolution_test_attributes_20261019_v959', '/bckl_order_resolution_test_attributes_20261019_v961', '/bckl_order_resolution_test_attributes_20261019_v965', '/bckl_order_resolution_test_attributes_20261019_v967', '/bckl_order_resolution_test_attributes_20261019_v971', '/bckl_order_resolution_test_attributes_20261019_v973', '/bckl_order_resolution_test_attributes_20261019_v975', '/bckl_order_resolution_test_hardening_20261029',
         ].includes(url.pathname))
     )
       throw Error('Exact Order context QA required');

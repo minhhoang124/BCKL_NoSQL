@@ -1,3 +1,4 @@
+import { SearchAnalyticsService } from './search-analytics.service.js';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import type { INestApplication, ExecutionContext } from '@nestjs/common';
@@ -160,6 +161,8 @@ describe('image upload controller and real HTTP transport (NOT loaded CLIP integ
     const module = await Test.createTestingModule({
       controllers: [SearchController],
       providers: [
+        // This suite isolates upload/AI transport; real telemetry has a separate PostgreSQL suite.
+        { provide: SearchAnalyticsService, useValue: {attach: async (result:unknown)=>result} },
         ImageSearchService,
         ImageSearchInterceptor,
         { provide: SearchService, useValue: { hydrate } },

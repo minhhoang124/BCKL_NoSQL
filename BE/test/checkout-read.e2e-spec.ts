@@ -801,7 +801,7 @@ describe('Checkout preview and receipt lookup HTTP (e2e; read-only scenarios)', 
       .send('addressId=1')
       .expect(400);
   });
-  it('Checkout parser does not impose its limit on pre-existing JSON routes', async () => {
+  it('Checkout parser leaves Auth requests to their dedicated parser', async () => {
     // A malformed payload alone is insufficient: it returns 400 even when a
     // parser regression silently drops the whole body. Prove a valid body too.
     await http()
@@ -814,8 +814,10 @@ describe('Checkout preview and receipt lookup HTTP (e2e; read-only scenarios)', 
     const result = await http()
       .post('/auth/login')
       .send({ email: 'x'.repeat(70_000), password: 'unused' });
-    expect(result.status).toBe(400);
-    expect(result.body.code).not.toBe('REQUEST_TOO_LARGE');
+    // Auth now has its own 8KiB admission boundary; this is not Checkout's
+    // 64KiB REQUEST_TOO_LARGE response or a silently dropped JSON body.
+    expect(result.status).toBe(413);
+    expect(result.body.code).toBe('AUTH_SESSION_INVALID_INPUT');
   });
   it('Swagger documents runtime endpoints, DTO limits, price and header format', () => {
     const document = SwaggerModule.createDocument(

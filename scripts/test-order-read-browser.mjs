@@ -2,8 +2,9 @@
 // No business response mocks except explicitly injected read/network faults.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { randomUUID, createHash } from 'node:crypto';
+import { mkdir, writeFile, readFile, access } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -11,15 +12,25 @@ const { values } = parseArgs({ options: { 'playwright-module': { type: 'string' 
 assert(values.output && values['playwright-module']);
 const db = new URL(process.env.DATABASE_URL ?? '');
 assert.equal(db.hostname, '127.0.0.1'); assert.equal(db.port, '5549');
-assert(['/bckl_checkout_web_20261012', '/bckl_pr59_combined_20261020'].includes(db.pathname));
+assert.equal(db.protocol, 'postgresql:');
+const integratedQa = db.pathname === '/bckl_order_resolution_test_hardening_20261029' && db.username === 'bckl_local_app';
+assert(integratedQa || ['/bckl_checkout_web_20261012', '/bckl_pr59_combined_20261020'].includes(db.pathname));
 assert([...db.searchParams].every(([k, v]) => k === 'schema' && v === 'public')); assert(!db.hash);
+assert(db.searchParams.getAll('schema').length <= 1);
 assert(process.env.JWT_ACCESS_SECRET && process.env.JWT_REFRESH_SECRET);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+for (const file of ['.env', 'BE/.env', 'FE/.env', 'FE/.env.local']) {
+  try { await access(path.join(root, file)); throw Error('Refusing local dotenv'); }
+  catch (e) { if (e.code !== 'ENOENT') throw e; }
+}
+const testedHead = execFileSync('git', ['rev-parse', 'HEAD'], {cwd:root,encoding:'utf8'}).trim();
+const driverSha256 = createHash('sha256').update(await readFile(fileURLToPath(import.meta.url))).digest('hex');
 const requireBE = createRequire(path.join(root, 'BE/package.json'));
 const requireFE = createRequire(path.join(root, 'FE/package.json'));
 requireBE('reflect-metadata');
 const { Test } = requireBE('@nestjs/testing');
-const { chromium } = await import(pathToFileURL(path.resolve(values['playwright-module'])).href);
+const playwrightModule = await import(pathToFileURL(path.resolve(values['playwright-module'])).href);
+const { chromium } = playwrightModule.default ?? playwrightModule;
 const load = name => import(pathToFileURL(path.join(root, 'BE/dist', name)).href);
 const { AppModule } = await load('app.module.js');
 const { configureApp } = await load('configure-app.js');
@@ -28,12 +39,14 @@ const { createServer } = await import(pathToFileURL(requireFE.resolve('vite')).h
 const output = path.resolve(values.output); await mkdir(output, { recursive: true });
 const frontend = 'http://127.0.0.1:5187';
 Object.assign(process.env, { FRONTEND_URL: frontend, SEARCH_SYNC_ENABLED: 'false', SEARCH_RECONCILIATION_ENABLED: 'false', PRODUCT_IMAGE_REPAIR_ENABLED: 'false', ORDER_AUTO_COMPLETE_ENABLED: 'false', CHECKOUT_CREATE_INTENTS_PER_MINUTE: '100' });
+process.env.VITE_BUYER_ORDER_COMMANDS_ENABLED = 'false';
+process.env.VITE_SELLER_ORDER_COMMANDS_ENABLED = 'false';
 const marker = `orderweb-${randomUUID().slice(0, 18)}`;
 const password = `Qa-${randomUUID()}!`;
 const results = [], screenshots = [];
 let app, vite, browser, api, prisma;
 async function http(endpoint, token, method = 'GET', body, extraHeaders = {}) {
-  const response = await fetch(api + endpoint, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...extraHeaders }, body: body === undefined ? undefined : JSON.stringify(body) });
+  const response = await fetch(api + endpoint, { method, headers: { 'Content-Type': 'application/json', Origin:frontend, ...(token ? { Authorization: `Bearer ${token}` } : {}), ...extraHeaders }, body: body === undefined ? undefined : JSON.stringify(body) });
   const data = response.status === 204 ? null : await response.json();
   assert(response.ok, `${endpoint} ${response.status}: ${JSON.stringify(data)}`); return data;
 }
@@ -59,9 +72,15 @@ try {
   const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
   app = module.createNestApplication(); configureApp(app); await app.listen(0, '127.0.0.1'); api = await app.getUrl();
   prisma = app.get(PrismaService); process.env.VITE_API_URL = api;
-  vite = await createServer({ root: path.join(root, 'FE'), server: { host: '127.0.0.1', port: 5187, strictPort: true } }); await vite.listen();
+  const [identity] = await prisma.$queryRaw`SELECT current_database() AS name,rolsuper,rolcreatedb,rolcreaterole FROM pg_roles WHERE rolname=current_user`;
+  assert.equal(identity.name,db.pathname.slice(1));
+  assert(!identity.rolsuper && !identity.rolcreatedb && !identity.rolcreaterole);
+  if(integratedQa){const [migrations]=await prisma.$queryRaw`SELECT count(*)::int AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;assert.equal(migrations.n,39);}
+  vite = await createServer({ root: path.join(root, 'FE'), envDir:false, server: { host: '127.0.0.1', port: 5187, strictPort: true } }); await vite.listen();
   browser = await chromium.launch({ headless: true, channel: 'chrome' });
   const seller = await prisma.user.create({ data: { email: `${marker}-seller@example.test`, passwordHash: await requireBE('bcryptjs').hash(password, 10), role: 'SELLER' } });
+  const foreignSeller = await prisma.user.create({data:{email:`${marker}-foreign-seller@example.test`,passwordHash:await requireBE('bcryptjs').hash(password,10),role:'SELLER'}});
+  await prisma.store.create({data:{sellerId:foreignSeller.id,name:'Other QA Store',status:'ACTIVE'}});
   const store = await prisma.store.create({ data: { sellerId: seller.id, name: 'QA Order Store', status: 'ACTIVE' } });
   const category = await prisma.category.create({ data: { name: 'QA Order leaf', slug: marker } });
   const product = await prisma.product.create({ data: { storeId: store.id, categoryId: category.id, name: 'QA Product snapshot', sellerStatus: 'ACTIVE', moderationStatus: 'APPROVED', images: { create: { url: '/uploads/qa-browser-only.jpg', isPrimary: true } }, shippingProfile: { create: { packageWeightGrams: 100 } } } });
@@ -173,19 +192,34 @@ try {
   assert.equal(await page.getByRole('heading', { name: order.orderNumber, exact: true }).count(), 0);
   assert.equal(await page.getByText('QA Buyer A', { exact: false }).count(), 0);
   await shot(page, 'session-02-buyer-b');
+  const buyerDenied=page.waitForResponse(r=>r.url()===api+`/orders/${order.id}`&&r.request().method()==='GET');
   await page.goto(frontend + `/account/orders/${order.id}`); await page.getByRole('alert').waitFor();
+  assert.equal((await buyerDenied).status(),404);
   assert.equal(await page.getByRole('heading', { name: order.orderNumber, exact: true }).count(), 0);
   await shot(page, 'session-03-ownership-404');
+  await logout(page); await login(page,foreignSeller.email);
+  const sellerDenied=page.waitForResponse(r=>r.url()===api+`/seller/orders/${order.id}`&&r.request().method()==='GET');
+  await page.goto(frontend+`/seller/orders/${order.id}`);await page.getByRole('alert').waitFor();
+  assert.equal((await sellerDenied).status(),404);
+  assert.equal(await page.getByRole('heading',{name:order.orderNumber,exact:true}).count(),0);
+  assert.equal(await page.getByText('QA Address A',{exact:false}).count(),0);
+  await shot(page,'session-04-other-seller-404');
+  await logout(page);await login(page,seller.email);
+  const sellerOwned=page.waitForResponse(r=>r.url()===api+`/seller/orders/${order.id}`&&r.request().method()==='GET');
+  await page.goto(frontend+`/seller/orders/${order.id}`);await page.getByRole('heading',{name:order.orderNumber,exact:true}).waitFor();
+  assert.equal((await sellerOwned).status(),200);
+  await shot(page,'session-05-owner-seller-control');
+  results.push({name:'buyer-and-seller-routed-ownership',result:'PASS',buyerForeignStatus:404,sellerForeignStatus:404,sellerOwnerStatus:200,source:'real authenticated Web routes and HTTP, no business mocks'});
   await logout(page); await page.goto(frontend + `/account/orders/${other.id}`); await page.getByRole('heading', { name: 'Đăng nhập', exact: true }).waitFor();
   await shot(page, 'session-04-guest-redirect');
   await context.close();
   results.push({ name: 'network-and-account-switch', result: 'PASS', description: 'Real login/logout/refresh cookies; held old GET, GET abort faults, recovery and ownership 404; no AuthContext injection' });
   assert.equal(await baseline(), before, 'Read-only browser flow mutated business baseline');
-  console.log('ALL 5 ORDER BROWSER SCENARIOS PASSED');
+  console.log('ALL 6 ORDER BROWSER GROUPS PASSED');
 } catch (error) {
   results.push({ name: 'run', result: 'FAIL', message: error.message }); throw error;
 } finally {
-  await writeFile(path.join(output, 'results.json'), JSON.stringify({ head: process.env.QA_HEAD, marker, layer: 'REAL_CHROME_HTTP_POSTGRES', bootstrap: 'Seller/store/catalog in QA DB; 22 orders through real Cart/Checkout APIs', fixtureIntentQuota: 100, results, screenshots }, null, 2));
-  await writeFile(path.join(output, 'report.html'), `<!doctype html><html lang="vi"><meta charset="utf-8"><title>PR57 Browser QA</title><style>body{font:16px system-ui;max-width:1100px;margin:32px auto;padding:16px;color:#20242b}img{max-width:100%;border:1px solid #ddd}article{margin:32px 0}</style><h1>PR #57 — Order read browser QA</h1><p>Head ${process.env.QA_HEAD}. Chrome riêng → Nest HTTP → PostgreSQL QA5549. ${results.filter(r => r.result === 'PASS').length}/5 scenarios PASS. Không phải toàn luồng xử lý đơn.</p>${screenshots.map((file, i) => `<article><h2>${i + 1}. ${file}</h2><img src="${file}" alt="${file}"></article>`).join('')}<h2>Giới hạn</h2><p>Thiết bị di động là viewport giả lập; chưa screen reader, touch device, Safari/Firefox hoặc POST Order. Header dùng chung còn placeholder ô tìm kiếm khó đọc ở dark preference; không đổi trong PR này.</p></html>`);
+  await writeFile(path.join(output, 'results.json'), JSON.stringify({ head: testedHead, driverSha256, marker, layer: 'REAL_CHROME_HTTP_POSTGRES', bootstrap: 'Seller/store/catalog in QA DB; 22 orders through real Cart/Checkout APIs', fixtureIntentQuota: 100, results, screenshots }, null, 2));
+  await writeFile(path.join(output, 'report.html'), `<!doctype html><html lang="vi"><meta charset="utf-8"><title>Release Order Ownership QA</title><style>body{font:16px system-ui;max-width:1100px;margin:32px auto;padding:16px;color:#20242b}img{max-width:100%;border:1px solid #ddd}article{margin:32px 0}</style><h1>Release — Order ownership browser QA</h1><p>Head ${testedHead}. Chrome riêng → Nest HTTP → PostgreSQL QA5549. ${results.filter(r => r.result === 'PASS').length}/6 groups PASS. Không phải toàn luồng xử lý đơn.</p>${screenshots.map((file, i) => `<article><h2>${i + 1}. ${file}</h2><img src="${file}" alt="${file}"></article>`).join('')}<h2>Giới hạn</h2><p>Thiết bị di động là viewport giả lập; chưa screen reader, touch device, Safari/Firefox hoặc POST Order. Header dùng chung còn placeholder ô tìm kiếm khó đọc ở dark preference; không đổi trong PR này.</p></html>`);
   await browser?.close(); await vite?.close(); await app?.close();
 }

@@ -19,6 +19,7 @@ import { createAccountReadApi } from '../features/admin-accounts/accountReadApi'
 import { AdminCategoryAttributesEditor } from '../features/admin-category-attributes/AdminCategoryAttributesEditor';
 import { AdminSystemHealth } from '../features/admin-system-health/AdminSystemHealth';
 import { createSystemHealthApi } from '../features/admin-system-health/systemHealthApi';
+import { SearchAnalytics } from '../features/SearchAnalytics';
 import { Dashboard } from '../features/dashboard/Dashboard';
 import { AftersalesPage } from '../features/aftersales/AftersalesPage';
 import { StoreApplicationPage } from '../features/seller-onboarding/StoreApplicationPage';
@@ -288,7 +289,7 @@ function OverviewPage() {
           </Link>
         </div>
       </section>
-      <Dashboard scope="ADMIN" />
+      <><Dashboard scope="ADMIN" /><SearchAnalytics scope="ADMIN" /></>
     </>
   );
 }

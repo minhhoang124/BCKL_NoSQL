@@ -52,4 +52,4 @@ export interface Product {
 
 export interface Page<T> { items: T[]; nextCursor: number | null }
 export interface SearchItem { productId: number; rank: number; score: number; product: Product }
-export interface SearchResponse { items: SearchItem[]; responseTimeMs: number }
+export interface SearchResponse { items: SearchItem[]; responseTimeMs: number; analytics?: {token:string} }

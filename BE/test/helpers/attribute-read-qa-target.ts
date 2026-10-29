@@ -5,9 +5,10 @@ export function assertAttributeReadQaTarget(raw: string | undefined): URL {
     const local =
       url.hostname === '127.0.0.1' &&
       url.port === '5549' &&
-      /^\/bckl_order_resolution_test_attributes_20261019(?:_v[1-9]\d*)?$/.test(
-        url.pathname,
-      );
+      (url.pathname === '/bckl_order_resolution_test_hardening_20261029' ||
+        /^\/bckl_order_resolution_test_attributes_20261019(?:_v[1-9]\d*)?$/.test(
+          url.pathname,
+        ));
     const ci =
       process.env.GITHUB_ACTIONS === 'true' &&
       ['127.0.0.1', 'localhost'].includes(url.hostname) &&

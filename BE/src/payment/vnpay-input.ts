@@ -78,7 +78,10 @@ export function vnpayQuery(originalUrl: string) {
     if (!out[k]) return bad();
   if (
     !/^[1-9][0-9]{0,11}$/.test(out.vnp_Amount!) ||
-    !/^[a-f0-9]{32}$/.test(out.vnp_TxnRef!) ||
+    // Provider callbacks can contain an unknown merchant reference (including
+    // the SIT suffix case). Keep a bounded opaque identifier here; verify the
+    // signature before DB lookup, then return01 when that reference is absent.
+    !/^[A-Za-z0-9_-]{1,100}$/.test(out.vnp_TxnRef!) ||
     !/^[A-Z0-9]{8}$/.test(out.vnp_TmnCode!) ||
     !/^[0-9]{1,15}$/.test(out.vnp_TransactionNo!) ||
     !/^[0-9]{2}$/.test(out.vnp_ResponseCode!) ||

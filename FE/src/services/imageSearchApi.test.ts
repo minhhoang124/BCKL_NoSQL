@@ -94,7 +94,7 @@ describe("public image API trust boundary", () => {
     ).rejects.toThrow();
     expect(fetcher).not.toHaveBeenCalled();
   });
-  it("uses multipart boundary generation, a generated filename, no credentials/header and no retry", async () => {
+  it("uses multipart boundary generation, a generated filename, anonymous cookie only, no Authorization/header and no retry", async () => {
     const fetcher = vi
       .fn()
       .mockResolvedValue(
@@ -108,7 +108,7 @@ describe("public image API trust boundary", () => {
       new AbortController().signal,
     );
     const options = fetcher.mock.calls[0][1];
-    expect(options.credentials).toBe("omit");
+    expect(options.credentials).toBe("include");
     expect(options.headers).toBeUndefined();
     expect(options.redirect).toBe("error");
     expect(options.body.get("image").name).toBe("query.png");

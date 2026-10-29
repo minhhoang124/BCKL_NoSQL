@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { bcryptPassword } from './password-policy.js';
 
 function body(value: unknown, fields: string[]) {
   if (
@@ -45,11 +46,11 @@ export function passwordInput(value: unknown) {
   if (
     typeof input.currentPassword !== 'string' ||
     Buffer.byteLength(input.currentPassword) < 1 ||
-    Buffer.byteLength(input.currentPassword) > 512 ||
+    !bcryptPassword(input.currentPassword) ||
     typeof input.newPassword !== 'string' ||
     [...input.newPassword].length < 8 ||
     Buffer.byteLength(input.newPassword) > 72 ||
-    input.newPassword.includes('\0')
+    !bcryptPassword(input.newPassword, 8)
   )
     throw new BadRequestException(
       'Mật khẩu mới cần ít nhất 8 ký tự và tối đa 72 byte UTF-8',

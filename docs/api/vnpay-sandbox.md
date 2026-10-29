@@ -1,5 +1,11 @@
 # VNPay sandbox — Checkout và đối chiếu thanh toán
 
+**Cập nhật29/10:** portal SIT mới đã đạt6/6 automatic cases; một giao dịch NCB
+sandbox đi hết OTP→IPN→DB PAID/SUCCEEDED→Web. Đã sửa parser reference lạ
+để giữ đúng ACK01 sau kiểm HMAC; không nới kiểm tiền/thời gian.
+QC thủ công/whitelist/log và biên bản vẫn mở. Các số/mô tả27/10 phía dưới là
+lịch sử, không thay kết quả mới. [Bằng chứng và giới hạn](../testing/vnpay-sit-live-2026-10-29.md).
+
 Phạm vi: `SCOPE-PAYMENT-001`, runtime QA với cờ mặc định tắt. Đọc kèm
 `docs/architecture/vnpay-sandbox-runtime.md`. Không thanh toán production,
 không tích hợp hoàn tiền thật hoặc ví người bán.

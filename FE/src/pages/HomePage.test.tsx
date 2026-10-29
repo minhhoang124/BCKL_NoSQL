@@ -7,8 +7,11 @@ import { HomePage } from './HomePage';
 import { marketplaceApi } from '../services/marketplaceApi';
 import type { Product, SearchResponse } from '../types/marketplace';
 
+const session=vi.hoisted(()=>({loading:false}));
+vi.mock('../contexts/useAuth',()=>({useAuth:()=>session}));
 const product = (id: number): Product => ({ id, name: `Product ${id}`, description: null, category: { id: 2, name: 'Audio', slug: 'audio' }, brand: { id: 3, name: 'Brand', slug: 'brand' }, images: [], variants: [], inStock: true });
 beforeEach(() => {
+  session.loading=false;
   vi.spyOn(marketplaceApi, 'categories').mockResolvedValue([{ id: 1, name: 'Electronics', slug: 'electronics', parentId: null, isLeaf: false, children: [{ id: 2, name: 'Audio', slug: 'audio', parentId: 1, isLeaf: true, children: [] }] }]);
   vi.spyOn(marketplaceApi, 'brands').mockResolvedValue([{ id: 3, name: 'Brand', slug: 'brand' }]);
 });
@@ -84,4 +87,10 @@ it('clears a previous query error when navigation succeeds', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Next query' }));
   await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
   await screen.findByRole('button', { name: 'Tìm kiếm' });
+});
+
+it('waits for initial session bootstrap before public Search/listing calls',async()=>{
+  session.loading=true;const list=vi.spyOn(marketplaceApi,'publicProducts').mockResolvedValue({items:[],nextCursor:null});
+  const page=render(<MemoryRouter><HomePage/></MemoryRouter>);expect(screen.getByRole('status')).toHaveTextContent('Đang chuẩn bị');expect(list).not.toHaveBeenCalled();expect(marketplaceApi.categories).not.toHaveBeenCalled();
+  session.loading=false;page.rerender(<MemoryRouter><HomePage/></MemoryRouter>);await waitFor(()=>expect(list).toHaveBeenCalledOnce());
 });

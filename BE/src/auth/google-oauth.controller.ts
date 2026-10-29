@@ -20,6 +20,7 @@ import type { AuthenticatedUser } from './auth.types.js';
 import { AuthService } from './auth.service.js';
 import { GoogleOAuthService } from './google-oauth.service.js';
 import { googleConfig } from './google-oauth.config.js';
+import { bcryptPassword } from './password-policy.js';
 const PROOF = 'bcklGoogleProof';
 const invalid = () =>
   new HttpException({ code: 'GOOGLE_OAUTH_INVALID_INPUT' }, 400);
@@ -89,7 +90,7 @@ export class GoogleOAuthController {
       (typeof x.currentPassword !== 'string' ||
         !x.currentPassword ||
         Buffer.byteLength(x.currentPassword) > 72 ||
-        x.currentPassword.includes('\0'))
+        !bcryptPassword(x.currentPassword))
     )
       throw invalid();
     return x.currentPassword as string | undefined;
@@ -106,9 +107,16 @@ export class GoogleOAuthController {
   }
   @Post('start')
   @HttpCode(200)
-  async start(@Body() raw: unknown, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async start(
+    @Body() raw: unknown,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     this.input(raw);
-    return this.response(await this.google.start(undefined, undefined, req.cookies?.refreshToken), res);
+    return this.response(
+      await this.google.start(undefined, undefined, req.cookies?.refreshToken),
+      res,
+    );
   }
   @Post('link')
   @HttpCode(200)

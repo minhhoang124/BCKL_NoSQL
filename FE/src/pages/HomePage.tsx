@@ -1,21 +1,27 @@
+import { useAuth } from '../contexts/useAuth';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { marketplaceApi } from '../services/marketplaceApi';
 import type { Brand, Category, Product } from '../types/marketplace';
-import { ProductCard } from '../components/ProductCard/ProductCard';
+import { SearchResultCard } from '../services/searchTelemetry';
+import { analyticsToken, prepareSearchTelemetry } from '../services/searchAnalyticsClient';
 import { ApiError } from '../services/apiClient';
 import styles from './Marketplace.module.css';
 
+const searchWithTelemetry = async (body:Record<string,unknown>) => {await prepareSearchTelemetry();return marketplaceApi.search(body);};
 const flatten = (nodes: Category[], depth = 0): Array<Category & { depth: number }> =>
   nodes.flatMap((node) => [{ ...node, depth }, ...flatten(node.children, depth + 1)]);
 
 export function HomePage() {
   const [searchParams] = useSearchParams();
+  const {loading:checkingSession}=useAuth();
+  if(checkingSession)return <p role="status">Đang chuẩn bị tìm kiếm…</p>;
   return <HomeResults key={searchParams.toString()} initialQuery={searchParams.get('q')?.trim() ?? ''} />;
 }
 
 function HomeResults({ initialQuery }: { initialQuery: string }) {
+  const [tracking,setTracking]=useState<{token:string}|undefined>();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -36,11 +42,12 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
     const current = Symbol();
     requestId.current = current;
     const productRequest = initialQuery
-      ? marketplaceApi.search({ query: initialQuery, topK: 24, candidateK: 100 })
+      ? searchWithTelemetry({ query: initialQuery, topK: 24, candidateK: 100 })
       : marketplaceApi.publicProducts({ limit: 24 });
     Promise.all([productRequest, marketplaceApi.categories(), marketplaceApi.brands()])
       .then(([result, categoryRows, brandRows]) => {
         if (requestId.current !== current) return;
+        setTracking('responseTimeMs' in result ? analyticsToken(result.analytics) : undefined);
         setProducts('responseTimeMs' in result ? result.items.map((item) => item.product) : result.items);
         setNextCursor('nextCursor' in result ? result.nextCursor : null);
         setResponseTime('responseTimeMs' in result ? result.responseTimeMs : null);
@@ -54,12 +61,12 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError(''); setLoading(true);
     const current = Symbol(); requestId.current = current;
-    setProducts([]); setNextCursor(null); setResponseTime(null);
+    setTracking(undefined); setProducts([]); setNextCursor(null); setResponseTime(null);
     try {
       if (query.trim()) {
-        const result = await marketplaceApi.search({ query: query.trim(), topK: 24, candidateK: 100, ...(categoryId ? { categoryIds: [Number(categoryId)] } : {}), ...(brandId ? { brandIds: [Number(brandId)] } : {}), ...(inStock ? { inStock: true } : {}) });
+        const result = await searchWithTelemetry({ query: query.trim(), topK: 24, candidateK: 100, ...(categoryId ? { categoryIds: [Number(categoryId)] } : {}), ...(brandId ? { brandIds: [Number(brandId)] } : {}), ...(inStock ? { inStock: true } : {}) });
         if (requestId.current !== current) return;
-        setProducts(result.items.map((item) => item.product)); setResponseTime(result.responseTimeMs); setSearched(true);
+        setTracking(analyticsToken(result.analytics)); setProducts(result.items.map((item) => item.product)); setResponseTime(result.responseTimeMs); setSearched(true);
       } else {
         const filters = { limit: 24, ...(categoryId ? { categoryId: Number(categoryId) } : {}), ...(brandId ? { brandId: Number(brandId) } : {}), ...(inStock ? { inStock: true } : {}) };
         const page = await marketplaceApi.publicProducts(filters);
@@ -97,7 +104,7 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
     <p className={styles.hint}>{import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' ? <Link to="/search/image">Tìm sản phẩm bằng ảnh JPEG/PNG</Link> : 'Tìm kiếm bằng ảnh chưa được bật ở bản triển khai này.'}</p>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {searched && <p>{products.length} kết quả{responseTime !== null ? ` · Search Service ${Math.round(responseTime)} ms` : ''}</p>}
-    {!loading && !error && !products.length && nextCursor === null ? <div className={styles.empty}>Chưa có sản phẩm phù hợp.</div> : <section className={styles.grid}>{products.map((item) => <ProductCard key={item.id} product={item} />)}</section>}
+    {!loading && !error && !products.length && nextCursor === null ? <div className={styles.empty}>Chưa có sản phẩm phù hợp.</div> : <section className={styles.grid}>{products.map((item) => <SearchResultCard key={`${tracking?.token??"catalog"}:${item.id}`} product={item} token={tracking?.token} />)}</section>}
     {nextCursor !== null && <button disabled={loading} onClick={() => void loadMore()}>Tải thêm sản phẩm</button>}
   </div>;
 }

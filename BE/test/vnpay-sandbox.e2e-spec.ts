@@ -308,6 +308,40 @@ describe('VNPay sandbox — real Checkout/HTTP/PostgreSQL; signed synthetic prov
       }),
     ).toBe(0);
   });
+  it('SIT unknown reference with a suffix returns01 only after signature verification and never mutates a known payment', async () => {
+    const f = await fixture();
+    await start(f).expect(200);
+    const before = await db.payment.findUniqueOrThrow({
+      where: { orderId: f.orderId },
+    });
+    const q = await fields(f);
+    q.vnp_TxnRef += '_99999';
+    const invalidSignature = new URLSearchParams(signed(q));
+    invalidSignature.set('vnp_SecureHash', '0'.repeat(128));
+    expect(
+      (
+        await http()
+          .get('/payments/vnpay/ipn?' + invalidSignature)
+          .expect(200)
+      ).body.RspCode,
+    ).toBe('97');
+    expect((await ipn(q).expect(200)).body.RspCode).toBe('01');
+    expect(
+      await db.payment.findUniqueOrThrow({ where: { orderId: f.orderId } }),
+    ).toEqual(before);
+    expect(
+      await db.paymentNotification.count({
+        where: { transaction: { payment: { orderId: f.orderId } } },
+      }),
+    ).toBe(0);
+    expect(
+      (
+        await db.productVariant.findUniqueOrThrow({
+          where: { id: f.variantId },
+        })
+      ).stock,
+    ).toBe(4);
+  });
   it('invalid signature, merchant, amount and duplicate query never mutate financial state', async () => {
     const f = await fixture();
     await start(f);

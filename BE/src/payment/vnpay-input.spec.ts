@@ -64,11 +64,16 @@ describe('VNPay boundaries — exact money, duplicate-safe query and GMT+7', () 
     { ...q, vnp_Amount: '1e6' },
     { ...q, vnp_Amount: '01000000' },
     { ...q, vnp_SecureHash: 'short' },
-    { ...q, vnp_TxnRef: 'other' },
+    { ...q, vnp_TxnRef: 'bad reference' },
+    { ...q, vnp_TxnRef: 'a'.repeat(101) },
     { ...q, vnp_ResponseCode: '0' },
   ])('rejects malformed provider fields', (x) =>
     expect(() => vnpayQuery(url(x))).toThrow(),
   );
+  it('preserves a bounded SIT unknown reference for authenticated lookup', () => {
+    const unknown = { ...q, vnp_TxnRef: q.vnp_TxnRef + '_99999' };
+    expect(vnpayQuery(url(unknown))).toEqual(unknown);
+  });
   it('requires explicit consent, never accepts caller-defined amount/URL', () => {
     vnpayConsent({ confirmed: true });
     for (const x of [

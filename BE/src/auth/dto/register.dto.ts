@@ -7,6 +7,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { BcryptPassword } from '../password-policy.js';
 
 export enum PublicAccountType {
   USER = 'USER',
@@ -22,6 +23,7 @@ export class RegisterDto {
   @ApiProperty({ minLength: 8, maxLength: 72 })
   @IsString()
   @Length(8, 72)
+  @BcryptPassword(8)
   password!: string;
 
   @ApiPropertyOptional({ example: 'Nguyễn Văn A' })

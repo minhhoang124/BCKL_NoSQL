@@ -20,14 +20,24 @@ const { values } = parseArgs({
 });
 const db = new URL(process.env.DATABASE_URL ?? "");
 assert.equal(db.protocol, "postgresql:");
-assert.equal(db.username, "bckl_qa_app_20261021");
 assert.equal(db.hostname, "127.0.0.1");
 assert.equal(db.port, "5549");
-assert(["/bckl_order_resolution_test_cod_journey_20261023_v924", "/bckl_order_resolution_test_attributes_20261019_v971"].includes(db.pathname));
+const integratedQa =
+  db.pathname === "/bckl_order_resolution_test_hardening_20261029" &&
+  db.username === "bckl_local_app";
+assert(
+  integratedQa ||
+    (db.username === "bckl_qa_app_20261021" &&
+      [
+        "/bckl_order_resolution_test_cod_journey_20261023_v924",
+        "/bckl_order_resolution_test_attributes_20261019_v971",
+      ].includes(db.pathname)),
+);
 assert(
   [...db.searchParams].every(([k, v]) => k === "schema" && v === "public"),
 );
 assert(!db.hash);
+assert(db.searchParams.getAll("schema").length <= 1);
 assert(
   process.env.JWT_ACCESS_SECRET && process.env.JWT_REFRESH_SECRET,
   "Explicit QA secrets required",
@@ -89,6 +99,10 @@ try {
     const [migrations] = await prisma.$queryRaw`SELECT count(*)::int AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL`;
     assert.equal(migrations.n,36);
   }
+  if (integratedQa) {
+    const [migrations] = await prisma.$queryRaw`SELECT count(*)::int AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;
+    assert.equal(migrations.n, 39);
+  }
   process.env.VITE_API_URL = api;
   if (values["integrated-aftersales"]) { process.env.VITE_AFTERSALES_ENABLED="true";  }
   vite = await createServer({
@@ -128,6 +142,9 @@ try {
       method,
       headers: {
         "Content-Type": "application/json",
+        // Node fetch sends Fetch Metadata; fixture calls must identify the
+        // configured Web origin just like the real browser session does.
+        Origin: frontend,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(key ? { "Idempotency-Key": key } : {}),
       },

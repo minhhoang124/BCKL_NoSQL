@@ -11,6 +11,7 @@ import { registerSellerOrderCommandParser } from './order/seller-order-command.h
 import { configureAccountListHttp } from './auth/admin-account-list.js';
 import { registerAttributeWriteParser } from './catalog/admin-attribute-write.http.js';
 import { registerAccountSettingsHttp } from './auth/account-settings.http.js';
+import { registerAuthSessionHttp } from './auth/auth-session.http.js';
 
 export function configureApp(app: INestApplication): void {
   // Preflight is transport negotiation, not a business write. Handle before body/query gates.
@@ -22,6 +23,11 @@ export function configureApp(app: INestApplication): void {
 
   // Apply before guards/validation as sensitive Admin failures must not be cached either.
   app.use((req: Request, res: Response, next: NextFunction) => {
+    if (/^\/(?:search(?:\/|$)|(?:seller|admin)\/search-analytics(?:\/|$))/i.test(req.path)) {
+      res.setHeader('Cache-Control','no-store');
+      const read = ['GET','HEAD'].includes(req.method);
+      if ((!read && req.originalUrl.includes('?')) || (read && (req.headers['transfer-encoding']!==undefined || (req.headers['content-length']!==undefined && req.headers['content-length']!=='0')))) {res.status(400).json({statusCode:400,code:'SEARCH_ANALYTICS_INVALID_INPUT'});return;}
+    }
     if (/^\/stores(?:\/|$)/i.test(req.path)) {
       res.setHeader('Cache-Control','no-store');
       if(['GET','HEAD'].includes(req.method)&&(req.headers['transfer-encoding']!==undefined||(req.headers['content-length']!==undefined&&req.headers['content-length']!=='0'))){res.status(400).json({statusCode:400,code:'PUBLIC_STORE_INVALID_INPUT'});return;}
@@ -73,6 +79,7 @@ export function configureApp(app: INestApplication): void {
     next();
   });
   configureAccountListHttp(app);
+  registerAuthSessionHttp(app);
   registerAccountSettingsHttp(app);
   // Reject unsupported Order GET bodies before any JSON parser is registered.
   configureOrderListHttp(app);

@@ -19,11 +19,18 @@ import {
 } from './email-recovery.controller.js';
 import { AuthEmailRecoveryService } from './email-recovery.service.js';
 import { AuthEmailDelivery } from './email-delivery.js';
-import { GoogleOAuthController, GoogleOAuthGuard } from './google-oauth.controller.js';
+import {
+  GoogleOAuthController,
+  GoogleOAuthGuard,
+} from './google-oauth.controller.js';
 import { GoogleOAuthService } from './google-oauth.service.js';
 import { GoogleOAuthProvider } from './google-oauth.provider.js';
-import { PhoneOtpController,PhoneOtpGuard } from './phone-otp.controller.js';
-import { PhoneOtpService,PhoneOtpSandboxDelivery } from './phone-otp.service.js';
+import { PhoneOtpController, PhoneOtpGuard } from './phone-otp.controller.js';
+import {
+  PhoneOtpService,
+  PhoneOtpSandboxDelivery,
+} from './phone-otp.service.js';
+import { AuthSessionRate, AuthSessionRateGuard } from './auth-session-rate.js';
 
 @Module({
   imports: [
@@ -40,8 +47,14 @@ import { PhoneOtpService,PhoneOtpSandboxDelivery } from './phone-otp.service.js'
     PhoneOtpController,
   ],
   providers: [
-    PhoneOtpService,PhoneOtpSandboxDelivery,PhoneOtpGuard,
-    GoogleOAuthService, GoogleOAuthProvider, GoogleOAuthGuard,
+    AuthSessionRate,
+    AuthSessionRateGuard,
+    PhoneOtpService,
+    PhoneOtpSandboxDelivery,
+    PhoneOtpGuard,
+    GoogleOAuthService,
+    GoogleOAuthProvider,
+    GoogleOAuthGuard,
     AuthEmailRecoveryService,
     AuthEmailDelivery,
     AuthEmailRateGuard,

@@ -18,11 +18,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
 assert.equal(url.protocol, "postgresql:");
 assert.equal(url.hostname, "127.0.0.1");
 assert.equal(url.port, "5549");
-assert.equal(
-  url.pathname,
-  "/bckl_order_resolution_test_attributes_20261019_v955",
-);
-assert.equal(url.username, "bckl_qa_app_20261021");
+const integratedQa = url.pathname === "/bckl_order_resolution_test_hardening_20261029" && url.username === "bckl_local_app";
+assert(integratedQa || (url.pathname === "/bckl_order_resolution_test_attributes_20261019_v955" && url.username === "bckl_qa_app_20261021"));
 assert(
   !url.hash &&
     [...url.searchParams].every(([k, v]) => k === "schema" && v === "public") &&
@@ -113,7 +110,7 @@ try {
   assert(!role.rolsuper && !role.rolcreatedb && !role.rolcreaterole);
   const [m] =
     await db.$queryRaw`SELECT count(*)::int n FROM _prisma_migrations WHERE finished_at IS NOT NULL`;
-  assert.equal(m.n, 29);
+  assert.equal(m.n, integratedQa ? 39 : 29);
   const password = randomBytes(20).toString("hex"),
     passwordHash = await hash(password, 4),
     marker = randomUUID();
@@ -590,7 +587,7 @@ try {
         result: "PASS",
         results,
         database: url.pathname.slice(1),
-        migrations: 29,
+        migrations: integratedQa ? 39 : 29,
         appRole: "non-superuser/no-CREATEDB/no-CREATEROLE",
         itemId,
         reviewId: stored.id,

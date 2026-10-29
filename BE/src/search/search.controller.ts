@@ -1,5 +1,9 @@
+import type { Request, Response } from 'express';
+import { SearchAnalyticsService } from './search-analytics.service.js';
 import {
   Body,
+  Req,
+  Res,
   Controller,
   HttpCode,
   Post,
@@ -28,6 +32,7 @@ import { SearchService } from './search.service.js';
 @Controller('search')
 export class SearchController {
   constructor(
+    private readonly analytics: SearchAnalyticsService,
     private readonly search: SearchService,
     private readonly imageSearch: ImageSearchService,
   ) {}
@@ -63,11 +68,18 @@ export class SearchController {
       },
     }),
   )
-  image(
+  async image(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
     @UploadedFile() file: UploadedImage | undefined,
     @Body() body: unknown,
   ) {
-    return this.imageSearch.image(file, body);
+    return this.analytics.attach(
+      await this.imageSearch.image(file, body),
+      'IMAGE',
+      req,
+      res,
+    );
   }
 
   @ApiOkResponse({
@@ -76,7 +88,16 @@ export class SearchController {
   })
   @HttpCode(200)
   @Post('hybrid')
-  hybrid(@Body() dto: SearchHybridQueryDto) {
-    return this.search.hybrid(dto);
+  async hybrid(
+    @Body() dto: SearchHybridQueryDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.analytics.attach(
+      await this.search.hybrid(dto),
+      'HYBRID_TEXT',
+      req,
+      res,
+    );
   }
 }

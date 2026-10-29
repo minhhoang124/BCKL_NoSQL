@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { isEmail } from 'class-validator';
 import { createHash } from 'node:crypto';
+import { bcryptPassword } from './password-policy.js';
 export type EmailPurpose = 'VERIFY_EMAIL' | 'RESET_PASSWORD';
 export const invalidEmailToken = () =>
   new BadRequestException({
@@ -60,7 +61,7 @@ export function emailConfirmation(value: unknown, reset = false) {
       typeof input.newPassword !== 'string' ||
       [...input.newPassword].length < 8 ||
       Buffer.byteLength(input.newPassword) > 72 ||
-      input.newPassword.includes('\0')
+      !bcryptPassword(input.newPassword, 8)
     )
       throw new BadRequestException({
         code: 'PASSWORD_POLICY',

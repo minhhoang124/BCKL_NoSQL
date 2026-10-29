@@ -1,3 +1,4 @@
+import { analyticsToken } from "./searchAnalyticsClient";
 import { API_URL, ApiError } from "./apiClient";
 import type { Product, SearchResponse } from "../types/marketplace";
 
@@ -128,7 +129,7 @@ function product(raw: unknown, expectedId: number): Product {
 export function parseImageSearchResults(raw: unknown): SearchResponse {
   const response = record(raw);
   if (
-    Object.keys(response).length !== 2 ||
+    Object.keys(response).some(k=>!["items","responseTimeMs","analytics"].includes(k)) ||
     !Array.isArray(response.items) ||
     response.items.length > TOP_K ||
     typeof response.responseTimeMs !== "number" ||
@@ -139,6 +140,7 @@ export function parseImageSearchResults(raw: unknown): SearchResponse {
   const seen = new Set<number>();
   let previousRank = 0;
   return {
+    ...(analyticsToken(response.analytics) ? {analytics:analyticsToken(response.analytics)} : {}),
     responseTimeMs: response.responseTimeMs,
     items: response.items.map((rawItem) => {
       const item = record(rawItem),
@@ -185,7 +187,7 @@ export async function searchImage(
       method: "POST",
       body: form,
       signal,
-      credentials: "omit",
+      credentials: "include",
       redirect: "error",
     });
     if (!response.ok) {

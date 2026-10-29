@@ -1,3 +1,4 @@
+import { SearchAnalyticsModule } from './search/search-analytics.controller.js';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller.js';
@@ -37,6 +38,7 @@ import { VnpayModule } from './payment/vnpay.controller.js';
     CatalogModule,
     ProductModule,
     SearchModule,
+    SearchAnalyticsModule,
     AddressModule,
     CartModule,
     OrderModule,

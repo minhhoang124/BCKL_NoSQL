@@ -7,12 +7,14 @@ import {
   cleanup,
   fireEvent,
   render,
-  screen,
+  screen, waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ImageSearchPage } from "./ImageSearchPage";
 import * as api from "../services/imageSearchApi";
 import type { SearchResponse } from "../types/marketplace";
+const primer=vi.hoisted(()=>vi.fn().mockResolvedValue(undefined));
+vi.mock('../services/searchAnalyticsClient',async original=>({...await original<typeof import('../services/searchAnalyticsClient')>(),prepareSearchTelemetry:primer}));
 const auth = vi.hoisted(() => ({
   user: null as { id: number; isActive: boolean } | null,
   loading: false,
@@ -58,6 +60,7 @@ function choose(name = "x.png", type = "image/png", load = true) {
   }
 }
 beforeEach(() => {
+  primer.mockReset().mockResolvedValue(undefined);
   auth.user = null;
   auth.loading = false;
   let sequence = 0;
@@ -77,6 +80,11 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("image query page lifecycle", () => {
+  it('stops before upload when cancelled during anonymous session preparation',async()=>{
+    let release!:()=>void;primer.mockReturnValue(new Promise<void>(r=>{release=r;}));
+    const search=vi.spyOn(api,'searchImage');render(view());choose();fireEvent.click(screen.getByRole('button',{name:'Tìm bằng ảnh'}));
+    fireEvent.click(screen.getByRole('button',{name:'Dừng chờ kết quả'}));await act(async()=>{release();});expect(search).not.toHaveBeenCalled();
+  });
   it("never sends on mount or selection; waits for preview and explicit submit", async () => {
     const search = vi.spyOn(api, "searchImage").mockResolvedValue(result());
     render(view());
@@ -105,7 +113,7 @@ describe("image query page lifecycle", () => {
       fireEvent.submit(form);
       fireEvent.submit(form);
     });
-    expect(search).toHaveBeenCalledOnce();
+    await waitFor(()=>expect(search).toHaveBeenCalledOnce());
     fireEvent.click(screen.getByRole("button", { name: "Dừng chờ kết quả" }));
     expect(search.mock.calls[0][1].aborted).toBe(true);
     await act(async () => resolve(result(9)));
@@ -128,6 +136,7 @@ describe("image query page lifecycle", () => {
     render(view());
     choose();
     fireEvent.click(screen.getByRole("button", { name: "Tìm bằng ảnh" }));
+    await waitFor(()=>expect(search).toHaveBeenCalledOnce());
     choose("new.png");
     fireEvent.click(screen.getByRole("button", { name: "Tìm bằng ảnh" }));
     await screen.findByRole("link", { name: "Product 2" });
@@ -149,6 +158,7 @@ describe("image query page lifecycle", () => {
     const ui = render(view());
     choose();
     fireEvent.click(screen.getByRole("button", { name: "Tìm bằng ảnh" }));
+    await waitFor(()=>expect(search).toHaveBeenCalledOnce());
     auth.user = { id: 2, isActive: true };
     ui.rerender(view());
     expect(

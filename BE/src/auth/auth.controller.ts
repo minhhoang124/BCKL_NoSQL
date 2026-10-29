@@ -26,6 +26,7 @@ import type { AuthenticatedUser } from './auth.types.js';
 import { AccountSettingsService } from './account-settings.service.js';
 import { AccountSettingsGuard } from './account-settings.http.js';
 import { passwordInput, profileInput } from './account-settings.input.js';
+import { AuthSessionRateGuard } from './auth-session-rate.js';
 
 const REFRESH_COOKIE = 'refreshToken';
 
@@ -90,6 +91,7 @@ export class AuthController {
   }
 
   @Post('register')
+  @UseGuards(AuthSessionRateGuard)
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) response: Response,
@@ -99,6 +101,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
+  @UseGuards(AuthSessionRateGuard)
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -109,6 +112,7 @@ export class AuthController {
   @ApiCookieAuth(REFRESH_COOKIE)
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
+  @UseGuards(AuthSessionRateGuard)
   async refresh(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,

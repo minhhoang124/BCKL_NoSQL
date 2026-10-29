@@ -9,7 +9,8 @@ import {
   validateQueryFile,
 } from "../services/imageSearchApi";
 import type { SearchResponse } from "../types/marketplace";
-import { ProductCard } from "../components/ProductCard/ProductCard";
+import { SearchResultCard } from "../services/searchTelemetry";
+import { prepareSearchTelemetry } from "../services/searchAnalyticsClient";
 import styles from "./ImageSearchPage.module.css";
 
 export function ImageSearchPage() {
@@ -113,6 +114,8 @@ function ImageQuery() {
     setNotice("");
     setResult(null);
     try {
+      await prepareSearchTelemetry();
+      if(cancel.signal.aborted) return;
       const response = await searchImage(selection.file, cancel.signal);
       if (resources.current.mounted && request === resources.current.generation)
         setResult(response);
@@ -251,7 +254,7 @@ function ImageQuery() {
           ) : (
             <div className={styles.grid}>
               {result.items.map((item) => (
-                <ProductCard key={item.productId} product={item.product} />
+                <SearchResultCard key={`${result.analytics?.token??"untracked"}:${item.productId}`} product={item.product} token={result.analytics?.token} />
               ))}
             </div>
           )}

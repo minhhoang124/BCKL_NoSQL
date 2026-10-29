@@ -1,5 +1,27 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**29/10/2026 — delta VNPay trên candidate PR135:** portal SIT mới987 đạt6/6,
+một NCB sandbox đi hết OTP→IPN thật→DB PAID/SUCCEEDED→Web; sửa parser
+reference lạ,40 payment unit và21 HTTP/DB độc lập đạt. Chưa QC thủ công/
+whitelist/log hoặc biên bản, chưa production; không đổi kiểm tiền/thời gian.
+[Bằng chứng và giới hạn](../testing/vnpay-sit-live-2026-10-29.md).
+
+**29/10/2026 — candidate tích hợp PR133/134 trên nhánh QA riêng:**
+source `2157eee`,39 migration;1201 E2E PASS/1 live SKIP/20 TODO,
+1783 Backend unit,1680 Web PASS/6 SKIP; live FastAPI health chạy riêng1 PASS.
+Chrome4 cấu hình và cùng Order COD→hậu mãi→Dashboard đạt; không chứng minh
+Search/provider thật hoặc tám gate đều DONE. Chưa merge vào develop.
+[Ma trận39 ca](../testing/release-acceptance-matrix-2026-10-29.md) và
+[checkpoint/giới hạn](../testing/release-integration-checkpoint-2026-10-29.md).
+Các checkpoint riêng theo nhánh bên dưới là lịch sử, không thay trạng thái candidate.
+
+**29/10/2026 — Auth/dependency hardening, nhánh riêng từ `a88a11d`, chưa tích hợp:**
+chặn login CSRF, kiểm giới hạn byte bcrypt và admission PG dùng chung giữa các
+instance; vá dependency và bổ sung target QA máy mới. Full E2E1187PASS/1SKIP/
+20TODO,32Auth HTTP/PG app-role và Chrome đối kháng đạt. Không chứa PR133,
+không tự merge hoặc tuyên bố đã deploy. [Bằng chứng và giới hạn](../testing/auth-session-hardening-2026-10-29.md),
+[gate staging](../deployment/staging-readiness-2026-10-29.md).
+
 **Email nghiệp vụ —28/10/2026, nhánh riêng từ d5815d5:** queue bền từ event commit, payload generic, quyền/email verified hiện hành, lease/CAS/DBclock và retry giới hạn; Mailpit thực local qua COD HTTP/Seller command và Chrome inbox đã đạt. Chưa merge trước gate, chưa Resend/Gmail delivery. [Contract](../api/business-notification-email.md), [QA/giới hạn](../testing/business-notification-email-2026-10-28.md).
 
 **28/10/2026 — QA phát hành và Store công khai đang triển khai trên nhánh riêng từ `532d79d`:** COD → Seller → Buyer → hậu mãi → Dashboard đã có bằng chứng Chrome/HTTP/PostgreSQL QA; Store công khai đang khép API/Web theo P0, chưa tính tích hợp trước merge. [Checkpoint SRS](../testing/release-srs-checkpoint-2026-10-28.md), [contract Store](../api/public-store.md), [hướng dẫn QA](../testing/local-qa-runbook-2026-10-28.md). Các đoạn theo nhánh/ngày phía dưới là checkpoint lịch sử, không thay ma trận hiện hành. Email thông báo nghiệp vụ, thống kê Search theo Store và nghiệm thu provider sandbox vẫn còn việc.
@@ -1839,3 +1861,8 @@ Buyer detail bật mặc định, build flag `VITE_BUYER_ORDER_COMMANDS_ENABLED=
 quay UI về chỉ đọc; Seller giữ gate riêng. Không Backend/schema/Auth mới.
 Đây là code trên branch tích hợp cho tới khi PR merge, không G-FULFILMENT DONE.
 [Luồng/biến/trạng thái](buyer-order-web-workflow.md) và [test/Chrome/giới hạn](../testing/buyer-order-web-runtime-2026-10-23.md).
+
+
+### Store Search analytics — nhánh bàn giao 28/10/2026
+
+FR-RPT-02 bổ sung SearchLog → SearchResultLog/ClickLog sau public hydrate, Web acknowledgement viewport/click, đọc Seller theo Store hiện hành và Admin tổng hợp. Không đổi wire Backend–AI hoặc chỉ số thực nghiệm. Collection mặc định tắt, cutoff UTC rõ ràng; dữ liệu chỉ RECORDED_ONLY, retention30 ngày và không lưu raw query/ảnh/Buyer. Nguồn: [contract](../api/store-search-analytics.md), [verification](../testing/store-search-analytics-2026-10-28.md), [bàn giao chuyển máy](../project/handoff-search-analytics-2026-10-28.md). Đây là bản trên nhánh/PR; chỉ ghi nhận tích hợp sau merge.

@@ -30,6 +30,7 @@ import {
 } from './account-status.input.js';
 import { waitForTransactionRetry } from '../product/transaction-conflict.js';
 import { isAccountStatusConflict } from './account-status-sql.js';
+import { requireBcryptPassword } from './password-policy.js';
 import {
   matchStatusIntent,
   reasonDigest,
@@ -69,6 +70,7 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
+    requireBcryptPassword(dto.password, 8);
     const email = dto.email.trim().toLowerCase();
     const passwordHash = await hash(dto.password, 12);
     try {
@@ -97,10 +99,18 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    requireBcryptPassword(dto.password);
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.trim().toLowerCase() },
     });
-    if (!user || !(await compare(dto.password, user.passwordHash))) {
+    // Cost-12 synthetic hash, not an account credential. Avoid the early-return
+    // timing difference between unknown email and an incorrect password.
+    const passwordMatches = await compare(
+      dto.password,
+      user?.passwordHash ??
+        '$2b$12$/RUAi2L1Nd8QfIyMLNn5.OLIQiduQw8tUspOwRjemzA6oatEjtR3W',
+    );
+    if (!user || !passwordMatches) {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
     }
     if (!user.isActive)
@@ -396,14 +406,28 @@ export class AuthService {
 
   // Internal federation entry point, not an HTTP API. Caller has validated the
   // provider identity and holds this User lock in the same transaction.
-  async createFederatedSession(tx: Prisma.TransactionClient, userId: number, expectedVersion: number) {
+  async createFederatedSession(
+    tx: Prisma.TransactionClient,
+    userId: number,
+    expectedVersion: number,
+  ) {
     await tx.$queryRaw`SELECT id FROM users WHERE id=${userId} FOR UPDATE`;
-    const current=await tx.user.findUnique({where:{id:userId}});
-    if(!current?.isActive || current.credentialVersion!==expectedVersion) throw new UnauthorizedException();
-    const user=await tx.user.findUniqueOrThrow({where:{id:userId},select:publicUserSelect});
-    const tokens=await this.signTokens(user,current.credentialVersion);
-    await tx.refreshToken.create({data:{tokenHash:this.hashToken(tokens.refreshToken),userId,expiresAt:this.refreshExpiry()}});
-    return {user,...tokens};
+    const current = await tx.user.findUnique({ where: { id: userId } });
+    if (!current?.isActive || current.credentialVersion !== expectedVersion)
+      throw new UnauthorizedException();
+    const user = await tx.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: publicUserSelect,
+    });
+    const tokens = await this.signTokens(user, current.credentialVersion);
+    await tx.refreshToken.create({
+      data: {
+        tokenHash: this.hashToken(tokens.refreshToken),
+        userId,
+        expiresAt: this.refreshExpiry(),
+      },
+    });
+    return { user, ...tokens };
   }
 
   private async createSession(

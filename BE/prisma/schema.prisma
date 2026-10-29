@@ -128,6 +128,16 @@ enum SearchReconciliationStatus {
   DEAD
 }
 
+model AuthRateBucket {
+  scope String @db.VarChar(16)
+  subjectHash String @db.Char(64)
+  count Int
+  resetAt DateTime @db.Timestamp(3)
+  @@id([scope, subjectHash])
+  @@index([resetAt])
+  @@map("auth_rate_buckets")
+}
+
 model User {
   id                      Int                      @id @default(autoincrement())
   email                   String                   @unique
@@ -1366,4 +1376,38 @@ model NotificationEmailJob {
   notification Notification @relation(fields:[notificationId],references:[id],onDelete:Restrict,onUpdate:NoAction)
   @@index([status,nextAttemptAt,notificationId],map:"notification_email_jobs_due_idx")
   @@map("notification_email_jobs")
+}
+
+// Anonymous query cohort. No query text/image, IP, Buyer ID or clear capability.
+model SearchLog {
+  id String @id @default(uuid()) @db.Uuid
+  tokenHash String @unique @db.Char(64)
+  visitorHash String @db.Char(64)
+  strategy String @db.VarChar(16)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  expiresAt DateTime @db.Timestamp(3)
+  results SearchResultLog[]
+  @@index([createdAt])
+  @@map("search_logs")
+}
+model SearchResultLog {
+  searchId String @db.Uuid
+  productId Int
+  storeId Int
+  rank Int
+  impressionAt DateTime? @db.Timestamp(3)
+  search SearchLog @relation(fields:[searchId],references:[id],onDelete:Cascade,onUpdate:Restrict)
+  click ClickLog?
+  @@id([searchId,productId])
+  @@unique([searchId,rank])
+  @@index([storeId,searchId])
+  @@map("search_result_logs")
+}
+model ClickLog {
+  searchId String @db.Uuid
+  productId Int
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  result SearchResultLog @relation(fields:[searchId,productId],references:[searchId,productId],onDelete:Cascade,onUpdate:Restrict)
+  @@id([searchId,productId])
+  @@map("search_click_logs")
 }

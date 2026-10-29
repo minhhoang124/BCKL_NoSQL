@@ -5,6 +5,7 @@ import { ApiError } from '../services/apiClient';
 import { marketplaceApi } from '../services/marketplaceApi';
 import type { Brand, Category, Product, Store } from '../types/marketplace';
 import styles from './Marketplace.module.css';
+import { SearchAnalytics } from '../features/SearchAnalytics';
 import { Dashboard } from '../features/dashboard/Dashboard';
 
 const flat = (nodes: Category[]): Category[] => nodes.flatMap((node) => [node, ...flat(node.children)]);
@@ -61,7 +62,7 @@ export function SellerDashboardPage() {
     <div><h1>Kênh người bán</h1><p>Hoàn thiện Store và sản phẩm trước khi gửi Admin duyệt.</p><Link to="/seller/orders">Đơn hàng của cửa hàng</Link><p><Link to="/seller/aftersales">Xử lý hậu mãi</Link></p>{import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED==='true'&&<p><Link to="/seller/reviews">Phản hồi đánh giá</Link></p>}</div>
     <div className={styles.tabs}><button className={tab === 'store' ? styles.active : ''} onClick={() => setTab('store')}>Store</button><button className={tab === 'products' ? styles.active : ''} onClick={() => setTab('products')}>Sản phẩm ({products.length})</button><button className={tab === 'dashboard' ? styles.active : ''} onClick={() => setTab('dashboard')}>Thống kê</button></div>
     {error && <p className={styles.error} role="alert">{error}</p>}{message && <p className={styles.success}>{message}</p>}
-    {tab === 'dashboard' ? <Dashboard scope="SELLER" storeId={store?.id} /> : tab === 'store' ? <section className={styles.columns}>
+    {tab === 'dashboard' ? <><Dashboard scope="SELLER" storeId={store?.id} /><SearchAnalytics scope="SELLER" /></> : tab === 'store' ? <section className={styles.columns}>
       {store?.application || (!store && import.meta.env.VITE_SELLER_ONBOARDING_ENABLED==='true') ? <div className={styles.panel}><h2>Hồ sơ mở Store</h2><p>Thông tin liên hệ, địa chỉ lấy/trả hàng và lịch sử được quản lý cùng hồ sơ đã nộp.</p><Link to="/account/store-application">Mở hồ sơ Store</Link></div> : <form className={`${styles.panel} ${styles.form}`} onSubmit={saveStore}><h2>{store ? 'Thông tin Store' : 'Mở Store'}</h2><label>Tên Store<input name="name" required minLength={3} defaultValue={store?.name} /></label><label>Mô tả<textarea name="description" rows={5} defaultValue={store?.description ?? ''} /></label><button disabled={busy}>{store ? 'Lưu thay đổi' : 'Gửi yêu cầu'}</button>{store?.status === 'REJECTED' && <button type="button" className={styles.secondary} onClick={() => run(marketplaceApi.resubmitStore, 'Đã nộp lại Store.')}>Nộp lại sau chỉnh sửa</button>}</form>}
       <aside className={styles.panel}><h2>Trạng thái</h2><span className={styles.badge}>{store?.status ?? 'CHƯA TẠO'}</span><p>{store?.status === 'ACTIVE' ? 'Store đã hoạt động; bạn có thể tạo và gửi sản phẩm.' : 'Admin cần duyệt Store trước khi thao tác sản phẩm.'}</p></aside>
     </section> : <section className={styles.columns}>

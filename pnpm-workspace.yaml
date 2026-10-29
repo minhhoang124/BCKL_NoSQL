@@ -2,7 +2,17 @@ packages:
   - 'FE'
   - 'BE'
 overrides:
-  '@nestjs/platform-express>multer': '2.4.0'
+  # HTTP runtime advisory patches; keep exact versions for reproducibility.
+  '@nestjs/platform-express>multer': '2.5.0'
+  'express>proxy-addr': '2.0.8'
+  'express>body-parser': '2.4.0'
+  'qs': '6.16.1'
+  'fast-uri': '3.1.9'
+  'source-map-js': '1.2.2'
+  'mysql2': '3.23.1'
+  # Prisma still pins v7. v8 changes Map merging; this repo config uses plain
+  # objects. Verify generate, migrations and schema compatibility on this override.
+  '@prisma/config>deepmerge-ts': '8.0.0'
 allowBuilds:
   '@prisma/engines': true
   '@scarf/scarf': false
