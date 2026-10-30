@@ -230,7 +230,10 @@ describe('COD create HTTP + real PostgreSQL transactions (two app instances)', (
       expect(rejected.body.code).toBe('EMAIL_VERIFICATION_REQUIRED');
       expect(rejected.headers['cache-control']).toBe('no-store');
       expect(await state()).toEqual(before);
-      await prisma.user.update({ where: { id: buyerId }, data: { emailVerifiedAt: new Date() } });
+      await prisma.user.update({
+        where: { id: buyerId },
+        data: { emailVerifiedAt: new Date() },
+      });
       await post().expect(201);
       expect(await prisma.order.count({ where: { buyerId } })).toBe(1);
     } finally {
@@ -680,6 +683,28 @@ describe('COD create HTTP + real PostgreSQL transactions (two app instances)', (
         data: { isActive: true },
       });
     }
+  });
+  it('rejects duplicate variant lines before purchase and preserves the same key for a valid intent', async () => {
+    const before = await state();
+    const response = await post({
+      ...input,
+      items: [{ ...input.items[0] }, { ...input.items[0] }],
+    }).expect(400);
+    expect(response.body.code).toBe('VALIDATION_ERROR');
+    expect(await state()).toEqual(before);
+    const valid = await post().expect(201);
+    expect(valid.body.replayed).toBe(false);
+    const committed = await state();
+    expect(committed.orders).toBe(before.orders + 1);
+    expect(committed.movements).toBe(before.movements + 1);
+    expect(
+      committed.variants.find((v) => v.id === input.items[0].variantId)!.stock,
+    ).toBe(
+      before.variants.find((v) => v.id === input.items[0].variantId)!.stock -
+        input.items[0].quantity,
+    );
+    await post().expect(200);
+    expect(await state()).toEqual(committed);
   });
   it('quantity mismatch and non-owned cart/address have no side effects', async () => {
     const before = await state();

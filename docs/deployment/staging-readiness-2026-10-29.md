@@ -1,5 +1,10 @@
 # Chuẩn bị staging cho bản bảo vệ —29/10/2026
 
+**Cập nhật30/10:** PR135/136 đã merge develop ce4e48f,CI sau merge6/6;
+điều kiện tích hợp cũ bên dưới đã được đáp ứng. Restore local mới68bảng,
+39migrations,90ảnh đạt;chưa triển khai Azure hoặc kiểm HTTPS.
+[Trạng thái và bằng chứng hiện hành](../testing/release-priority-checkpoint-2026-10-30.md).
+
 Mục tiêu là một bản demo online ổn định, có dữ liệu mô phỏng và bằng chứng
 kiểm thử. Không đồng nghĩa mở bán, nhận tiền thật hoặc đã đạt chứng nhận bảo mật.
 Tài khoản Azure education của người dùng chưa được kiểm subscription/credit/

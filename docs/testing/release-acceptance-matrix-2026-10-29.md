@@ -1,5 +1,10 @@
 # Ma trận tám luồng nghiệm thu — bản tích hợp 29/10/2026
 
+**Trạng thái hiện hành30/10:** PR135/136 đã merge;CI develop ce4e48f6/6.
+Xem [checkpoint tám gate30/10](release-priority-checkpoint-2026-10-30.md)
+để lấy kết quả mới và phần còn mở. Bảng NOT_RUN/candidate chưa merge bên dưới
+là baseline lịch sử, không phải trạng thái phát hành hiện tại.
+
 **Nhánh tiếp theo sau PR135:** đã có browser multi-SKU/typed attributes và
 Chat chia sẻ Order, kèm hai sửa lỗi API có tái hiện. [Checkpoint](listing-chat-release-2026-10-29.md).
 Không lấy số liệu của branch mới thay CI/release đã merge nếu chưa tích hợp.

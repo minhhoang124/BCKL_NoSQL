@@ -1,5 +1,12 @@
 # Tổng quan kiến trúc và trạng thái hệ thống
 
+**30/10/2026 — PR135/136 đã merge,develop ce4e48f CI sau merge6/6:**
+146 focused HTTP/PG vàChromeCOD/hậu mãi đạt;39 migrations,model/index86,
+backup→restore68bảng/90ảnh trên QA mới. Chưa staging/provider toàn bộ hoặc
+rollback executable. [Checkpoint hiện hành](../testing/release-priority-checkpoint-2026-10-30.md)
+và [kế hoạch đồng bộ giao diện](../project/ui-unification-worklist-2026-10-30.md).
+Các checkpoint chưa merge bên dưới giữ nguyên làm lịch sử.
+
 **29/10/2026 — PR135 đã merge develop edab510, CI6/6; nhánh listing/Chat tiếp theo:**
 Demo đã nâng39 migrations sau backup và chạy source tích hợp. Listing có
 typed attributes/2 nhóm/nhiều SKU và Buyer chọn SKU vào giỏ; hai lỗi API
