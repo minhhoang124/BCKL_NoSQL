@@ -190,7 +190,7 @@ Bàn giao: User tìm → xem chi tiết/chat với Seller → thêm giỏ → đ
 Thời gian: 12/10–25/10/2026.
 
 - Đánh giá sản phẩm, Dashboard Seller, doanh thu ngày/tháng/quý.
-- Theo phạm vi P1 mới: email verify/reset, một OAuth provider, phone OTP sandbox, VNPay/MoMo sandbox và ReturnRequest/hoàn tiền mô phỏng cơ bản. Tách issue/PR theo dependency; không đưa tất cả vào cùng PR Product hoặc Auth.
+- Theo phạm vi P1 hiện hành: email verify/reset, một OAuth provider, phone OTP sandbox, VNPay sandbox và ReturnRequest/hoàn tiền mô phỏng cơ bản. Ngày30/10 Hoàng xác nhận tạm dừng MoMo, chuyển hướng mở rộng theo SCOPE-PAYMENT-002. Tách issue/PR theo dependency; không đưa tất cả vào cùng PR Product hoặc Auth.
 - Search log, click log, responsive và xử lý lỗi.
 - Docker hóa Frontend, Backend, PostgreSQL.
 - Hỗ trợ Hiền tích hợp Admin.

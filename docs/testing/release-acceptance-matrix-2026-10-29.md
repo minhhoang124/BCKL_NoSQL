@@ -1,5 +1,9 @@
 # Ma trận tám luồng nghiệm thu — bản tích hợp 29/10/2026
 
+**Quyết định phạm vi30/10 — SCOPE-PAYMENT-002:** MoMo tạm dừng và chuyển sang
+hướng mở rộng; RC-CHK-05 không thuộc gate bản nộp hiện tại. COD/VNPay vẫn giữ
+đầy đủ các điều kiện nghiệm thu. Những mô tả MoMo P1 cũ là lịch sử.
+
 **Trạng thái hiện hành30/10:** PR135/136 đã merge;CI develop ce4e48f6/6.
 Xem [checkpoint tám gate30/10](release-priority-checkpoint-2026-10-30.md)
 để lấy kết quả mới và phần còn mở. Bảng NOT_RUN/candidate chưa merge bên dưới
@@ -90,7 +94,7 @@ khẳng định đã phát hiện lỗ hổng mức High. Lỗi mới phải có
 |RC-CHK-02|CHECKOUT/P1|Hai buyer mua món cuối; tối đa một giao dịch hợp lệ, không âm kho|NOT_RUN release acceptance|Concurrent HTTP/DB + số receipt/stock movement|
 |RC-CHK-03|CHECKOUT/P1|Mất response/reload/bấm hai lần: giữ intent/key, không đặt hai đơn|NOT_RUN browser|Browser fault + receipt/order count|
 |RC-CHK-04|CHECKOUT/P1|VNPay success/cancel/failure/duplicate/late IPN thật; return không tự set PAID|BLOCKED VNPay IPN|Provider transaction + Payment/attempt/ledger/kho|
-|RC-CHK-05|CHECKOUT/P1|MoMo sandbox có adapter/config và callback thật; không nhận số tiền client|BLOCKED runtime/credential|Provider callback + signature/amount checks + DB|
+|RC-CHK-05|CHECKOUT/P2|MoMo sandbox — hướng mở rộng theo SCOPE-PAYMENT-002|DEFERRED theo quyết định owner30/10; không chặn bản nộp|Khi tiếp tục: provider callback + signature/amount checks + DB|
 |RC-CHK-06|CHECKOUT/P1|Chữ ký/số tiền/ref sai; callback chạy đua với hủy không trả PAID sai|NOT_RUN provider thật|Synthetic QA và provider acceptance tách riêng|
 |RC-FUL-01|FULFILMENT/P1|Seller chuẩn bị/bàn giao; Admin/adapter mô phỏng giao; Buyer hoàn tất|NOT_RUN browser|Một Order Web xuyên luồng, history/Payment COD|
 |RC-FUL-02|FULFILMENT/P1|Hủy/giao thất bại/nhận hoàn; kho hoàn đúng một lần, không sửa snapshot|NOT_RUN browser|Order/history/StockMovement, replay|
@@ -140,7 +144,7 @@ Web6SKIP phải giữ danh sách tên từ JSON, không đổi thành PASS hoặ
 |1|Ổn định môi trường QA và hoàn tất hồi quy candidate|Lượt bị ngắt hoặc PostgreSQL dừng không cho kết luận code; giữ log lỗi, chạy lại sau readiness|
 |2|COD/stock/receipt/refund/browser recovery trên cùng candidate|Sai tiền/kho hoặc ghi lặp là lỗi chặn release; sửa trước UI phụ|
 |3|Quyền actor/Store/account và private media|Không chấp nhận đọc/ghi chéo; cần HTTP/DB/browser theo ranh giới|
-|4|Email recovery và Google LINK; IPN/MoMo đầu vào|Phụ thuộc ngoài và nguy cơ account/payment; chốt blocker trước01/11|
+|4|Email recovery và Google LINK; VNPay IPN/QC|Phụ thuộc ngoài và nguy cơ account/payment; MoMo đã chuyển hướng mở rộng|
 |5|AI thật, mapping, outbox và analytics browser|Unit/synthetic AI không thay Search end-to-end|
 |6|HTTPS/proxy/backup/restore/rollback/tải|Là điều kiện online, không giải quyết bằng tăng số test|
 |7|Word/ảnh/metric/runbook/tag|Bàn giao dần cho Hiền, không chờ05/11; đóng code trước06–07/11|

@@ -1,5 +1,11 @@
 # Phạm vi triển khai và mức độ hoàn thiện
 
+**Điều chỉnh phạm vi thanh toán ngày 30/10/2026:** Võ Minh Hoàng xác nhận giữ
+COD và VNPay sandbox cho bản nộp/bảo vệ hiện tại; tạm dừng MoMo và chuyển sang
+P2/hướng mở rộng. Quyết định `SCOPE-PAYMENT-002` thay phần cam kết MoMo trong
+`SCOPE-PAYMENT-001` và các tài liệu cũ. MoMo không còn là điều kiện chặn bản nộp,
+không được mô tả là đã triển khai. Các điều kiện nghiệm thu VNPay vẫn giữ nguyên.
+
 Tài liệu này là nguồn chuẩn để cả nhóm và coding agent phân biệt **phải chạy trong bản bảo vệ khóa luận tháng 12/2026** với **điểm mở rộng sau bảo vệ trên mọi miền nghiệp vụ**. Đợt phát triển dự kiến 12 tuần; các mốc 25/10–08/11 trong bảng phân công là mốc kế hoạch nội bộ cũ, không phải ngày bảo vệ. **P0 và P1 đều là mục tiêu triển khai trước buổi bảo vệ; P1 không đồng nghĩa với “chỉ đề xuất”.** P2 là hướng phát triển tiếp, không phải phần mặc định phải hoàn thành trong 12 tuần. Bản khóa luận phải tích hợp các luồng nhiều Seller bằng tài khoản và dữ liệu demo, có kiểm thử và đánh giá tìm kiếm; khả năng mở rộng về sau là tiêu chí thiết kế, không phải lời khẳng định đã sẵn sàng vận hành thương mại công khai.
 
 Chat trực tiếp User-Seller được bổ sung vào phạm vi bắt buộc theo decision record dưới đây. Nếu tài liệu kế hoạch cũ chưa nhắc đến Chat, tài liệu này và `docs/architecture/chat-domain-design.md` được ưu tiên cho phạm vi hiện hành sau khi PR #7 được reviewer nghiệp vụ chấp thuận.
@@ -8,6 +14,7 @@ Chat trực tiếp User-Seller được bổ sung vào phạm vi bắt buộc th
 |---|---|---|---|---|
 | `SCOPE-CHAT-001` | Chat văn bản User-Seller là P0 của bản bảo vệ | Võ Minh Hoàng xác nhận phạm vi và chịu trách nhiệm triển khai; Nguyễn Quốc Hiền review nghiệp vụ/test qua PR #7; Nguyễn Cao Dũng Đạt chỉ xác nhận ranh giới với Product/Search | 11/09/2026 | Thiết kế sớm nhưng chỉ code sau Auth, Store và Product; không được làm trễ Product, Search, Cart/Order/COD. Nếu tiến độ rủi ro, giữ đúng MVP text/history/realtime/read-state và không mở rộng tính năng P2. |
 | `SCOPE-PAYMENT-001` | VNPay/MoMo sandbox là P1 cam kết triển khai | Võ Minh Hoàng chịu trách nhiệm Payment model, Backend và tích hợp sandbox; Nguyễn Quốc Hiền cập nhật SRS/Use Case/ERD/sequence/test case; Nguyễn Cao Dũng Đạt không phụ trách miền Payment | 11/09/2026 | Chỉ triển khai sau khi Order, COD và Payment model ổn định. Phạm vi dừng ở môi trường sandbox, xác minh callback và cập nhật trạng thái idempotent; production, hoàn tiền trực tuyến, ví Seller và đối soát thật vẫn là P2. Credential/secret thử nghiệm chỉ nằm trong `.env` và không được commit. |
+| `SCOPE-PAYMENT-002` | Giữ COD/VNPay sandbox; tạm dừng MoMo, chuyển sang P2/hướng mở rộng cho bản nộp hiện tại | Võ Minh Hoàng xác nhận trực tiếp; tài liệu SRS/Use Case/test/báo cáo cần đồng bộ theo quyết định này | 30/10/2026 | Thay phần cam kết MoMo của SCOPE-PAYMENT-001; không hạ điều kiện kiểm chữ ký, tiền, callback thật và idempotency của VNPay. Không coi MoMo là đã triển khai hoặc blocker phát hành. |
 | `SCOPE-CORE-001` | Hồ sơ/địa chỉ, Seller onboarding, thông báo, xác thực bổ sung và hậu mãi cơ bản là mục tiêu của bản bảo vệ tháng 12, không chỉ vẽ UI/ERD | Võ Minh Hoàng xác nhận yêu cầu và chịu trách nhiệm tích hợp; Nguyễn Quốc Hiền đối chiếu SRS/Use Case/test và review nghiệp vụ; Nguyễn Cao Dũng Đạt review phần Product/Search bị ảnh hưởng | 15/09/2026 | Review chéo tập trung tính khả thi, dữ liệu, test và thứ tự triển khai; không biến nghiệp vụ này thành P2 chỉ vì code chưa có. Không sửa migration/contract đang ở PR khác chỉ dựa trên bảng này. Tách issue nhỏ và báo rủi ro nếu mốc nội bộ cần điều chỉnh. |
 | `SCOPE-ROLE-001` | Một tài khoản User có thể mua hàng và, sau onboarding/duyệt Store, có thêm quyền Seller trong bản bảo vệ; Admin là quyền quản trị riêng, không đăng ký công khai | Võ Minh Hoàng chốt yêu cầu nghiệp vụ và phụ trách Auth/migration; Nguyễn Quốc Hiền review phân quyền/Use Case/test; Nguyễn Cao Dũng Đạt chỉ review nếu payload Product/Search bị ảnh hưởng | 16/09/2026 | Schema hiện có một `Role` duy nhất nên phải có migration mới và kế hoạch tương thích tài khoản cũ. Reviewer chốt cách triển khai kỹ thuật, không phải bỏ yêu cầu nghiệp vụ. Không tự nâng quyền theo email trùng hoặc seed; PR Auth/Product hiện hành không bị sửa lén. |
 | `SCOPE-STORE-002` | Store bị từ chối được sửa hồ sơ và nộp lại trên chính bản ghi Store cũ; Store bị tạm khóa không tự mở lại | Võ Minh Hoàng chốt vòng đời/API; Nguyễn Quốc Hiền đồng bộ SRS, ERD và test phân quyền | 16/09/2026 | Trạng thái đích tối thiểu là `PENDING/ACTIVE/REJECTED/SUSPENDED`. Mỗi lần duyệt lưu actor, thời gian và lý do trong history. Nộp lại chỉ hợp lệ từ `REJECTED` về `PENDING`; chỉ Admin được khôi phục `SUSPENDED`. Không tạo Store thứ hai để né quyết định trước. Đây là TARGET cần migration/API riêng, không sửa lén PR schema đang review. |
@@ -17,7 +24,7 @@ Chat trực tiếp User-Seller được bổ sung vào phạm vi bắt buộc th
 |---|---|
 | Một tài khoản mua và mở Store sau duyệt; hồ sơ/địa chỉ; email login/verify/reset, Google login, phone OTP sandbox | Facebook/Apple/passkey bổ sung, SMS production, KYC/giấy tờ Seller thật và quy trình pháp lý |
 | Store/Product đa ngành hàng, variant/ảnh/kho/kiểm duyệt; keyword, semantic, image search và RRF | Livestream, affiliate, quảng cáo, gợi ý cá nhân hóa, nhiều kho/phân bổ tồn theo khu vực |
-| Giỏ, Order snapshot, COD, VNPay/MoMo sandbox, vận chuyển mô phỏng, hủy/hoàn kho | Thanh toán/vận chuyển production, đối soát/chi trả Seller, thuế và phí sàn thực tế |
+| Giỏ, Order snapshot, COD, VNPay sandbox, vận chuyển mô phỏng, hủy/hoàn kho | MoMo sandbox (tạm dừng theo SCOPE-PAYMENT-002); thanh toán/vận chuyển production, đối soát/chi trả Seller, thuế và phí sàn thực tế |
 | Chat văn bản, review, thông báo, Admin/Dashboard và hậu mãi/hoàn tiền mô phỏng cơ bản | Chat đa phương tiện, voucher/flash sale phức tạp, tranh chấp/hoàn tiền thật nhiều cấp |
 
 Bảng này là **phân loại mục tiêu**, không phải checklist chức năng đã hoàn thành. Trạng thái triển khai thật phải xem release gates và bằng chứng trên `develop`.
@@ -138,7 +145,7 @@ toàn hệ thống. Kiểm thử chức năng tìm ảnh trình bày riêng.
 - Nếu refund thành công sau `DELIVERED` nhưng trước `COMPLETED`, vòng đời fulfillment vẫn được phép chuyển `COMPLETED` và hậu mãi tiếp tục ở trạng thái riêng. Refund transaction/adjustment được tạo đúng một lần ngay khi refund thành công, nhưng projection Dashboard chưa áp dụng adjustment thành doanh thu âm trước khi doanh thu gốc được ghi nhận. Khi Order chuyển `COMPLETED`, projection ghi gross revenue và áp dụng adjustment đã có một cách idempotent trong cùng kỳ tính; `OrderItem` hoàn đủ đóng góp doanh thu thuần bằng `0`. Nếu refund xảy ra sau `COMPLETED`, adjustment có hiệu lực ngay. Test phải chứng minh không có doanh thu âm tạm thời và không cộng/trừ hai lần.
 - Hỗ trợ bằng chứng ảnh an toàn là tùy chọn của đợt đầu; tranh chấp nhiều cấp, hoàn tiền một phần và logistics hoàn hàng thật vẫn là P2.
 
-### Thanh toán VNPay/MoMo sandbox
+### Thanh toán VNPay sandbox
 
 - Dùng chung `Payment`/`PaymentTransaction` với COD; trạng thái thanh toán tách khỏi `OrderStatus`.
 - Backend tự lấy `orderId`, số tiền và nội dung thanh toán từ PostgreSQL; không tin số tiền do client gửi lên.
@@ -171,7 +178,8 @@ Các nội dung sau không được mô tả là đã triển khai nếu chưa c
 - Voucher, flash sale và chương trình khuyến mãi phức tạp.
 - Nhiều Warehouse và phân bổ tồn kho theo khu vực.
 - Tích hợp đơn vị vận chuyển thật và tính phí vận chuyển thực tế.
-- Thanh toán trực tuyến production, hoàn tiền trực tuyến, ví Seller, đối soát và rút tiền. VNPay/MoMo sandbox cơ bản thuộc P1 theo `SCOPE-PAYMENT-001`.
+- MoMo sandbox: tạm dừng và chuyển sang hướng mở rộng theo `SCOPE-PAYMENT-002`; chưa triển khai/nghiệm thu, không chặn bản nộp hiện tại.
+- Thanh toán trực tuyến production, hoàn tiền trực tuyến, ví Seller, đối soát và rút tiền. VNPay sandbox cơ bản vẫn thuộc P1.
 - Kiểm duyệt thương hiệu, giấy phép và hồ sơ pháp lý chuyên sâu.
 - Livestream, affiliate, quảng cáo và gợi ý cá nhân hóa.
 - Chat gửi file/ảnh, gọi thoại/video, thu hồi tin, typing indicator và chatbot.
