@@ -33,6 +33,24 @@ type ReconciliationFilter = {
   batchSize: number;
 };
 
+/** JSONB may reorder object keys. Compare every own field structurally while
+ * retaining meaningful array order and primitive types; never rewrite events. */
+export function sameReconciliationJson(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length)
+      return false;
+    return a.every((value, index) => sameReconciliationJson(value, b[index]));
+  }
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object')
+    return false;
+  const left = a as Record<string, unknown>, right = b as Record<string, unknown>;
+  const keys = Object.keys(left);
+  return keys.length === Object.keys(right).length && keys.every(key =>
+    Object.hasOwn(right, key) && sameReconciliationJson(left[key], right[key]),
+  );
+}
+
 @Injectable()
 export class SearchReconciliationService {
   private readonly logger = new Logger(SearchReconciliationService.name);
@@ -285,7 +303,7 @@ export class SearchReconciliationService {
       'inStock',
     ];
     return keys.every(
-      (key) => JSON.stringify(a[key]) === JSON.stringify(b[key]),
+      (key) => sameReconciliationJson(a[key], b[key]),
     );
   }
 

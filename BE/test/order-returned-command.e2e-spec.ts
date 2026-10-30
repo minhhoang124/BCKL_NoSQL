@@ -413,7 +413,7 @@ describe('Returned commands — real HTTP/PostgreSQL, two instances', () => {
       imageUrls: [
         '/uploads/returned-primary.jpg',
         '/uploads/returned-secondary.jpg',
-      ],
+      ].map(image => new URL(image, process.env.BACKEND_PUBLIC_URL ?? `http://localhost:${process.env.BACKEND_PORT ?? 3001}`).href),
       minPrice: '10000',
       maxPrice: '25000',
       inStock: true,

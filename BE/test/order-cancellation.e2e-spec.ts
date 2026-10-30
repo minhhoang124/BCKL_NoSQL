@@ -199,7 +199,7 @@ describe('C3 cancellation — real Checkout, PostgreSQL and two HTTP application
         brandId: null,
         brandName: null,
         attributes: {},
-        imageUrls: ['/uploads/cancellation-fixture.jpg'],
+        imageUrls: [new URL('/uploads/cancellation-fixture.jpg', process.env.BACKEND_PUBLIC_URL ?? `http://localhost:${process.env.BACKEND_PORT ?? 3001}`).href],
         minPrice: '10000',
         maxPrice: '10000',
         inStock: true,
@@ -468,7 +468,7 @@ describe('C3 cancellation — real Checkout, PostgreSQL and two HTTP application
       imageUrls: [
         '/uploads/cancellation-fixture.jpg',
         '/uploads/cancellation-secondary.jpg',
-      ],
+      ].map(image => new URL(image, process.env.BACKEND_PUBLIC_URL ?? `http://localhost:${process.env.BACKEND_PORT ?? 3001}`).href),
       minPrice: '10000',
       maxPrice: '20000',
       inStock: true,
