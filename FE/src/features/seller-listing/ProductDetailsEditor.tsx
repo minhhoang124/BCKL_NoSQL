@@ -8,6 +8,7 @@ import type {
   ProductAttributeValue,
 } from "../../types/marketplace";
 import styles from "../../pages/Marketplace.module.css";
+import { VariantInventoryEditor } from "./VariantInventoryEditor";
 
 type Run = (
   work: () => Promise<unknown>,
@@ -18,10 +19,12 @@ export function ProductDetailsEditor({
   product,
   busy,
   run,
+  onInventoryChanged,
 }: {
   product: Product;
   busy: boolean;
   run: Run;
+  onInventoryChanged?: (product: Product) => void;
 }) {
   const [definitions, setDefinitions] = useState<AttributeDefinition[]>([]);
   const [metadataCategory, setMetadataCategory] = useState<number | null>(null);
@@ -102,6 +105,7 @@ export function ProductDetailsEditor({
   }
   return (
     <section className={styles.form} aria-label="Thuộc tính và phiên bản bán">
+      {import.meta.env.VITE_SELLER_VARIANT_INVENTORY_ENABLED === "true" && product.variants.length > 0 && <VariantInventoryEditor product={product} busy={busy} onChanged={onInventoryChanged} />}
       {!editable && (
         <p role="status">
           Sản phẩm đang chờ duyệt hoặc bị đóng băng. Các trường chỉ đọc.

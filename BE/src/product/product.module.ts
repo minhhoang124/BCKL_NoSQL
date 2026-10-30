@@ -10,6 +10,8 @@ import { AdminProductController } from './admin-product.controller.js';
 import { PublicProductController } from './public-product.controller.js';
 import { ProductLifecycleService } from './product-lifecycle.service.js';
 import { SearchModule } from '../search/search.module.js';
+import { SellerVariantInventoryController } from './seller-variant-inventory.controller.js';
+import { SellerVariantInventoryService } from './seller-variant-inventory.service.js';
 
 @Module({
   imports: [
@@ -18,11 +20,13 @@ import { SearchModule } from '../search/search.module.js';
     SearchModule,
   ],
   controllers: [
+    SellerVariantInventoryController,
     SellerProductController,
     AdminProductController,
     PublicProductController,
   ],
   providers: [
+    SellerVariantInventoryService,
     ProductService,
     ProductImageStorageService,
     ProductLifecycleService,
