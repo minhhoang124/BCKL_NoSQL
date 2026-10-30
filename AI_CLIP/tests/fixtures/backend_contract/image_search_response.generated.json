@@ -1,7 +1,7 @@
 {
   "source": "AI_CLIP/app/schemas/search.py",
   "sourceSha256Lf": "fe2564a39402c1168970393d714e2bb23b9048276dd74fc6983e4d9e3b2ee5e1",
-  "routerSha256Lf": "99152737bb1accf210f962e431914b159f7294bbafef09e70fb859e8f9ce1a1e",
+  "routerSha256Lf": "a5c024a264bb9d21416d446ac52dce12e713ea1b6f8f72e6a6382a5aa957a74f",
   "serialization": "by_alias=True, exclude_none=True (existing image router)",
   "schema": {
     "$defs": {

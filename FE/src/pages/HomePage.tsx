@@ -104,7 +104,7 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
     <p className={styles.hint}>{import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' ? <Link to="/search/image">Tìm sản phẩm bằng ảnh JPEG/PNG</Link> : 'Tìm kiếm bằng ảnh chưa được bật ở bản triển khai này.'}</p>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {searched && <p>{products.length} kết quả{responseTime !== null ? ` · Search Service ${Math.round(responseTime)} ms` : ''}</p>}
-    {!loading && !error && !products.length && nextCursor === null ? <div className={styles.empty}>Chưa có sản phẩm phù hợp.</div> : <section className={styles.grid}>{products.map((item) => <SearchResultCard key={`${tracking?.token??"catalog"}:${item.id}`} product={item} token={tracking?.token} />)}</section>}
+    {!loading && !error && !products.length && nextCursor === null ? <div className={styles.empty}>{searched ? 'Không có kết quả phù hợp. Hãy thử từ khóa khác hoặc bỏ bớt bộ lọc.' : 'Chưa có sản phẩm phù hợp.'}</div> : <section className={styles.grid}>{products.map((item) => <SearchResultCard key={`${tracking?.token??"catalog"}:${item.id}`} product={item} token={tracking?.token} />)}</section>}
     {nextCursor !== null && <button disabled={loading} onClick={() => void loadMore()}>Tải thêm sản phẩm</button>}
   </div>;
 }

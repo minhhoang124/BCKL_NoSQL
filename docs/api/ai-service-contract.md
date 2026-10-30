@@ -63,6 +63,35 @@ Trạng thái: **contract Hoàng–Đạt đã thống nhất; Search Service PR
 
 PostgreSQL là nguồn chuẩn của Product, Variant, giá, tồn kho và trạng thái công khai. FastAPI quản lý Elasticsearch, CLIP/FAISS và RRF như các chỉ mục/phép xếp hạng phụ trợ. Backend không gọi Elasticsearch trực tiếp; Backend gọi Search Service, sau đó đọc lại PostgreSQL để loại sản phẩm không còn hợp lệ và giữ thứ tự kết quả còn lại.
 
+## Ngưỡng tương đồng tùy chọn — nhánh triển khai 30/10/2026
+
+Hai biến phía AI `AI_TEXT_MIN_SIMILARITY` và `AI_IMAGE_MIN_SIMILARITY` nhận số
+hữu hạn trong [-1, 1]. Không cấu hình thì giữ cách truy hồi trước đây. Bật ở môi
+trường nào phải ghi giá trị vào cấu hình/provenance môi trường đó và khởi động
+lại AI; không nhận ngưỡng từ request của Browser.
+
+- `/search/text` và `/search/image`: loại ứng viên có điểm cosine nhỏ hơn ngưỡng
+  tương ứng trước khi lấy topK; bằng ngưỡng vẫn được giữ. Không bù ứng viên yếu
+  để đủ K. Rank các kết quả còn lại bắt đầu từ 1; không có kết quả trả HTTP 200
+  với `items: []`, không đổi envelope hoặc biến thành lỗi dịch vụ.
+- `/search/hybrid`: ngưỡng text chỉ áp dụng nhánh CLIP/FAISS **trước RRF**. Nhánh
+  keyword vẫn được Elasticsearch quyết định theo truy vấn và metadata filters;
+  kết quả khớp từ khóa không bị cắt bởi ngưỡng CLIP. Vì vậy câu có khớp từ khóa
+  vẫn có thể có kết quả dù nhánh semantic rỗng. Không dùng điểm RRF làm cosine
+  hoặc xác suất, không áp một ngưỡng chung lên BM25/RRF/cosine.
+- Metadata filters và PostgreSQL hydrate vẫn áp dụng như trước. Không thay
+  Product schema, productId hoặc cơ chế đồng bộ/index/timeout/retry.
+
+Ngưỡng là chính sách loại kết quả yếu, không phải bộ phân loại hiểu mọi câu
+vô nghĩa hoặc ảnh ngoài catalog. Điểm của câu đúng và câu ngoài chủ đề có thể
+chồng lấp; ngưỡng cao có thể bỏ sót sản phẩm đúng. Cần hiệu chỉnh theo catalog,
+revision model và tập kiểm tra đại diện. Mức thử local 0.27 cho text và 0.80 cho
+ảnh chưa phải ngưỡng được nghiệm thu cho production hoặc kết quả chất lượng mới.
+Không áp ngược cấu hình này vào các run đánh giá 7 truy vấn đã khóa.
+
+Phần này cần review thống nhất Hoàng–Đạt trước khi merge/rollout chung; trạng thái
+nhánh triển khai không tự thay trạng thái bản develop đã tích hợp.
+
 ## Định danh và đồng bộ
 
 - `productId`: JSON number nguyên dương do PostgreSQL sinh, dùng làm cùng một ID trong Backend, Elasticsearch và FAISS. ID 1–1200 của prototype ABO không phải ID production.
