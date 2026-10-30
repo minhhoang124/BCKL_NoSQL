@@ -37,9 +37,14 @@ phát triển nhỏ, không phải held-out evaluation hoặc phép tính Precis
 | qzxw123abc | 0.2618 |
 
 Các khoảng điểm chồng lấp. Ví dụ Lightning có thể bị loại bởi semantic cutoff
-0.27, nên không ép keyword hợp lệ phải vượt cutoff này. Mức text **0.27** chỉ
+0.265, nên không ép keyword hợp lệ phải vượt cutoff này. Mức text **0.265** chỉ
 là cấu hình thử local, không chứng minh chặn mọi query vô nghĩa. Câu ngoài
 chủ đề nhưng chứa từ khóa catalog vẫn có thể có kết quả từ keyword.
+
+Đã thử 0.27 trước, nhưng câu “tai nghe chụp tai nhẹ màu trắng” có max 0.2698
+và không khớp từ khóa tiếng Anh nên bị trả rỗng. Hạ mức local xuống 0.265 để
+giữ các ứng viên đó, đồng thời vẫn loại các mẫu ngoài chủ đề đã thử (max 0.2618).
+Đây là tuning trên cùng bộ mẫu phát triển, không phải bằng chứng tổng quát hóa.
 
 Ảnh catalog tai nghe và loa đạt cosine gần 1 do sử dụng lại ảnh nguồn; đây chỉ
 là kiểm chức năng. Ảnh xám trơn tổng hợp vẫn có max cosine **0.7829**, ảnh nhiễu

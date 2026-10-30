@@ -85,7 +85,7 @@ lại AI; không nhận ngưỡng từ request của Browser.
 Ngưỡng là chính sách loại kết quả yếu, không phải bộ phân loại hiểu mọi câu
 vô nghĩa hoặc ảnh ngoài catalog. Điểm của câu đúng và câu ngoài chủ đề có thể
 chồng lấp; ngưỡng cao có thể bỏ sót sản phẩm đúng. Cần hiệu chỉnh theo catalog,
-revision model và tập kiểm tra đại diện. Mức thử local 0.27 cho text và 0.80 cho
+revision model và tập kiểm tra đại diện. Mức thử local 0.265 cho text và 0.80 cho
 ảnh chưa phải ngưỡng được nghiệm thu cho production hoặc kết quả chất lượng mới.
 Không áp ngược cấu hình này vào các run đánh giá 7 truy vấn đã khóa.
 
