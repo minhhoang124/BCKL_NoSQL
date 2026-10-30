@@ -9,6 +9,7 @@ import type { User } from "../../types/auth";
 import type { OrderDetail, PreparationCommand } from "../../types/order";
 import { orderActions } from "../order-readiness/orderPolicy";
 import { createSellerCommandRecovery } from "./sellerCommandRecovery";
+import { pendingSellerClose } from "./sellerCloseClient";
 import type { VerifiedOrderSession } from "./orderCommandCoordinator";
 import {
   OrderRecoveryBlockedError,
@@ -203,6 +204,7 @@ export function createSellerOrderWorkflow(options: {
       !state.command ||
       !confirmed ||
       pending() ||
+      pendingSellerClose(options.storage, identity.actorId) ||
       !eligible(state.command)
     )
       throw new OrderRecoveryBlockedError();
@@ -283,7 +285,13 @@ export function createSellerOrderWorkflow(options: {
     resolve,
     choose(command: PreparationCommand) {
       assertCurrent();
-      if (busy || state.phase !== "ready" || pending() || !eligible(command))
+      if (
+        busy ||
+        state.phase !== "ready" ||
+        pending() ||
+        pendingSellerClose(options.storage, identity.actorId) ||
+        !eligible(command)
+      )
         throw new OrderRecoveryBlockedError();
       publish({ ...state, phase: "confirm-new", outcome: null, command });
     },

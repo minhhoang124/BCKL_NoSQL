@@ -40,6 +40,7 @@ export function orderReadError(error: unknown) {
   return 'Chưa tải được đơn hàng. Kiểm tra kết nối rồi thử tải lại.';
 }
 export interface OrderActionContext {
+  closingConnected?: boolean;
   scope: OrderScope;
   user: User | null;
   store?: { id: number; status: string };
@@ -104,14 +105,14 @@ export function orderActions(
           : 'Cần quyền Store, dữ liệu mới và thanh toán phù hợp; không được còn yêu cầu chưa rõ kết quả.',
       });
     }
-    if (['PENDING_CONFIRMATION', 'CONFIRMED'].includes(order.status))
+    if (!context.closingConnected && ['PENDING_CONFIRMATION', 'CONFIRMED'].includes(order.status))
       result.push({
         id: 'cancel',
         label: 'Hủy đơn',
         enabled: false,
         reason: 'Chưa nối API hủy đơn; cần lý do và mã chống xử lý trùng.',
       });
-    if (order.status === 'DELIVERY_FAILED')
+    if (!context.closingConnected && order.status === 'DELIVERY_FAILED')
       result.push({
         id: 'confirm-returned',
         label: 'Xác nhận hàng quay về',

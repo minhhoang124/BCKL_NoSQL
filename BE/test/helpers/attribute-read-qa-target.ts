@@ -1,8 +1,10 @@
+import { isFinalDayQaTarget } from './final-day-qa-target.js';
+
 /** Allow only our dedicated local DB or GitHub's disposable PostgreSQL service. */
 export function assertAttributeReadQaTarget(raw: string | undefined): URL {
   try {
     const url = new URL(raw ?? '');
-    const local =
+    const local = isFinalDayQaTarget(url) ||
       url.hostname === '127.0.0.1' &&
       url.port === '5549' &&
       (url.pathname === '/bckl_order_resolution_test_hardening_20261029' ||

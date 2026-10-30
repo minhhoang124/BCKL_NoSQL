@@ -64,7 +64,7 @@ export function assertResolutionIdentity(closed: {
     Number.isInteger(v) && v > 0 && v <= 2147483647;
   const allowed =
     closed.actorType === 'SELLER'
-      ? ['confirm', 'start-packing', 'ready-to-ship']
+      ? ['confirm', 'start-packing', 'ready-to-ship', 'cancel', 'confirm-returned']
       : closed.actorType === 'BUYER'
         ? ['cancel', 'complete']
         : [];

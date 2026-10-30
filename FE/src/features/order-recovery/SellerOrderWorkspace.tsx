@@ -6,6 +6,11 @@ import { OrderDetailPanel } from "../order-readiness/OrderPanels";
 import { SellerCommandReview } from "./SellerCommandReview";
 import { SellerResolutionReview } from "./SellerResolutionReview";
 import { createSellerOrderWorkflow } from "./sellerOrderWorkflow";
+import {
+  pendingSellerClose,
+  eligibleClose,
+  type CloseIntent,
+} from "./sellerCloseClient";
 import type { VerifiedOrderSession } from "./orderCommandCoordinator";
 import styles from "./SellerOrderWorkspace.module.css";
 
@@ -54,8 +59,54 @@ export function SellerOrderWorkspace({ orderId }: { orderId: number }) {
     state.phase === "closed-refresh-error";
   const confirming = state.phase === "confirm-new";
   const pending = state.pending;
+  let closing: CloseIntent | null = null,
+    closingBlocked = false;
+  try {
+    if (user) closing = pendingSellerClose(storage(), user.id);
+  } catch {
+    closingBlocked = true;
+  }
   return (
     <section className={styles.workspace} aria-label="Xử lý đơn Seller">
+      {closingBlocked && (
+        <p role="alert">
+          Không đọc được yêu cầu hủy/nhận hoàn. Chưa được gửi lệnh mới.
+        </p>
+      )}
+      {closing && (
+        <p role="alert">
+          Còn yêu cầu hủy/nhận hoàn cần đối chiếu.{" "}
+          <Link to={`/seller/orders/${closing.orderId}/close`}>
+            Đối chiếu đơn {closing.orderId}
+          </Link>{" "}
+          trước thao tác khác.
+        </p>
+      )}
+      {state.phase === "ready" &&
+        !pending &&
+        !closing &&
+        !closingBlocked &&
+        state.order &&
+        state.store && (
+          <>
+            {eligibleClose(state.order, state.store.status, "cancel") && (
+              <p>
+                <Link to={`/seller/orders/${orderId}/close`}>Hủy đơn</Link>
+              </p>
+            )}
+            {eligibleClose(
+              state.order,
+              state.store.status,
+              "confirm-returned",
+            ) && (
+              <p>
+                <Link to={`/seller/orders/${orderId}/close`}>
+                  Xác nhận hàng quay về
+                </Link>
+              </p>
+            )}
+          </>
+        )}
       <p>
         Xác nhận, đóng gói và sẵn sàng bàn giao là ba thao tác riêng. Không tự
         gửi lại khi mất phản hồi.
@@ -124,7 +175,13 @@ export function SellerOrderWorkspace({ orderId }: { orderId: number }) {
             user,
             store: state.store ?? undefined,
             fresh: state.phase === "ready",
-            busy: busy || confirming || state.phase === "blocked",
+            busy:
+              busy ||
+              confirming ||
+              state.phase === "blocked" ||
+              !!closing ||
+              closingBlocked,
+            closingConnected: true,
             outcomeUnknown: pending !== null,
           }}
           onAction={(command) => flow.choose(command)}

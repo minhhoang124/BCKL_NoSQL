@@ -23,6 +23,7 @@ import { CartPage } from '../pages/CartPage';
 import { AddressBookPage } from '../pages/AddressBookPage';
 import { CheckoutPage } from '../features/order-flow/CheckoutPage';
 import { OrderReadPage } from '../features/order-readiness/OrderReadPages';
+import { SellerClosePage } from '../features/order-recovery/SellerClosePage';
 import { ChatPage } from '../features/chat/ChatPage';
 import { AftersalesPage } from '../features/aftersales/AftersalesPage';
 import { StoreApplicationPage } from '../features/seller-onboarding/StoreApplicationPage';
@@ -108,6 +109,7 @@ export function AppRouter() {
         <Route path="/seller/aftersales" element={<ProtectedRoute allowedRoles={['SELLER']}><AftersalesPage scope="SELLER" /></ProtectedRoute>} />
         <Route path="/account/orders/:orderId" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><OrderReadPage scope="buyer" detail /></ProtectedRoute>} />
         <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" /></ProtectedRoute>} />
+        <Route path="/seller/orders/:orderId/close" element={<ProtectedRoute allowedRoles={['SELLER']}><SellerClosePage /></ProtectedRoute>} />
         <Route path="/seller/orders/:orderId" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" detail /></ProtectedRoute>} />
 
         {/* Protected Routes - Seller only */}

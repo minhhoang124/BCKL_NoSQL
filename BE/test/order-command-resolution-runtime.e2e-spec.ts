@@ -770,7 +770,7 @@ describe('Resolver HTTP + full PostgreSQL schema', () => {
         [3, `USER:${other.id}`],
         [4, 'short'],
         [4, 'a'.repeat(129)],
-        [5, 'cancel'],
+        [5, 'mark-delivered'],
         [6, 'g'.repeat(64)],
         [6, 'a'.repeat(63)],
         [7, 2],
@@ -794,6 +794,25 @@ describe('Resolver HTTP + full PostgreSQL schema', () => {
       expect(await p.orderCommandResolution.count({ where: { orderId } })).toBe(
         0,
       );
+    } finally {
+      await c.query('ROLLBACK');
+      c.release();
+    }
+  });
+  it('R12 latest constraint accepts Seller cancel and returned fences without executing either command', async () => {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
+      for (const command of ['cancel', 'confirm-returned']) {
+        const k = key();
+        const result = await c.query(
+          'INSERT INTO order_command_resolutions("orderId","actorId","actorType","actorScope","idempotencyKey",command,"requestHash","hashVersion") VALUES($1,$2,\'SELLER\',$3,$4,$5,$6,1) RETURNING command',
+          [orderId, seller.id, `USER:${seller.id}`, k, command, 'a'.repeat(64)],
+        );
+        expect(result.rows).toEqual([{ command }]);
+        expect((await c.query('SELECT count(*)::int AS count FROM order_commands WHERE "actorScope"=$1 AND "idempotencyKey"=$2', [`USER:${seller.id}`, k])).rows[0].count).toBe(0);
+      }
+      await c.query('ROLLBACK');
     } finally {
       await c.query('ROLLBACK');
       c.release();

@@ -12,7 +12,7 @@
 .panel p { margin: 12px 0; }
 .preparation, .hint { color: #59616c; font-size: 13px; }
 .panel label { display: block; margin: 16px 0 8px; }
-.panel select, .panel textarea {
+.panel select, .panel textarea, .panel input[type="text"] {
   display: block;
   box-sizing: border-box;
   width: 100%;

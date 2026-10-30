@@ -24,7 +24,7 @@ describe('Dashboard shared revenue/refund HTTP and PostgreSQL', () => {
   const http = () => request(app.getHttpServer());
   beforeAll(async () => {
     const url = new URL(process.env.DATABASE_URL ?? '');
-    const local =
+    const local = isFinalDayQaTarget(url) ||
       url.hostname === '127.0.0.1' &&
       url.port === '5549' &&
       ['/bckl_order_resolution_test_attributes_20261019_v951','/bckl_order_resolution_test_attributes_20261019_v953', '/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957', '/bckl_order_resolution_test_attributes_20261019_v959', '/bckl_order_resolution_test_attributes_20261019_v961', '/bckl_order_resolution_test_attributes_20261019_v965', '/bckl_order_resolution_test_attributes_20261019_v967', '/bckl_order_resolution_test_attributes_20261019_v971', '/bckl_order_resolution_test_attributes_20261019_v973', '/bckl_order_resolution_test_attributes_20261019_v975', '/bckl_order_resolution_test_hardening_20261029'].includes(url.pathname);
@@ -513,3 +513,4 @@ describe('Dashboard shared revenue/refund HTTP and PostgreSQL', () => {
     expect(await snapshot()).toEqual(before);
   });
 });
+import { isFinalDayQaTarget } from './helpers/final-day-qa-target.js';

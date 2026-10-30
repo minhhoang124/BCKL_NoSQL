@@ -7,7 +7,7 @@ describe('Accounts migration — real SQL baseline upgrade', () => {
     const url = new URL(process.env.DATABASE_URL!);
     expect(url.hostname).toBe('127.0.0.1');
     expect(url.port).toBe('5549');
-    expect([
+    expect(isFinalDayQaTarget(url) || [
       '/bckl_order_resolution_test_attributes_20261019',
       '/bckl_order_resolution_test_accounts_20261024_v946',
       '/bckl_order_resolution_test_attributes_20261019_v947',
@@ -16,7 +16,7 @@ describe('Accounts migration — real SQL baseline upgrade', () => {
       '/bckl_order_resolution_test_attributes_20261019_v950',
       '/bckl_order_resolution_test_attributes_20261019_v951',
       '/bckl_order_resolution_test_attributes_20261019_v953', '/bckl_order_resolution_test_attributes_20261019_v955', '/bckl_order_resolution_test_attributes_20261019_v957', '/bckl_order_resolution_test_attributes_20261019_v959', '/bckl_order_resolution_test_attributes_20261019_v961', '/bckl_order_resolution_test_attributes_20261019_v965', '/bckl_order_resolution_test_attributes_20261019_v967', '/bckl_order_resolution_test_attributes_20261019_v971', '/bckl_order_resolution_test_attributes_20261019_v973', '/bckl_order_resolution_test_attributes_20261019_v975', '/bckl_order_resolution_test_hardening_20261029',
-    ]).toContain(url.pathname);
+    ].includes(url.pathname)).toBe(true);
     const db = new Client({ connectionString: url.toString() });
     await db.connect();
     // Unique retained schema, never DROP/reset or alter public business tables.
@@ -165,3 +165,4 @@ describe('Accounts migration — real SQL baseline upgrade', () => {
     }
   }, 15000);
 });
+import { isFinalDayQaTarget } from './helpers/final-day-qa-target.js';
