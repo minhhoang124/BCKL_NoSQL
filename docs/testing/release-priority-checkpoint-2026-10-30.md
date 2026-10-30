@@ -1,5 +1,10 @@
 # Checkpoint ổn định bản bảo vệ — 30/10/2026
 
+**Bổ sung sau PR137:** CI sau merge23096fa đã xanh6/6. Màn Admin giao hàng
+mô phỏng và nghiệm thu các nhánh được triển khai tiếp trên nhánh riêng;
+xem [bằng chứng/giới hạn](admin-fulfilment-web-2026-10-30.md).
+Không dùng CI137 để thay CI của thay đổi Admin mới.
+
 **Điều chỉnh sau checkpoint:** owner xác nhận ngày30/10 tạm dừng MoMo,
 chuyển sang hướng mở rộng theo `SCOPE-PAYMENT-002`. Bản nộp giữ COD/VNPay;
 MoMo không còn là blocker. Bằng chứng và giới hạn nghiệm thu VNPay giữ nguyên.

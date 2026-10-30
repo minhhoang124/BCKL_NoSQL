@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AdminFulfilment } from '../features/admin-fulfilment/AdminFulfilment';
 import type { ReactNode } from 'react';
 import {
   Link,
@@ -106,6 +107,7 @@ const navItems = [
   { to: '/admin/users', label: 'Tài khoản', icon: '◎' },
   { to: '/admin/system-health', label: 'Sức khỏe hệ thống', icon: '◉' },
   { to: '/admin/returns', label: 'Hậu mãi', icon: '↺', disabled: false },
+  { to: '/admin/fulfilment', label: 'Giao hàng mô phỏng', icon: '▣' },
   ...(import.meta.env.VITE_NOTIFICATIONS_ENABLED === 'true' ? [{to:'/account/notifications',label:'Thông báo',icon:'♧'}] : []),
   ...(import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED==='true'?[{to:'/admin/reviews',label:'Đánh giá',icon:'☆'}]:[]),
 ];
@@ -1645,6 +1647,7 @@ function AdminConsole() {
         </header>
         <div className={styles.content}>
           <Routes>
+            <Route path="fulfilment" element={<AdminFulfilment />} />
             <Route index element={<OverviewPage />} />
             <Route path="products" element={<ProductQueuePage />} />
             <Route

@@ -1,5 +1,9 @@
 # Ma trận tám luồng nghiệm thu — bản tích hợp 29/10/2026
 
+**Nghiệm thu Admin giao hàng30/10:** đã có UI mô phỏng và bằng chứng theo
+nhánh;[report](admin-fulfilment-web-2026-10-30.md). Không đổi các nhánh Seller
+chưa nối UI hoặc điều kiện staging thành PASS.
+
 **Quyết định phạm vi30/10 — SCOPE-PAYMENT-002:** MoMo tạm dừng và chuyển sang
 hướng mở rộng; RC-CHK-05 không thuộc gate bản nộp hiện tại. COD/VNPay vẫn giữ
 đầy đủ các điều kiện nghiệm thu. Những mô tả MoMo P1 cũ là lịch sử.
