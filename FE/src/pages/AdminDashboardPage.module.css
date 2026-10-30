@@ -1,12 +1,12 @@
 .adminShell {
   color-scheme: light;
-  --orange: #d63b0b;
-  --orange-dark: #b83208;
-  --ink: #20242b;
-  --muted: #737985;
-  --line: #e9ebef;
+  --orange: #c92a2a;
+  --orange-dark: #a61e1e;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
   --surface: #fff;
-  --canvas: #f6f7f8;
+  --canvas: #f8fafc;
   display: flex;
   min-height: 100vh;
   background: var(--canvas);
@@ -24,8 +24,9 @@
 .sidebar {
   width: 258px;
   flex: 0 0 258px;
-  background: #fff;
-  border-right: 1px solid var(--line);
+  background: #0f172a;
+  border-right: 1px solid #334155;
+  color: #f8fafc;
   padding: 24px 16px 16px;
   display: flex;
   flex-direction: column;
@@ -36,7 +37,7 @@
   align-items: center;
   gap: 11px;
   padding: 3px 10px 30px;
-  color: var(--ink);
+  color: #ffffff;
   text-decoration: none;
 }
 .brandMark {
@@ -86,7 +87,7 @@
   padding: 0 12px;
   border-radius: 9px;
   text-decoration: none;
-  color: #606670;
+  color: #cbd5e1;
   font-size: 13px;
   font-weight: 550;
   transition: 0.16s;
@@ -98,17 +99,18 @@
   color: #91959c;
 }
 .navItem:hover {
-  background: #fff6f2;
-  color: var(--orange);
+  background: #1e293b;
+  color: #ffffff;
 }
 .navActive,
 .navActive:hover {
-  background: #fff0e9;
-  color: var(--orange);
+  background: #c92a2a;
+  color: #ffffff;
   font-weight: 700;
+  box-shadow: 0 6px 14px rgba(201, 42, 42, 0.32);
 }
 .navActive > span {
-  color: var(--orange);
+  color: #ffffff;
 }
 .navDisabled {
   cursor: not-allowed;
@@ -129,9 +131,10 @@
 .helpCard {
   padding: 15px 13px;
   margin: 18px 2px;
-  background: linear-gradient(140deg, #fff4ed, #fff9f5);
-  border: 1px solid #ffe0cf;
+  background: rgba(30, 41, 59, 0.88);
+  border: 1px solid #334155;
   border-radius: 12px;
+  color: #f8fafc;
 }
 .helpCard > span {
   color: var(--orange);
@@ -163,7 +166,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid #334155;
+  color: #f8fafc;
   padding: 16px 4px 0;
 }
 .avatar,
@@ -839,11 +843,11 @@
   cursor: pointer;
 }
 .approveButton {
-  background: var(--orange);
+  background: #1b4332;
   color: #fff;
 }
 .approveButton:hover {
-  background: var(--orange-dark);
+  background: #143325;
 }
 .rejectButton {
   background: #fff;

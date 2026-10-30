@@ -77,8 +77,12 @@ export function LoginPage() {
 
   return (
     <AuthLayout><div className={styles.container}>
+      <div className={styles.cardTopMeta}>
+        <span className={styles.festiveChip}>🎅 Phiên bản Noel 2026</span>
+        <span className={styles.qrBadge}>▦ Bảo mật phiên &amp; OAuth 2.0</span>
+      </div>
       <h1 className={styles.title}>Đăng nhập</h1>
-      <p className={styles.subtitle}>Chào mừng bạn trở lại với BCKL.</p>
+      <p className={styles.subtitle}>Chào mừng bạn trở lại với BCKL · Chợ hiện đại.</p>
       {new URLSearchParams(location.search).get('google') === 'collision' && <p role="alert">Email đã có tài khoản BCKL. Hãy đăng nhập bằng mật khẩu rồi vào Tài khoản để chủ động liên kết Google.</p>}
       {new URLSearchParams(location.search).get('google') === 'linked' && <p role="status">Đã liên kết Google và thu hồi các phiên cũ. Hãy đăng nhập lại.</p>}
       {new URLSearchParams(location.search).get('google') === 'failed' && <p role="alert">Đăng nhập Google chưa hoàn tất hoặc đã hết hạn. Bạn có thể chủ động bắt đầu lại.</p>}
@@ -89,11 +93,11 @@ export function LoginPage() {
       <form className={styles.form} onSubmit={submit}>
         <label>
           Email
-          <input name="email" type="email" autoComplete="email" required />
+          <input name="email" type="email" placeholder="Nhập địa chỉ email của bạn..." autoComplete="email" required />
         </label>
         <label>
           Mật khẩu
-          <input name="password" type="password" minLength={8} maxLength={72} autoComplete="current-password" required />
+          <input name="password" type="password" placeholder="Nhập mật khẩu (tối thiểu 8 ký tự)..." minLength={8} maxLength={72} autoComplete="current-password" required />
         </label>
         <button type="submit" className={`market-button ${styles.submitBtn}`} disabled={busy}>
           {busy ? 'Đang xử lý...' : 'Đăng nhập'}

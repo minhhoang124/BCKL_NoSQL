@@ -10,6 +10,7 @@ import { ProductPurchase } from '../features/seller-listing/ProductPurchase';
 export function ProductDetailPage() {
   const { id } = useParams();
   const [result, setResult] = useState<{ id: number; product?: Product; error?: string } | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const productId = Number(id); const invalidId = !Number.isInteger(productId) || productId < 1;
   useEffect(() => {
     if (invalidId) return;
@@ -22,7 +23,7 @@ export function ProductDetailPage() {
           return marketplaceApi.publicProduct(productId);
         throw error;
       })
-      .then((product) => { if (active) setResult({ id: productId, product }); })
+      .then((product) => { if (active) { setResult({ id: productId, product }); setSelectedImageUrl(null); } })
       .catch((e) => { if (active) setResult({ id: productId, error: e instanceof ApiError ? e.message : 'Không thể tải sản phẩm.' }); });
     return () => { active = false; };
   }, [invalidId, productId]);
@@ -31,14 +32,56 @@ export function ProductDetailPage() {
   if (invalidId) return <p className={styles.error} role="alert">Mã sản phẩm không hợp lệ.</p>;
   if (error) return <p className={styles.error} role="alert">{error}</p>;
   if (!product) return <p>Đang tải sản phẩm…</p>;
-  const image = product.images.find((item) => item.isPrimary) ?? product.images[0];
+  const primaryImage = product.images.find((item) => item.isPrimary) ?? product.images[0];
+  const activeImageUrl = selectedImageUrl ?? primaryImage?.url;
   return <div className={styles.page}>
     <section className={styles.detail}>
-      <div className={styles.gallery}>{image ? <img src={mediaUrl(image.url)} alt={product.name} /> : <div className={styles.empty}>Chưa có ảnh</div>}</div>
-      <div className={styles.panel}><span className={styles.badge}>{product.category.name}</span><h1>{product.name}</h1><p>{product.brand?.name ?? 'Không thương hiệu'} · {product.store && <Link to={`/stores/${product.store.id}`}>{product.store.name}</Link>}</p><strong className={styles.price}>{formatPrice(product.minPrice ?? product.variants[0]?.price)}</strong><p>{product.inStock ? 'Còn hàng' : 'Hết hàng'}</p><p>{product.description || 'Sản phẩm chưa có mô tả.'}</p></div>
+      <div className={styles.galleryColumn}>
+        <div className={styles.gallery}>
+          {activeImageUrl ? <img src={mediaUrl(activeImageUrl)} alt={product.name} /> : <div className={styles.empty}>Chưa có ảnh</div>}
+        </div>
+        {product.images.length > 1 && (
+          <div className={styles.thumbStrip} aria-hidden="true">
+            {product.images.map((item) => (
+              <div
+                key={item.id}
+                onMouseEnter={() => setSelectedImageUrl(item.url)}
+                onClick={() => setSelectedImageUrl(item.url)}
+                className={activeImageUrl === item.url ? `${styles.thumbItem} ${styles.thumbActive}` : styles.thumbItem}
+              >
+                <img src={mediaUrl(item.url)} alt="" />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className={styles.stickyBuyColumn}>
+        <div className={styles.panel}>
+          <div className={styles.badgeRow}>
+            <span className={styles.badge}>{product.category.name}</span>
+            <span className={styles.festiveBadge} aria-hidden="true">🎄 Noel Deal 2026</span>
+          </div>
+          <h1 className={styles.productTitle}>{product.name}</h1>
+          <p className={styles.storeMeta}>{product.brand?.name ?? 'Không thương hiệu'} · {product.store && <Link to={`/stores/${product.store.id}`}>{product.store.name}</Link>}</p>
+          <div className={styles.priceBanner}>
+            <strong className={styles.price}>{formatPrice(product.minPrice ?? product.variants[0]?.price)}</strong>
+            <span className={product.inStock ? styles.inStockPill : styles.outStockPill}>{product.inStock ? 'Còn hàng' : 'Hết hàng'}</span>
+          </div>
+          <div className={styles.policyStrip} aria-hidden="true">
+            <span>✓ Đổi trả miễn phí 15 ngày</span>
+            <span>✓ Cam kết chính hãng 100%</span>
+            <span>✓ Hỗ trợ Freeship Noel</span>
+          </div>
+          <p className={styles.descriptionText}>{product.description || 'Sản phẩm chưa có mô tả.'}</p>
+        </div>
+        <ProductPurchase product={product} />
+        {import.meta.env.VITE_CHAT_ENABLED === 'true' && product.store && (
+          <div className={styles.chatStoreBar}>
+            <Link to={`/messages?storeId=${product.store.id}&productId=${product.id}`} className={styles.chatStoreLink}>Chat với cửa hàng</Link>
+          </div>
+        )}
+      </div>
     </section>
-    <ProductPurchase product={product} />
-    {import.meta.env.VITE_CHAT_ENABLED === 'true' && product.store && <Link to={`/messages?storeId=${product.store.id}&productId=${product.id}`}>Chat với cửa hàng</Link>}
     {!!product.attributes?.length && <section className={styles.panel}><h2>Thông số</h2>{product.attributes.map((item) => <div className={styles.row} key={item.id}><span>{item.name}</span><strong>{String(item.value)}</strong></div>)}</section>}
     {import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED === 'true' && <PublicProductReviews productId={product.id} />}
   </div>;

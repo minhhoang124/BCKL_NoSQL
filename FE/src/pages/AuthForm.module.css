@@ -1,14 +1,164 @@
-.container { box-sizing: border-box; width: 100%; min-width: 0; padding: 48px; border: 1px solid var(--market-line); border-radius: var(--market-radius); background-color: #fff; color: #20242b; color-scheme: light; }
-.title { color: #20242b; font: 700 30px/1.25 var(--market-font); letter-spacing: -0.5px; margin: 0 0 16px; }
-.subtitle { color: var(--market-muted); margin-bottom: 32px; }
-.form { display: flex; flex-direction: column; gap: 24px; }
-.form label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 500; }
-.form input, .form select { box-sizing: border-box; min-width: 0; width: 100%; min-height: 48px; color: #20242b; background-color: #fff; padding: 12px 16px; border: 1px solid var(--market-line); border-radius: var(--market-radius); font: 400 16px/1.5 var(--market-font); }
-.form input::placeholder { color: #596170; opacity: 1; }
-.form input:focus, .form select:focus { outline: 2px solid var(--market-brand); outline-offset: 2px; border-color: var(--market-brand); }
-.submitBtn { min-height: 52px; margin-top: 8px; }
-.linkText { text-align: center; margin-top: 32px; font-size: 14px; }
-.linkText a { color: var(--market-brand); text-decoration: none; font-weight: 600; }
-.linkText a:hover { text-decoration: underline; }
-.container a:focus-visible, .submitBtn:focus-visible { outline: 2px solid var(--market-brand); outline-offset: 3px; }
-@media (max-width: 600px) { .container { padding: 24px; } .title { font-size: 28px; } }
+.container {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 40px 36px;
+  border: 1px solid var(--market-line);
+  border-top: 4px solid var(--market-brand);
+  border-radius: 12px;
+  background-color: #fff;
+  color: #20242b;
+  color-scheme: light;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cardTopMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.festiveChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--market-soft);
+  border: 1px solid var(--market-soft-border);
+  color: var(--market-brand);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.qrBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #FFF9DB;
+  border: 1px solid #FDE047;
+  color: #854D0E;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.title {
+  color: #20242b;
+  font: 800 28px/1.25 var(--market-font);
+  letter-spacing: -0.5px;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  color: var(--market-muted);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #20242b;
+}
+
+.form input, .form select {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  min-height: 46px;
+  color: #20242b;
+  background-color: #fff;
+  padding: 10px 14px;
+  border: 1px solid var(--market-line-strong);
+  border-radius: var(--market-radius);
+  font: 400 15px/1.5 var(--market-font);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form input::placeholder {
+  color: #596170;
+  opacity: 1;
+}
+
+.form input:focus, .form select:focus {
+  outline: 2px solid var(--market-brand);
+  outline-offset: 2px;
+  border-color: var(--market-brand);
+}
+
+.submitBtn {
+  min-height: 48px;
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.dividerRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 12px;
+  color: var(--market-subtle);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.dividerRow::before,
+.dividerRow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--market-line);
+}
+
+.linkText {
+  text-align: center;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--market-line);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.linkText a {
+  color: var(--market-brand);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.linkText a:hover {
+  text-decoration: underline;
+}
+
+.container a:focus-visible,
+.submitBtn:focus-visible {
+  outline: 2px solid var(--market-brand);
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 24px 18px;
+  }
+  .title {
+    font-size: 24px;
+  }
+}

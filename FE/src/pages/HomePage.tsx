@@ -93,18 +93,64 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
   };
 
   return <div className={styles.page}>
-    <section className={styles.hero}><h1>Khám phá sản phẩm phù hợp</h1><p>Tìm theo từ khóa, ngữ nghĩa và lọc lại bằng dữ liệu đang bán thực tế.</p></section>
+    <section className={styles.heroGrid}>
+      <div className={styles.hero}>
+        <div className={styles.heroBadgeRow} aria-hidden="true">
+          <span className={styles.heroSeasonPill}>🎄 NOEL MEGA SALE 2026</span>
+          <span className={styles.heroGuaranteePill}>✓ Mall Chính Hãng · Freeship 0Đ</span>
+        </div>
+        <h1>Khám phá sản phẩm phù hợp</h1>
+        <p>Tìm theo từ khóa, ngữ nghĩa và lọc lại bằng dữ liệu đang bán thực tế.</p>
+        <div className={styles.voucherRow} aria-hidden="true">
+          <div className={styles.voucherChip}>
+            <strong>GIẢM 120K</strong>
+            <span>Đơn từ 499K · Noel2026</span>
+          </div>
+          <div className={styles.voucherChip}>
+            <strong>FREESHIP 0Đ</strong>
+            <span>Mọi đơn hàng Mall</span>
+          </div>
+          <div className={styles.voucherChip}>
+            <strong>AI CLIP 📷</strong>
+            <span>Tìm nhanh bằng hình ảnh</span>
+          </div>
+        </div>
+      </div>
+      <div className={styles.heroSide} aria-hidden="true">
+        <div className={styles.sideBannerGold}>
+          <span className={styles.sideTag}>KHUNG GIỜ VÀNG 0H · 12H · 21H</span>
+          <strong>Săn Voucher Giáng Sinh 50%</strong>
+          <span>Cộng dồn ưu đãi cửa hàng &amp; miễn phí vận chuyển</span>
+        </div>
+        <div className={styles.sideBannerPine}>
+          <span className={styles.sideTag}>ĐỐI TÁC THANH TOÁN</span>
+          <strong>VNPay-QR Hoàn Tiền Đến 20%</strong>
+          <span>Bảo vệ người mua 100% · Đồng kiểm khi nhận hàng</span>
+        </div>
+      </div>
+    </section>
+
+    <div className={styles.flashRibbon} aria-hidden="true">
+      <div className={styles.flashTitle}>
+        <span>⚡ FLASH SALE GIÁNG SINH</span>
+        <div className={styles.countdown}>
+          <b>02</b>:<b>18</b>:<b>45</b>
+        </div>
+      </div>
+      <span className={styles.flashSub}>Di chuột qua sản phẩm có nhiều góc chụp để xem nhanh ảnh thực tế chuẩn Shein</span>
+    </div>
+
     <form className={styles.toolbar} onSubmit={submit}>
       <input aria-label="Từ khóa" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tai nghe chống ồn, giày chạy bộ..." />
       <select aria-label="Danh mục" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}><option value="">Mọi danh mục</option>{flatCategories.map((item) => <option key={item.id} value={item.id}>{'—'.repeat(item.depth)} {item.name}</option>)}</select>
       <select aria-label="Thương hiệu" value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">Mọi thương hiệu</option>{brands.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
-      <label><input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} /> Còn hàng</label>
+      <label className={styles.stockCheck}><input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} /> Còn hàng</label>
       <button disabled={loading}>{loading ? 'Đang tìm…' : 'Tìm kiếm'}</button>
     </form>
     <p className={styles.hint}>{import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' ? <Link to="/search/image">Tìm sản phẩm bằng ảnh JPEG/PNG</Link> : 'Tìm kiếm bằng ảnh chưa được bật ở bản triển khai này.'}</p>
     {error && <p className={styles.error} role="alert">{error}</p>}
-    {searched && <p>{products.length} kết quả{responseTime !== null ? ` · Search Service ${Math.round(responseTime)} ms` : ''}</p>}
+    {searched && <p className={styles.searchStats}>{products.length} kết quả{responseTime !== null ? ` · Search Service ${Math.round(responseTime)} ms` : ''}</p>}
     {!loading && !error && !products.length && nextCursor === null ? <div className={styles.empty}>Chưa có sản phẩm phù hợp.</div> : <section className={styles.grid}>{products.map((item) => <SearchResultCard key={`${tracking?.token??"catalog"}:${item.id}`} product={item} token={tracking?.token} />)}</section>}
-    {nextCursor !== null && <button disabled={loading} onClick={() => void loadMore()}>Tải thêm sản phẩm</button>}
+    {nextCursor !== null && <div className={styles.loadMoreWrap}><button className={styles.loadMoreBtn} disabled={loading} onClick={() => void loadMore()}>Tải thêm sản phẩm</button></div>}
   </div>;
 }

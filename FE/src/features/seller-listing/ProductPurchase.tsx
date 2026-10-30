@@ -14,7 +14,7 @@ export function ProductPurchase({ product }: { product: Product }) {
   if (loading) return <p role="status">Đang kiểm tra phiên…</p>;
   if (!user)
     return (
-      <p>
+      <p className={styles.loginPromptBar}>
         <Link to="/login">Đăng nhập để chọn mua</Link>
       </p>
     );
@@ -86,34 +86,65 @@ function Purchase({ product }: { product: Product }) {
       <form className={styles.form} onSubmit={(e) => void save(e)}>
         <fieldset disabled={busy}>
           {groups.map((g) => (
-            <label key={g.id}>
-              {g.name} muốn mua
-              <select
-                aria-label={`${g.name} muốn mua`}
-                required
-                value={choices[g.id] ?? ""}
-                onChange={(e) => {
-                  setChoices((old) => ({ ...old, [g.id]: e.target.value }));
-                  setNotice("");
-                  setError("");
-                }}
-              >
-                <option value="">Chọn {g.name}</option>
-                {g.values.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.value}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div key={g.id} className={styles.optionGroupBlock}>
+              <label>
+                {g.name} muốn mua
+                <select
+                  aria-label={`${g.name} muốn mua`}
+                  required
+                  value={choices[g.id] ?? ""}
+                  onChange={(e) => {
+                    setChoices((old) => ({ ...old, [g.id]: e.target.value }));
+                    setNotice("");
+                    setError("");
+                  }}
+                >
+                  <option value="">Chọn {g.name}</option>
+                  {g.values.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className={styles.swatchList} aria-hidden="true">
+                {g.values.map((v) => {
+                  const isSelected = choices[g.id] === String(v.id);
+                  return (
+                    <span
+                      key={v.id}
+                      onClick={() => {
+                        if (busy) return;
+                        setChoices((old) => ({
+                          ...old,
+                          [g.id]: String(v.id),
+                        }));
+                        setNotice("");
+                        setError("");
+                      }}
+                      className={
+                        isSelected
+                          ? `${styles.swatchChip} ${styles.swatchChipActive}`
+                          : styles.swatchChip
+                      }
+                    >
+                      {v.value}
+                      {isSelected && <i className={styles.cornerTick}>✓</i>}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
           ))}
           {selected ? (
-            <p>
+            <p className={styles.skuStatusBox}>
               Giá SKU: <strong>{formatPrice(selected.price)}</strong> ·{" "}
               {selected.inStock ? "Còn hàng" : "Hết hàng"}
             </p>
           ) : (
-            <p>Chọn đủ phân loại để xem giá và tình trạng hàng.</p>
+            <p className={styles.skuHintBox}>
+              Chọn đủ phân loại để xem giá và tình trạng hàng.
+            </p>
           )}
           <label>
             Số lượng trong giỏ
@@ -129,18 +160,22 @@ function Purchase({ product }: { product: Product }) {
               }}
             />
           </label>
-          <p>
+          <p className={styles.hint}>
             Số lượng này thay cho số lượng của cùng SKU nếu đã có trong giỏ. Giá
             và tồn kho được kiểm lại khi thanh toán.
           </p>
-          <button disabled={busy || !canBuy}>
-            {busy ? "Đang lưu…" : "Lưu vào giỏ"}
-          </button>
+          <div className={styles.dualActionRow}>
+            <button className={styles.addToCartBtn} disabled={busy || !canBuy}>
+              {busy ? "Đang lưu…" : "Lưu vào giỏ"}
+            </button>
+            <Link to="/cart" className={styles.buyNowLink}>
+              Xem giỏ và thanh toán
+            </Link>
+          </div>
         </fieldset>
       </form>
-      {notice && <p role="status">{notice}</p>}
-      {error && <p role="alert">{error}</p>}
-      <Link to="/cart">Xem giỏ và thanh toán</Link>
+      {notice && <p className={styles.success} role="status">{notice}</p>}
+      {error && <p className={styles.error} role="alert">{error}</p>}
     </section>
   );
 }

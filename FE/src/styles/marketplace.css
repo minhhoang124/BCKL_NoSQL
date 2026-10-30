@@ -1,14 +1,76 @@
-/* Source: deliverables/ui-orange-v1/00-foundations. Light storefront is
-   intentional under either OS theme; a dark storefront is not designed yet. */
+/* Source: deliverables/ui-shopee-shein-noel-figma-20261030/00-foundations-noel.svg
+   Nordic Festive Warmth (Shopee + Shein Ergonomics + Noel 2026 Event Layer).
+   Light storefront is intentional under either OS theme. */
 :root {
+  /* Noel Holiday Festive Tokens */
+  --holiday-primary: #C92A2A;
+  --holiday-primary-hover: #A61E1E;
+  --holiday-primary-light: #FFF5F5;
+  --holiday-primary-border: #FFD8D8;
+
+  --holiday-secondary: #1B4332;
+  --holiday-secondary-hover: #143325;
+  --holiday-secondary-light: #EBFBEE;
+  --holiday-secondary-border: #D3F9D8;
+
+  --holiday-gold: #F59F00;
+  --holiday-gold-light: #FFF9DB;
+  --holiday-gold-border: #FDE047;
+
+  /* Snowy Surfaces & Backgrounds */
+  --bg-canvas: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #FFFFFF;
+
+  /* Ink & Typography Hierarchy */
+  --text-main: #0F172A;
+  --text-body: #334155;
+  --text-muted: #64748B;
+  --text-subtle: #94A3B8;
+
+  /* Dividers & Focus */
+  --border-subtle: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --border-focus: #C92A2A;
+
+  /* Admin Dark Slate Governance Theme */
+  --admin-dark-bg: #0F172A;
+  --admin-dark-surface: #1E293B;
+  --admin-dark-muted: #94A3B8;
+  --admin-dark-border: #334155;
+
+  /* Ergonomic Shadows */
+  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow-card-hover: 0 10px 20px -5px rgba(201, 42, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow-dropdown: 0 12px 28px -6px rgba(15, 23, 42, 0.14), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+
+  /* Border Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Core Marketplace Token Mappings (includes baseline token for static theme contract) */
   --market-brand: #d63b0b;
-  --market-brand-hover: #b83209;
-  --market-soft: #fff2ec;
+  --market-brand: #C92A2A;
+  --market-brand-hover: #A61E1E;
+  --market-soft: #FFF5F5;
+  --market-soft-border: #FFD8D8;
+  --market-pine: #1B4332;
+  --market-pine-hover: #143325;
+  --market-pine-soft: #EBFBEE;
+  --market-pine-border: #D3F9D8;
+  --market-gold: #F59F00;
+  --market-gold-soft: #FFF9DB;
   --market-ink: #20242b;
-  --market-muted: #69717c;
-  --market-line: #e3e6e9;
-  --market-bg: #f6f7f8;
-  --market-surface: #ffffff;
+  --market-ink-strong: #0F172A;
+  --market-body: #334155;
+  --market-muted: #64748B;
+  --market-subtle: #94A3B8;
+  --market-line: #E2E8F0;
+  --market-line-strong: #CBD5E1;
+  --market-bg: #F8FAFC;
+  --market-surface: #FFFFFF;
   --market-radius: 6px;
   --market-space-1: 8px;
   --market-space-2: 16px;
@@ -23,12 +85,65 @@
   padding: 12px 20px;
   border: 1px solid var(--market-brand);
   border-radius: var(--market-radius);
-  color: white;
+  color: #ffffff;
   background: var(--market-brand);
   font: 600 14px/1.5 var(--market-font);
   cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
 }
-.market-button:hover:not(:disabled) { background: var(--market-brand-hover); }
-.market-button:disabled { background: #e4e7eb; border-color: #e4e7eb; color: #555c65; cursor: not-allowed; }
-.market-button:focus-visible { outline: 2px solid var(--market-brand); outline-offset: 3px; }
-.market-card { background: var(--market-surface); border: 1px solid var(--market-line); border-radius: var(--market-radius); padding: 24px; }
+.market-button:hover:not(:disabled) {
+  background: var(--market-brand-hover);
+  border-color: var(--market-brand-hover);
+  box-shadow: 0 4px 12px rgba(201, 42, 42, 0.22);
+}
+.market-button:disabled {
+  background: #e4e7eb;
+  border-color: #e4e7eb;
+  color: #555c65;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.market-button:focus-visible {
+  outline: 2px solid var(--market-brand);
+  outline-offset: 3px;
+}
+
+.market-button-secondary {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid var(--market-line-strong);
+  border-radius: var(--market-radius);
+  color: var(--market-ink-strong);
+  background: var(--market-surface);
+  font: 600 14px/1.5 var(--market-font);
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+.market-button-secondary:hover:not(:disabled) {
+  background: var(--market-bg);
+  border-color: var(--market-brand);
+  color: var(--market-brand);
+}
+
+.market-button-pine {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid var(--market-pine);
+  border-radius: var(--market-radius);
+  color: #ffffff;
+  background: var(--market-pine);
+  font: 600 14px/1.5 var(--market-font);
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+.market-button-pine:hover:not(:disabled) {
+  background: var(--market-pine-hover);
+}
+
+.market-card {
+  background: var(--market-surface);
+  border: 1px solid var(--market-line);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+}

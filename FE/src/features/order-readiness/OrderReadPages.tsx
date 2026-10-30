@@ -73,7 +73,7 @@ export function OrderReadPage({
             Trao đổi về đơn hàng
           </Link>
         )}
-      <p>
+      <p className={styles.scopeIntro}>
         {scope === "seller" &&
         detail &&
         import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED !== "false"
@@ -147,27 +147,50 @@ function List({ scope }: { scope: OrderScope }) {
     );
   return (
     <>
-      <label>
-        Trạng thái đơn
-        <select
-          value={status ?? ""}
-          onChange={(event) =>
-            setParams(event.target.value ? { status: event.target.value } : {})
-          }
+      <div className={styles.statusTabStrip} aria-hidden="true">
+        <span
+          onClick={() => setParams({})}
+          className={!status ? `${styles.statusTab} ${styles.statusTabActive}` : styles.statusTab}
         >
-          <option value="">Tất cả trạng thái</option>
-          {ORDER_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {orderStatusLabels[s]}
-            </option>
-          ))}
-        </select>
-      </label>
-      {after !== null && (
-        <button onClick={() => setParams(status ? { status } : {})}>
-          Về trang đầu
-        </button>
-      )}
+          Tất cả
+        </span>
+        {ORDER_STATUSES.map((s) => (
+          <span
+            key={s}
+            onClick={() => setParams({ status: s })}
+            className={
+              status === s
+                ? `${styles.statusTab} ${styles.statusTabActive}`
+                : styles.statusTab
+            }
+          >
+            {orderStatusLabels[s]}
+          </span>
+        ))}
+      </div>
+      <div className={styles.filterToolbar}>
+        <label>
+          Trạng thái đơn
+          <select
+            value={status ?? ""}
+            onChange={(event) =>
+              setParams(event.target.value ? { status: event.target.value } : {})
+            }
+          >
+            <option value="">Tất cả trạng thái</option>
+            {ORDER_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {orderStatusLabels[s]}
+              </option>
+            ))}
+          </select>
+        </label>
+        {after !== null && (
+          <button onClick={() => setParams(status ? { status } : {})}>
+            Về trang đầu
+          </button>
+        )}
+      </div>
       <ListData
         scope={scope}
         status={status as OrderStatus | null}

@@ -1,21 +1,220 @@
 .container {
-  max-width: 600px;
+  max-width: 1180px;
   margin: 0 auto;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.headerBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.35rem 1.65rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #8a151b 0%, #c92a2a 58%, #1b4332 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 26px rgba(153, 27, 27, 0.14);
+}
+
+.kicker {
+  display: inline-block;
+  margin-bottom: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(245, 159, 0, 0.95);
+  color: #0f172a;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.headerBanner h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.55rem;
+  font-weight: 800;
+}
+
+.securitySeal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  padding: 0.65rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.26);
+  font-size: 0.78rem;
+}
+
+.securitySeal strong {
+  color: #fde047;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+
+.masterDetail {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 1.35rem;
+  align-items: start;
+}
+
+.sidebar {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.userBrief {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.avatarCircle {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #c92a2a, #991b1b);
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.userBriefMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.userBriefMeta strong {
+  color: #0f172a;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userBriefMeta span {
+  color: #64748b;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quickLinks {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.quickLinks p {
+  margin: 0;
+}
+
+.quickLinks a {
+  display: block;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #1e293b;
+  font-size: 0.86rem;
+  font-weight: 650;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.quickLinks a:hover {
+  border-color: #ffd8d8;
+  background: #fff5f5;
+  color: #c92a2a;
+}
+
+.detailColumn {
+  display: grid;
+  gap: 1.15rem;
+  min-width: 0;
 }
 
 .profileCard {
-  border: 1px solid #eaeaea;
-  border-radius: 8px;
-  padding: 2rem;
-  background-color: #fff;
-  margin-top: 1.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem 1.65rem;
+  background-color: #ffffff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.profileHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .profileCard h2 {
-  margin-bottom: 1rem;
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.25rem;
+}
+
+.activeBadge,
+.lockedBadge {
+  padding: 0.24rem 0.68rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.activeBadge {
+  background: #ebfbee;
+  color: #1b4332;
+}
+
+.lockedBadge {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.75rem;
 }
 
 .profileCard p {
-  margin: 0.5rem 0;
-  color: #555;
+  margin: 0;
+  padding: 0.68rem 0.9rem;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .masterDetail {
+    grid-template-columns: 1fr;
+  }
+
+  .securitySeal {
+    align-items: flex-start;
+  }
 }

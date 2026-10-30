@@ -59,8 +59,46 @@ export function SellerDashboardPage() {
   };
   const saveShipping = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const data = new FormData(event.currentTarget); void run(() => marketplaceApi.shipping(selected.id, { packageWeightGrams: Number(data.get('weight')) }), 'Đã lưu kiện hàng.'); };
   const upload = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const body = new FormData(event.currentTarget); body.set('isPrimary', 'true'); body.set('sortOrder', '0'); void run(() => marketplaceApi.addImage(selected.id, body), 'Đã tải ảnh chính.'); };
+  const approvedCount = products.filter((item) => item.moderationStatus === 'APPROVED').length;
+  const pendingCount = products.filter((item) => item.moderationStatus === 'PENDING').length;
+
   return <div className={styles.page}>
-    <div><h1>Kênh người bán</h1><p>Hoàn thiện Store và sản phẩm trước khi gửi Admin duyệt.</p><Link to="/seller/orders">Đơn hàng của cửa hàng</Link><p><Link to="/seller/aftersales">Xử lý hậu mãi</Link></p>{import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED==='true'&&<p><Link to="/seller/reviews">Phản hồi đánh giá</Link></p>}</div>
+    <div className={styles.sellerHeaderBanner}>
+      <div>
+        <span className={styles.sellerKicker} aria-hidden="true">🎄 SHOPEE SELLER CENTER · MÙA LỄ HỘI NOEL 2026</span>
+        <h1>Kênh người bán</h1>
+        <p>Hoàn thiện Store và sản phẩm trước khi gửi Admin duyệt.</p>
+      </div>
+      <div className={styles.sellerQuickNav}>
+        <Link to="/seller/orders" className={styles.sellerNavBtn}>Đơn hàng của cửa hàng</Link>
+        <p><Link to="/seller/aftersales" className={styles.sellerNavBtnSecondary}>Xử lý hậu mãi</Link></p>
+        {import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED==='true'&&<p><Link to="/seller/reviews" className={styles.sellerNavBtnSecondary}>Phản hồi đánh giá</Link></p>}
+      </div>
+    </div>
+
+    <div className={styles.sellerKpiGrid} aria-hidden="true">
+      <div className={styles.sellerKpiCard}>
+        <span>Trạng thái gian hàng</span>
+        <strong>{store?.status ?? 'CHƯA TẠO'}</strong>
+        <small>{store?.name ?? 'Chưa đăng ký tên Store'}</small>
+      </div>
+      <div className={styles.sellerKpiCard}>
+        <span>Sản phẩm đã duyệt</span>
+        <strong>{approvedCount} / {products.length}</strong>
+        <small>Đang hiển thị trên sàn</small>
+      </div>
+      <div className={styles.sellerKpiCard}>
+        <span>Chờ Admin kiểm duyệt</span>
+        <strong>{pendingCount}</strong>
+        <small>Hàng chờ duyệt nội dung</small>
+      </div>
+      <div className={styles.sellerKpiCard}>
+        <span>Cập nhật Giá &amp; Kho SKU</span>
+        <strong>D13 Tức thì</strong>
+        <small>Không cần chờ duyệt lại</small>
+      </div>
+    </div>
+
     <div className={styles.tabs}><button className={tab === 'store' ? styles.active : ''} onClick={() => setTab('store')}>Store</button><button className={tab === 'products' ? styles.active : ''} onClick={() => setTab('products')}>Sản phẩm ({products.length})</button><button className={tab === 'dashboard' ? styles.active : ''} onClick={() => setTab('dashboard')}>Thống kê</button></div>
     {error && <p className={styles.error} role="alert">{error}</p>}{message && <p className={styles.success}>{message}</p>}
     {tab === 'dashboard' ? <><Dashboard scope="SELLER" storeId={store?.id} /><SearchAnalytics scope="SELLER" /></> : tab === 'store' ? <section className={styles.columns}>
