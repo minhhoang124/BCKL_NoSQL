@@ -18,4 +18,8 @@ Nguồn các mục dưới là chỉ đạo trực tiếp của owner trong chat
 | D12 | Bộ nhớ chung lưu trong dự án và cập nhật qua bàn giao có review; không tự ghi vào bộ nhớ cá nhân/toàn cục của provider. Chỉ đạo tạo bộ nhớ không tự tiếp tục toàn bộ nghiệp vụ đang tạm dừng |
 | D13 | Owner xác nhận30/10: giá/kho SKU đã tạo được áp dụng ngay, giữ quy trình duyệt khi sửa nội dung. Sửa giá/kho vẫn kiểm quyền/CAS, ledger và Search outbox; không tự đưa sản phẩm đã duyệt về nháp chỉ vì cập nhật giá/kho |
 
+D14 — Owner30/10 xác nhận bannerNoel/ưuđãi chủyếu là trangtrí; giữhướngvisualnày, không ghi thành chức năng đã nghiệmthu. Owner yêu cầu xóa huyhiệu/chữ Đã đăng ký Bộ Công Thương. Codex chỉ gỡ badgeFooter và CSS riêng, không đổi cácbanner khác. Xác nhận này không chứng minh đăngký/chínhhãng/ưuđãi/đốitác thật.
+
 Quy tắc kiến trúc giữ nguyên: PostgreSQL là nguồn nghiệp vụ; ES/FAISS là index phụ. productId integer đồng nhất; giá/kho thuộc Variant; Order snapshot bất biến. Migration mới thay vì sửa migration dùng chung. Secret/model/index/uploads/dump không vào Git/bộ nhớ/prompt review.
+
+D15 — Chỉ đạo owner30/10 mới: quay lạiBE, khép phần thiếu/nghiệmthu luồng chức năng và đẩyGit. Cho phép pushbranchcandidate đãkiểm, thay giới hạn D06 cũ đối với push; không tựmerge/main/develop, không đổiworkflow/billing hoặc tạoAzure/tunnel/gửimail/nhậnTOSmới. Giữ reviewCodex+Gemini/Claude theoD04 vàmodelcapsD05. QuotaActions có thể vẫn hết, phải báo đúng nếu chưa cóCI mới.

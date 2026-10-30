@@ -14,9 +14,10 @@ Coordinator Codex; owner yêu cầu thực thi kế hoạch, model caps Argon/Cl
 | PROVIDER-03 | DONE_LIVE_VERIFY_RESET_LOCAL_QA | Resend tới một recipient đã được chỉ định, owner mởPC; DBtoken/sessionproof. QAđãdừng; businessnotificationemail còn riêng |
 | PROVIDER-02 | PARTIAL_HISTORICAL | VNPay SIT6/6 vàNCB→IPN→PAID đã có; QC thủ công/callback staging còn mở, không tựTOS giao dịch mới |
 | OPERATE-01 | LOCAL_RESTORE_PASS / STAGING_OPEN |39→40 giữ67business-tablefingerprints/2Orders; consistentdump restore+90ảnh. Chưaoffsite/cloud/rollback executable; Azurechưaresource/costapproved |
-| SEARCH-01 | FUNCTIONAL_LOCAL / FINAL_PACKAGE_OPEN | CLIP/ESFAISS86real smoke;7querypackageverifierPASS với externalrawhash/officialgate chưa chạy. Historicalqueue/portability vẫn riêng |
-| UI-01 | OPEN | Chỉ patchUI nghiệp vụ theo component cũ; chưa đồng bộ thiết kế toàn bộ |
-| RELEASE-01 | OPEN | Chốt source/flags/accounts/runbook/report/Word-slide khớp phạm vi sau các gate; không sửa Word Hiền ngoài việc được giao |
+| SEARCH-01 / SEARCH-02 | DONE_LOCAL_SKU_SEARCH_QA | Audit chỉ đọc + chuẩn hóa URL ảnh `/uploads/...` khi tạo event mới (`search-image-url-policy.ts`, 68 unit PASS; full BE 1940 PASS) + ClaudeMedium review (0 P1) + live PG/CLIP/ES/FAISS QA 8/8 PASS (`sku-search-live-1793358243549`). Không tự drain/sửa payload lịch sử Demo |
+| NOTIFY-01 | DONE_LOCAL_CHROME_QA | Kiểm thử thông báo đúng người nhận & cách ly quyền Buyer/Seller/Admin trên DB QA riêng + Chrome thật: 6/6 HTTP/PG probes & 7/7 Chrome groups PASS (`notify-browser-1793358544142`), giữ nguyên fingerprint 11 bảng nghiệp vụ |
+| UI-01 | DONE_LOCAL_UI_MODERNIZATION | Hoàn tất 28 file UI 4 phase Nordic Festive Warmth (Shopee + Shein); full test FE 1.856 PASS, production build PASS; Footer gỡ BCT theo D14 |
+| RELEASE-01 | CANDIDATE_COMMITTED | Commit 1 (BE/Search/WebP `ee2ec30`) + Commit 2 (FE UI `7b73dd5`); CANDIDATE_BASELINE.json cập nhật; chuẩn bị đẩy Git theo D15 |
 
 ## Ownership hiện tại
 
@@ -25,3 +26,9 @@ Coordinator Codex; owner yêu cầu thực thi kế hoạch, model caps Argon/Cl
 - Worker seller_browser_harness đã bàn giao một e2eSKU35cases, không còn writer đang chạy. Worker seller_page_tests lượt cũ bị usage limit; root đã kiểm phần bàn giao trước đó.
 - External Argon/Claude dùng snapshot lọc, staticonly, không credentials/DB/Git. Headless directwriteArgon bịdeny0files; không dùng dangerously-skip. Root tích hợp draftoffline, giữ bằng chứng không che lỗi.
 - Baseline8SellerfilesMEM01 là lịch sử trướcc18, không dùng làm khóa WIP mới. Các thay đổiSeller có chủ đích đã commit; candidateSKU dùng SHA256 ở provenanceQA và baseline checkpoint mới, không tự restore snapshot cũ.
+
+SEARCH-02 & NOTIFY-01 (đã hoàn tất local QA 30/10): Codex khởi tạo code/harness, Gemini tiếp nhận khi Codex chạm limit, sửa lỗi nhỏ và chạy PASS toàn bộ unit test (1940 BE PASS), review tĩnh ClaudeMedium (`search-review-1793358367805`), live SKU→Outbox→CLIP→ES/FAISS (`sku-search-live-1793358243549`) và Chrome Notifications (`notify-browser-1793358544142`). Xem `docs/agent-context/handoffs/2026-10-30-SEARCH-02-NOTIFY-01-gemini.md`.
+
+AuditCodex mới: SearchQA8PASS accepted6/6source, nhưng REVIEW_P2_OPEN/DEMO_PENDING; NotifyQA6+7accepted đúngscope cũ, UI_CHANGED_AFTER_QA (Header+CSS). Baseline55/56(SellerDashboardlệch); BEunitrecheck1940PASS, FEtsc+35notifunitPASS. Xem antigravity-handoff-audit report; không đánh DONEtoànUI/project hoặc bậtDemo từsummarychat.
+
+BE-CLOSE ownerrequested30/10: Codexintegration/searchoutbox/startup/operatorcontext, QA DB riêng+provider/checks+GitauthorizedD15. Workerclient chỉimageURLpolicy/spec77PASSfrozen; workerbrowser chỉreconservice+16unit+7e2e bàn giao chưa chạy; workerpage gateauditdoc+auth-write-epoch.e2e barrierpending. Không sửaFEWIP. Baseline khácFE làUIhandoff+FooterownerD14 đã xác định, không reset/restore. SourceBEnewchangescóownership rõ, baselinecũgiữhistoryđếncheckpoint.

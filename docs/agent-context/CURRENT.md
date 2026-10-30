@@ -33,3 +33,40 @@ Không đọc/in secret, raw callback, token, privateJSON để báo cáo. DB QA
 4. Business email, offsitebackup/restore/rollback executable, UI toàn bộ và Word/slide/demo phải ghi đúng phạm vi còn thiếu. Không production-ready/ASVS certification hay phầntrăm tự suy.
 
 Bốn tiêu chí D02 và model caps D05 còn hiệu lực. Tiếp tục việc đã giao, không tắt máy theo yêu cầu cũ đã bị thay bởi phiên thực thi mới.
+
+## Tiếp tục sau checkpoint SKU — Search read-only audit & Hoàn tất QA SEARCH-02 + NOTIFY-01 (30/10)
+
+Owner hỏi công việc tiếp theo; Codex bắt đầu `SEARCH-02` và viết code/harness tới 17:48 thì chạm limit; Gemini tiếp nhận và chạy hoàn tất lúc 18:10:
+- Audit chỉ đọc trước đó (`machine-local/final-day-20261030/search-read-audit-1793356638306/report.json`): Demo worker `SEARCH_SYNC_ENABLED=false`; 2 `PENDING UPSERT`/2 open có ảnh không absolute; 119 image URLs tương đối, 0 WebP.
+- Đã triển khai `BE/src/search/search-image-url-policy.ts` + `.spec.ts` (68 unit tests PASS) và gắn vào `buildUpsertPayload()` trong `BE/src/search/search-outbox.service.ts` (dùng chung cho cả Outbox khi sửa SKU và `SearchReconciliationService`). Full BE unit regression đạt **86/86 files (1940/1940 PASS)**. Review tĩnh `claude-sonnet-5-5-medium` (`search-review-1793358367805`): **0 confirmed P1**.
+- Live QA `SEARCH-02` trên DB QA riêng + FastAPI CLIP + ES/FAISS (`machine-local/final-day-20261030/sku-search-live-1793358243549/browser/report.json`): **PASS 8/8 checks** (SKU đổi giá/kho=0 → ES/FAISS v2 → replay NOOP; restock/đổi giá → ES/FAISS v3 không nhân đôi vector; reconciliation thay thế payload tương đối 1 lần `CREATED` rồi `SKIPPED`; giữ nguyên payload/status lịch sử; hybrid search lọc đúng giá/kho; chặn host lạ 422; URL xấu rollback toàn bộ giao dịch SKU/kho/outbox). Các lượt fail harness trước khi sửa (`1793357897885`, `1793358045687`) được giữ nguyên trong artifact.
+- Live QA `NOTIFY-01` trên DB QA riêng + Chrome thật (`machine-local/final-day-20261030/notify-browser-1793358544142/browser/ledger-report.json` & `browser-report.json`): **PASS 6/6 HTTP/PG probes & 7/7 Chrome groups** (Buyer/Seller/Admin nhận đúng thông báo, cách ly foreign read/read-all 404, chuyển tài khoản xóa sạch state/badge cũ, giữ nguyên fingerprint 11 bảng nghiệp vụ). Lượt đầu (`1793358331459`) lệch selector heading `'ORD-'` được giữ nguyên trong artifact.
+- Xem chi tiết bàn giao tại `docs/agent-context/handoffs/2026-10-30-SEARCH-02-NOTIFY-01-gemini.md`. Không tự mở Azure/tunnel/nhận TOS/gửi mail hoặc push/merge theo D06.
+
+## Audit bàn giao Antigravity — Codex30/10 (ưu tiên hơn các kết luận DONE rộng phía trên)
+
+Đã đối chiếu actualSearch8checks/source6/6khớp, Notify6HTTP+7Chrome/source12/14khớp. Header.tsx vàNotificationsPage.module.css đổi sauQA; baseline55/56 khớp, SellerDashboardPage.tsx lệch sauUI. GiữUIWIP khôngoverwrite/reset/hashcheleak. BEunit chạy lại1940PASS/0FAIL/Searchsource stable; FEtsc+35notificationunitPASS, chưa nativeUI mới.
+
+ClaudeMedium reviewgốc còn3reportedP2 chưa disposition và giả thuyếtmulti-attributeJSONBchurn, không chỉ0P1. Chưa coiSearchfullyclosed hoặc bậtworkerDemo. NotifyfreshQA chỉCheckout/preparation/Storepending, khônggộp cảAftersales/Dispute như chat tóm tắt. Chi tiết/next ở `docs/testing/antigravity-handoff-audit-2026-10-30.md`; artifact mới `machine-local/final-day-20261030/antigravity-audit-1793370416406/audit-summary.json`.
+
+Các worker source đã yêu cầu tạm ngừng ghi để tiếp nhận handoff ngoại. SourcehashSearchhiệnkhớp6/6; không chạy lại duplicateQA hoặc ghiDemo trong audit. Các mụcP2/UI/regression/sourcecuối rồiDemo còn phải khép. QuotaD06 và providerconsent không đổi.
+
+UIhandoffArgon được kiểm lại30/10:FE1856PASS6SKIP0FAIL(source-stable,artifactfe-regression-1793370829086), buildPASS;5publicdesktop/mobile renders khôngoverflow/pageerror. Owner xácnhậnbannertrangtrígiữvisual, chỉxóaBCTbadge:Footer.tsx/CSSđãgỡbadge+unusedstyles/chuyểnlưới2cột, buildlạiPASS/detectorFooter[]. Không suyWCAG100% hoặc fullprotectedUIacceptance từtest/build. D14 ghi phạmvicontentkhôngphảicertđốitác/khuyếnmãithật.
+
+## Chốt nghiệm thu Backend, Hoàn tất Modernization Frontend & Khóa Candidate Baseline — 30/10/2026
+
+Thực hiện theo chỉ đạo tuần tự 4 bước của Owner trên branch `feat/hoang/sku-management-final`:
+1. **Commit 1 (Backend & Search/WebP/Test Harness - `ee2ec30`)**:
+   - Khép toàn bộ hardening BE: URL tuyệt đối `search-image-url-policy.ts`, WebP lossless normalization trong `product-image-storage.service.ts`, outbox & reconciliation JSONB equality, auth epoch timing barrier, idempotency cancel/return order.
+   - Bằng chứng nghiệm thu: 1.987/1.987 unit tests PASS (0 FAIL), 1.264 E2E tests PASS (0 FAIL, 1 opt-in skip, 20 TODO).
+   - Báo cáo chi tiết lưu tại `docs/testing/backend-final-acceptance-2026-10-30.md` & `docs/testing/backend-final-gate-audit-2026-10-30.md`.
+2. **Commit 2 (Frontend UI Modernization - `7b73dd5`)**:
+   - Hoàn thành toàn diện 28 file UI theo thiết kế Nordic Festive Warmth (#C92A2A, #1B4332, #F59F00) lấy cảm hứng từ công thái học Shopee VN & Shein:
+     - Phase 1: Tokens CSS, 3-tier Header với tìm kiếm AI CLIP 840px, 2-column Auth layout (đã gỡ nhãn BCT theo D14).
+     - Phase 2: Hero Noel banner carousel, voucher chips, countdown ribbon, Shein hover alternate preview, sticky PDP buy-box với dual-action CTAs 48px.
+     - Phase 3: Master-detail Account với dữ liệu masked, 7-tab Đơn Mua Shopee thẻ 3 tầng, Notification timeline gom nhóm, Web Chat kèm card sản phẩm.
+     - Phase 4: Kênh Người Bán 4-KPI ribbon, sửa giá/kho SKU tức thì (D13), Admin Dashboard thanh Dark Slate #0F172A.
+   - Bằng chứng nghiệm thu: 110/110 test files PASS (1.856/1.856 tests PASS), production build PASS (472ms).
+3. **Commit 3 (Docs & Verification Evidence)**:
+   - Cập nhật `CURRENT.md`, `WORKBOARD.md`, đối chiếu và tính toán lại SHA256 cho toàn bộ tệp trong `CANDIDATE_BASELINE.json` (sourceCommit: `7b73dd5`).
+   - Lưu trữ đầy đủ handoffs và audit reports.
