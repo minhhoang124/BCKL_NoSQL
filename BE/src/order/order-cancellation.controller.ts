@@ -82,6 +82,7 @@ export class OrderCancellationController {
       cancellationOrderId(id),
       req.headers['idempotency-key'],
       body,
+      user.credentialVersion ?? 0,
     );
   }
   @Post('orders/:orderId/cancel')

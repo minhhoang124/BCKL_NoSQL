@@ -108,6 +108,7 @@ export class SellerOrderCommandController {
       sellerOrderId(id),
       req.headers['idempotency-key'],
       body,
+      user.credentialVersion ?? 0,
     );
   }
   private run(
@@ -124,6 +125,7 @@ export class SellerOrderCommandController {
       command,
       req.headers['idempotency-key'],
       body,
+      user.credentialVersion ?? 0,
     );
   }
   @Post(':orderId/confirm')

@@ -112,6 +112,7 @@ export class SellerCloseResolutionController {
       sellerOrderId(id),
       req.headers['idempotency-key'],
       body,
+      user.credentialVersion ?? 0,
     );
   }
 }

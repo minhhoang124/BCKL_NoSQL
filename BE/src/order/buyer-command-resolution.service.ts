@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { assertCurrentWriteEpoch } from '../auth/write-epoch.js';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { canActAsBuyer } from '../auth/buyer-access.js';
@@ -62,7 +63,7 @@ export class BuyerCommandResolutionService {
         'Buyer resolution requires lock <= statement <= transaction and bounded deadline',
       );
   }
-  async resolve(actorId: number, orderId: number, key: unknown, body: unknown) {
+  async resolve(actorId: number, orderId: number, key: unknown, body: unknown, expectedCredentialVersion?: number) {
     const input = buyerResolutionInput(actorId, orderId, key, body);
     const deadline = Date.now() + this.deadlineMs;
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -79,9 +80,10 @@ export class BuyerCommandResolutionService {
             await tx.$queryRaw`SELECT id FROM users WHERE id=${actorId} FOR UPDATE`;
             const actor = await tx.user.findUnique({
               where: { id: actorId },
-              select: { isActive: true, role: true },
+              select: { isActive: true, role: true, credentialVersion: true },
             });
             if (!actor?.isActive) throw orderCommandError(401, 'UNAUTHORIZED');
+            assertCurrentWriteEpoch(actor, expectedCredentialVersion);
             if (!canActAsBuyer(actor.role))
               throw orderCommandError(403, 'FORBIDDEN');
             const ref = await tx.order.findFirst({

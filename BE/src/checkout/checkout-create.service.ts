@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OrderActorType, Prisma } from '@prisma/client';
 import { canActAsBuyer } from '../auth/buyer-access.js';
+import { assertCurrentWriteEpoch } from '../auth/write-epoch.js';
 import { requireVerifiedEmail } from '../auth/email-verification.policy.js';
 import { vnpayConfig } from '../payment/vnpay-config.js';
 import { vnpayAmount } from '../payment/vnpay-input.js';
@@ -67,7 +68,7 @@ export class CheckoutCreateService {
       );
   }
 
-  async create(buyerId: number, keyInput: unknown, input: unknown) {
+  async create(buyerId: number, keyInput: unknown, input: unknown, expectedCredentialVersion?: number) {
     const key = validateCheckoutKey(keyInput);
     const { canonicalRequest, requestHash } = buildCheckoutRequestV1(
       buyerId,
@@ -89,8 +90,9 @@ export class CheckoutCreateService {
             await tx.$queryRaw`SELECT id FROM users WHERE id = ${buyerId} FOR UPDATE`;
             const actor = await tx.user.findUnique({
               where: { id: buyerId },
-              select: { isActive: true, role: true, emailVerifiedAt: true },
+              select: { isActive: true, role: true, emailVerifiedAt: true, credentialVersion: true },
             });
+            assertCurrentWriteEpoch(actor, expectedCredentialVersion);
             if (!actor?.isActive)
               throw checkoutError(
                 401,
