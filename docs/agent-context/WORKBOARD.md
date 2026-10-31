@@ -32,3 +32,18 @@ SEARCH-02 & NOTIFY-01 (đã hoàn tất local QA 30/10): Codex khởi tạo code
 AuditCodex mới: SearchQA8PASS accepted6/6source, nhưng REVIEW_P2_OPEN/DEMO_PENDING; NotifyQA6+7accepted đúngscope cũ, UI_CHANGED_AFTER_QA (Header+CSS). Baseline55/56(SellerDashboardlệch); BEunitrecheck1940PASS, FEtsc+35notifunitPASS. Xem antigravity-handoff-audit report; không đánh DONEtoànUI/project hoặc bậtDemo từsummarychat.
 
 BE-CLOSE ownerrequested30/10: Codexintegration/searchoutbox/startup/operatorcontext, QA DB riêng+provider/checks+GitauthorizedD15. Workerclient chỉimageURLpolicy/spec77PASSfrozen; workerbrowser chỉreconservice+16unit+7e2e bàn giao chưa chạy; workerpage gateauditdoc+auth-write-epoch.e2e barrierpending. Không sửaFEWIP. Baseline khácFE làUIhandoff+FooterownerD14 đã xác định, không reset/restore. SourceBEnewchangescóownership rõ, baselinecũgiữhistoryđếncheckpoint.
+
+## Checkpoint31/10 mới nhất — ưu tiên hơn trạng thái lịch sử phía trên
+
+- FE-COPY: DONE_LOCAL, ownerD16;1856PASS/6SKIP+build; chưacommit/push.
+- THREE-ROLE-ACCEPTANCE: BUSINESS_PASS / UX_P2_OPEN. Codex+QAhelpers, ArgonMedium staticreview;54ảnh đã gom+verify. Source/hạn chế/bằng chứng trong `docs/testing/three-role-acceptance-2026-10-31.md`.
+- NEXT: sửaUX01returnqueryStoreChat,UX02PDPloginreturn,UX03Adminbell; testsafeinternalredirect+regression+Chrome3ca vàluồngcùngOrder. Chưa có writer được giao sửaapp cho3lỗi này; chỉharnessmới ởscripts trong lượt audit.
+- Demo đang chạyFE5173/API3001/AI8000; QA mới từnglane,40migrations/DML, khônggửimail/provider. Azure/HTTPS/offsite và integration/CI vẫn cần khép riêng; không merge từ checklist.
+
+## UX close / clean install — 31/10, owner yêu cầu Argon thực hiện
+
+- Argon Medium: hoàn thiện draft Codex cho UX01–03; chỉ LoginPage, ProductPurchase, AdminDashboardPage và utils/loginReturnPath cùng test tương ứng. Không sửa copy WIP ngoài phạm vi, Git, lockfile, backend hoặc bộ nhớ chung. Kết quả chưa nghiệm thu cho tới khi có diff và tests thực tế.
+- Codex: review độc lập, browser driver và QA DB mới, lockfile/cài sạch ở snapshot riêng. Owner chọn soạn tin để tự gửi Đạt; không gửi thông điệp trực tiếp hoặc comment PR.
+- Không sửa app trong lúc driver chốt source hash đang chạy. Giữ báo cáo FAIL_UX ban đầu và bổ sung bằng chứng sau sửa riêng.
+
+Kết quả mới: UX01–03 DONE_LOCAL_QA, Argon offline helper/tests → Codex review+fullFE1865PASS/6SKIP+build+Chrome12business/3UXPASS,24ảnh/source-stable. Lockfile DONE_CLEAN_INSTALL: frozeninstall/Prismagenerate/FEbuildPASS ởsnapshotkhôngnode_modules;03afb53 đãpush. Owner tựgửiĐạt, chưa có tin nhắn kênhngoài. Handoff `handoffs/2026-10-31-argon-ux-fixes.md`. Không thay trạng thái staging/CI/PR139 bằng localPASS.

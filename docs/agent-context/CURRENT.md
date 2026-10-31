@@ -70,3 +70,27 @@ Thực hiện theo chỉ đạo tuần tự 4 bước của Owner trên branch `
 3. **Commit 3 (Docs & Verification Evidence)**:
    - Cập nhật `CURRENT.md`, `WORKBOARD.md`, đối chiếu và tính toán lại SHA256 cho toàn bộ tệp trong `CANDIDATE_BASELINE.json` (sourceCommit: `7b73dd5`).
    - Lưu trữ đầy đủ handoffs và audit reports.
+
+## Delta31/10 — ưu tiên hiện hành về nội dung FE
+
+Owner chuyển tạm sang dọn nội dung FE: bỏ chipAI CLIP/hoverShein và các lời giới thiệu công nghệ/đồ án; giữ trang trí Noel và thông tin cần để thao tác. Base1c4feb4 đã có trên origin khi kiểm31/10, workingtree sạch trước sửa; baseline56/56 khớp trước delta. Đã sửa local, fullFE1856PASS6SKIP và buildPASS, chưa push/deploy. Handoff chính xác: `handoffs/2026-10-31-FE-copy-polish.md`. Baseline7b73dd5 là lịch sử trước copy polish; hash lệch ở các file này là thay đổi có chủ đích, không reset/restore.
+
+## Nghiệm thu3vai trò31/10 — mới nhất
+
+Owner yêu cầu chạy/trải nghiệm ba vai trò và chụp ảnh; đã cho phép Playwright vì Local browser use trong Work settings đang tắt. Demo được khởi động, cảFE5173/API3001/AI8000 trả200. Các ca ghi dùng database QA mới,40migrations/app-roleDML, không gửi provider/mail hoặc resetDemo.
+
+CùngOrder:12nhóm nghiệp vụPASS (listing4SKU→Adminapprove→BuyerCOD60k→Sellerprepare→AdminUIship/deliver→Buyercomplete→Review→Chat); tiền/kho đúng1lần. Sellerclose12Chrome+18HTTP/16Order,SKU3Chrome+3ledger,onboarding9,hậu mãi9,Notify7Chrome+6HTTP,public6nhóm đềuPASS. Đã lưu54ảnh vàgallery tại rootmáy `BAO_CAO_NGHIEM_THU_3_VAI_TRO_2026-10-31/`. AntigravityArgonMedium review tĩnh có phản hồi thực.
+
+**Chưa chốt toàn bộ:3lỗiUXP2 đã tái hiện**, mainreportFAIL_UX/businessPASS: Login mấtqueryStoreChat; PDPloginvềHome; chuôngAdminkhôngaction. Chưa sửa app trong lượt audit. Next sửa3ca, giữ returnroute nội bộ chốngopenredirect, testregression rồinghiệmthuHTTPS. Báo cáo/sourcehash/giới hạn: `docs/testing/three-role-acceptance-2026-10-31.md`. Các driver mới là scriptQA riêng; FEcopyWIP và tài liệu vẫn chưacommit/push.
+
+Lưu ý workingtree: khởi động Frontend bằng pnpm đã đồng bộ3entry plugin-react/TypeScript/Vite từdevDependencies sangdependencies trongpnpm-lock.yaml để khớp package.json đã được Gemini sửa trước đó. Đã kiểm diff:chỉ chuyển9dòng, không đổi version. Đây là thay đổi local có nguồn đã xác định, không reset/restore và chưa gọi là clean-cloud-install PASS. Gallery54ảnh đã kiểm bằngChrome:đủảnh/filter24ảnhjourney/mobilekhôngoverflow; ZIP15.7MB nằm cạnh thưmục báo cáo ngoài checkout.
+
+## Checkpoint sau phản hồi Đạt / Argon sửa UX — 31/10
+
+Owner chỉ định ArgonMedium sửa3UX và chọn nhận bản soạn để tự gửi Đạt. Codex đã tái hiện ERR_PNPM_OUTDATED_LOCKFILE, kiểm clean snapshot HEAD1c4feb4+lock sửa:pnpm11.25.0 frozeninstall toànworkspace/Prismagenerate/FEbuildPASS; commit03afb53 đãpush candidate. Không nângdependencyversion hoặc nới frozenlock. Có dùng packagecache, không coi là tải mới toàn bộ từInternet.
+
+Argon directwrite timeout/response rỗng/0edits, sau đó offline snapshot19KB có JSONpatch thật: helper chốngredirect/authloop và9test mới. Codex tích hợp/crossreview:fullFE1865PASS6SKIP,tsc/VitePASS. BrowserfreshQA `three-role-1793428754458` PASS12business+3UX,0pageerrors,source-stable,24ảnh. LoginStoreChat giữstoreId;PDPvềđúngProduct;Adminbell tới inbox tải xong. LocalUXclosed, không productionDONE. Provenance/failures giữ trong `handoffs/2026-10-31-argon-ux-fixes.md`, rootmáy gallery `BAO_CAO_CHOT_UX_2026-10-31/`.
+
+Docker vừa được khởi động lại, PostgreSQL đã qua recovery vàQAđãdừng sạch. Không suy Demo5173/API3001/AI8000 hiện chạy từ health checkpoint cũ. Không gọi provider, không mergePR,không đổiCI/billing/cloud. PR138 code/CIready ở exacthead cũ;PR139 vẫnDraft/CI/policygate vàconflictHomePage vớicandidate. Còn HTTPSonline, cấu hình runtime riêng từngmáy, dữ liệu/model/ảnh/index,offsite/rollback vàtài liệu cuối.
+
+Source FE đã commit `a2204e0`. Đối chiếu620file FE/src+BE/src hiện tại khớp rawSHA của QA cuối; cập nhật candidatebaseline99file sangsourcea2204e0 sau xác định đúng1hashcũ lệch doSellerDashboardcopyD16. WIPBASELINE lịch sử không đổi. Rawhash có thể lệch lineending khi chuyểnmáy, phải inspect khôngrestore. Lockfix03afb53 đãpush; source/docs tiếp theo cần xác nhận push trước báo nhóm đã pullđược.
