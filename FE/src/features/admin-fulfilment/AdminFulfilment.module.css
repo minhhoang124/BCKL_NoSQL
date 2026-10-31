@@ -1,0 +1,67 @@
+.workspace {
+  background: #fff;
+  color: #263244;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: clamp(16px, 3vw, 28px);
+  min-width: 0;
+}
+.workspace h1 {
+  font-size: 1.5rem;
+  margin-top: 0;
+}
+.workspace p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.fields {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 20px 0;
+  max-width: 640px;
+}
+.fields label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.fields input:not([type="checkbox"]),
+.fields select,
+.fields textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  padding: 10px;
+  font: inherit;
+}
+.workspace button {
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  color: #172033;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.workspace button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.workspace :focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}
+.workspace li {
+  margin: 8px 0;
+}
+.workspace ul {
+  padding-left: 20px;
+}

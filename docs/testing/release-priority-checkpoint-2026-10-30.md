@@ -1,5 +1,14 @@
 # Checkpoint ổn định bản bảo vệ — 30/10/2026
 
+**Bổ sung sau PR137:** CI sau merge23096fa đã xanh6/6. Màn Admin giao hàng
+mô phỏng và nghiệm thu các nhánh được triển khai tiếp trên nhánh riêng;
+xem [bằng chứng/giới hạn](admin-fulfilment-web-2026-10-30.md).
+Không dùng CI137 để thay CI của thay đổi Admin mới.
+
+**Điều chỉnh sau checkpoint:** owner xác nhận ngày30/10 tạm dừng MoMo,
+chuyển sang hướng mở rộng theo `SCOPE-PAYMENT-002`. Bản nộp giữ COD/VNPay;
+MoMo không còn là blocker. Bằng chứng và giới hạn nghiệm thu VNPay giữ nguyên.
+
 ## Bản tích hợp và cách đọc
 
 PR135 đã merge tại `edab510`; PR136 đã merge tại
@@ -69,7 +78,7 @@ cũ kèm ghi chú invalidation, không dùng assertion “không ở login” l�
 |SELLER|PASS local,PARTIAL staging|Onboarding9 nhóm Chrome29/10;quyền/khóa/sửa–nộp lại cùng Store|Kiểm actor/origin lại trên staging|
 |LISTING|PASS local,PARTIAL phạm vi|2 nhóm4 SKU,typed attributes,Admin duyệt,Buyer đúng SKU;race409;private-media suites CI|Editor sửa SKU đã tạo chưa có;media staging và biến thể còn thiếu|
 |DISCOVERY|PASS local,PARTIAL vận hành|86 model/index thật;hide/hydrate/outbox2event/replay/restart29/10;smoke30/10|Portability ảnh/historical queue;workload và metric package cuối|
-|CHECKOUT|PASS COD local,PARTIAL provider|Giá server,ownership,last-item race,replay/rollback;ChromeCOD;VNPay6/6 SIT+NCB/IPN thật29/10|QC VNPay thủ công/callback staging;MoMo chưa adapter/nghiệm thu|
+|CHECKOUT|PASS COD local,PARTIAL provider|Giá server,ownership,last-item race,replay/rollback;ChromeCOD;VNPay6/6 SIT+NCB/IPN thật29/10|QC VNPay thủ công/callback staging;MoMo chuyển hướng mở rộng, không chặn bản nộp|
 |FULFILMENT|PARTIAL|Chrome Seller chuẩn bị/Buyer command,recovery/ledger;Admin simulation HTTP;focused/CI|Admin UI giao mô phỏng và các nhánh browser còn thiếu;logistics thật ngoài phạm vi|
 |AFTERSALE|PASS local,PARTIAL triển khai|Refund-only;return/restock/dispute;Review/Chat vàOrder context;replay/race/ownership|Staging,realtime nhiều instance;refund ngoài hệ thống vẫn mô phỏng|
 |OPERATE|PARTIAL/BLOCKED online|CI39migrations,backup→restore local,baseline đọc nhẹ|HTTPS,proxy,offsite/restoreAzure,rollback executable,SRS workload,gói Word/demo cuối|
@@ -84,7 +93,7 @@ ma trận gốc có nhiều điều kiện: bằng chứng một phần không l
 |VNPay|SIT6/6 và NCB→IPN→PAID/SUCCEEDED thật trên sandbox; tunnel cũ đã tắt|Giữ bằng chứng; QC thủ công,log/whitelist và callback HTTPS mới khi có staging|
 |Email|Adapter/queue/local Mailpit có; chưa có key/sender cho delivery ngoài|Cấu hình riêng ngoài Git; gửi tới recipient đã được owner chỉ định sau khi provider sẵn sàng|
 |Google|Login thật đã xác nhận;JSON riêng ngoài Git|Kiểm LINK/collision với tài khoản thật và callback HTTPS sau khi chốt origin|
-|MoMo|P1 vẫn cam kết; thiếu credential; không tìm thấy adapter trong BE/src/payment|Chưa được gọi hoàn thành hoặc âm thầm bỏ phạm vi; cần credential sandbox và task triển khai riêng|
+|MoMo|Tạm dừng; hướng mở rộng theo quyết định owner SCOPE-PAYMENT-002|Không triển khai/nghiệm thu trong bản nộp hiện tại; không gọi hoàn thành hoặc blocker|
 
 Không gửi thư mới, mở tunnel, tạo tài nguyên Azure hoặc chấp nhận điều khoản
 giao dịch mới trong lượt này. Các hành động đó cần đúng đầu vào và phạm vi
