@@ -94,3 +94,11 @@ Argon directwrite timeout/response rỗng/0edits, sau đó offline snapshot19KB 
 Docker vừa được khởi động lại, PostgreSQL đã qua recovery vàQAđãdừng sạch. Không suy Demo5173/API3001/AI8000 hiện chạy từ health checkpoint cũ. Không gọi provider, không mergePR,không đổiCI/billing/cloud. PR138 code/CIready ở exacthead cũ;PR139 vẫnDraft/CI/policygate vàconflictHomePage vớicandidate. Còn HTTPSonline, cấu hình runtime riêng từngmáy, dữ liệu/model/ảnh/index,offsite/rollback vàtài liệu cuối.
 
 Source FE đã commit `a2204e0`. Đối chiếu620file FE/src+BE/src hiện tại khớp rawSHA của QA cuối; cập nhật candidatebaseline99file sangsourcea2204e0 sau xác định đúng1hashcũ lệch doSellerDashboardcopyD16. WIPBASELINE lịch sử không đổi. Rawhash có thể lệch lineending khi chuyểnmáy, phải inspect khôngrestore. Lockfix03afb53 đãpush; source/docs tiếp theo cần xác nhận push trước báo nhóm đã pullđược.
+
+## Khép PR138/139 theo quyền mới của owner — 31/10
+
+OwnerD17 yêu cầu thực hiện merge. PR138 squash merge thành `63ebcd6`, PR139 bỏ Draft rồi squash merge thành `3be37d8` vào develop. Không đổi head của nhánh Đạt; code139 giữ threshold mặc định unset, không bật ngưỡng thử. Candidate merge139 tại `ab7f6e1`, giữ UI/copy mới và empty state; đồng bộ develop tại `094d455`. Đã đối chiếu tree hai commit này không khác source. Xung đột do lịch sử squash ở OrderModule/SellerClose, AdminFulfilment copy và HomePage được giải quyết giữ source candidate đã kiểm, không bỏ Seller resolver.
+
+Kiểm trên source tích hợp: full FE1865PASS6SKIP, tsc/Vite buildPASS; Web Search4files50PASS sau assertion mới cho empty state; AI Search/cutoff/hybrid/contract/export5files47PASS, offline. Không chạy lại fullBE/fullAI hoặc liveCLIP–ES–FAISS trong lượt merge. QA3UX/12business trước đó vẫn có phạm vi source riêng; không đổi nhãn bằng chứng cũ.
+
+CI push develop138 run41178092360 và139 run41178326505 đều6jobsFAIL/0steps, không có test được chạy. Owner đã báoquota; chưa đọc được annotation nguyên nhân mới nên không khẳng định codeFAIL hoặc CI xanh. Không bypass bằng sửa workflow/billing/rerun. Candidate vẫn chứa nhiều phần mới hơn develop (SKU/SellerClose/Auth/UI/lockfix); nhóm tiếp tục pull nhánhHoàng để thử trọn candidate, không coi merge2PR đã đưa toàn bộ181file candidate vào develop. Báo cáo `docs/testing/pr138-pr139-merged-2026-10-31.md`.

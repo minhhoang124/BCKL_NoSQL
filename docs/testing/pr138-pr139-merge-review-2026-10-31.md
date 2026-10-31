@@ -36,3 +36,7 @@ Ngưỡngtext0.265/image0.80 làtuningdevelopment chưarepresentative/held-out; 
 Read-only merge-tree:138+139 trênbase23096fa không conflictmarkers.139 vào candidate1c4feb4 có conflict ởFE/src/pages/HomePage.tsx. Cần giữ UI/copy chuyên nghiệp mới và empty-state139; không lấy nguyên filecũ đè WIP. Không chạymerge trong workingtreeđangdirty.
 
 APIđọc branchprotectiondevelop bị403 Resource not accessible by integration; chưa xácminh toàn bộ rules hoặc khả năng GitHub cho phép bấmMerge. Mergeabletrue chỉ nói khôngconflict vớidevelop hiện tại, không thay CI/approval/quota. User yêu cầu review, chưa tựmerge. Sau review mới chuyển sang sửaUX01–03 ởtask nghiệmthu.
+
+## Cập nhật sau chỉ đạo owner mới
+
+Owner đã yêu cầu thực hiện merge: cả138và139đãmerge31/10, xem `pr138-pr139-merged-2026-10-31.md`. Các kết luận trạng thái mở/Draft ở trên là checkpoint review trước chỉ đạo này, không phải trạng thái hiện tại. Ngưỡng thử vẫn chưa bật; CI sau merge chưa xanh.

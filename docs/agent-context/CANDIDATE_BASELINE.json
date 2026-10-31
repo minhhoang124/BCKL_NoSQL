@@ -1,9 +1,9 @@
 {
   "kind": "Scoped current candidate source baseline; historical MEM01 snapshot is separate",
-  "sourceCommit": "a2204e060b827879b68935d186155da23175a774",
+  "sourceCommit": "094d455c4db5c35dd906d6fb0572a6561cc76caa",
   "branch": "feat/hoang/sku-management-final",
   "files": {
-    ".env.example": "c6d5cd20460b93515f7d90ae7d161459582278526b7c54a127eade2990b860ba",
+    ".env.example": "9e35f80f1e77a29febede04d689210d53d3746f2caccfb32e9a0457c937885a1",
     "BE/prisma/migrations/20261030100000_seller_close_command_resolution/migration.sql": "a05322fec19a578f50421919c8c1827c732a2eeff835e81e7a43dc45136d28c5",
     "BE/src/order/order-command-fence.ts": "0d494192769805c4a00868c3da594ac3e641cdc84e07cd59de2acc0915060d16",
     "BE/src/order/order.module.ts": "1a53eb4f7fa853e27581afee2e8824ea9ee216f6d0836ae7b5621755400061c2",
@@ -50,7 +50,7 @@
     "FE/src/features/admin-category-attributes/AdminCategoryAttributesEditor.tsx": "891529744bd62dcdb0b6351de28dde4762491c43ac653dd8b154617342f8a500",
     "FE/src/features/admin-category-attributes/AdminCategoryAttributesReader.test.tsx": "fc4923fd6ad61e06b5845a51ccc135dd77f799d235df87048d9cb556ec7255c3",
     "FE/src/features/admin-category-attributes/AdminCategoryAttributesReader.tsx": "e513eb55483b5270b92035db7bbdbde68332b593f971a60d3f69f667c941da15",
-    "FE/src/features/admin-fulfilment/AdminFulfilment.tsx": "909074256f79c4272c5bf5a9136a8552fffe5553f07be68ed2572cb876763202",
+    "FE/src/features/admin-fulfilment/AdminFulfilment.tsx": "14766971b472eb71e933c9a981f417cfa19065054e9ca8bed99d87c534a22c92",
     "FE/src/features/chat/ChatPage.tsx": "99e90ece43aa32a30fdb50e48ba33eef16497de83e3be6290df25a5cd8ffb625",
     "FE/src/features/order-flow/CheckoutPage.tsx": "7596f463412d64d30827fc8d7bd0a37852ec8d8f4d186151fcccdfd9f5a4b299",
     "FE/src/features/order-readiness/OrderPanels.test.tsx": "9ea5a88f908f3206b68872bbf2d79d2ba5eb211b665d1192ec17c5571ebbfd2d",
@@ -83,9 +83,9 @@
     "FE/src/pages/AdminDashboardPage.test.tsx": "f9a2fc37cb21fe476000c314c1df49700e54c25b22f3743f5ab3826388350464",
     "FE/src/pages/AdminDashboardPage.tsx": "3a7885d5cf7201fbed811f871e8bb82a4d42e3bf4751f95c16c6940f37e289b2",
     "FE/src/pages/CartPage.tsx": "9d5681ef526d59be3d82bd10667681f8863606cbb74fd8b7032e9758d5cbfb0b",
-    "FE/src/pages/HomePage.test.tsx": "e3df762cba7d696d1c98d5f871b793bbae2a034fa7e630bbfdf142da6cf263f8",
-    "FE/src/pages/HomePage.tsx": "9412d0dd7bb80ac0d50a06176329c0e841d1decaffbf1961212ce781d3cf69fd",
-    "FE/src/pages/ImageSearchPage.tsx": "5b33c90c32553b31757aae279e99407476624c0b3813bc0d637f1b9744a4c73c",
+    "FE/src/pages/HomePage.test.tsx": "3342d8080ec9dd4620b63551adcff978494c2b16cfe608259abff8ffe5a55234",
+    "FE/src/pages/HomePage.tsx": "0e64d58d9f455b4de9c88f66c7db87c9a22ac6428c3b3787f264634ff3efb927",
+    "FE/src/pages/ImageSearchPage.tsx": "770ba8e9199af0e281c38137bbfd8d9aacda24be9bac78beb5b89d266486b9ec",
     "FE/src/pages/LoginPage.test.tsx": "8d965c89de5db6f766aa0d0122abccd4d99224b74ca16c60181606a7f7e5c873",
     "FE/src/pages/LoginPage.tsx": "6fba0a2d419595d448fc9cd3af4d7fc13293662436d2e1461cadebdff3253af9",
     "FE/src/pages/Marketplace.module.css": "ae1929fd9947e7510c4766f436067a55fe5ac00068a23eb9c6ce588496fa4049",
@@ -101,15 +101,23 @@
     "scripts/test-seller-close-browser.py": "b7fd554fde3e32836c9bdf03cf56493f9cb581406c18e9f14788fb3ff7adfb46",
     "scripts/test-sku-inventory-browser.mjs": "7629144f10704be5cd2ebed7fd1287f8314b229d3cbf15aa82f37d125779c026",
     "scripts/test-sku-inventory-browser.py": "e31300abf9cf319d4c224a2a75f8297ffa9b481fe0314d5b38151f5c8ee173c5",
-    "scripts/test-sku-search-live.mjs": "09aacce20caae8d05a1900f1186ce82404dd71450a6a616b83785bd0e4e7ab41"
+    "scripts/test-sku-search-live.mjs": "09aacce20caae8d05a1900f1186ce82404dd71450a6a616b83785bd0e4e7ab41",
+    "AI_CLIP/app/config.py": "73536045010b7f2ff87d19bc7e60fb7baf6b00cccc9168091c9d62325be09e2b",
+    "AI_CLIP/app/routers/search.py": "186c4f18e9f8382881a6862389eadc23d169f19133ae85f8904518e1c5cd0258",
+    "AI_CLIP/tests/fixtures/backend_contract/image_search_response.generated.json": "05aafe23750fc01ce5c00d296a0e596aacb6f0473dd14f9cfbf3fd4308dbda1f",
+    "AI_CLIP/tests/test_relevance_threshold.py": "03e2c78d86277d263e9e2c0ed2eba6207f7200fa6e29539d7db363f189aa8dc3",
+    "FE/src/pages/ImageSearchPage.test.tsx": "54ca30271ca899e99bf33bc03d49896f36685f48ada988a42b47a58a08f7c699",
+    "docs/api/ai-service-contract.md": "ca39b9a4e4c204528339adad5336a57fec8a677ced465abf13c7504de45747f8",
+    "docs/testing/search-relevance-threshold-2026-10-30.md": "4098daf07f281012cac40b729d0e5fa86961ef7d47d73de6c24136f76b199f69"
   },
   "notes": [
-    "Checkpoint after deliberate commerce-copy and UX01-03 edits; previous baseline source preserved in Git history",
-    "All current FE/src and BE/src raw file hashes match fresh Chrome QA three-role-1793428754458; 12 business groups plus3UX PASS; full FE1865PASS6SKIP and buildPASS",
-    "Backend full regression remains historical; no new full BE or full model/ES/FAISS rerun claimed",
-    "Frozen install proven in clean HEAD1c4feb4 plus corrected lock;03afb53 committed that fix; no dependency version changes",
-    "Raw working-tree SHA256: line-ending differences on another machine require inspection, not restore/reset",
-    "No credentials/model/data/index/uploads; not remote CI or staging acceptance"
+    "Current source after PR138/139 merges and candidate reconciliation; original QA source artifacts retained unchanged",
+    "FE full1865PASS6SKIP and buildPASS, WebSearch50PASS, AIsearch/contract/export47PASS on integrated source",
+    "AdminFulfilment raw bytes changed only by CRLF checkout during merge; normalized text matches c3c75ee; no business change",
+    "Default cutoff remains unset; trial values not production policy",
+    "No full BE/full AI or real-model integration rerun in this merge turn; prior acceptance retains its exact source scope",
+    "Raw working-tree SHA256, inspect line-ending differences across machines rather than restore/reset",
+    "No credentials/model/data/index/uploads; post-merge Actions both failed with0jobsteps, not CIgreen"
   ],
-  "previousSourceCommit": "7b73dd5"
+  "previousSourceCommit": "a2204e060b827879b68935d186155da23175a774"
 }

@@ -10,7 +10,7 @@
 4. `PROTOCOL.md`: cách giao việc, review và cập nhật bộ nhớ.
 5. Tài liệu miền bắt buộc được liệt kê trong `AGENTS.md` ở root checkout.
 
-Trước khi sửa code candidate hoặc giao worker sửa, đối chiếu `CANDIDATE_BASELINE.json` (sourcea2204e0). `WIP_BASELINE.json` giữ nguyên snapshot lịch sửMEM01 trước Sellerc18; không đối chiếu nó như baseline hiện tại. Nếu hash lệch, dừng ghi vào các file liên quan, xác định thay đổi và báo coordinator; không reset, tự restore hay cập nhật hash để che sai lệch. Có bản snapshot riêng 8 file tại root máy `machine-local/shared-context-20261030/seller-wip-snapshot/`, không phải bản backup offsite hoặc quyền tự phục hồi.
+Trước khi sửa code candidate hoặc giao worker sửa, đối chiếu `CANDIDATE_BASELINE.json` (source094d455). `WIP_BASELINE.json` giữ nguyên snapshot lịch sửMEM01 trước Sellerc18; không đối chiếu nó như baseline hiện tại. Nếu hash lệch, dừng ghi vào các file liên quan, xác định thay đổi và báo coordinator; không reset, tự restore hay cập nhật hash để che sai lệch. Có bản snapshot riêng 8 file tại root máy `machine-local/shared-context-20261030/seller-wip-snapshot/`, không phải bản backup offsite hoặc quyền tự phục hồi.
 
 Kiểm branch, HEAD, working tree; nếu làm runtime thì kiểm health và DB đích trước. Bản ghi là bằng chứng lịch sử có ngày, không phải phép đo trực tiếp của phiên mới.
 
@@ -19,7 +19,7 @@ Kiểm branch, HEAD, working tree; nếu làm runtime thì kiểm health và DB 
 | File | Vai trò | Người cập nhật |
 |---|---|---|
 | CURRENT.md | Tóm tắt ngắn để bắt đầu lại | Coordinator sau khi kiểm bằng chứng |
-| CANDIDATE_BASELINE.json | SHA256 source candidate Seller/SKU, gắn sourcea2204e0 và provenanceQA | Coordinator sau checkpoint kiểm chứng |
+| CANDIDATE_BASELINE.json | SHA256 source candidate Seller/SKU, gắn source094d455 và provenanceQA | Coordinator sau checkpoint kiểm chứng |
 | WIP_BASELINE.json | SHA2568Sellerfiles lịch sửMEM01 trướcc18, không phải WIP hiện tại | Giữ lịch sử |
 | DECISIONS.md | Quyết định và giới hạn được owner xác nhận | Coordinator; chỉ ghi nguồn và phạm vi thực |
 | WORKBOARD.md | Task, phụ thuộc và file ownership | Coordinator trước/sau giao việc |

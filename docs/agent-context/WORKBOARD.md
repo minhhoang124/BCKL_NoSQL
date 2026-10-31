@@ -47,3 +47,5 @@ BE-CLOSE ownerrequested30/10: Codexintegration/searchoutbox/startup/operatorcont
 - Không sửa app trong lúc driver chốt source hash đang chạy. Giữ báo cáo FAIL_UX ban đầu và bổ sung bằng chứng sau sửa riêng.
 
 Kết quả mới: UX01–03 DONE_LOCAL_QA, Argon offline helper/tests → Codex review+fullFE1865PASS/6SKIP+build+Chrome12business/3UXPASS,24ảnh/source-stable. Lockfile DONE_CLEAN_INSTALL: frozeninstall/Prismagenerate/FEbuildPASS ởsnapshotkhôngnode_modules;03afb53 đãpush. Owner tựgửiĐạt, chưa có tin nhắn kênhngoài. Handoff `handoffs/2026-10-31-argon-ux-fixes.md`. Không thay trạng thái staging/CI/PR139 bằng localPASS.
+
+PR-CLOSE31/10: ownerD17 cho phép merge138/139; cả hai MERGED vào develop63ebcd6/3be37d8. Candidate đã tích hợp139 và develop, source094d455; fullFE/build/WebSearch50/AI47PASS. CI sau merge cả2run6FAIL/0steps, không coi là codeFAIL hoặc CIgreen. Candidate gồm các phần khác chưa vào develop; tiếp tục thử nhóm trên nhánhfeat/hoang/sku-management-final. Không tự tạo/merge thêmPR toàncandidate từ quyền merge haiPR này.
