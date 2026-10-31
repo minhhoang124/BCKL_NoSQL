@@ -86,6 +86,8 @@ class Settings(BaseSettings):
         ),
     )
     rrf_k: int = Field(default=60, ge=1)
+    text_min_similarity: float | None = Field(default=None, ge=-1, le=1, allow_inf_nan=False)
+    image_min_similarity: float | None = Field(default=None, ge=-1, le=1, allow_inf_nan=False)
     internal_health_token: SecretStr | None = None
 
     @property

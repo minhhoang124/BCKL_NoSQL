@@ -29,6 +29,7 @@ it('uses the same parent-category subtree filter for listing and keyword search'
   fireEvent.change(screen.getByLabelText('Từ khóa'), { target: { value: 'headphones' } });
   fireEvent.click(screen.getByRole('button', { name: 'Tìm kiếm' }));
   await waitFor(() => expect(search).toHaveBeenLastCalledWith({ query: 'headphones', topK: 24, candidateK: 100, categoryIds: [1] }));
+  expect(await screen.findByText('Không có kết quả phù hợp. Hãy thử từ khóa khác hoặc bỏ bớt bộ lọc.')).toBeInTheDocument();
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 

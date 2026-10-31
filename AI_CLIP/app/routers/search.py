@@ -1,3 +1,4 @@
+import math
 import time
 from collections.abc import Iterable
 from typing import Annotated
@@ -48,14 +49,15 @@ async def search_hybrid(payload: HybridSearchRequest, request: Request) -> Hybri
         )
         semantic_ids = [
             item.product_id
-            for item in build_search_items(product_ids, scores)
+            for item in build_search_items(
+                product_ids, scores, min_similarity=get_settings().text_min_similarity
+            )
         ]
 
         # FAISS cannot apply structured filters itself. Intersect its candidates
         # against the same Elasticsearch metadata filter before RRF.
         active_filters = any(
-            value is not None and value != []
-            for value in payload.filters.model_dump().values()
+            value is not None and value != [] for value in payload.filters.model_dump().values()
         )
         if active_filters and semantic_ids:
             filtered = await elasticsearch_service.search_with_meta(
@@ -84,6 +86,8 @@ def build_search_items(
     product_ids: Iterable[object],
     scores: Iterable[object],
     limit: int | None = None,
+    *,
+    min_similarity: float | None = None,
 ) -> list[SearchResult]:
     items: list[SearchResult] = []
     seen_product_ids: set[int] = set()
@@ -94,12 +98,17 @@ def build_search_items(
         normalized_id = int(product_id)
         if normalized_id == -1 or normalized_id in seen_product_ids:
             continue
+        normalized_score = float(score)
+        if not math.isfinite(normalized_score):
+            continue
+        if min_similarity is not None and normalized_score < min_similarity:
+            continue
         seen_product_ids.add(normalized_id)
         items.append(
             SearchResult(
                 productId=normalized_id,
                 rank=len(items) + 1,
-                score=float(score),
+                score=normalized_score,
             )
         )
 
@@ -129,7 +138,12 @@ async def search_text(
             candidate_k,
         )
 
-        items = build_search_items(product_ids, scores, limit=payload.top_k)
+        items = build_search_items(
+            product_ids,
+            scores,
+            limit=payload.top_k,
+            min_similarity=get_settings().text_min_similarity,
+        )
 
         return SearchResponse(
             query=SearchQuery(
@@ -200,7 +214,12 @@ async def search_image(
                 topK=top_k,
                 candidateK=effective_candidate_k,
             ),
-            items=build_search_items(product_ids, scores, limit=top_k),
+            items=build_search_items(
+                product_ids,
+                scores,
+                limit=top_k,
+                min_similarity=get_settings().image_min_similarity,
+            ),
             responseTimeMs=(time.perf_counter() - start_time) * 1000,
         )
     except ImageTooLargeError as error:
