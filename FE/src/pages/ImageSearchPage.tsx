@@ -250,7 +250,7 @@ function ImageQuery() {
             nhau.
           </p>
           {result.items.length === 0 ? (
-            <p>Chưa có sản phẩm công khai phù hợp. Bạn có thể chọn ảnh khác.</p>
+            <p>Không có kết quả phù hợp. Bạn có thể chọn ảnh khác.</p>
           ) : (
             <div className={styles.grid}>
               {result.items.map((item) => (

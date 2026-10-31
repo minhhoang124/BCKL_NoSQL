@@ -199,7 +199,7 @@ describe("image query page lifecycle", () => {
     fireEvent.click(screen.getByRole("button", { name: "Tìm bằng ảnh" }));
     await act(async () => {});
     expect(
-      screen.getByText(/Chưa có sản phẩm công khai phù hợp/),
+      screen.getByText(/Không có kết quả phù hợp/),
     ).toBeInTheDocument();
     expect(search).toHaveBeenCalledTimes(2);
   });
