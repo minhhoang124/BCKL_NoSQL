@@ -32,7 +32,7 @@ describe('AdminCategoryAttributesEditor write safety', () => {
     await screen.findByDisplayValue('Màu sắc');
     fireEvent.change(screen.getByLabelText('Tên'), { target: { value: 'Draft preserved' } });
     fireEvent.click(screen.getByRole('button', { name: 'Lưu thuộc tính' }));
-    await screen.findByText(/Đã khóa toàn bộ thao tác ghi/);
+    await screen.findByText(/Tạm khóa chỉnh sửa để tránh cập nhật trùng/);
     expect(screen.getByLabelText('Tên')).toHaveValue('Draft preserved');
     expect(screen.getByRole('button', { name: 'Lưu thuộc tính' })).toBeDisabled();
     expect(screen.queryByText('Đã cập nhật thuộc tính.')).not.toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('AdminCategoryAttributesEditor write safety', () => {
     const lock = await editAndSave(api(new TypeError('network')));
     expect((screen.getByLabelText('Tên') as HTMLInputElement).value).toBe('Màu sản phẩm');
     expect((screen.getByRole('button', { name: 'Lưu thuộc tính' }) as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getByText(/Đã khóa toàn bộ thao tác ghi/)).toBeTruthy();
+    expect(screen.getByText(/Tạm khóa chỉnh sửa để tránh cập nhật trùng/)).toBeTruthy();
     await waitFor(() => expect(lock).toHaveBeenLastCalledWith(true));
   });
 });

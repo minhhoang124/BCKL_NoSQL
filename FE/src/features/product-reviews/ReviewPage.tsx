@@ -460,8 +460,7 @@ function Workspace({
       )}
       {!enabled && (
         <p className={styles.notice}>
-          Chưa bật thao tác đánh giá trên Web. Mã đang chờ vẫn có thể được đối
-          chiếu khi Backend sẵn sàng.
+          Tạm thời chưa thể gửi đánh giá mới. Bạn vẫn có thể kiểm tra yêu cầu đang chờ.
         </p>
       )}
       {scope === "BUYER" && !initialItem && !pending && (

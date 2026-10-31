@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/useAuth";
 import { hasBuyerAccess } from "../../utils/buyerAccess";
 import { cartApi } from "../../services/cartApi";
@@ -11,11 +11,12 @@ import styles from "../../pages/Marketplace.module.css";
 
 export function ProductPurchase({ product }: { product: Product }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
   if (loading) return <p role="status">Đang kiểm tra phiên…</p>;
   if (!user)
     return (
       <p className={styles.loginPromptBar}>
-        <Link to="/login">Đăng nhập để chọn mua</Link>
+        <Link to="/login" state={{ from: location }}>Đăng nhập để chọn mua</Link>
       </p>
     );
   if (!hasBuyerAccess(user))

@@ -213,7 +213,7 @@ function Workspace({ actorId }: { actorId: number }) {
     <section className={styles.workspace} aria-label="Giao hàng mô phỏng">
       <h1>Giao hàng mô phỏng</h1>
       <p>
-        Chỉ dùng cho nghiệm thu. Không gọi hãng vận chuyển hoặc thu tiền thật.
+        Môi trường mô phỏng: không gọi hãng vận chuyển hoặc thu tiền thật.
         Giao thành công ghi nhận COD đã thanh toán trong dữ liệu mô phỏng.
       </p>
       <details>

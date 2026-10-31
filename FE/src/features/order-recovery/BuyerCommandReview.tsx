@@ -146,7 +146,7 @@ function ReviewContent({
     <section className={styles.panel} aria-labelledby={heading}
       aria-busy={phase === "sending" || phase === "acknowledged-refreshing" ||
         (submitted && !failed) || reloading}>
-      <p className={styles.preparation}>{integrated ? 'Thao tác với đơn đã lưu. Server kiểm tra lại quyền và trạng thái trước khi ghi nhận.' : 'BẢN CHUẨN BỊ — chưa bật giao dịch Buyer trên Web.'}</p>
+      <p className={styles.preparation}>{integrated ? 'Kiểm tra thông tin đơn hàng trước khi xác nhận.' : 'Thao tác đơn hàng hiện chưa khả dụng.'}</p>
       <h2 id={heading}>{command === "cancel" ? "Xác nhận hủy đơn" : "Xác nhận đã nhận hàng"}</h2>
       <p>Đơn <strong>{order.orderNumber}</strong> · Tổng đã lưu: {orderMoney(order.total)}</p>
       {phase === "confirm-new" && <>
@@ -182,7 +182,7 @@ function ReviewContent({
         </button>
         {onDismiss && <button type="button" className={styles.secondary} disabled={submitted}
           onClick={() => { if (isCurrent() && !latch.current) onDismiss(); }}>Quay lại, chưa gửi</button>}
-        {!connected && <p>Chưa nối bộ thực thi đã được duyệt; không có request giao dịch từ bản chuẩn bị này.</p>}
+        {!connected && <p>Chưa thể gửi yêu cầu. Đơn hàng chưa được thay đổi.</p>}
       </>}
       {phase === "sending" && <p role="status">Đang gửi yêu cầu. Mất kết nối không chứng minh server chưa xử lý.</p>}
       {submitted && !failed && <p role="status">Đã chuyển yêu cầu; đang chờ kết quả được kiểm chứng, chưa kết luận thành công.</p>}

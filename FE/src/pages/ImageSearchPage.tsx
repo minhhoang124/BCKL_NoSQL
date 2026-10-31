@@ -194,9 +194,7 @@ function ImageQuery() {
           />
         )}
         <p className={styles.hint}>
-          Ảnh được gửi tới Backend và dịch vụ AI nội bộ để truy vấn, không được
-          thêm thành ảnh sản phẩm. Chưa hỗ trợ kết hợp bộ lọc của tìm kiếm từ
-          khóa.
+          Ảnh được dùng để tìm sản phẩm tương tự, không được thêm vào ảnh sản phẩm.
         </p>
         <div className={styles.actions}>
           <button
@@ -244,11 +242,6 @@ function ImageQuery() {
       {result && (
         <section aria-label="Kết quả tìm ảnh">
           <h2>{result.items.length} sản phẩm tìm thấy</h2>
-          <p className={styles.hint}>
-            AI xử lý {Math.round(result.responseTimeMs)} ms; không phải tổng
-            thời gian tải lên. Điểm xếp hạng không phải tỷ lệ phần trăm giống
-            nhau.
-          </p>
           {result.items.length === 0 ? (
             <p>Chưa có sản phẩm công khai phù hợp. Bạn có thể chọn ảnh khác.</p>
           ) : (

@@ -316,7 +316,7 @@ function CartContent({ user }: { user: User }) {
         <p>Đã chọn <strong>{visibleSummary ? `${selectedItems.length} dòng` : '—'}</strong></p>
         <p>Số lượng đã chọn <strong>{visibleSummary ? selectedItems.reduce((sum, item) => sum + item.quantity, 0) : '—'}</strong></p>
         <p className={styles.total}>Tạm tính đã chọn <strong>{!visibleSummary ? '—' : selectedCents === null ? 'Không xác định' : formatCartMoney(selectedCents)}</strong></p>
-        <small>Tổng thanh toán sẽ được Backend kiểm tra lại giá và tồn kho ở bước đặt hàng.</small>
+        <small>Giá và tình trạng còn hàng được cập nhật khi bạn xác nhận đặt hàng.</small>
         {canCheckout ? <Link className={styles.checkout} to={`/checkout?${checkoutQuery.toString()}`}>Tiếp tục thanh toán</Link>
           : <button className={styles.checkout} type="button" disabled>Tiếp tục thanh toán</button>}
         {visibleSummary && selectedItems.length > 50 && <p role="alert">Chỉ chọn tối đa 50 dòng để thanh toán.</p>}

@@ -15,7 +15,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           <span>Mua sắm theo cách của bạn.</span>
         </h2>
         <p className={styles.lead}>
-          Tìm sản phẩm phù hợp bằng từ khóa và AI CLIP, quản lý đơn mua và theo dõi hành trình giao hàng thời gian thực trên cùng một nền tảng.
+          Những món quà ý nghĩa cho người thân và những lựa chọn dành riêng cho bạn.
         </p>
 
         <div className={styles.perks}>
@@ -42,7 +42,6 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <p className={styles.note}>Khám phá bằng từ khóa và hình ảnh.</p>
         <img
           className={styles.artwork}
           src="/images/auth-shopping-v1.webp"

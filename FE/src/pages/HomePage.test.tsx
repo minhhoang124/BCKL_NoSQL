@@ -37,7 +37,7 @@ it.each([undefined, 'false', 'true'])('exposes image search only for the explici
   vi.spyOn(marketplaceApi, 'publicProducts').mockResolvedValue({ items: [], nextCursor: null });
   render(<MemoryRouter><HomePage /></MemoryRouter>);
   await screen.findByRole('button', { name: 'Tìm kiếm' });
-  const link = screen.queryByRole('link', { name: 'Tìm sản phẩm bằng ảnh JPEG/PNG' });
+  const link = screen.queryByRole('link', { name: 'Tìm sản phẩm bằng ảnh' });
   if (flag === 'true') expect(link).toHaveAttribute('href', '/search/image');
   else expect(link).not.toBeInTheDocument();
 });

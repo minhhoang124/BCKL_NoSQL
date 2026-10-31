@@ -93,10 +93,10 @@ export function Header() {
                 <Link
                   to="/search/image"
                   className={styles.cameraBtn}
-                  title="Tìm kiếm sản phẩm bằng hình ảnh (AI CLIP)"
+                  title="Tìm sản phẩm bằng ảnh"
                 >
                   <span aria-hidden="true">📷</span>
-                  <span>AI Ảnh</span>
+                  <span>Tìm ảnh</span>
                 </Link>
               )}
               <button type="submit">

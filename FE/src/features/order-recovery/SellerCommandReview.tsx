@@ -106,8 +106,8 @@ function ReviewContent({
         {integrated
           ? "Thao tác trên đơn đã lưu; kiểm tra thông tin và xác nhận trước khi gửi."
           : connected
-            ? "KIỂM THỬ QA — thao tác gọi API thật."
-            : "BẢN CHUẨN BỊ — chưa nối thao tác Order trên Web."}
+            ? "Kiểm tra thông tin đơn hàng trước khi xác nhận."
+            : "Thao tác đơn hàng hiện chưa khả dụng."}
       </p>
       <h2 id={headingId}>{labels[target.command]}</h2>
       <p>

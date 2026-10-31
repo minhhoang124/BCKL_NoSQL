@@ -340,3 +340,51 @@ describe('Admin product moderation', () => {
     );
   });
 });
+
+describe('AdminDashboardPage notification bell', () => {
+  function mockProduct45() {
+    vi.mocked(fetchApi).mockImplementation((path) => {
+      if (String(path).includes('45')) return Promise.resolve(productDetail);
+      return Promise.reject(new ApiError('Not found', 404));
+    });
+  }
+
+  function renderAdminRoutes(path = '/admin/products/45') {
+    return render(
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/admin/*" element={<AdminDashboardPage />} />
+          <Route path="/account/notifications" element={<h1>Trang thông báo</h1>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+  }
+
+  it('disables the notification bell when VITE_NOTIFICATIONS_ENABLED is not true', async () => {
+    vi.stubEnv('VITE_NOTIFICATIONS_ENABLED', 'false');
+    try {
+      mockProduct45();
+      renderAdminRoutes();
+      const bell = await screen.findByRole('button', { name: 'Thông báo' });
+      expect(bell).toBeDisabled();
+      expect(bell).toHaveAttribute('title', 'Thông báo hiện chưa khả dụng');
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('enables the notification bell and navigates to /account/notifications when VITE_NOTIFICATIONS_ENABLED is true', async () => {
+    vi.stubEnv('VITE_NOTIFICATIONS_ENABLED', 'true');
+    try {
+      mockProduct45();
+      renderAdminRoutes();
+      const bell = await screen.findByRole('button', { name: 'Thông báo' });
+      expect(bell).not.toBeDisabled();
+      expect(bell).toHaveAttribute('title', 'Thông báo');
+      fireEvent.click(bell);
+      expect(await screen.findByRole('heading', { name: 'Trang thông báo' })).toBeInTheDocument();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});

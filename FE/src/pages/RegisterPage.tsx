@@ -44,7 +44,7 @@ export function RegisterPage() {
     <AuthLayout>
       <div className={styles.container}>
         <div className={styles.cardTopMeta}>
-          <span className={styles.festiveChip}>🎅 Phiên bản Noel 2026</span>
+          <span className={styles.festiveChip}>🎅 Mùa lễ hội Noel 2026</span>
           <span className={styles.qrBadge}>🎁 Ưu đãi thành viên mới</span>
         </div>
         <h1 className={styles.title}>Đăng ký</h1>

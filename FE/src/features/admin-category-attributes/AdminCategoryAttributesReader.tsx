@@ -16,7 +16,7 @@ export function AdminCategoryAttributesReader(props: Props) {
   const { user, loading } = useAuth();
   if (loading) return <p role="status">Đang kiểm tra phiên đăng nhập…</p>;
   if (!user || !user.isActive || user.role !== 'ADMIN') return <p role="alert">Cần tài khoản Admin đang hoạt động.</p>;
-  if (!props.api) return <p role="status">Chưa kết nối API đọc Attributes. Chưa có dữ liệu thật.</p>;
+  if (!props.api) return <p role="status">Tạm thời không tải được thuộc tính ngành hàng. Vui lòng thử lại sau.</p>;
   if (!Number.isInteger(props.categoryId) || props.categoryId <= 0 || props.categoryId > 2147483647 ||
     !Number.isInteger(props.pageSize ?? 50) || (props.pageSize ?? 50) < 1 || (props.pageSize ?? 50) > 100) return <p role="alert">Cấu hình đọc không hợp lệ.</p>;
   return <Reader key={`${user.id}:${getAuthSessionVersion()}:${props.categoryId}`} {...props} api={props.api} />;
@@ -102,7 +102,7 @@ function Reader({ categoryId, api, pageSize = 50 }: Props & { api: AttributeRead
     </select></label>{' '}<button disabled={busy || blocked} onClick={() => void loadList()}>Tải lại danh sách</button>
     {busy && <p role="status">Đang tải danh sách…</p>}{error && <p role="alert">{error}</p>}
     {!busy && !error && !blocked && !list.items.length && <p>Không có thuộc tính phù hợp.</p>}
-    {!busy && !error && !blocked && <p>Đã tải {list.items.length} dòng{list.nextCursor !== null ? ' — còn trang tiếp theo' : ' — hết trang tại lần đọc này'}. Không phải snapshot chung của Category.</p>}
+    {!busy && !error && !blocked && <p>Đã tải {list.items.length} thuộc tính{list.nextCursor !== null ? ' — còn trang tiếp theo' : ' — đã tải hết danh sách'}.</p>}
     <div className={styles.columns}><section aria-label="Danh sách thuộc tính chỉ đọc">
       {list.items.map(row => <button className={styles.row} key={row.id} disabled={blocked || busy} onClick={() => void select(row)}>
         {row.name} · {row.isActive ? 'Bật' : 'Tắt'} · v{row.revision}

@@ -380,10 +380,10 @@ function ChatThread({
       if (valid()) onChangeRef.current();
     });
     client.on("disconnect", () => {
-      if (valid()) setStatus("Mất kết nối realtime; đang tải bù qua API.");
+      if (valid()) setStatus("Kết nối bị gián đoạn. Đang tải lại tin nhắn…");
     });
     client.on("connect_error", () => {
-      if (valid()) setStatus("Realtime chưa kết nối; lịch sử vẫn tải qua API.");
+      if (valid()) setStatus("Tin nhắn mới có thể cập nhật chậm. Bạn vẫn có thể xem lịch sử trò chuyện.");
     });
     client.connect();
     queueMicrotask(() => {

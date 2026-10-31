@@ -258,7 +258,7 @@ function OverviewPage() {
         <div className={styles.panelHead}>
           <div>
             <h2>Việc cần xử lý</h2>
-            <p>Các tác vụ đang được Backend hỗ trợ</p>
+            <p>Theo dõi và xử lý các yêu cầu đang chờ</p>
           </div>
           {counts.productsLoaded && counts.storesLoaded && (
             <span className={styles.liveBadge}>
@@ -446,8 +446,8 @@ function ProductQueuePage() {
         )}
       </section>
       <p className={styles.caption}>
-        Danh sách được lấy trực tiếp từ hàng chờ Backend. Quyết định duyệt yêu
-        cầu dùng đúng phiên bản nội dung đang hiển thị.
+        Kiểm tra nội dung sản phẩm trước khi duyệt. Nếu thông tin đã thay đổi,
+        hãy tải lại để xem bản mới nhất.
       </p>
     </>
   );
@@ -1406,7 +1406,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
               )}
             </div>
             <p className={styles.formHint}>
-              Tắt danh mục có thể khiến sản phẩm không còn công khai. Giao diện quản lý định nghĩa thuộc tính chưa nằm trong đợt bàn giao này; Backend đã có API tạo/cập nhật thuộc tính.
+              Tắt danh mục có thể khiến sản phẩm trong danh mục không còn hiển thị với khách hàng.
             </p>
           </section>
         </div>
@@ -1499,7 +1499,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
         </div>
       ) : (
         <section className={styles.panel}>
-          <div className={styles.panelHead}><div><h2>Thuộc tính ngành hàng</h2><p>Chọn ngành hàng rồi quản lý định nghĩa và lựa chọn bằng API thật.</p></div></div>
+          <div className={styles.panelHead}><div><h2>Thuộc tính ngành hàng</h2><p>Chọn ngành hàng để quản lý thông tin và các lựa chọn của sản phẩm.</p></div></div>
           <label className={styles.fieldLabel} htmlFor="attribute-category">Ngành hàng</label>
           <select id="attribute-category" className={styles.input} disabled={catalogBusy || loading || !ready}
             value={attributeCategoryId} onChange={event => setAttributeCategoryId(event.target.value)}>
@@ -1573,11 +1573,11 @@ function AdminConsole() {
               <div
                 key={item.to}
                 className={`${styles.navItem} ${styles.navDisabled}`}
-                title="Giao diện chưa triển khai; xem phạm vi và API hiện có trong tài liệu QA"
+                title="Mục này hiện chưa khả dụng"
               >
                 <span>{item.icon}</span>
                 {item.label}
-                <i>Chưa có UI</i>
+                <i>Chưa khả dụng</i>
               </div>
             ) : (
               <NavLink
@@ -1630,9 +1630,12 @@ function AdminConsole() {
           <div className={styles.topActions}>
             <span className={styles.environmentTag}>Bảng điều khiển</span>
             <button
+              type="button"
               className={styles.iconButton}
               aria-label="Thông báo"
-              title="API thông báo chưa triển khai"
+              title={import.meta.env.VITE_NOTIFICATIONS_ENABLED === 'true' ? 'Thông báo' : 'Thông báo hiện chưa khả dụng'}
+              disabled={import.meta.env.VITE_NOTIFICATIONS_ENABLED !== 'true'}
+              onClick={() => navigate('/account/notifications')}
             >
               ♧
             </button>

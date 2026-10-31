@@ -29,7 +29,7 @@ export function AccountPage() {
           <h1>Thông tin tài khoản</h1>
         </div>
         <div className={styles.securitySeal} aria-hidden="true">
-          <span>🛡️ Bảo vệ phiên đăng nhập &amp; Masked PII</span>
+          <span>Email tài khoản</span>
           <strong>{maskEmail(user.email)}</strong>
         </div>
       </div>

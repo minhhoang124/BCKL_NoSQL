@@ -89,7 +89,7 @@ function BrandEditorContent({ api, embedded = false, disabled = false, reloadTok
       const result = await api.update(selected.id, confirm, controller.signal);
       if (!current()) return;
       setSelected(null); setConfirm(null);
-      setNotice(`Đã lưu thương hiệu. ${result.searchReconciliation ? `Backend ghi nhận job ${result.searchReconciliation.jobId} (${result.searchReconciliation.status}); chưa xác nhận index đã đồng bộ.` : 'Không có job đồng bộ trong phản hồi.'}`);
+      setNotice(`Đã lưu thương hiệu. ${result.searchReconciliation ? 'Thay đổi có thể chưa xuất hiện ngay trong kết quả tìm kiếm.' : ''}`);
       await load();
       if (current()) onSaved?.();
     } catch (failure) {
@@ -103,7 +103,7 @@ function BrandEditorContent({ api, embedded = false, disabled = false, reloadTok
         setError((failure as ApiError).message);
       } else {
         setUncertain(true);
-        setError('Chưa rõ kết quả lưu. Không gửi lại; cần đối chiếu Backend trước khi sửa tiếp.');
+        setError('Chưa rõ kết quả lưu. Hãy kiểm tra thông tin đã lưu trước khi thử lại để tránh cập nhật trùng.');
         setNotice('Có thể tải lại để xem dữ liệu, nhưng GET không chứng minh yêu cầu cũ đã kết thúc. Giữ khóa thao tác ghi trong phiên màn hình này.');
       }
     } finally {
@@ -124,7 +124,7 @@ function BrandEditorContent({ api, embedded = false, disabled = false, reloadTok
     {phase === 'loading' && <p role="status">Đang tải thương hiệu…</p>}
     {phase === 'ready' && <div className={styles.columns}>
       <section className={styles.panel} aria-label="Danh sách thương hiệu"><h2>Thương hiệu đã tải ({rows.length})</h2>
-        {!rows.length && <p>Chưa có thương hiệu trong phản hồi Backend.</p>}
+        {!rows.length && <p>Chưa có thương hiệu.</p>}
         <ul className={styles.list}>{rows.map(row => <li key={row.id}><div><strong>{row.name}</strong><span>{row.slug}</span><small>{row.isActive ? 'Đang bật' : 'Đã tắt'}</small></div>
           <button type="button" disabled={blocked || confirm !== null} onClick={() => choose(row)} aria-label={`Sửa thương hiệu ${row.name}`}>Sửa</button></li>)}</ul>
       </section>
@@ -139,13 +139,13 @@ function BrandEditorContent({ api, embedded = false, disabled = false, reloadTok
           </form>
           {confirm && <section className={styles.confirm} aria-label="Xác nhận thay đổi thương hiệu"><h3 ref={confirmationHeading} tabIndex={-1}>Xác nhận trước khi lưu</h3>
             <dl><dt>Tên</dt><dd>{confirm.name ?? selected.name}</dd><dt>Slug</dt><dd>{confirm.slug ?? selected.slug}</dd></dl>
-            <p>Đổi tên có thể tạo công việc cập nhật Search. Backend vẫn quyết định dữ liệu và kết quả ghi.</p>
+            <p>Thông tin mới có thể cần một thời gian để xuất hiện trong kết quả tìm kiếm.</p>
             <div className={styles.actions}><button type="button" disabled={blocked} onClick={() => void save()}>{busy ? 'Đang lưu…' : 'Xác nhận lưu'}</button>
               <button type="button" disabled={disabled || busy} onClick={() => setConfirm(null)}>Quay lại sửa</button></div>
           </section>}
         </> : <p>Danh sách gồm cả thương hiệu đã tắt. Không xóa hoặc bật/tắt trong màn này.</p>}
       </section>
     </div>}
-    <p className={styles.hint}>Backend hiện chưa có version/If-Match cho Brand; không nhận đã ngăn ghi đè giữa hai Admin. Khóa kết quả chưa rõ chỉ giữ trong màn hình hiện tại, không bảo đảm qua tải lại trang.</p>
+    <p className={styles.hint}>Tránh cùng sửa một thương hiệu với quản trị viên khác. Nếu mất kết nối khi lưu, kiểm tra lại thông tin trước khi thử lại.</p>
   </section>;
 }

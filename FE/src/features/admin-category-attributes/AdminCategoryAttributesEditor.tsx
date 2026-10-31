@@ -11,7 +11,7 @@ const defaultReadApi = createAttributeReadApi();
 const defaultWriteApi = createAttributeWriteApi();
 const emptyDefinition: DefinitionInput = { name: '', slug: '', dataType: 'TEXT', isRequired: false, isFilterable: false, allowsCustom: true, sortOrder: 0, isActive: false };
 const emptyOption: OptionInput = { value: '', slug: '', sortOrder: 0, isActive: false };
-const errorMessage = (error: unknown) => error instanceof ApiError ? `${error.code ?? 'ERROR'}: ${error.message}` : 'Không nhận được kết quả chắc chắn từ Backend.';
+const errorMessage = (error: unknown) => error instanceof ApiError ? error.message : 'Không nhận được kết quả chắc chắn. Vui lòng kiểm tra lại trước khi tiếp tục.';
 // Already loaded rows may include a newer successful local write. Do not replace
 // them with an overlapping page read, or lose items inserted past the cursor.
 function appendPage<T extends { id: number }>(previous: T[], incoming: T[]) {
@@ -162,10 +162,10 @@ export function AdminCategoryAttributesEditor({ categoryId, disabled = false, ap
       : api.createOption(categoryId, selected.id, { ...option, expectedRevision: selected.revision }), selectedOption ? 'Đã cập nhật lựa chọn.' : 'Đã tạo lựa chọn.');
   };
   const formDisabled = disabled || busy || locked;
-  return <section className={`${styles.root} ${editorStyles.editor}`} aria-label="Quản lý Attributes thật">
+  return <section className={`${styles.root} ${editorStyles.editor}`} aria-label="Quản lý thuộc tính ngành hàng">
     <h1>Thuộc tính ngành hàng #{categoryId}</h1>
-    <p>Đang dùng API thật. Mọi bản cập nhật dùng revision hiện đã đọc; không tự gửi lại khi kết quả chưa rõ.</p>
-    {locked && <p role="alert">Kết quả lần ghi trước chưa rõ. Đã khóa toàn bộ thao tác ghi; tải lại trang không được dùng để suy ra rollback.</p>}
+    <p>Chọn thuộc tính để cập nhật thông tin và các lựa chọn của sản phẩm.</p>
+    {locked && <p role="alert">Chưa xác định được kết quả lưu trước đó. Tạm khóa chỉnh sửa để tránh cập nhật trùng; hãy kiểm tra kết quả trước khi tiếp tục.</p>}
     {optionsStale && <p role="alert">Phiên bản thuộc tính đã thay đổi. Bản nháp được giữ; chọn lại thuộc tính để đọc phiên bản mới trước khi lưu.</p>}
     {notice && <p role={notice.startsWith('Đã ') ? 'status' : 'alert'}>{notice}</p>}
     <button disabled={disabled || busy} onClick={() => void load()}>Tải lại danh sách</button>

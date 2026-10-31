@@ -110,7 +110,7 @@ describe("Prepared panels — fixture/component tests, NOT live Web transactions
     rerender(<OrderListPanel {...props} state={{ status: "idle" }} />);
     expect(screen.getByRole("status")).toHaveTextContent("đúng tài khoản");
   });
-  it("uses snapshot fields only, treats API reads as not yet accepted and does not invent legacy payment", () => {
+  it("uses purchase snapshots without development banners and does not invent legacy payment", () => {
     const d = detailFixture();
     d.payment = null;
     render(
@@ -121,7 +121,7 @@ describe("Prepared panels — fixture/component tests, NOT live Web transactions
         state={{ status: "ready", data: d }}
       />,
     );
-    expect(screen.getByText(/chưa nghiệm thu toàn luồng/)).toBeInTheDocument();
+    expect(screen.queryByText(/chưa nghiệm thu toàn luồng/)).not.toBeInTheDocument();
     expect(screen.getByText("Tên sản phẩm lúc mua")).toBeInTheDocument();
     expect(screen.getByText(/SKU-SNAPSHOT/)).toHaveTextContent("Đen / M");
     expect(screen.getByText(/Địa chỉ đã lưu/)).toBeInTheDocument();

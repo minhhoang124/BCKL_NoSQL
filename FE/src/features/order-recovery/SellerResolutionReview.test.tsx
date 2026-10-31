@@ -68,7 +68,7 @@ describe("Resolver confirmation view — NOT mounted / no HTTP", () => {
     expect(screen.getByRole("checkbox")).toBeDisabled();
     expect(screen.getByRole("button")).toBeDisabled();
     expect(screen.getByText(/không phải hủy đơn hàng/)).toBeVisible();
-    expect(screen.getByText(/BẢN CHUẨN BỊ/)).toBeVisible();
+    expect(screen.getByText(/Tạm thời chưa thể kiểm tra yêu cầu/)).toBeVisible();
     expect(document.body.textContent).not.toContain(intent.idempotencyKey);
   });
   it("requires explicit consent and dispatches only once on double click", () => {

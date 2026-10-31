@@ -65,7 +65,7 @@ export function SellerDashboardPage() {
   return <div className={styles.page}>
     <div className={styles.sellerHeaderBanner}>
       <div>
-        <span className={styles.sellerKicker} aria-hidden="true">🎄 SHOPEE SELLER CENTER · MÙA LỄ HỘI NOEL 2026</span>
+        <span className={styles.sellerKicker} aria-hidden="true">🎄 KÊNH NGƯỜI BÁN · MÙA LỄ HỘI NOEL 2026</span>
         <h1>Kênh người bán</h1>
         <p>Hoàn thiện Store và sản phẩm trước khi gửi Admin duyệt.</p>
       </div>
@@ -94,7 +94,7 @@ export function SellerDashboardPage() {
       </div>
       <div className={styles.sellerKpiCard}>
         <span>Cập nhật Giá &amp; Kho SKU</span>
-        <strong>D13 Tức thì</strong>
+        <strong>Áp dụng ngay</strong>
         <small>Không cần chờ duyệt lại</small>
       </div>
     </div>

@@ -118,3 +118,30 @@ it("does not retry an uncertain network outcome and directs the buyer to reconci
   );
   expect(put).toHaveBeenCalledTimes(1);
 });
+
+it('preserves current PDP location in state.from when guest clicks login prompt', async () => {
+  const { Route, Routes, useLocation } = await import('react-router-dom');
+  const put = vi.spyOn(cartApi, 'put');
+  Object.assign(auth, { user: null });
+  function LoginProbe() {
+    const loc = useLocation();
+    const from = (loc.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
+    return (
+      <div data-testid="login-from">
+        {from ? `${from.pathname ?? ''}${from.search ?? ''}${from.hash ?? ''}` : 'missing'}
+      </div>
+    );
+  }
+  render(
+    <MemoryRouter initialEntries={['/products/1?ref=promo#buy']}>
+      <Routes>
+        <Route path="/products/:id" element={<ProductPurchase product={product} />} />
+        <Route path="/login" element={<LoginProbe />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+  const link = screen.getByRole('link', { name: 'Đăng nhập để chọn mua' });
+  fireEvent.click(link);
+  expect(screen.getByTestId('login-from')).toHaveTextContent('/products/1?ref=promo#buy');
+  expect(put).not.toHaveBeenCalled();
+});

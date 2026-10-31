@@ -19,7 +19,7 @@ export function Footer() {
         <div className={styles.columns}>
           <div className={styles.col}>
             <strong>BCKL · CHỢ HIỆN ĐẠI (NOEL 2026)</strong>
-            <p>Nền tảng thương mại điện tử đa ngành hàng tích hợp tìm kiếm lai ngữ nghĩa &amp; thị giác AI CLIP/FAISS.</p>
+            <p>Khám phá những lựa chọn yêu thích cho cuộc sống mỗi ngày.</p>
             <p>Địa chỉ: 140 Lê Trọng Tấn, Phường Tây Thạnh, Quận Tân Phú, TP. Hồ Chí Minh</p>
           </div>
           <div className={styles.col}>
@@ -34,7 +34,7 @@ export function Footer() {
         </div>
 
         <div className={styles.bottom}>
-          <p>&copy; 2026 BCKL E-Commerce — Đề án Khóa luận Tốt nghiệp Đại học Công Thương TP.HCM (HUIT). All rights reserved.</p>
+          <p>&copy; 2026 BCKL E-Commerce. All rights reserved.</p>
         </div>
       </div>
     </footer>

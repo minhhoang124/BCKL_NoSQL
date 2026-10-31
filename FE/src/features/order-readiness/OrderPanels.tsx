@@ -18,11 +18,10 @@ import styles from "./OrderPanels.module.css";
 type Source = "fixture" | "api";
 type ActionHandler = (action: PreparationCommand) => void | Promise<void>;
 function Evidence({ source }: { source: Source }) {
+  if (source !== "fixture") return null;
   return (
     <p className={styles.notice}>
-      {source === "fixture"
-        ? "DỮ LIỆU MẪU — chưa tích hợp giao dịch thật."
-        : "Dữ liệu đọc từ API — chưa nghiệm thu toàn luồng Order Web."}
+      DỮ LIỆU MẪU — chưa tích hợp giao dịch thật.
     </p>
   );
 }
@@ -195,7 +194,7 @@ function Actions({
           </button>
           <p className={styles.hint}>
             {action.reason ??
-              (!onAction ? "Panel chuẩn bị; chưa nối API thao tác." : "")}
+              (!onAction ? "Thao tác hiện chưa khả dụng." : "")}
           </p>
         </div>
       ))}

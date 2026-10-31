@@ -8,6 +8,7 @@ import { ErrorMessage } from '../components/ErrorMessage/ErrorMessage';
 import styles from './AuthForm.module.css';
 import { GoogleLogin } from '../features/auth-google/GoogleAuth';
 import { AuthLayout } from '../components/AuthLayout/AuthLayout';
+import { loginReturnPath } from '../utils/loginReturnPath';
 
 export function LoginPage() {
   const { login, endSession } = useAuth();
@@ -34,7 +35,7 @@ export function LoginPage() {
     }
   }, [endSession, location.key, location.state]);
 
-  const from = location.state?.from?.pathname || '/';
+  const from = loginReturnPath(location.state?.from);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,8 +79,7 @@ export function LoginPage() {
   return (
     <AuthLayout><div className={styles.container}>
       <div className={styles.cardTopMeta}>
-        <span className={styles.festiveChip}>🎅 Phiên bản Noel 2026</span>
-        <span className={styles.qrBadge}>▦ Bảo mật phiên &amp; OAuth 2.0</span>
+        <span className={styles.festiveChip}>🎅 Mùa lễ hội Noel 2026</span>
       </div>
       <h1 className={styles.title}>Đăng nhập</h1>
       <p className={styles.subtitle}>Chào mừng bạn trở lại với BCKL · Chợ hiện đại.</p>

@@ -17,7 +17,7 @@ function setup(request: AccountRequester) { const api = createAccountReadApi(req
 afterEach(() => { cleanup(); setAccessToken(null); vi.restoreAllMocks(); });
 describe('Accounts read screen', () => {
   it('keeps missing API distinct from successful empty, disables filters', () => {
-    render(view()); expect(screen.getByText('Chưa kết nối API Accounts')).toBeVisible(); expect(screen.getByRole('searchbox')).toBeDisabled();
+    render(view()); expect(screen.getByText('Chưa thể tải tài khoản')).toBeVisible(); expect(screen.getByRole('searchbox')).toBeDisabled();
     expect(screen.queryByText('Không có tài khoản phù hợp')).not.toBeInTheDocument();
   });
   it('does not request for non-Admin', () => {
