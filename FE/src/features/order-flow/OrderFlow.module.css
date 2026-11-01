@@ -101,3 +101,19 @@
 /* Legacy table helper (receipt) */
 .table { width: 100%; border-collapse: collapse; }
 .table th, .table td { padding: 12px 8px; border-bottom: 1px solid #dce0e5; text-align: left; overflow-wrap: anywhere; }
+
+/* Order placed (receipt) */
+.receipt { display: grid; justify-items: center; gap: 6px; padding: 32px 24px; text-align: center; }
+.receiptIcon { width: 56px; height: 56px; color: #1d8a4e; }
+.page .receipt h1 { font-size: 20px; }
+.receiptOrder { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 24px; padding: 14px 0; border-top: 1px solid #f0f0f0; }
+.receiptOrder:first-child { border-top: 0; }
+.receiptOrder h2 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px !important; }
+.receiptOrder strong { color: var(--market-brand); font-size: 16px; font-weight: 600; }
+.page .receiptLink, .page .receiptSecondary, .page .receiptPrimary { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 18px; border-radius: 2px; text-decoration: none; white-space: nowrap; }
+.page .receiptLink, .page .receiptSecondary { border: 1px solid rgba(0, 0, 0, 0.15); color: #20242b; background: #fff; }
+.page .receiptPrimary { border: 1px solid var(--market-brand); background: var(--market-brand); color: #fff; }
+.page .receiptLink:hover, .page .receiptSecondary:hover, .page .receiptPrimary:hover { text-decoration: none; }
+.receiptActions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.receiptOrder > div { min-width: 0; }
+@media (max-width: 600px) { .receiptOrder { grid-template-columns: minmax(0, 1fr); gap: 6px; } }

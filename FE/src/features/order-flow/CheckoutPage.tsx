@@ -4,7 +4,7 @@ import { AddressForm } from '../../components/Address/AddressForm';
 import type { AddressInput } from '../../types/address';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MapPinIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/useAuth';
 import { ApiError } from '../../services/apiClient';
 import { clearMatchingIntent, errorMessage, initialIntent, intentSlot, lookupReceipt, loadIntent, money, read, rejectedWithoutCommit, saveIntent, validateReceipt, write } from './api';
@@ -114,13 +114,29 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
       await accept(await write<Receipt>(pending.path, pending.body, pending.key), pending.key);
     });
   }
-  if (receipt) return <div className={styles.page}>
-    <h1>Đã ghi nhận đặt hàng {receipt.orders[0]?.payment.provider==='VNPAY'?'VNPay sandbox':'COD'}</h1><p>{receipt.replayed ? 'Đã khôi phục biên nhận gốc; không đặt thêm đơn.' : 'Đơn đã được tạo thành công.'}</p>
-    {receipt.orders[0]?.payment.provider==='VNPAY'&&<p>Đơn chưa được thanh toán. Mở chi tiết từng đơn để chủ động tạo phiên VNPay sandbox.</p>}
-    <p>Đây là biên nhận lúc đặt, không phải trạng thái giao hàng hiện tại.</p>
-    {receipt.orders.map(o => <article className={styles.card} key={o.id}><h2>{o.orderNumber}</h2><p>{money(o.total)}</p><p>Mã đơn: {o.id}. <Link to={`/account/orders/${o.id}`}>Theo dõi đơn {o.orderNumber}</Link></p></article>)}
-    {error && <p role="alert">{error}</p>}<Link to="/cart">Quay lại giỏ hàng</Link>
-  </div>;
+  if (receipt) {
+    const vnpay = receipt.orders[0]?.payment.provider === 'VNPAY';
+    return <div className={styles.page}>
+      <section className={`${styles.card} ${styles.receipt}`} aria-labelledby="receipt-title">
+        <CheckCircleIcon className={styles.receiptIcon} aria-hidden="true" />
+        <h1 id="receipt-title">Đã ghi nhận đặt hàng {vnpay ? 'VNPay sandbox' : 'COD'}</h1>
+        <p className={styles.hint}>{receipt.replayed ? 'Đã khôi phục biên nhận gốc; không đặt thêm đơn.' : `Đã tạo ${receipt.orders.length} đơn hàng. Mỗi cửa hàng xử lý một đơn riêng.`}</p>
+        {vnpay && <p className={styles.hint}>Đơn chưa được thanh toán. Mở chi tiết từng đơn để tạo phiên thanh toán VNPay sandbox.</p>}
+      </section>
+      <section className={styles.card} aria-label="Đơn hàng vừa tạo">
+        {receipt.orders.map(o => <article className={styles.receiptOrder} key={o.id}>
+          <div><h2 title={o.orderNumber}>{o.orderNumber}</h2><span className={styles.hint}>{vnpay ? 'VNPay sandbox · Chưa thanh toán' : 'Thanh toán khi nhận hàng'}</span></div>
+          <strong>{money(o.total)}</strong>
+          <Link className={styles.receiptLink} to={`/account/orders/${o.id}`} aria-label={`Theo dõi đơn ${o.orderNumber}`}>Theo dõi đơn</Link>
+        </article>)}
+      </section>
+      {error && <p className={styles.error} role="alert">{error}</p>}
+      <div className={styles.receiptActions}>
+        <Link className={styles.receiptSecondary} to="/">Tiếp tục mua sắm</Link>
+        <Link className={styles.receiptPrimary} to="/account/orders">Xem đơn mua</Link>
+      </div>
+    </div>;
+  }
   const unavailableText: Record<string, string> = {
     PRODUCT_UNAVAILABLE: 'Sản phẩm không còn được bán',
     VARIANT_UNAVAILABLE: 'Phân loại không còn được bán',

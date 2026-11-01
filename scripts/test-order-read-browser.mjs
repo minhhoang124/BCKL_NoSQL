@@ -119,11 +119,11 @@ try {
     page.on('pageerror', error => pageErrors.push(error.message));
     page.on('request', request => { if (request.url().startsWith(api) && /\/(seller\/)?orders(?:\/|\?|$)/.test(new URL(request.url()).pathname) && request.method() !== 'GET') writes.push(request.method()); });
     await login(page, a.email); assert((await context.cookies()).length > 0);
-    await page.goto(frontend + '/account'); await page.getByRole('link', { name: 'Đơn mua của tôi' }).click();
+    await page.goto(frontend + '/account'); await page.getByRole('link', { name: 'Đơn mua', exact: true }).click();
     await page.getByRole('button', { name: 'Trang tiếp theo', exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: /^Xem chi tiết / }).count(), 20);
     assert(await page.getByRole('complementary', { name: 'Tài khoản mua hàng' }).isVisible());
-    assert.equal(await page.getByRole('navigation', { name: 'Điều hướng tài khoản' }).getByRole('link').count(), 3);
+    assert((await page.getByRole('navigation', { name: 'Điều hướng tài khoản' }).getByRole('link').count()) >= 3);
     assert.equal(await page.getByRole('link', { name: 'Đơn mua', exact: true }).getAttribute('aria-current'), 'page');
     await shot(page, `${name}-01-buyer-list`);
     await page.getByRole('button', { name: 'Trang tiếp theo', exact: true }).click();

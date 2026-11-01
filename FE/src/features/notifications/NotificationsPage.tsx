@@ -100,9 +100,6 @@ function Inbox() {
   return (
     <section className={styles.inbox} aria-busy={busy}>
       <h1>Thông báo</h1>
-      <p>
-        Cập nhật về đơn hàng, cửa hàng và tin nhắn của bạn.
-      </p>
       <div className={styles.toolbar}>
         <label>
           Lọc thông báo{" "}

@@ -91,7 +91,7 @@ export function SellerOrderWorkspace({ orderId }: { orderId: number }) {
           <>
             {eligibleClose(state.order, state.store.status, "cancel") && (
               <p>
-                <Link to={`/seller/orders/${orderId}/close`}>Hủy đơn</Link>
+                <Link className={styles.outline} to={`/seller/orders/${orderId}/close`}>Hủy đơn</Link>
               </p>
             )}
             {eligibleClose(
@@ -100,17 +100,13 @@ export function SellerOrderWorkspace({ orderId }: { orderId: number }) {
               "confirm-returned",
             ) && (
               <p>
-                <Link to={`/seller/orders/${orderId}/close`}>
+                <Link className={styles.outline} to={`/seller/orders/${orderId}/close`}>
                   Xác nhận hàng quay về
                 </Link>
               </p>
             )}
           </>
         )}
-      <p>
-        Xác nhận, đóng gói và sẵn sàng bàn giao là ba thao tác riêng. Không tự
-        gửi lại khi mất phản hồi.
-      </p>
       {state.order &&
         state.phase !== "ready" &&
         state.phase !== "confirm-new" && (
@@ -120,6 +116,7 @@ export function SellerOrderWorkspace({ orderId }: { orderId: number }) {
           </p>
         )}
       <button
+        className={styles.reload}
         type="button"
         disabled={busy || confirming || state.phase === "blocked"}
         onClick={() => {

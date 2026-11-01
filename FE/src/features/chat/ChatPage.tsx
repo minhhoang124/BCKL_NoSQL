@@ -175,7 +175,6 @@ function ChatSession({
   return (
     <main className={styles.page}>
       <h1>Tin nhắn</h1>
-      <p>Trao đổi riêng với cửa hàng bằng tin nhắn và thẻ tham chiếu.</p>
       {error && <p role="alert">{error}</p>}
       {(validStore || validOrder) && (
         <button disabled={busy} onClick={() => void open()}>
@@ -186,7 +185,9 @@ function ChatSession({
       )}
       <div className={styles.columns}>
         <aside aria-label="Danh sách hội thoại">
-          <button onClick={() => void load()}>Tải lại hội thoại</button>
+          <div className={styles.actionsQuiet}>
+            <button onClick={() => void load()}>Tải lại hội thoại</button>
+          </div>
           {inboxPhase === "loading" && <p>Đang tải hội thoại…</p>}
           {inboxPhase === "ready" && !items.length && <p>Chưa có hội thoại.</p>}
           {items.map((item) => (
@@ -538,16 +539,15 @@ export function ChatThread({
     >
       {compact ? null : <h2>{title ?? `Hội thoại #${id}`}</h2>}
       <p role="status" className={styles.connection}>{status}</p>
-      {/* Recovery controls are always available, but only prominent when something is wrong. */}
-      <div
-        className={
-          error || status !== "Đang kết nối trực tiếp"
-            ? styles.actions
-            : `${styles.actions} ${styles.actionsQuiet}`
-        }
-      >
+      <div className={`${styles.actions} ${styles.actionsQuiet}`}>
         <button onClick={() => void reconnect()}>Kết nối lại</button>
         <button onClick={() => void sync()}>Tải lại tin nhắn</button>
+        <button
+          disabled={!messages.length || readBusy}
+          onClick={() => void markRead()}
+        >
+          Đánh dấu đã đọc các tin đã hiển thị
+        </button>
       </div>
       {error && <p role="alert">{error}</p>}
       {before !== null && (
@@ -587,12 +587,6 @@ export function ChatThread({
           </li>
         ))}
       </ol>
-      <button
-        disabled={!messages.length || readBusy}
-        onClick={() => void markRead()}
-      >
-        Đánh dấu đã đọc các tin đã hiển thị
-      </button>
       {pending && (
         <p role="status">
           Có tin chưa rõ kết quả.{" "}

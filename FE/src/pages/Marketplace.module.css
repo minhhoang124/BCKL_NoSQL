@@ -1459,6 +1459,7 @@
 .scStoreCard h1 { margin: 0 0 6px; font-size: 13px; font-weight: 500; color: var(--market-brand); letter-spacing: 0; }
 .scStoreCard strong { font-size: 15px; overflow-wrap: anywhere; }
 .scStoreCard span { color: #69717c; font-size: 13px; }
+.scStoreCard .scBrand { color: var(--market-brand); font-size: 15px; font-weight: 600; }
 .scNav { display: grid; padding: 8px 0 12px; }
 .scNavGroup { padding: 12px 16px 4px; color: #69717c; font-size: 12px; font-weight: 600; }
 .scNav a, .scNav button { display: block; width: 100%; box-sizing: border-box; padding: 8px 16px 8px 28px; border: 0; background: none; color: #20242b; text-align: left; text-decoration: none; font: inherit; cursor: pointer; }
@@ -1534,7 +1535,7 @@
 .scCheckMissing { background: #fff0ed; color: #b42318; }
 
 @media (max-width: 900px) {
-  .scShell { grid-template-columns: 1fr; padding: 8px; }
+  .scShell { grid-template-columns: minmax(0, 1fr); padding: 8px; }
   .scSidebar { position: static; }
   .scNav { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; }
   .scNavGroup { display: none; }
@@ -1581,3 +1582,9 @@
   .scEditor .editorGrid { grid-template-columns: 1fr; }
   .scEditor fieldset > label { flex-basis: 100%; }
 }
+
+/* Guest read-only option chips on the product page */
+.guestOptions { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; align-items: start; margin: 0 0 12px; font-size: 14px; }
+.guestOptions > span { padding-top: 5px; color: #69717c; }
+.guestOptions ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.guestOptions li { padding: 5px 14px; border: 1px solid rgba(0, 0, 0, 0.09); border-radius: 2px; background: #fff; color: #20242b; }

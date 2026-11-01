@@ -84,7 +84,9 @@ describe("Order routes + merged GET client/validators (mock HTTP boundary, not l
     const nav = screen.getByRole("navigation", {
       name: "Điều hướng tài khoản",
     });
-    expect(nav.querySelectorAll("a")).toHaveLength(3);
+    // Shared AccountLayout: only implemented account sections (profile, addresses, orders, ...).
+    expect(nav.querySelectorAll("a").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByRole("link", { name: "Hồ sơ của tôi" })).toHaveAttribute("href", "/account");
     expect(screen.getByRole("link", { name: "Đơn mua" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -266,7 +268,7 @@ describe("Order routes + merged GET client/validators (mock HTTP boundary, not l
   it("shows Account entry point", () => {
     render(tree("/account"));
     expect(
-      screen.getByRole("link", { name: "Đơn mua của tôi" }),
+      screen.getByRole("link", { name: "Đơn mua" }),
     ).toHaveAttribute("href", "/account/orders");
   });
   it('renders item preview with product details and hasMoreItems note in list panel', async () => {

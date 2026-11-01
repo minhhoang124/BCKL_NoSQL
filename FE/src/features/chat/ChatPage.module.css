@@ -1,22 +1,24 @@
 .page {
-  max-width: 1220px;
-  margin: 0 auto;
-  padding: 16px 0 28px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
   color: #20242b;
   font-family: var(--market-font, sans-serif);
 }
 
 .page h1 {
   margin: 0 0 0.25rem;
-  font-size: 1.55rem;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 600;
   color: #20242b;
 }
 
 .page h2 {
   margin: 0 0 0.35rem;
-  font-size: 1.15rem;
-  font-weight: 750;
+  font-size: 16px;
+  font-weight: 600;
   color: #20242b;
 }
 
@@ -29,7 +31,7 @@
 .columns {
   display: grid;
   grid-template-columns: minmax(250px, 31%) minmax(0, 1fr);
-  gap: 20px;
+  gap: 12px;
   align-items: start;
 }
 
@@ -37,10 +39,10 @@
 .thread {
   border: 1px solid #e3e6e9;
   background: #ffffff;
-  border-radius: 16px;
-  padding: 18px 20px;
+  border-radius: 4px;
+  padding: 16px;
   min-width: 0;
-  box-shadow: 0 4px 14px rgba(32, 36, 43, 0.04);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 .conversation {
@@ -52,14 +54,14 @@
   color: #20242b;
   border: 1px solid transparent;
   border-bottom: 1px solid #eef0f2;
-  border-radius: 10px;
+  border-radius: 4px;
   text-decoration: none;
   overflow-wrap: anywhere;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .conversation:hover {
-  background: #f6f7f8;
+  background: #f5f5f5;
 }
 
 .conversation span {
@@ -85,20 +87,20 @@
 }
 
 .page button {
-  padding: 0.58rem 0.95rem;
-  border: 1px solid var(--market-brand);
-  border-radius: 9px;
-  color: var(--market-brand);
-  background: var(--market-soft);
+  padding: 8px 12px;
+  border: 1px solid #d8d8d8;
+  border-radius: 4px;
+  color: #20242b;
+  background: #fff;
   font: inherit;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .page button:hover:not(:disabled) {
-  background: var(--market-brand);
-  color: #ffffff;
+  background: #fff5f0;
+  color: var(--market-brand);
+  border-color: var(--market-brand);
 }
 
 .page button:disabled {
@@ -127,22 +129,22 @@
   max-height: 480px;
   overflow: auto;
   border: 1px solid #eef0f2;
-  border-radius: 12px;
+  border-radius: 4px;
   background: #f6f7f8;
 }
 
 .messages > li {
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: 4px;
   width: min(85%, 520px);
   overflow-wrap: anywhere;
   color: #20242b;
-  box-shadow: 0 2px 6px rgba(32, 36, 43, 0.04);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 .messages > li > span {
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #4b525c;
 }
 
@@ -160,8 +162,8 @@
 
 .own {
   align-self: flex-end;
-  background: var(--market-soft);
-  border: 1px solid #fecaca;
+  background: #fff1e8;
+  border: 1px solid #ffd8c4;
 }
 
 .peer {
@@ -180,7 +182,7 @@
 }
 
 .thread label {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.88rem;
   color: #20242b;
 }
@@ -191,7 +193,7 @@
   resize: vertical;
   padding: 12px;
   border: 1px solid #cfd4d9;
-  border-radius: 10px;
+  border-radius: 4px;
   background: #ffffff;
   color: #20242b;
   font: inherit;
@@ -200,7 +202,7 @@
 .thread textarea:focus {
   outline: none;
   border-color: var(--market-brand);
-  box-shadow: 0 0 0 3px rgba(214, 59, 11, 0.12);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 .productCard {
@@ -212,20 +214,20 @@
   background: #ffffff;
   border: 1px solid var(--market-soft-border);
   border-left: 4px solid var(--market-brand);
-  border-radius: 10px;
+  border-radius: 4px;
 }
 
 .productCard img {
   width: 64px;
   height: 64px;
   object-fit: contain;
-  border-radius: 6px;
+  border-radius: 4px;
   background: #f6f7f8;
 }
 
 .productCard a {
   color: var(--market-brand);
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -243,15 +245,15 @@
   padding: 10px 12px;
   margin-top: 6px;
   background: #ffffff;
-  border: 1px solid var(--market-pine-border);
-  border-left: 4px solid var(--market-pine);
-  border-radius: 10px;
+  border: 1px solid #e8e8e8;
+  border-left: 4px solid var(--market-brand);
+  border-radius: 4px;
   color: #20242b;
 }
 
 .orderCard a {
-  color: var(--market-pine);
-  font-weight: 700;
+  color: var(--market-brand);
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -275,7 +277,7 @@
 
 @media (max-width: 700px) {
   .page {
-    padding: 12px;
+    padding: 0;
   }
   .columns {
     grid-template-columns: 1fr;
@@ -291,7 +293,7 @@
 
 .connection {
   margin: 0;
-  color: var(--market-muted);
+  color: #69717c;
   font-size: 12px;
 }
 .compactThread {
@@ -305,16 +307,28 @@
 .compactThread textarea {
   min-height: 64px;
 }
+.page .actionsQuiet button,
 .thread .actionsQuiet button {
   min-height: 28px;
   padding: 0 8px;
   border: 0;
   background: transparent;
-  color: var(--market-muted);
+  color: #69717c;
   font-size: 12px;
   font-weight: 500;
   box-shadow: none;
 }
-.thread .actionsQuiet button:hover {
+.page .actionsQuiet button:hover:not(:disabled),
+.thread .actionsQuiet button:hover:not(:disabled) {
   color: var(--market-brand);
 }
+
+.thread button[type="submit"] { align-self: flex-end; background: var(--market-brand); border-color: var(--market-brand); color: #fff; }
+.thread button[type="submit"]:hover:not(:disabled) { background: var(--market-brand-hover); color: #fff; }
+.thread { display: flex; flex-direction: column; }
+.thread form { margin-top: auto; }
+.actionsQuiet button { white-space: normal; text-align: left; }
+
+.thread:not(.compactThread) { min-height: 560px; }
+.thread .messages { flex: 1; min-height: 100px; }
+.thread .actionsQuiet button:hover:not(:disabled) { background: transparent; }

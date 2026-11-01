@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { hasBuyerAccess } from '../utils/buyerAccess';
 import { useAuth } from '../contexts/useAuth';
 import { ApiError } from '../services/apiClient';
@@ -7,7 +6,6 @@ import { addressApi } from '../services/addressApi';
 import { AddressCard } from '../components/Address/AddressCard';
 import { AddressForm } from '../components/Address/AddressForm';
 import type { Address, AddressInput } from '../types/address';
-import type { User } from '../types/auth';
 import styles from './AddressBookPage.module.css';
 
 function messageFor(error: unknown) {
@@ -25,10 +23,10 @@ export function AddressBookPage() {
   if (!user) return null;
   if (!hasBuyerAccess(user)) return <p role="alert">Chỉ tài khoản người mua đang hoạt động được quản lý địa chỉ.</p>;
   // A session change remounts the page and clears all personal data and draft state.
-  return <AddressBookContent key={user.id} user={user} />;
+  return <AddressBookContent key={user.id} />;
 }
 
-function AddressBookContent({ user }: { user: User }) {
+function AddressBookContent() {
   const [items, setItems] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [ready, setReady] = useState(false);
@@ -107,10 +105,6 @@ function AddressBookContent({ user }: { user: User }) {
   const disabled = busy || loading || !ready;
 
   return <div className={styles.page}>
-    <aside className={styles.sidebar} aria-label="Tài khoản">
-      <h2>Tài khoản</h2><strong>{user.fullName || 'Người mua'}</strong><p>{user.email}</p>
-      <nav><Link to="/account">Hồ sơ của tôi</Link><Link to="/account/addresses" aria-current="page">Sổ địa chỉ</Link></nav>
-    </aside>
     <div className={styles.content}>
       <header className={styles.heading}>
         <div><h1>Sổ địa chỉ</h1><p>Quản lý địa chỉ nhận hàng của bạn.</p></div>
@@ -120,7 +114,7 @@ function AddressBookContent({ user }: { user: User }) {
       {error && <div className={styles.error} role="alert">{error}</div>}
       <div className={styles.toolbar}>
         <span>{ready ? `${items.length} địa chỉ` : 'Danh sách cần được cập nhật'}</span>
-        <button type="button" disabled={busy || loading} onClick={() => { setError(''); setNotice(''); void load(); }}>Tải lại danh sách</button>
+        <button type="button" className={styles.quiet} disabled={busy || loading} onClick={() => { setError(''); setNotice(''); void load(); }}>Tải lại danh sách</button>
       </div>
       <section className={styles.list} aria-label="Danh sách địa chỉ" aria-busy={loading}>
         {loading ? <p className={styles.empty} role="status">Đang tải địa chỉ...</p> : !ready ?

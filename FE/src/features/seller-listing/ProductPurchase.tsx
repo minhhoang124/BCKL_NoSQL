@@ -15,9 +15,20 @@ export function ProductPurchase({ product }: { product: Product }) {
   if (loading) return <p role="status">Đang kiểm tra phiên…</p>;
   if (!user)
     return (
-      <p className={styles.loginPromptBar}>
-        <Link to="/login" state={{ from: location }}>Đăng nhập để chọn mua</Link>
-      </p>
+      <>
+        {/* Guests can see the available options (read-only); buying still needs login. */}
+        {(product.optionGroups ?? []).filter((g) => g.values.length > 0).map((g) => (
+          <div className={styles.guestOptions} key={g.id}>
+            <span>{g.name}</span>
+            <ul aria-label={`${g.name} có sẵn`}>
+              {g.values.map((v) => <li key={v.id}>{v.value}</li>)}
+            </ul>
+          </div>
+        ))}
+        <p className={styles.loginPromptBar}>
+          <Link to="/login" state={{ from: location }}>Đăng nhập để chọn mua</Link>
+        </p>
+      </>
     );
   if (!hasBuyerAccess(user))
     return <p>Tài khoản này chưa có quyền mua hàng.</p>;

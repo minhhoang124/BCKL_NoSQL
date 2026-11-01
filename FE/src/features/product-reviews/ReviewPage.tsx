@@ -389,12 +389,7 @@ function Workspace({
       aria-busy={busy}
     >
       <header>
-        <p className={styles.eyebrow}>ĐÁNH GIÁ SAU GIAO DỊCH</p>
         <h1>{labels[scope]}</h1>
-        <p>
-          Đánh giá dựa trên mặt hàng trong đơn đã hoàn tất. Hoàn tiền không tự
-          xóa nhận xét.
-        </p>
       </header>
       <div className={styles.toolbar}>
         <button disabled={busy} onClick={() => void load()}>

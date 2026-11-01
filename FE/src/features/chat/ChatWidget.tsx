@@ -203,7 +203,10 @@ function ChatWidgetSession({ actorId }: { actorId: number }) {
         aria-controls="chat-widget-panel"
         onClick={() => setOpen((value) => !value)}
       >
-        <span aria-hidden="true">💬</span> Tin nhắn
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M4 4h16v12H9l-5 4V4Z" />
+          <path d="M8 8h8M8 12h5" />
+        </svg> Tin nhắn
         {unread > 0 && (
           <b className={styles.toggleBadge} aria-label={`${unread} tin chưa đọc`}>
             {unread > 99 ? "99+" : unread}

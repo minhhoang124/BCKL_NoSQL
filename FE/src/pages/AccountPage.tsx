@@ -1,6 +1,4 @@
 import { useAuth } from '../contexts/useAuth';
-import { Link } from 'react-router-dom';
-import { hasBuyerAccess } from '../utils/buyerAccess';
 import styles from './AccountPage.module.css';
 import { AccountSettings } from '../features/account-settings/AccountSettings';
 import { EmailVerificationSettings } from '../features/auth-email/EmailRecoveryPages';
@@ -19,41 +17,9 @@ export function AccountPage() {
 
   if (!user) return null; // Will be caught by ProtectedRoute anyway
 
-  const avatarInitial = (user.fullName || user.email || 'U').trim().slice(0, 1).toUpperCase();
-
   return (
     <div className={styles.container}>
-      <div className={styles.headerBanner}>
-        <div>
-          <h1>Thông tin tài khoản</h1>
-        </div>
-        <div className={styles.securitySeal} aria-hidden="true">
-          <span>Email tài khoản</span>
-          <strong>{maskEmail(user.email)}</strong>
-        </div>
-      </div>
-
       <div className={styles.masterDetail}>
-        <aside className={styles.sidebar}>
-          <div className={styles.userBrief} aria-hidden="true">
-            <div className={styles.avatarCircle}>{avatarInitial}</div>
-            <div className={styles.userBriefMeta}>
-              <strong>{user.fullName || 'Thành viên BCKL'}</strong>
-              <span>{maskEmail(user.email)}</span>
-            </div>
-          </div>
-          <div className={styles.quickNav}>
-            <span className={styles.quickNavTitle}>Tài khoản của tôi</span>
-            <p><Link to="/account" className={styles.quickNavActive}>Hồ sơ &amp; Bảo mật</Link></p>
-            {hasBuyerAccess(user) && <p><Link to="/account/addresses">Quản lý địa chỉ nhận hàng</Link></p>}
-            {hasBuyerAccess(user) && <p><Link to="/account/orders">Đơn mua của tôi</Link></p>}
-            {hasBuyerAccess(user) && <p><Link to="/account/aftersales">Yêu cầu hậu mãi</Link></p>}
-            {user.role !== 'ADMIN' && (user.role === 'SELLER' || import.meta.env.VITE_SELLER_ONBOARDING_ENABLED === 'true') && (
-              <p><Link to="/account/store-application">Đăng ký / quản lý hồ sơ Store</Link></p>
-            )}
-          </div>
-        </aside>
-
         <div className={styles.detailColumn}>
           <div className={styles.profileCard}>
             <div className={styles.profileHeader}>

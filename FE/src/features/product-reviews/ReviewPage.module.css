@@ -1,18 +1,15 @@
 .page {
-  max-width: 1200px;
-  margin: auto;
-  padding: 32px 20px;
-  color: #17333b;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  color: #20242b;
+  font-size: 14px;
 }
 .page h1 {
-  font-size: 30px;
+  font-size: 18px;
+  font-weight: 600;
   margin: 8px 0 14px;
-}
-.eyebrow {
-  color: #007d82;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
 }
 .toolbar {
   display: flex;
@@ -23,23 +20,25 @@
 .columns {
   display: grid;
   grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr);
-  gap: 22px;
-  margin-top: 24px;
+  gap: 12px;
+  margin-top: 12px;
 }
 .single {
-  max-width: 820px;
-  margin: 24px auto;
+  min-width: 0;
+  margin: 12px 0;
 }
 .panel {
   background: white;
   border: 1px solid #dbe5e8;
-  border-radius: 14px;
-  padding: 24px;
+  border-radius: 4px;
+  padding: 16px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
   min-width: 0;
 }
 .panel h2 {
   margin: 0 0 18px;
-  font-size: 22px;
+  font-size: 18px;
+  font-weight: 600;
 }
 .form {
   display: grid;
@@ -56,7 +55,7 @@
   width: 100%;
   box-sizing: border-box;
   border: 1px solid #9aadb5;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 12px;
   font: inherit;
   color: inherit;
@@ -72,11 +71,11 @@
 }
 .page button,
 .panel > button {
-  border: 1px solid var(--market-brand);
-  border-radius: 8px;
+  border: 1px solid #d8d8d8;
+  border-radius: 4px;
   padding: 11px 16px;
-  background: var(--market-brand);
-  color: white;
+  background: #fff;
+  color: #20242b;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -98,15 +97,15 @@
 .pending {
   padding: 18px;
   border: 1px solid #ca7773;
-  border-radius: 10px;
+  border-radius: 4px;
   background: #fff4ed;
   color: #73231b;
   margin: 16px 0;
   overflow-wrap: anywhere;
 }
 .notice {
-  background: #eaf6f3;
-  border-radius: 10px;
+  background: #fff7f2;
+  border-radius: 4px;
   padding: 16px;
   overflow-wrap: anywhere;
 }
@@ -126,8 +125,8 @@
 .list button {
   width: 100%;
   text-align: left;
-  background: #f3f9f9;
-  color: #18363d;
+  background: #fff;
+  color: #20242b;
   overflow-wrap: anywhere;
 }
 .list button[aria-pressed="true"] {
@@ -168,7 +167,7 @@
 }
 .panel time {
   font-size: 12px;
-  color: #526972;
+  color: #69717c;
 }
 .panel ol {
   padding-left: 22px;
@@ -179,10 +178,10 @@
 }
 @media (max-width: 760px) {
   .page {
-    padding: 22px 12px;
+    padding: 0;
   }
   .page h1 {
-    font-size: 25px;
+    font-size: 18px;
   }
   .columns {
     grid-template-columns: 1fr;
@@ -197,3 +196,12 @@
     font-size: 20px;
   }
 }
+
+.page a { color: var(--market-brand); }
+.page header p, .list span { color: #69717c; }
+.form button[type="submit"] { background: var(--market-brand); color: #fff; border-color: var(--market-brand); justify-self: start; }
+.list button[aria-pressed="true"] { background: #fff7f2; border-width: 1px; border-left-width: 3px; }
+
+.page button:hover:not(:disabled) { border-color: var(--market-brand); }
+.page h3 { font-size: 16px; font-weight: 600; }
+.score { display: inline-block; padding: 4px 8px; background: #fff1e8; border-radius: 4px; font-size: 16px; }

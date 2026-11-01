@@ -43,3 +43,12 @@
   color: #684500;
   background: #fff5df;
 }
+
+/* UI-F: seller order actions — close/cancel as outline, refresh as quiet text. */
+.workspace { display: grid; gap: 8px; font-size: 14px; }
+.workspace p { margin: 0; }
+.outline { display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border: 1px solid #d9d9d9; border-radius: 4px; background: #fff; color: #20242b; text-decoration: none; }
+.outline:hover { border-color: #a6a6a6; color: #20242b; }
+.workspace > button.reload { justify-self: end; min-height: 32px; margin: 0; padding: 4px 10px; border: 0; background: transparent; color: #69717c; font-size: 12px; }
+.workspace > button.reload:hover:not(:disabled) { color: var(--market-brand); }
+.workspace > button.reload:disabled { background: transparent; color: #a3a8b0; }

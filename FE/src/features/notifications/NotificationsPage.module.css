@@ -1,18 +1,20 @@
 .inbox {
-  max-width: 960px;
-  margin: 12px auto 24px;
-  padding: 24px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
   border: 1px solid #e3e6e9;
-  border-radius: 16px;
+  border-radius: 4px;
   background: #ffffff;
   color: #20242b;
-  box-shadow: 0 4px 16px rgba(32, 36, 43, 0.04);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 .inbox h1 {
   margin: 0 0 0.35rem;
-  font-size: 1.55rem;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 600;
   color: #20242b;
 }
 
@@ -30,7 +32,7 @@
   margin: 14px 0;
   padding: 12px 14px;
   border: 1px solid #e3e6e9;
-  border-radius: 12px;
+  border-radius: 4px;
   background: #f6f7f8;
 }
 
@@ -48,7 +50,7 @@
   padding: 0.58rem 0.95rem;
   font: inherit;
   font-weight: 650;
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1px solid #cfd4d9;
   background: #ffffff;
   color: #20242b;
@@ -67,7 +69,7 @@
   display: inline-flex;
   align-items: center;
   padding: 0.5rem 0.9rem;
-  border-radius: 8px;
+  border-radius: 4px;
   background: var(--market-brand);
   color: #ffffff;
   font-size: 0.86rem;
@@ -84,22 +86,22 @@
   padding: 0;
   margin: 16px 0;
   display: grid;
-  gap: 14px;
+  gap: 0;
 }
 
 .list li {
   position: relative;
   border: 1px solid #e3e6e9;
-  border-radius: 12px;
-  padding: 16px 18px;
+  border-radius: 4px;
+  padding: 12px 16px;
   background: #ffffff;
   overflow-wrap: anywhere;
-  box-shadow: 0 2px 8px rgba(32, 36, 43, 0.03);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 .list h2 {
-  font-size: 1.06rem;
-  font-weight: 750;
+  font-size: 16px;
+  font-weight: 600;
   color: #20242b;
   margin: 0 0 6px;
 }
@@ -114,8 +116,8 @@
 }
 
 .unread {
-  border-left: 5px solid var(--market-brand) !important;
-  background: linear-gradient(90deg, var(--market-soft) 0%, #ffffff 35%) !important;
+  border-left: 3px solid #ffb38f !important;
+  background: #fff7f2 !important;
 }
 
 .unread > span {
@@ -125,7 +127,7 @@
 }
 
 .read {
-  border-left: 5px solid #8a919b !important;
+  border-left: 3px solid transparent !important;
 }
 
 .read > span {
@@ -152,8 +154,8 @@
 
 @media (max-width: 600px) {
   .inbox {
-    margin: 8px;
-    padding: 14px;
+    margin: 0;
+    padding: 0;
   }
   .toolbar {
     align-items: stretch;
@@ -180,8 +182,8 @@
   max-width: 90vw;
   background: #ffffff;
   border: 1px solid #e3e6e9;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
   z-index: 1000;
   overflow: hidden;
   margin-top: 8px;
@@ -200,7 +202,7 @@
 }
 
 .unreadTag {
-  background: #fee2e2;
+  background: #fff1e8;
   color: var(--market-brand-hover);
   font-size: 0.75rem;
   font-weight: 700;
@@ -223,7 +225,7 @@
 }
 
 .dropdownItemUnread {
-  background-color: #fef2f2;
+  background-color: #fff7f2;
 }
 
 .dropdownItem:hover,
@@ -260,7 +262,7 @@
 
 .itemTime {
   font-size: 0.75rem;
-  color: #8a919b;
+  color: #69717c;
 }
 
 .emptyNotice {
@@ -288,3 +290,18 @@
 .viewAllBtn:hover {
   text-decoration: underline;
 }
+
+.inbox button { border: 0; background: transparent; color: var(--market-brand); font: inherit; font-size: 13px; padding: 6px 0; cursor: pointer; }
+.inbox button:hover:not(:disabled) { background: transparent; text-decoration: underline; }
+.list li { border-width: 0 0 1px; border-radius: 0; box-shadow: none; }
+.list p { margin: 4px 0; }
+.toolbar { background: #fff; border-width: 0 0 1px; border-radius: 0; padding: 0 0 12px; }
+
+.inbox h1 { padding: 16px 16px 0; }
+.inbox > p, .inbox > button { margin-left: 16px; margin-right: 16px; }
+.inbox .toolbar { margin: 12px 16px; }
+.list a { color: var(--market-brand); font-size: 13px; }
+/* Per-notification "Xem chi tiết": the only solid action in the row, white text on brand. */
+.list .toolbar a { padding: 6px 14px; background: var(--market-brand); color: #fff; font-weight: 500; }
+.list .toolbar a:hover { background: var(--market-brand-hover); color: #fff; }
+.dropdownItemUnread { border-left: 3px solid #ffb38f; }

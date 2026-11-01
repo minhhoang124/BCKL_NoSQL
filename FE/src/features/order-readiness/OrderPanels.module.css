@@ -339,15 +339,15 @@
 .buyerPanel .previewItemImg, .buyerPanel .orderDetailItemImg, .buyerPanel .previewItemPlaceholder { width: 72px; height: 72px; border-radius: 2px; border: 1px solid #e8e8e8; }
 .buyerPanel .previewItemTitle { font-size: 14px; line-height: 20px; font-weight: 400; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .buyerPanel .previewItemPrice { color: #333; white-space: nowrap; font-weight: 400; }
-.buyerPanel .timeline { list-style: none; padding: 0; gap: 0; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; }
-.buyerPanel .timeline > li { position: relative; flex: 1 0 150px; border: 0; padding: 0 12px; text-align: center; }
-.buyerPanel .timeline > li::before { content: ''; position: absolute; top: 18px; left: 0; right: 0; height: 1px; background: #e8e8e8; }
+.panel .timeline { list-style: none; padding: 0; gap: 0; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; }
+.panel .timeline > li { position: relative; flex: 1 0 150px; border: 0; padding: 0 12px; text-align: center; }
+.panel .timeline > li::before { content: ''; position: absolute; top: 18px; left: 0; right: 0; height: 1px; background: #e8e8e8; }
 .stepNumber { display: grid; place-items: center; position: relative; z-index: 1; width: 36px; height: 36px; margin: 0 auto 12px; border: 1px solid var(--market-brand); border-radius: 50%; color: var(--market-brand); background: #fff; }
-.buyerPanel .timeline strong { display: block; font-weight: 500; font-size: 13px; }
-.buyerPanel .timeline p { font-size: 12px; }
+.panel .timeline strong { display: block; font-weight: 500; font-size: 13px; }
+.panel .timeline p { font-size: 12px; }
 .buyerPanel .itemsGrid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
 .buyerPanel .summary { width: min(100%, 380px); justify-self: end; box-sizing: border-box; border: 0; border-top: 1px solid #e8e8e8; border-radius: 0; background: #fafafa; text-align: right; }
-.buyerPanel .summary p { padding-bottom: 8px; color: #757575; }
+.buyerPanel .summary p { padding-bottom: 8px; color: #69717c; }
 .buyerPanel .summary > strong { display: block; padding-top: 12px; border-top: 1px solid #e8e8e8; }
 .buyerPanel .orderDetailItemHead { display: flex; gap: 16px; align-items: center; }
 .buyerPanel .orderDetailItemContent { flex: 1; min-width: 0; }
@@ -379,4 +379,12 @@
 @media (max-width: 600px) {
   .orderItemsTable th, .orderItemsTable td { padding: 10px 6px; font-size: 12px; }
   .orderItemsTable th:first-child, .orderItemsTable td:first-child { min-width: 150px; }
+}
+
+/* Shared horizontal progress must never widen the page (seller panel sits in a grid). */
+.panel { min-width: 0; }
+.panel .timeline { max-width: 100%; min-width: 0; }
+@media (max-width: 600px) {
+  .panel .timeline { flex-wrap: wrap; overflow-x: visible; }
+  .panel .timeline > li { flex: 1 1 120px; }
 }

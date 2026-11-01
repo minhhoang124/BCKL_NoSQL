@@ -59,13 +59,11 @@ export function OrderReadPage({
     );
   return (
     <div className={styles.page}>
-      <nav aria-label="Điều hướng đơn hàng">
-        <Link to={scope === "buyer" ? "/account" : "/seller"}>
-          {scope === "buyer" ? "Tài khoản" : "Kênh người bán"}
-        </Link>
-        {" · "}
-        <Link to={base(scope)}>Danh sách đơn</Link>
-      </nav>
+      {detail && (
+        <nav aria-label="Điều hướng đơn hàng" className={styles.backNav}>
+          <Link to={base(scope)}>‹ Trở lại danh sách đơn</Link>
+        </nav>
+      )}
       {detail &&
         import.meta.env.VITE_CHAT_ENABLED === "true" &&
         import.meta.env.VITE_CHAT_ORDER_CONTEXT_ENABLED === "true" && (
@@ -73,34 +71,10 @@ export function OrderReadPage({
             Trao đổi về đơn hàng
           </Link>
         )}
-      {scope === "seller" && <p className={styles.scopeIntro}>
-        {detail &&
-        import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED !== "false"
-          ? "Xử lý đơn đã nhận; mỗi bước cần xác nhận riêng, không tự gửi lại yêu cầu."
-          : "Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật trên màn này."}
-      </p>}
-      <div
-        className={
-          !detail && scope === "buyer" ? styles.accountGrid : undefined
-        }
-      >
-        {!detail && scope === "buyer" && (
-          <aside
-            className={styles.accountSidebar}
-            aria-label="Tài khoản mua hàng"
-          >
-            <h2>Tài khoản</h2>
-            <strong>{user.fullName ?? "Tài khoản của bạn"}</strong>
-            <p>{user.email}</p>
-            <nav aria-label="Điều hướng tài khoản">
-              <Link to="/account">Hồ sơ của tôi</Link>
-              <Link to="/account/addresses">Sổ địa chỉ</Link>
-              <Link to="/account/orders" aria-current="page">
-                Đơn mua
-              </Link>
-            </nav>
-          </aside>
-        )}
+      {scope === "seller" && detail && import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED === "false" && (
+        <p className={styles.scopeIntro}>Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật.</p>
+      )}
+      <div>
         <div className={styles.content}>
           {detail ? (
             scope === "seller" &&

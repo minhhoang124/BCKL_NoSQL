@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../services/apiClient';
 import { formatPrice, marketplaceApi, mediaUrl } from '../services/marketplaceApi';
 import type { Brand, Category, Product, Store } from '../types/marketplace';
@@ -42,7 +42,18 @@ export function SellerDashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
-  const [tab, setTab] = useState<'store' | 'products' | 'dashboard'>('store');
+  type Tab = 'store' | 'products' | 'dashboard';
+  const [params, setParams] = useSearchParams();
+  const requested = params.get('tab');
+  const [tab, setTabState] = useState<Tab>(requested === 'products' || requested === 'dashboard' ? requested : 'store');
+  // Links from the shared seller sidebar (?tab=) switch the section; buttons keep the URL in sync.
+  useEffect(() => {
+    if (requested === 'store' || requested === 'products' || requested === 'dashboard') setTabState(requested);
+  }, [requested]);
+  const setTab = (next: Tab) => {
+    setTabState(next);
+    setParams((current) => { const copy = new URLSearchParams(current); copy.set('tab', next); return copy; }, { replace: true });
+  };
   const [activeStep, setActiveStep] = useState<StepKey>('info');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -253,7 +264,7 @@ export function SellerDashboardPage() {
         </nav>
       </aside>
 
-      <main className={styles.scMain}>
+      <div className={styles.scMain}>
         {error && <p className={styles.error} role="alert">{error}</p>}
         {message && <p className={styles.success}>{message}</p>}
 
@@ -510,7 +521,7 @@ export function SellerDashboardPage() {
             </section>
           </>
         )}
-      </main>
+      </div>
     </div>
   );
 }

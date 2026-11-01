@@ -476,10 +476,6 @@ function Workspace({
     <section className={styles.page} aria-label="Hậu mãi">
       <header>
         <h1>Hỗ trợ sau mua hàng</h1>
-        <p>
-          Yêu cầu hoàn tiền hoặc trả hàng; người bán xử lý và Admin giải quyết
-          bất đồng.
-        </p>
         <nav>
           <Link
             className={styles.back}
@@ -647,10 +643,6 @@ function Workspace({
                       }}
                     />
                   </label>
-                  <p>
-                    Hệ thống kiểm thời hạn và tiền theo đơn đã lưu; không nhập
-                    số tiền hoàn từ trình duyệt.
-                  </p>
                   <label className={styles.check}>
                     <input
                       type="checkbox"

@@ -145,10 +145,6 @@ function ImageQuery() {
       <header>
         <Link to="/">← Tìm bằng từ khóa</Link>
         <h1>Tìm sản phẩm bằng ảnh</h1>
-        <p>
-          Chọn ảnh để tìm sản phẩm tương tự. Giá và trạng thái bán được đối
-          chiếu lại từ dữ liệu hiện tại.
-        </p>
       </header>
       <form className={styles.panel} onSubmit={(event) => void submit(event)}>
         <label htmlFor="image-query">Ảnh JPEG hoặc PNG, tối đa 5 MiB</label>
@@ -193,9 +189,6 @@ function ImageQuery() {
             }}
           />
         )}
-        <p className={styles.hint}>
-          Ảnh được dùng để tìm sản phẩm tương tự, không được thêm vào ảnh sản phẩm.
-        </p>
         <div className={styles.actions}>
           <button
             type="submit"
