@@ -11,6 +11,7 @@ import { request as nodeRequest } from 'node:http';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/configure-app.js';
 import { PrismaService } from '../src/prisma.service.js';
+import { createFaultDdl } from './helpers/qa-fault-ddl.js';
 
 describe('Admin delivery commands — real HTTP/PostgreSQL, two instances', () => {
   let app: INestApplication, other: INestApplication, prisma: PrismaService;
@@ -272,6 +273,8 @@ describe('Admin delivery commands — real HTTP/PostgreSQL, two instances', () =
       expect(prepared[field]).toEqual(initial[field]);
     return { checkoutKey, payload, preparationKeys };
   }
+  // Fixture-only DDL channel; the runtime role stays DML-only.
+  const ddl = createFaultDdl();
   beforeAll(async () => {
     const url = new URL(process.env.DATABASE_URL ?? '');
     if (
@@ -326,6 +329,7 @@ describe('Admin delivery commands — real HTTP/PostgreSQL, two instances', () =
   });
   afterEach(() => vi.restoreAllMocks());
   afterAll(async () => {
+    await ddl.close();
     if (prisma) {
       await prisma.$transaction(async (tx) => {
         await tx.stockMovement.deleteMany({
@@ -668,19 +672,19 @@ describe('Admin delivery commands — real HTTP/PostgreSQL, two instances', () =
     await post().expect(200);
     const before = await state(),
       k = key();
-    await prisma.$executeRawUnsafe(
+    await ddl.exec(
       `CREATE FUNCTION delivery_command_test_failure() RETURNS trigger LANGUAGE plpgsql AS $fn$ BEGIN RAISE EXCEPTION 'Controlled receipt failure'; END $fn$`,
     );
     try {
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         `CREATE TRIGGER delivery_command_test_failure BEFORE UPDATE ON order_commands FOR EACH ROW WHEN (NEW."orderId" = ${orderId}) EXECUTE FUNCTION delivery_command_test_failure()`,
       );
       await post('mark-delivered', delivered(), k).expect(500);
     } finally {
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         'DROP TRIGGER IF EXISTS delivery_command_test_failure ON order_commands',
       );
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         'DROP FUNCTION delivery_command_test_failure()',
       );
     }
@@ -775,19 +779,19 @@ describe('Admin delivery commands — real HTTP/PostgreSQL, two instances', () =
   it('finalize failure during ship rolls back new attempt/counter/history/claim', async () => {
     const before = await state(),
       k = key();
-    await prisma.$executeRawUnsafe(
+    await ddl.exec(
       `CREATE FUNCTION delivery_command_test_failure() RETURNS trigger LANGUAGE plpgsql AS $fn$ BEGIN RAISE EXCEPTION 'Controlled receipt failure'; END $fn$`,
     );
     try {
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         `CREATE TRIGGER delivery_command_test_failure BEFORE UPDATE ON order_commands FOR EACH ROW WHEN (NEW."orderId" = ${orderId}) EXECUTE FUNCTION delivery_command_test_failure()`,
       );
       await post('ship', tracking, k).expect(500);
     } finally {
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         'DROP TRIGGER IF EXISTS delivery_command_test_failure ON order_commands',
       );
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         'DROP FUNCTION delivery_command_test_failure()',
       );
     }
@@ -799,19 +803,19 @@ describe('Admin delivery commands — real HTTP/PostgreSQL, two instances', () =
     await post('delivery-failed', failed()).expect(200);
     const before = await state();
     const k = key();
-    await prisma.$executeRawUnsafe(
+    await ddl.exec(
       `CREATE FUNCTION delivery_retry_test_failure() RETURNS trigger LANGUAGE plpgsql AS $fn$ BEGIN RAISE EXCEPTION 'Controlled retry receipt failure'; END $fn$`,
     );
     try {
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         `CREATE TRIGGER delivery_retry_test_failure BEFORE UPDATE ON order_commands FOR EACH ROW WHEN (NEW."orderId" = ${orderId} AND NEW.command = 'retry-delivery') EXECUTE FUNCTION delivery_retry_test_failure()`,
       );
       await post('retry-delivery', tracking, k).expect(500);
     } finally {
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         'DROP TRIGGER IF EXISTS delivery_retry_test_failure ON order_commands',
       );
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         'DROP FUNCTION delivery_retry_test_failure()',
       );
     }

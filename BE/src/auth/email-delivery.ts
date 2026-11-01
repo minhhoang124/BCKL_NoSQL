@@ -5,7 +5,7 @@ import {
   type OnModuleDestroy,
 } from '@nestjs/common';
 import { isEmail } from 'class-validator';
-import type { EmailPurpose } from './email-recovery.input.js';
+import type { MailPurpose } from './email-recovery.input.js';
 @Injectable()
 export class AuthEmailDelivery implements OnModuleDestroy {
   private readonly pending = new Set<Promise<void>>();
@@ -69,7 +69,7 @@ export class AuthEmailDelivery implements OnModuleDestroy {
       });
     }
   }
-  enqueue(email: string, token: string, purpose: EmailPurpose, id: string) {
+  enqueue(email: string, token: string, purpose: MailPurpose, id: string) {
     // No token in DB outbox or logs. Delivery is best effort after commit, never inside the User lock.
     // A restart can lose an in-memory send; request again after cooldown. No automatic token rotation.
     const job = Promise.resolve()
@@ -80,12 +80,20 @@ export class AuthEmailDelivery implements OnModuleDestroy {
     this.pending.add(job);
     void job.finally(() => this.pending.delete(job));
   }
-  async send(email: string, token: string, purpose: EmailPurpose, id: string) {
-    const config = this.configured(),
-      reset = purpose === 'RESET_PASSWORD';
-    const link = `${config.origin}/${reset ? 'reset-password' : 'verify-email'}#token=${token}`;
-    const subject = `BCKL — ${reset ? 'Đặt lại mật khẩu' : 'Xác minh email'}`;
-    const text = `${reset ? 'Đặt lại mật khẩu' : 'Xác minh email'} bằng liên kết một lần, hiệu lực 15 phút:\n${link}\nNếu bạn không yêu cầu, hãy bỏ qua thư này. Không chia sẻ liên kết.`;
+  async send(email: string, token: string, purpose: MailPurpose, id: string) {
+    const config = this.configured();
+    const [path, label] = {
+      RESET_PASSWORD: ['reset-password', 'Đặt lại mật khẩu'],
+      VERIFY_EMAIL: ['verify-email', 'Xác minh email'],
+      // Fragment only: a mail scanner's GET never reaches the API with the token.
+      CHANGE_PASSWORD: ['account/change-password', 'Xác nhận đổi mật khẩu'],
+    }[purpose];
+    const link = `${config.origin}/${path}#token=${token}`;
+    const subject = `BCKL — ${label}`;
+    const text =
+      purpose === 'CHANGE_PASSWORD'
+        ? `${label} bằng liên kết một lần, hiệu lực 15 phút:\n${link}\nMở liên kết trên đúng trình duyệt đã gửi yêu cầu. Nếu bạn không yêu cầu, hãy bỏ qua thư này và đổi mật khẩu ngay. Không chia sẻ liên kết.`
+        : `${label} bằng liên kết một lần, hiệu lực 15 phút:\n${link}\nNếu bạn không yêu cầu, hãy bỏ qua thư này. Không chia sẻ liên kết.`;
     if (config.provider === 'mailpit') {
       const response = await fetch('http://127.0.0.1:8025/api/v1/send', {
         method: 'POST',

@@ -403,6 +403,8 @@ model AuthEmailToken {
   expiresAt         DateTime @db.Timestamp(3)
   usedAt            DateTime? @db.Timestamp(3)
   revokedAt         DateTime? @db.Timestamp(3)
+  /// SHA256 of the browser-held secret; only for purpose CHANGE_PASSWORD.
+  bindingHash       String?  @db.VarChar(64)
   user              User     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
 
   @@index([userId, purpose, expiresAt])
@@ -863,10 +865,60 @@ model UserAddress {
   isDefault     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  // Catalog codes (QĐ 19/2025/QĐ-TTg). All three null = legacy free-text address.
+  provinceCode      String?    @db.VarChar(2)
+  wardCode          String?    @db.VarChar(5)
+  divisionVersionId Int?
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  division      AdminWard? @relation(fields: [divisionVersionId, wardCode, provinceCode], references: [versionId, code, provinceCode], onDelete: Restrict, onUpdate: Restrict)
 
   @@index([userId])
+  @@index([divisionVersionId, wardCode, provinceCode])
   @@map("user_addresses")
+}
+
+/// One imported official administrative catalogue. Exactly one may be active.
+model AdminDivisionVersion {
+  id            Int             @id @default(autoincrement())
+  sourceRef     String
+  effectiveDate DateTime        @db.Date
+  sourceSha256  String          @unique @db.Char(64)
+  provinceCount Int
+  wardCount     Int
+  isActive      Boolean         @default(false)
+  importedAt    DateTime        @default(now())
+  provinces     AdminProvince[]
+  wards         AdminWard[]
+
+  @@map("admin_division_versions")
+}
+
+model AdminProvince {
+  versionId Int
+  code      String               @db.VarChar(2)
+  name      String
+  kind      String
+  version   AdminDivisionVersion @relation(fields: [versionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  wards     AdminWard[]
+
+  @@id([versionId, code])
+  @@map("admin_provinces")
+}
+
+model AdminWard {
+  versionId    Int
+  code         String               @db.VarChar(5)
+  name         String
+  kind         String
+  provinceCode String               @db.VarChar(2)
+  version      AdminDivisionVersion @relation(fields: [versionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  province     AdminProvince        @relation(fields: [versionId, provinceCode], references: [versionId, code], onDelete: Restrict, onUpdate: Restrict)
+  addresses    UserAddress[]
+
+  @@id([versionId, code])
+  @@unique([versionId, code, provinceCode])
+  @@index([versionId, provinceCode])
+  @@map("admin_wards")
 }
 
 model Cart {

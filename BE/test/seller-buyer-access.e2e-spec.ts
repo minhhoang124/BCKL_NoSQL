@@ -176,6 +176,70 @@ describe('Seller acts as Buyer — opt-in real HTTP/PostgreSQL', () => {
       .set('Authorization', owner.token)
       .expect(200);
   });
+  it('SELLER account on /orders gets BUYER image policy by endpoint scope; owner keeps SELLER policy', async () => {
+    const id = await checkout();
+    const item = await p.orderItem.findFirstOrThrow({ where: { orderId: id } });
+    const listRow = async (url: string, who: Actor) =>
+      (
+        await http().get(url).set('Authorization', who.token).expect(200)
+      ).body.items.find((row: { id: number }) => row.id === id);
+    const detailItem = async (url: string, who: Actor) =>
+      (await http().get(url).set('Authorization', who.token).expect(200)).body
+        .items[0];
+    // Visible product: a role-based SELLER policy would filter by the
+    // purchaser's own Store and wrongly return null here.
+    const purchased = await listRow('/orders', purchaser);
+    expect(purchased).toMatchObject({
+      itemCount: 1,
+      totalQuantity: 1,
+      hasMoreItems: false,
+    });
+    expect(purchased.itemPreview).toEqual([
+      {
+        orderItemId: item.id,
+        productId: item.productId,
+        variantId,
+        productName: marker,
+        options: [],
+        quantity: 1,
+        unitPrice: '10000.00',
+        lineTotal: '10000.00',
+        imageUrl: '/uploads/dual-access-fixture.jpg',
+      },
+    ]);
+    expect((await detailItem(`/orders/${id}`, purchaser)).imageUrl).toBe(
+      '/uploads/dual-access-fixture.jpg',
+    );
+    expect(
+      (await listRow('/seller/orders', owner)).itemPreview[0].imageUrl,
+    ).toBe('/uploads/dual-access-fixture.jpg');
+    // The purchaser's own Seller scope never sees this order.
+    expect(await listRow('/seller/orders', purchaser)).toBeUndefined();
+    await p.product.update({
+      where: { id: item.productId },
+      data: { sellerStatus: 'HIDDEN' },
+    });
+    try {
+      expect(
+        (await listRow('/orders', purchaser)).itemPreview[0].imageUrl,
+      ).toBeNull();
+      const hiddenDetail = await detailItem(`/orders/${id}`, purchaser);
+      expect(hiddenDetail.imageUrl).toBeNull();
+      expect(hiddenDetail.productName).toBe(marker);
+      expect(hiddenDetail.unitPrice).toBe('10000.00');
+      expect(
+        (await listRow('/seller/orders', owner)).itemPreview[0].imageUrl,
+      ).toBe('/uploads/dual-access-fixture.jpg');
+      expect(
+        (await detailItem(`/seller/orders/${id}`, owner)).imageUrl,
+      ).toBe('/uploads/dual-access-fixture.jpg');
+    } finally {
+      await p.product.update({
+        where: { id: item.productId },
+        data: { sellerStatus: 'ACTIVE' },
+      });
+    }
+  });
   it('blocks self-purchase at Cart, preview and create even with a directly seeded cart row', async () => {
     const ownStore = await p.store.findUniqueOrThrow({
       where: { sellerId: purchaser.id },

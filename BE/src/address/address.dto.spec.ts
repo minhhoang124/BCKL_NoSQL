@@ -77,24 +77,77 @@ describe('Address validation', () => {
     ).toBeGreaterThan(0);
   });
 
-  it.each(['12345678', '+1 (234) 567-8901', '123456789012345'])(
-    'accepts phone %s',
-    async (phone) => {
-      expect(
-        await validate(plainToInstance(CreateAddressDto, { ...valid, phone })),
-      ).toHaveLength(0);
-    },
-  );
   it.each([
+    ['0901234567', '0901234567'],
+    ['0351234567', '0351234567'],
+    ['0561234567', '0561234567'],
+    ['0761234567', '0761234567'],
+    ['0861234567', '0861234567'],
+    [' 090 123 4567 ', '0901234567'],
+    ['090.123.4567', '0901234567'],
+    ['090-123-4567', '0901234567'],
+    ['(090) 1234567', '0901234567'],
+    ['+84901234567', '0901234567'],
+    ['+84 90 123 4567', '0901234567'],
+  ])('accepts Vietnamese mobile %s and stores %s', async (phone, stored) => {
+    const dto = plainToInstance(CreateAddressDto, { ...valid, phone });
+    expect(await validate(dto)).toHaveLength(0);
+    expect(dto.phone).toBe(stored);
+  });
+  it.each([
+    '12345678',
+    '+1 (234) 567-8901',
+    '123456789012345',
+    '0123456789',
+    '0201234567',
+    '0401234567',
+    '0601234567',
+    '090123456',
+    '09012345678',
+    '84901234567',
+    '+840901234567',
+    '+8490123456',
     '1234567',
-    '1234567890123456',
     '٠٩٠١٢٣٤٥٦٧',
-    '090abc1234567',
+    '090abc1234',
     '+'.repeat(21),
     'true',
   ])('rejects phone %s', async (phone) => {
     expect(
       (await validate(plainToInstance(CreateAddressDto, { ...valid, phone })))
+        .length,
+    ).toBeGreaterThan(0);
+  });
+
+  it('accepts catalogue codes without province/ward text, rejects partial text-less legacy', async () => {
+    const coded = {
+      recipientName: 'Buyer',
+      phone: '0901234567',
+      provinceCode: '01',
+      wardCode: '00004',
+      addressLine: '12 Street',
+    };
+    expect(
+      await validate(plainToInstance(CreateAddressDto, coded)),
+    ).toHaveLength(0);
+    const { province: _p, ...noProvince } = valid;
+    expect(
+      (await validate(plainToInstance(CreateAddressDto, noProvince))).length,
+    ).toBeGreaterThan(0);
+  });
+  it.each([
+    { provinceCode: '1' },
+    { provinceCode: '001' },
+    { provinceCode: 'AB' },
+    { provinceCode: 1 },
+    { wardCode: '0004' },
+    { wardCode: '000045' },
+    { wardCode: '0000a' },
+    { provinceCode: null },
+    { wardCode: null },
+  ])('rejects malformed division code %j', async (codes) => {
+    expect(
+      (await validate(plainToInstance(CreateAddressDto, { ...valid, ...codes })))
         .length,
     ).toBeGreaterThan(0);
   });

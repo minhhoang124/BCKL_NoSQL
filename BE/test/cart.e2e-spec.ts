@@ -211,6 +211,7 @@ describe('Buyer Cart API (e2e)', () => {
       imageUrl: '/uploads/cart-fixture.png',
       optionValues: [],
       currentUnitPrice: '10000.00',
+      lineTotal: '20000.00',
       stock: 10,
       available: true,
       unavailableReason: null,
@@ -245,13 +246,21 @@ describe('Buyer Cart API (e2e)', () => {
       totalQuantity: 198,
       purchasableSubtotal: '99000001222056.00',
     });
+    // Exact Decimal line totals over HTTP; they add up to the subtotal.
+    expect(res.groups.map((g) => g.items[0].lineTotal)).toEqual([
+      '98999999999901.00',
+      '1222155.00',
+    ]);
     await prisma.productVariant.update({
       where: { id: b.variantId },
       data: { price: '1.00' },
     });
-    expect((await get().expect(200)).body.purchasableSubtotal).toBe(
-      '99000000000000.00',
-    );
+    const refreshed = (await get().expect(200)).body;
+    expect(refreshed.purchasableSubtotal).toBe('99000000000000.00');
+    expect(refreshed.groups[1].items[0]).toMatchObject({
+      currentUnitPrice: '1.00',
+      lineTotal: '99.00',
+    });
   });
 
   it('Cart reads/deletes only the actor cart, even when the Variant is shared', async () => {
@@ -340,6 +349,44 @@ describe('Buyer Cart API (e2e)', () => {
       '24690.00',
       '0.00',
     ]);
+    // Shortage line shows its current-price line total but adds nothing.
+    expect(res.groups[0].items[0]).toMatchObject({
+      variantId: good.variantId,
+      available: true,
+      lineTotal: '24690.00',
+    });
+    expect(res.groups[1].items[0]).toMatchObject({
+      variantId: short.variantId,
+      available: false,
+      unavailableReason: 'INSUFFICIENT_STOCK',
+      lineTotal: '166665.00',
+    });
+    // Checkout preview (authoritative) agrees with the purchasable line total.
+    const address = await http()
+      .post('/me/addresses')
+      .set('Authorization', token)
+      .send({
+        recipientName: 'Cart QA',
+        phone: '0901234567',
+        province: 'QA',
+        ward: 'QA',
+        addressLine: 'QA only',
+      })
+      .expect(201);
+    const preview = await http()
+      .post('/checkout/preview')
+      .set('Authorization', token)
+      .send({
+        addressId: address.body.id,
+        paymentProvider: 'COD',
+        items: [
+          { variantId: good.variantId, quantity: 2, expectedUnitPrice: '12345' },
+        ],
+      })
+      .expect(200);
+    expect(preview.body.canCheckout).toBe(true);
+    expect(preview.body.groups[0].items[0].lineTotal).toBe('24690.00');
+    expect(preview.body.totals.total).toBe(res.groups[0].items[0].lineTotal);
     expect(res.unavailableItems).toEqual([
       {
         variantId: hidden.variantId,

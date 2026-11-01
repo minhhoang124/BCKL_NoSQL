@@ -9,6 +9,10 @@ import {
 } from '../product/transaction-conflict.js';
 import { CreateAddressDto, UpdateAddressDto } from './address.dto.js';
 import { addressError } from './address-http.js';
+import {
+  activeCatalogVersion,
+  resolveDivision,
+} from '../location/location-catalog.js';
 
 const addressSelect = {
   id: true,
@@ -21,9 +25,29 @@ const addressSelect = {
   postalCode: true,
   deliveryNote: true,
   isDefault: true,
+  provinceCode: true,
+  wardCode: true,
+  divisionVersionId: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.UserAddressSelect;
+
+type AddressRow = Prisma.UserAddressGetPayload<{ select: typeof addressSelect }>;
+type Db = Prisma.TransactionClient | PrismaService;
+
+/** Never exposes the internal catalogue version id. */
+export function presentAddress(row: AddressRow, activeVersionId: number | null) {
+  const { divisionVersionId, ...rest } = row;
+  return {
+    ...rest,
+    divisionStatus:
+      divisionVersionId === null
+        ? ('LEGACY_FREE_TEXT' as const)
+        : divisionVersionId === activeVersionId
+          ? ('STANDARD' as const)
+          : ('OUTDATED' as const),
+  };
+}
 
 @Injectable()
 export class AddressService {
@@ -38,16 +62,66 @@ export class AddressService {
     );
     if (!Number.isSafeInteger(this.maxAddresses) || this.maxAddresses < 1)
       throw new Error('ADDRESS_MAX_PER_USER must be a positive integer');
+    const required = config.get<string>('ADDRESS_CATALOG_REQUIRED', 'false');
+    if (required !== 'true' && required !== 'false')
+      throw new Error('ADDRESS_CATALOG_REQUIRED must be true or false');
+    this.catalogRequired = required === 'true';
+  }
+  private readonly catalogRequired: boolean;
+
+  private async present(db: Db, rows: AddressRow[]) {
+    const active = rows.some((row) => row.divisionVersionId !== null)
+      ? ((await activeCatalogVersion(db))?.id ?? null)
+      : null;
+    return rows.map((row) => presentAddress(row, active));
+  }
+
+  /**
+   * Location fields: codes => names from the active catalogue (server-checked
+   * pair, district cleared); text => legacy free text with codes cleared, only
+   * while ADDRESS_CATALOG_REQUIRED=false. Untouched on updates without either.
+   */
+  private async location(
+    tx: Prisma.TransactionClient,
+    dto: CreateAddressDto | UpdateAddressDto,
+    isCreate: boolean,
+  ) {
+    const { provinceCode, wardCode, ...rest } = dto;
+    if (provinceCode !== undefined || wardCode !== undefined) {
+      if (typeof provinceCode !== 'string' || typeof wardCode !== 'string')
+        throw addressError(
+          400,
+          'ADDRESS_DIVISION_INCOMPLETE',
+          'Cần chọn cả tỉnh/thành và phường/xã.',
+        );
+      const division = await resolveDivision(tx, provinceCode, wardCode);
+      return { ...rest, ...division, district: null };
+    }
+    const textTouched = [rest.province, rest.district, rest.ward].some(
+      (value) => value !== undefined,
+    );
+    if (!isCreate && !textTouched) return rest;
+    if (this.catalogRequired)
+      throw addressError(
+        400,
+        'ADDRESS_DIVISION_REQUIRED',
+        'Vui lòng chọn tỉnh/thành và phường/xã từ danh sách.',
+      );
+    return {
+      ...rest,
+      provinceCode: null,
+      wardCode: null,
+      divisionVersionId: null,
+    };
   }
 
   async list(userId: number) {
-    return {
-      items: await this.prisma.userAddress.findMany({
-        where: { userId },
-        select: addressSelect,
-        orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
-      }),
-    };
+    const rows = await this.prisma.userAddress.findMany({
+      where: { userId },
+      select: addressSelect,
+      orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+    });
+    return { items: await this.present(this.prisma, rows) };
   }
 
   create(userId: number, dto: CreateAddressDto) {
@@ -60,11 +134,13 @@ export class AddressService {
           'Đã đạt giới hạn địa chỉ.',
         );
       const isDefault = count === 0 || dto.isDefault === true;
+      const data = await this.location(tx, dto, true);
       if (isDefault) await this.clearDefault(tx, userId);
-      return tx.userAddress.create({
-        data: { ...dto, userId, isDefault },
+      const row = await tx.userAddress.create({
+        data: { ...(data as CreateAddressDto), userId, isDefault },
         select: addressSelect,
       });
+      return (await this.present(tx, [row]))[0]!;
     });
   }
 
@@ -83,25 +159,28 @@ export class AddressService {
           'DEFAULT_ADDRESS_CANNOT_BE_UNSET',
           'Hãy chọn địa chỉ mặc định khác hoặc xóa địa chỉ này.',
         );
+      const data = await this.location(tx, dto, false);
       if (dto.isDefault === true) await this.clearDefault(tx, userId);
-      return tx.userAddress.update({
+      const row = await tx.userAddress.update({
         where: { id: address.id },
-        data: dto,
+        data,
         select: addressSelect,
       });
+      return (await this.present(tx, [row]))[0]!;
     });
   }
 
   setDefault(userId: number, id: number) {
     return this.write(userId, async (tx) => {
       const address = await this.owned(tx, userId, id);
-      if (address.isDefault) return address;
+      if (address.isDefault) return (await this.present(tx, [address]))[0]!;
       await this.clearDefault(tx, userId);
-      return tx.userAddress.update({
+      const row = await tx.userAddress.update({
         where: { id: address.id },
         data: { isDefault: true },
         select: addressSelect,
       });
+      return (await this.present(tx, [row]))[0]!;
     });
   }
 

@@ -12,6 +12,7 @@ import { prepareOrderCommand } from '../src/order/order-command-request.js';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/configure-app.js';
 import { PrismaService } from '../src/prisma.service.js';
+import { createFaultDdl } from './helpers/qa-fault-ddl.js';
 
 describe('Seller preparation commands — real PostgreSQL, two app instances', () => {
   let app: INestApplication;
@@ -129,6 +130,8 @@ describe('Seller preparation commands — real PostgreSQL, two app instances', (
       }),
     };
   }
+  // Fixture-only DDL channel; the runtime role stays DML-only.
+  const ddl = createFaultDdl();
   beforeAll(async () => {
     // Fail closed before any fixture write; dotenv override must never target demo.
     const target = new URL(process.env.DATABASE_URL ?? '');
@@ -174,6 +177,7 @@ describe('Seller preparation commands — real PostgreSQL, two app instances', (
     orderId = await fixture();
   });
   afterAll(async () => {
+    await ddl.close();
     try {
       if (prisma) {
         const ownOrder = { buyer: { email: { startsWith: marker } } };
@@ -615,10 +619,10 @@ describe('Seller preparation commands — real PostgreSQL, two app instances', (
         stage === 'history' ? 'order_status_history' : 'order_commands';
       const event = stage === 'history' ? 'INSERT' : 'UPDATE';
       // Identifiers are generated locally, never derived from request input.
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         `CREATE FUNCTION ${functionName}() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW."orderId" = ${orderId} THEN RAISE EXCEPTION 'fixture-private-database-failure'; END IF; RETURN NEW; END $$`,
       );
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         `CREATE TRIGGER ${functionName} BEFORE ${event} ON ${table} FOR EACH ROW EXECUTE FUNCTION ${functionName}()`,
       );
       const header = key();
@@ -629,10 +633,10 @@ describe('Seller preparation commands — real PostgreSQL, two app instances', (
         expect(JSON.stringify(response.body)).not.toContain('fixture-private');
         expect(await state()).toEqual(before);
       } finally {
-        await prisma.$executeRawUnsafe(
+        await ddl.exec(
           `DROP TRIGGER ${functionName} ON ${table}`,
         );
-        await prisma.$executeRawUnsafe(`DROP FUNCTION ${functionName}()`);
+        await ddl.exec(`DROP FUNCTION ${functionName}()`);
       }
       await post(orderId, 'confirm', header).expect(200);
     },

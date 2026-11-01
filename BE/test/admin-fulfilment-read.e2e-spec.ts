@@ -153,6 +153,109 @@ describe('Admin fulfilment read projection — HTTP/PostgreSQL', () => {
       .send({ extra: true })
       .expect(400);
   });
+  it('looks up any status by displayed ORD code (full, 8-hex prefix, case/space), same minimal projection', async () => {
+    const base = await db.order.findUniqueOrThrow({ where: { id } });
+    const code = randomUUID();
+    const checkout = await db.checkout.create({
+      data: {
+        buyerId: base.buyerId,
+        idempotencyKey: marker + '-lookup',
+        requestHash: 'b'.repeat(64),
+        hashVersion: 1,
+      },
+    });
+    const completed = await db.order.create({
+      data: {
+        orderNumber: 'ORD-' + code,
+        checkoutId: checkout.id,
+        buyerId: base.buyerId,
+        storeId: base.storeId,
+        status: 'COMPLETED',
+        recipientNameSnapshot: 'PRIVATE RECIPIENT',
+        phoneSnapshot: '0901234567',
+        provinceSnapshot: 'PRIVATE',
+        wardSnapshot: 'PRIVATE',
+        addressLineSnapshot: 'PRIVATE ADDRESS',
+        subtotal: '20000.00',
+        shippingFee: 0,
+        discountTotal: 0,
+        total: '20000.00',
+        payment: {
+          create: { provider: 'COD', status: 'PAID', amount: '20000.00' },
+        },
+      },
+    });
+    const before = await db.order.findUniqueOrThrow({
+      where: { id: completed.id },
+      include: { payment: true },
+    });
+    const lookup = (value: string, token = tokens.ADMIN) =>
+      get('?orderNumber=' + encodeURIComponent(value), token);
+    for (const value of [
+      'ORD-' + code,
+      'ORD-' + code.slice(0, 8),
+      '  ord-' + code.toUpperCase() + ' ',
+      code.slice(0, 13),
+    ]) {
+      const res = await lookup(value).expect(200);
+      expect(res.headers['cache-control']).toBe('no-store');
+      expect(Object.keys(res.body)).toEqual(['items']);
+      expect(res.body.items.map((r: { id: number }) => r.id)).toEqual([
+        completed.id,
+      ]);
+      expect(Object.keys(res.body.items[0]).sort()).toEqual(
+        [
+          'id',
+          'orderNumber',
+          'status',
+          'total',
+          'currentDeliveryAttempt',
+          'retryCount',
+          'currentAttempt',
+          'payment',
+        ].sort(),
+      );
+      expect(res.body.items[0]).toMatchObject({
+        orderNumber: 'ORD-' + code,
+        status: 'COMPLETED',
+        total: '20000.00',
+      });
+      expect(JSON.stringify(res.body)).not.toMatch(
+        /PRIVATE|0901234567|buyerId|idempotencyKey/,
+      );
+    }
+    // Not part of the delivery queue, and the non-ORD fixture is never matched.
+    expect(
+      (await get().expect(200)).body.items.some(
+        (r: { id: number }) => r.id === completed.id,
+      ),
+    ).toBe(false);
+    expect(
+      (await lookup('ORD-' + 'f'.repeat(8)).expect(200)).body.items.some(
+        (r: { id: number }) => r.id === completed.id || r.id === id,
+      ),
+    ).toBe(false);
+    for (const role of [Role.USER, Role.SELLER])
+      await lookup('ORD-' + code, tokens[role]).expect(403);
+    for (const suffix of [
+      '?orderNumber=' + encodeURIComponent('ORD-' + code.slice(0, 7)),
+      '?orderNumber=' + encodeURIComponent('ORD-%'),
+      '?orderNumber=' + encodeURIComponent('ORD-' + code.slice(0, 8) + '%'),
+      '?orderNumber=' + encodeURIComponent("ORD-1a2b3c4d' OR 1=1"),
+      '?orderNumber=ORD-' + code + '&limit=1',
+      '?orderNumber=ORD-' + code + '&orderNumber=ORD-' + code,
+      '?orderNumber=',
+    ]) {
+      const res = await get(suffix).expect(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+    }
+    expect(
+      await db.order.findUniqueOrThrow({
+        where: { id: completed.id },
+        include: { payment: true },
+      }),
+    ).toEqual(before);
+  });
   it('rechecks credential version inside the reader even without HTTP guards', async () => {
     await db.user.update({
       where: { id: adminId },

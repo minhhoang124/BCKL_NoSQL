@@ -9,6 +9,7 @@ import { vi } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/configure-app.js';
 import { PrismaService } from '../src/prisma.service.js';
+import { createFaultDdl } from './helpers/qa-fault-ddl.js';
 
 describe('Returned commands — real HTTP/PostgreSQL, two instances', () => {
   let app: INestApplication, other: INestApplication, prisma: PrismaService;
@@ -494,6 +495,8 @@ describe('Returned commands — real HTTP/PostgreSQL, two instances', () => {
       expect(after.order![field]).toEqual(before.order![field]);
     return after;
   }
+  // Fixture-only DDL channel; the runtime role stays DML-only.
+  const ddl = createFaultDdl();
   beforeAll(async () => {
     const url = new URL(process.env.DATABASE_URL ?? '');
     if (
@@ -557,6 +560,7 @@ describe('Returned commands — real HTTP/PostgreSQL, two instances', () => {
   });
   afterEach(() => vi.restoreAllMocks());
   afterAll(async () => {
+    await ddl.close();
     if (prisma) {
       await prisma.$transaction(async (tx) => {
         await tx.stockMovement.deleteMany({
@@ -1194,19 +1198,19 @@ describe('Returned commands — real HTTP/PostgreSQL, two instances', () => {
   it('failure finalizing receipt rolls back stock/payment/order/history/outbox; same key retry works', async () => {
     const k = key(),
       before = await state();
-    await prisma.$executeRawUnsafe(`CREATE FUNCTION returned_test_fault() RETURNS trigger LANGUAGE plpgsql AS $$
+    await ddl.exec(`CREATE FUNCTION returned_test_fault() RETURNS trigger LANGUAGE plpgsql AS $$
       BEGIN IF NEW."orderId" = ${orderId} AND NEW.status = 'SUCCEEDED' THEN RAISE EXCEPTION 'fixture fault'; END IF; RETURN NEW; END $$`);
-    await prisma.$executeRawUnsafe(
+    await ddl.exec(
       'CREATE TRIGGER returned_test_fault BEFORE UPDATE ON order_commands FOR EACH ROW EXECUTE FUNCTION returned_test_fault()',
     );
     try {
       expect((await post('confirm-returned', returned, k)).status).toBe(500);
       expect(await state()).toEqual(before);
     } finally {
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         'DROP TRIGGER returned_test_fault ON order_commands',
       );
-      await prisma.$executeRawUnsafe('DROP FUNCTION returned_test_fault()');
+      await ddl.exec('DROP FUNCTION returned_test_fault()');
     }
     expect((await post('confirm-returned', returned, k)).status).toBe(200);
   });

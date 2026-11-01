@@ -8,6 +8,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/configure-app.js';
 import { PrismaService } from '../src/prisma.service.js';
+import { createFaultDdl } from './helpers/qa-fault-ddl.js';
 import { prepareOrderCommand } from '../src/order/order-command-request.js';
 
 describe('C3 cancellation — real Checkout, PostgreSQL and two HTTP applications', () => {
@@ -248,6 +249,8 @@ describe('C3 cancellation — real Checkout, PostgreSQL and two HTTP application
     }
     return after;
   }
+  // Fixture-only DDL channel; the runtime role stays DML-only.
+  const ddl = createFaultDdl();
   beforeAll(async () => {
     const target = new URL(process.env.DATABASE_URL ?? '');
     if (
@@ -350,6 +353,7 @@ describe('C3 cancellation — real Checkout, PostgreSQL and two HTTP application
     orderId = created.body.orders[0].id;
   });
   afterAll(async () => {
+    await ddl.close();
     try {
       if (prisma) {
         const owned = { buyer: { email: { startsWith: marker } } };
@@ -1030,20 +1034,20 @@ describe('C3 cancellation — real Checkout, PostgreSQL and two HTTP application
           : table === 'stock_movements'
             ? `NEW."variantId" = ${variantIds[1]} AND NEW."type" = 'CANCELLATION_RESTORE'`
             : `NEW."orderId" = ${orderId}`;
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         `CREATE FUNCTION "${trigger}"() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF ${predicate} THEN RAISE EXCEPTION 'isolated cancellation test failure'; END IF; RETURN NEW; END $$`,
       );
       try {
-        await prisma.$executeRawUnsafe(
+        await ddl.exec(
           `CREATE TRIGGER "${trigger}" BEFORE ${event} ON "${table}" FOR EACH ROW EXECUTE FUNCTION "${trigger}"()`,
         );
         await post().expect(500);
         expect(await state()).toEqual(before);
       } finally {
-        await prisma.$executeRawUnsafe(
+        await ddl.exec(
           `DROP TRIGGER IF EXISTS "${trigger}" ON "${table}"`,
         );
-        await prisma.$executeRawUnsafe(
+        await ddl.exec(
           `DROP FUNCTION IF EXISTS "${trigger}"()`,
         );
       }
