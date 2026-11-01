@@ -30,6 +30,8 @@ import { StoreApplicationPage } from '../features/seller-onboarding/StoreApplica
 import { ReviewPage } from '../features/product-reviews/ReviewPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
 import { ForgotPasswordPage, EmailConfirmationPage } from '../features/auth-email/EmailRecoveryPages';
+import { ChangePasswordPage } from '../pages/ChangePasswordPage';
+import { passwordChangeMode } from '../services/passwordChangeEmailApi';
 
 export function AppRouter() {
   return (
@@ -73,6 +75,7 @@ export function AppRouter() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<EmailConfirmationPage reset />} />
           <Route path="/verify-email" element={<EmailConfirmationPage />} />
+          {passwordChangeMode() === 'EMAIL' && <Route path="/account/change-password" element={<ChangePasswordPage />} />}
         </>}
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/stores/:storeId" element={<PublicStorePage />} />

@@ -69,3 +69,13 @@
 .settings fieldset:disabled {
   opacity: 0.65;
 }
+
+.settings .consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.settings .consent input {
+  width: auto;
+  margin-top: 0.2rem;
+}
