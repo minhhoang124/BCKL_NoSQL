@@ -102,3 +102,23 @@ OwnerD17 yêu cầu thực hiện merge. PR138 squash merge thành `63ebcd6`, PR
 Kiểm trên source tích hợp: full FE1865PASS6SKIP, tsc/Vite buildPASS; Web Search4files50PASS sau assertion mới cho empty state; AI Search/cutoff/hybrid/contract/export5files47PASS, offline. Không chạy lại fullBE/fullAI hoặc liveCLIP–ES–FAISS trong lượt merge. QA3UX/12business trước đó vẫn có phạm vi source riêng; không đổi nhãn bằng chứng cũ.
 
 CI push develop138 run41178092360 và139 run41178326505 đều6jobsFAIL/0steps, không có test được chạy. Owner đã báoquota; chưa đọc được annotation nguyên nhân mới nên không khẳng định codeFAIL hoặc CI xanh. Không bypass bằng sửa workflow/billing/rerun. Candidate vẫn chứa nhiều phần mới hơn develop (SKU/SellerClose/Auth/UI/lockfix); nhóm tiếp tục pull nhánhHoàng để thử trọn candidate, không coi merge2PR đã đưa toàn bộ181file candidate vào develop. Báo cáo `docs/testing/pr138-pr139-merged-2026-10-31.md`.
+
+## Ưu tiên hiện hành: UX implementation và bàn giao Claude đồng leader
+
+OwnerD18 giao Claude và Codex đồng leader; Claude tiếp nhận coordinator hoạt động khi Codex bàn giao. Antigravity tiếp tục FE. HEAD60f2091 + WIP BE/FE, chưa commit/push đợt UX. Không restore baseline106file để mất WIP. Nguồn yêu cầu: rootmáy `DANH_SACH_PHAN_HOI_UX_2026-10-31.md` và brief trong handoffs.
+
+Codex vừa xác minh trực tiếp QA BE-UX-01: artifact `be-ux01-qa-1793439585660` là241PASS13FAIL, hiện lệch4fileBE do fix sau chạy; `be-ux01-qa-1793439827030` là68PASS0FAIL vàhash toànBE đã ghi trongprovenance khớp source hiện tại. Các số2037unit/build/typecheck theo handoffClaude, chưa rerun bởiCodex trong lượt bàn giao. Snapshot option hỏng: list preview trảoptionsnull, detailvẫn500 theo hành vi cũ, cầnFEfallback. 11ca injectDDL còn OPEN do roleappDML, không coi làPASS/không loại khỏiphạmvi để làm xanh.
+
+Đọc `handoffs/2026-10-31-COLEAD-TRANSFER.md` để tiếp tục. Claude cần khép QA-DDL setup riêng với runtimeDML, nhận checkpointFE và reviewchung, rồi triển khai các task email-password/address/notification còn lại. Không ghi nhận BE/FE hoàn chỉnh từ một checkpoint. Secret vàartifactprivate không vàoGit/ClaudeMemory.
+
+## Checkpoint coordinator Claude (Windows) — 31/10 ~17:05, mới nhất
+
+Owner chỉ định phiên Claude Windows làm coordinator duy nhất; phiên Linux chỉ review. 11 ca fixture-DDL **đã khép** bằng kênh DDL fixture riêng (migrator của DB QA dùng một lần), runtime vẫn DML: lượt `be-ux01-qa-1793440773058` đạt 186 PASS / 0 FAIL. BE-UX-01 đạt API_ACCEPTED (local HTTP/PG QA): 8 suite 254 PASS trên source cuối, unit 2053 PASS. FE chưa có checkpoint; blocker validator `exact()` và `options` nullable đang chờ Antigravity. Chưa commit/push; chưa gọi BE/FE hoàn chỉnh. Xem WORKBOARD mục cuối.
+
+## Checkpoint 01/11 — D19 vai trò/model (mới nhất về điều phối)
+
+Owner xác nhận Claude là leader/coordinator hiện hành; Codex/Antigravity nhận task từ Claude. Effort: Codex Astra Low, Codex khác Medium, Antigravity mạnh ≤ Medium, Antigravity nhẹ Medium, Claude ≤ Medium. D05 và phần đồng leader của D18 đã SUPERSEDED (giữ lịch sử). Nguồn `handoffs/2026-11-01-owner-task-model-policy.md`; chi tiết ở DECISIONS D19 và PROTOCOL. CN3-YC2 (lịch sử giao dịch) đã có source, unit/build PASS, **chờ E2E PostgreSQL** vì PG QA 5549 đang tắt. Chưa commit/push.
+
+## Checkpoint 01/11 — commit local sau CN3-YC2
+
+Owner bật Docker và yêu cầu thực hiện tiếp. CN3-YC2 DONE_LOCAL: E2E PG 20/20, Codex review 0 CONFIRMED còn mở, Chrome Demo Seller/Admin PASS (desktop + mobile). WIP được commit local theo nhóm: `d038a6c` (BE-UX), `59a1330` (FE UX), `ad6efa9` (CN3-YC2), kèm commit tài liệu. **Chưa push**, chưa CI/staging. Demo đang chạy với `BE/dist` mới. Việc tiếp theo trong kế hoạch: VNPay IPN online (B3, cần owner duyệt tunnel/TOS), đổi mật khẩu qua email (B4, tùy chọn), tài liệu đối chiếu đề cương cho Word (B6).
