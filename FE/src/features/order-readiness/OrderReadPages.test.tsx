@@ -115,16 +115,13 @@ describe("Order routes + merged GET client/validators (mock HTTP boundary, not l
       "/orders?limit=20&afterId=20",
       expect.objectContaining({ cache: "no-store" }),
     );
-    fireEvent.change(screen.getByLabelText("Trạng thái đơn"), {
-      target: { value: "CONFIRMED" },
-    });
+    expect(screen.queryByLabelText("Trạng thái đơn")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Đã xác nhận" }));
     await screen.findByText("Chưa có đơn trong bộ lọc này.");
     expect(api.mock.calls.at(-1)?.[0]).toBe(
       "/orders?limit=20&status=CONFIRMED",
     );
-    fireEvent.change(screen.getByLabelText("Trạng thái đơn"), {
-      target: { value: "" },
-    });
+    fireEvent.click(screen.getByRole("button", { name: "Tất cả" }));
     fireEvent.click(
       await screen.findByRole("button", { name: "Trang tiếp theo" }),
     );

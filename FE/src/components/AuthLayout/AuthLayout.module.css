@@ -9,41 +9,24 @@
 
 .intro {
   padding: 40px 36px;
-  background: var(--market-soft);
-  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--market-line);
+  border-radius: 4px;
   color: var(--market-ink);
   display: flex;
   flex-direction: column;
 }
 
-.eyebrowRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.festiveBadge {
-  background: #ffffff;
-  border: 1px solid var(--market-soft-border);
-  color: var(--market-brand);
-  font-size: 11px;
-  font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 999px;
-  letter-spacing: 0.4px;
-}
-
 .eyebrow {
+  margin-bottom: 12px;
   font-weight: 600;
-  color: var(--market-muted);
-  font-size: 13px;
+  color: var(--market-brand);
+  font-size: 14px;
 }
 
 .intro h2 {
-  font: 800 32px/1.22 var(--market-font);
-  letter-spacing: -0.8px;
+  font: 700 26px/1.3 var(--market-font);
+  letter-spacing: -0.4px;
   color: var(--market-ink);
   margin: 0 0 14px;
 }
@@ -60,6 +43,9 @@
 }
 
 .perks {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -71,14 +57,15 @@
   align-items: flex-start;
   gap: 12px;
   padding: 12px 14px;
-  background: #ffffff;
-  border: 1px solid var(--market-line);
-  border-radius: 8px;
+  background: var(--market-bg);
+  border-radius: 4px;
 }
 
 .perkIcon {
-  font-size: 20px;
-  line-height: 1.2;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--market-brand);
 }
 
 .perkItem strong {
@@ -126,8 +113,5 @@
   }
   .intro h2 {
     font-size: 24px;
-  }
-  .eyebrowRow {
-    margin-bottom: 12px;
   }
 }

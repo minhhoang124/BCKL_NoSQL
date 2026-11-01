@@ -64,6 +64,7 @@ function Workspace({
   return (
     <div className={workspaceStyles.workspace} role="region" aria-label="Xử lý đơn Buyer">
       <button
+        className={workspaceStyles.quietRefresh}
         type="button"
         disabled={busy || confirming || state.phase === "blocked"}
         onClick={() => void flow.reload()}
@@ -136,6 +137,7 @@ function Workspace({
           {buyerCanChoose(state.order, "cancel") && (
             <button
               type="button"
+              className={styles.secondary}
               onClick={() => {
                 try {
                   flow.choose("cancel");

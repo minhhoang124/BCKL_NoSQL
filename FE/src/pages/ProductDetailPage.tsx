@@ -6,7 +6,6 @@ import { ApiError, AuthSessionChangedError } from '../services/apiClient';
 import styles from './Marketplace.module.css';
 import { PublicProductReviews } from '../features/product-reviews/PublicProductReviews';
 import { ProductPurchase } from '../features/seller-listing/ProductPurchase';
-import { StateCard } from '../components/StateCard/StateCard';
 
 export function ProductDetailPage() {
   const { id } = useParams();
@@ -35,7 +34,7 @@ export function ProductDetailPage() {
   if (!product) return <p>Đang tải sản phẩm…</p>;
   const primaryImage = product.images.find((item) => item.isPrimary) ?? product.images[0];
   const activeImageUrl = selectedImageUrl ?? primaryImage?.url;
-  return <div className={styles.page}>
+  return <div className={`${styles.page} ${styles.buyerSurface}`}>
     <section className={styles.detail}>
       <div className={styles.galleryColumn}>
         <div className={styles.gallery}>
@@ -58,37 +57,31 @@ export function ProductDetailPage() {
       </div>
       <div className={styles.stickyBuyColumn}>
         <div className={styles.panel}>
-          <div className={styles.badgeRow}>
-            <span className={styles.badge}>{product.category.name}</span>
-          </div>
+          <p className={styles.storeMeta}>{product.category.name}</p>
           <h1 className={styles.productTitle}>{product.name}</h1>
-          <p className={styles.storeMeta}>{product.brand?.name ?? 'Không thương hiệu'} · {product.store && <Link to={`/stores/${product.store.id}`}>{product.store.name}</Link>}</p>
+          {product.brand && <p className={styles.storeMeta}>{product.brand.name}</p>}
           <div className={styles.priceBanner}>
             <strong className={styles.price}>{formatPrice(product.minPrice ?? product.variants[0]?.price)}</strong>
-            <span className={product.inStock ? styles.inStockPill : styles.outStockPill}>{product.inStock ? 'Còn hàng' : 'Hết hàng'}</span>
+            {product.inStock === false && <span className={styles.outStockPill}>Hết hàng</span>}
           </div>
-          <p className={styles.descriptionText}>{product.description || 'Sản phẩm chưa có mô tả.'}</p>
         </div>
-        <ProductPurchase product={product} />
-        {product.inStock === false && (
-          <StateCard
-            title="Sản phẩm đang hết hàng"
-            role="status"
-            action={import.meta.env.VITE_CHAT_ENABLED === 'true' && product.store
-              ? { label: 'Chat với cửa hàng', to: `/messages?storeId=${product.store.id}&productId=${product.id}` }
-              : undefined}
-          >
-            <p>Bạn vẫn có thể xem thông tin sản phẩm. Tạm thời chưa thể thêm sản phẩm này vào giỏ.</p>
-          </StateCard>
-        )}
-        {import.meta.env.VITE_CHAT_ENABLED === 'true' && product.store && product.inStock !== false && (
-          <div className={styles.chatStoreBar}>
-            <Link to={`/messages?storeId=${product.store.id}&productId=${product.id}`} className={styles.chatStoreLink}>Chat với cửa hàng</Link>
+        <div className={styles.purchaseArea}>
+          <div className={styles.guestOptions} aria-label="Phân loại sản phẩm">
+            {(product.optionGroups ?? []).map((group) => <div key={group.id}>
+              <p>{group.name}</p>
+              <div className={styles.swatchList}>{group.values.map((value) => <span className={styles.swatchChip} key={value.id}>{value.value}</span>)}</div>
+            </div>)}
           </div>
-        )}
+          <ProductPurchase product={product} />
+        </div>
       </div>
     </section>
-    {!!product.attributes?.length && <section className={styles.panel}><h2>Thông số</h2>{product.attributes.map((item) => <div className={styles.row} key={item.id}><span>{item.name}</span><strong>{String(item.value)}</strong></div>)}</section>}
+    {product.store && <section className={`${styles.panel} ${styles.shopCard}`} aria-label="Cửa hàng">
+      <div><h2>{product.store.name}</h2><Link className={styles.shopLink} to={`/stores/${product.store.id}`}>Xem shop</Link></div>
+      {import.meta.env.VITE_CHAT_ENABLED === 'true' && <Link className={styles.shopLink} to={`/messages?storeId=${product.store.id}&productId=${product.id}`}>Chat với cửa hàng</Link>}
+    </section>}
+    {!!product.attributes?.length && <section className={styles.panel}><h2>Thông số</h2><table className={styles.attributeTable}><tbody>{product.attributes.map((item) => <tr key={item.id}><th scope="row">{item.name}</th><td>{String(item.value ?? '—')}</td></tr>)}</tbody></table></section>}
+    {product.description && <section className={styles.panel}><h2>Mô tả sản phẩm</h2><p className={styles.descriptionText}>{product.description}</p></section>}
     {import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED === 'true' && <PublicProductReviews productId={product.id} />}
   </div>;
 }

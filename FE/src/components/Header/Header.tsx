@@ -5,16 +5,14 @@ import { NotificationBadge } from '../../features/notifications/NotificationsPag
 import { useAuth } from '../../contexts/useAuth';
 import { ApiError } from '../../services/apiClient';
 import styles from './Header.module.css';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { CameraIcon, MagnifyingGlassIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 
-const HOT_KEYWORDS = [
-  'Áo len Noel',
-  'Bàn phím cơ',
-  'Tai nghe chống ồn',
-  'Nến thơm Giáng sinh',
-  'Quà tặng 2026',
-];
-
+/**
+ * Marketplace header: a slim utility row (role channels on the left; notifications,
+ * messages, account and sign-out on the right) above logo + search + cart.
+ * Accessible names are kept stable ("Giỏ hàng", "Tài khoản (…)", "Đăng xuất")
+ * because route tests and browser QA drivers select by them.
+ */
 export function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -40,132 +38,95 @@ export function Header() {
     }
   };
 
+  const displayName = user ? user.fullName || user.email : '';
+  const initial = displayName.trim().charAt(0).toUpperCase() || '?';
+
   return (
     <header className={styles.header}>
-      {/* Tier 1: Shopee Utility Strip with Noel Festive Accent */}
       <div className={styles.utilityBar}>
         <div className={styles.utilityInner}>
-          <div className={styles.utilityLeft}>
-            <span className={styles.festivePill}>🎄 Mùa Lễ Hội Noel 2026</span>
-            <span className={styles.utilityDivider}>·</span>
-            <span>Thanh toán khi nhận hàng hoặc qua VNPay</span>
-          </div>
-          <div className={styles.utilityRight}>
-            <span>Tiếng Việt</span>
-          </div>
+          <nav className={styles.utilityLeft} aria-label="Kênh">
+            {user?.role === 'SELLER' && <Link to="/seller">Kênh người bán</Link>}
+            {user?.role === 'USER' && import.meta.env.VITE_SELLER_ONBOARDING_ENABLED === 'true' && (
+              <Link to="/account/store-application">Mở cửa hàng</Link>
+            )}
+            {user?.role === 'ADMIN' && <Link to="/admin">Quản trị</Link>}
+            {!user && <span>Thanh toán khi nhận hàng hoặc qua VNPay</span>}
+          </nav>
+
+          <nav className={styles.utilityRight} aria-label="Tài khoản">
+            {user ? (
+              <>
+                <NotificationBadge />
+                {import.meta.env.VITE_CHAT_ENABLED === 'true' && user.role !== 'ADMIN' && (
+                  <Link to="/messages">Tin nhắn</Link>
+                )}
+                <Link to="/account" className={styles.account} aria-label={`Tài khoản (${displayName})`}>
+                  <span className={styles.avatar} aria-hidden="true">{initial}</span>
+                  <span className={styles.accountName}>{displayName}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className={styles.logoutBtn}
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/register">Đăng ký</Link>
+                <span className={styles.utilityDivider} aria-hidden="true" />
+                <Link to="/login">Đăng nhập</Link>
+              </>
+            )}
+          </nav>
         </div>
       </div>
 
-      {/* Tier 2 & 3: Main Search Header + Hot Keywords + Navigation */}
       <div className={styles.mainBar}>
-        <div className={styles.logo}>
-          <Link to="/">
-            <span className={styles.santaHat} aria-hidden="true">🎅</span>
-            BCKL
-          </Link>
-          <span className={styles.tagline}>Chợ hiện đại</span>
-        </div>
+        <Link to="/" className={styles.logo} aria-label="BCKL – Trang chủ">
+          <span className={styles.logoMark} aria-hidden="true">B</span>
+          <span className={styles.logoText}>BCKL</span>
+        </Link>
 
-        <div className={styles.search}>
-          <div className={styles.searchBoxWrap}>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (searchQuery.trim()) {
-                  navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`);
-                }
-              }}
-            >
-              <input
-                aria-label="Tìm sản phẩm"
-                type="search"
-                placeholder="Tìm sản phẩm, thương hiệu..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' && (
-                <Link
-                  to="/search/image"
-                  className={styles.cameraBtn}
-                  title="Tìm sản phẩm bằng ảnh"
-                >
-                  <span aria-hidden="true">📷</span>
-                  <span>Tìm ảnh</span>
-                </Link>
-              )}
-              <button type="submit">
-                <MagnifyingGlassIcon aria-hidden="true" />
-                Tìm
-              </button>
-            </form>
-          </div>
-
-          <div className={styles.hotKeywords} aria-label="Từ khóa phổ biến">
-            {HOT_KEYWORDS.map((kw) => (
-              <span
-                key={kw}
-                className={styles.keywordChip}
-                onClick={() => {
-                  setSearchQuery(kw);
-                  navigate(`/?q=${encodeURIComponent(kw)}`);
-                }}
-              >
-                {kw}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <nav className={styles.nav}>
-          {user ? (
-            <>
-              <Link to="/account" className={styles.accountLink}>
-                Tài khoản ({user.fullName || user.email})
-              </Link>
-              {hasBuyerAccess(user) && (
-                <Link to="/cart" className={styles.cartLink}>
-                  Giỏ hàng
-                </Link>
-              )}
-              <NotificationBadge />
-              {import.meta.env.VITE_CHAT_ENABLED === 'true' && user.role !== 'ADMIN' && (
-                <Link to="/messages">Tin nhắn</Link>
-              )}
-              {user.role === 'SELLER' && (
-                <Link to="/seller" className={styles.roleBadgeLink}>
-                  Kênh người bán
-                </Link>
-              )}
-              {user.role === 'USER' && import.meta.env.VITE_SELLER_ONBOARDING_ENABLED === 'true' && (
-                <Link to="/account/store-application" className={styles.roleBadgeLink}>
-                  Mở cửa hàng
-                </Link>
-              )}
-              {user.role === 'ADMIN' && (
-                <Link to="/admin" className={styles.roleBadgeLink}>
-                  Quản trị
-                </Link>
-              )}
-              <button
-                type="button"
-                onClick={handleLogout}
-                className={styles.logoutBtn}
-                disabled={isLoggingOut}
-              >
-                {isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className={styles.loginLink}>
-                Đăng nhập
-              </Link>
-              <Link to="/register" className={styles.registerBtn}>
-                Đăng ký
-              </Link>
-            </>
+        <form
+          className={styles.search}
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (searchQuery.trim()) {
+              navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`);
+            }
+          }}
+        >
+          <input
+            aria-label="Tìm sản phẩm"
+            type="search"
+            placeholder="Tìm sản phẩm, thương hiệu..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' && (
+            <Link to="/search/image" className={styles.cameraBtn} title="Tìm sản phẩm bằng ảnh">
+              <CameraIcon aria-hidden="true" />
+              <span>Tìm ảnh</span>
+            </Link>
           )}
-        </nav>
+          <button type="submit">
+            <MagnifyingGlassIcon aria-hidden="true" />
+            Tìm
+          </button>
+        </form>
+
+        {user && hasBuyerAccess(user) ? (
+          <Link to="/cart" className={styles.cartLink} aria-label="Giỏ hàng" title="Giỏ hàng">
+            <ShoppingCartIcon aria-hidden="true" />
+          </Link>
+        ) : (
+          <span className={styles.cartSpacer} aria-hidden="true" />
+        )}
       </div>
 
       {logoutError && (

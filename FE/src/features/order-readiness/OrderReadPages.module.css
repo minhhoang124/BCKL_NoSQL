@@ -214,3 +214,9 @@ button.statusTab:focus-visible {
   outline: 2px solid var(--market-brand);
   outline-offset: -2px;
 }
+
+.page { font-size: 14px; background: #f5f5f5; min-width: 0; }
+.statusTabStrip { max-width: 100%; min-width: 0; border-color: #e8e8e8; border-radius: 4px; box-shadow: none; }
+.accountSidebar { border-color: #e8e8e8; border-radius: 4px; box-shadow: none; }
+.page .chatLink { display: inline-flex; justify-self: start; padding: 8px 14px; border: 1px solid #e8e8e8; border-radius: 4px; background: #fff; color: #555; text-decoration: none; }
+.content > button.quietRefresh { min-height: 32px; padding: 4px 10px; border: 0; background: transparent; color: #757575; font-size: 12px; font-weight: 400; border-radius: 4px; display: block; margin-left: auto; }

@@ -69,21 +69,16 @@ export function OrderReadPage({
       {detail &&
         import.meta.env.VITE_CHAT_ENABLED === "true" &&
         import.meta.env.VITE_CHAT_ORDER_CONTEXT_ENABLED === "true" && (
-          <Link to={`/messages?orderId=${pathId(orderId)}&orderScope=${scope}`}>
+          <Link className={styles.chatLink} to={`/messages?orderId=${pathId(orderId)}&orderScope=${scope}`}>
             Trao đổi về đơn hàng
           </Link>
         )}
-      <p className={styles.scopeIntro}>
-        {scope === "seller" &&
-        detail &&
+      {scope === "seller" && <p className={styles.scopeIntro}>
+        {detail &&
         import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED !== "false"
           ? "Xử lý đơn đã nhận; mỗi bước cần xác nhận riêng, không tự gửi lại yêu cầu."
-          : scope === "buyer" &&
-              detail &&
-              import.meta.env.VITE_BUYER_ORDER_COMMANDS_ENABLED !== "false"
-            ? "Xem đơn đã lưu; hủy hoặc hoàn tất hợp lệ cần xác nhận riêng, không tự gửi lại yêu cầu."
-            : "Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật trên màn này."}
-      </p>
+          : "Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật trên màn này."}
+      </p>}
       <div
         className={
           !detail && scope === "buyer" ? styles.accountGrid : undefined
@@ -173,7 +168,7 @@ function List({ scope }: { scope: OrderScope }) {
         ))}
       </nav>
       <div className={styles.filterToolbar}>
-        <label>
+        {scope === "seller" && <label>
           Trạng thái đơn
           <select
             value={status ?? ""}
@@ -188,7 +183,7 @@ function List({ scope }: { scope: OrderScope }) {
               </option>
             ))}
           </select>
-        </label>
+        </label>}
         {after !== null && (
           <button onClick={() => setParams(status ? { status } : {})}>
             Về trang đầu
@@ -230,7 +225,7 @@ function ListData({
   });
   return (
     <>
-      <button disabled={state.status === "loading"} onClick={reload}>
+      <button className={styles.quietRefresh} disabled={state.status === "loading"} onClick={reload}>
         Làm mới trang đơn
       </button>
       <OrderListPanel
@@ -251,7 +246,7 @@ function Detail({ scope, orderId }: { scope: OrderScope; orderId: number }) {
   return (
     <>
       {scope==='buyer'&&state.status==='ready'&&state.data.payment?.provider==='VNPAY'&&<VnpayPayment orderId={orderId} amount={state.data.total}/>}
-      <button disabled={state.status === "loading"} onClick={reload}>
+      <button className={styles.quietRefresh} disabled={state.status === "loading"} onClick={reload}>
         Làm mới chi tiết đơn
       </button>
       <OrderDetailPanel

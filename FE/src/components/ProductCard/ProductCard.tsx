@@ -12,11 +12,6 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article className={styles.card}>
       <Link to={`/products/${product.id}`} className={styles.imageWrap}>
-        {secondaryImage && (
-          <span className={styles.angleBadge} aria-hidden="true">
-            2 góc ảnh
-          </span>
-        )}
         {image ? (
           <>
             <img
@@ -38,10 +33,6 @@ export function ProductCard({ product }: { product: Product }) {
         )}
       </Link>
       <div className={styles.body}>
-        <p className={styles.meta}>
-          {product.category.name}
-          {product.brand ? ` · ${product.brand.name}` : ''}
-        </p>
         <Link to={`/products/${product.id}`} className={styles.name}>
           {product.name}
         </Link>
@@ -51,9 +42,7 @@ export function ProductCard({ product }: { product: Product }) {
           </strong>
         </div>
         <div className={styles.statusRow}>
-          <span className={product.inStock === false ? styles.out : styles.stock}>
-            {product.inStock === false ? 'Hết hàng' : 'Còn hàng'}
-          </span>
+          {product.inStock === false && <span className={styles.out}>Hết hàng</span>}
           {product.store && (
             <span className={styles.storeName}>{product.store.name}</span>
           )}

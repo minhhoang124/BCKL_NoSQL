@@ -4,6 +4,7 @@ import { AddressForm } from '../../components/Address/AddressForm';
 import type { AddressInput } from '../../types/address';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/useAuth';
 import { ApiError } from '../../services/apiClient';
 import { clearMatchingIntent, errorMessage, initialIntent, intentSlot, lookupReceipt, loadIntent, money, read, rejectedWithoutCommit, saveIntent, validateReceipt, write } from './api';
@@ -120,155 +121,129 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
     {receipt.orders.map(o => <article className={styles.card} key={o.id}><h2>{o.orderNumber}</h2><p>{money(o.total)}</p><p>Mã đơn: {o.id}. <Link to={`/account/orders/${o.id}`}>Theo dõi đơn {o.orderNumber}</Link></p></article>)}
     {error && <p role="alert">{error}</p>}<Link to="/cart">Quay lại giỏ hàng</Link>
   </div>;
+  const unavailableText: Record<string, string> = {
+    PRODUCT_UNAVAILABLE: 'Sản phẩm không còn được bán',
+    VARIANT_UNAVAILABLE: 'Phân loại không còn được bán',
+    OUT_OF_STOCK: 'Đã hết hàng',
+    INSUFFICIENT_STOCK: 'Vượt tồn kho hiện tại',
+  };
+  const lineAmount = (i: (typeof items)[number]) => i.currentUnitPrice
+    ? (i.lineTotal ? money(i.lineTotal) : money((BigInt(i.currentUnitPrice.split('.')[0]!) * BigInt(i.quantity)).toString() + '.00'))
+    : '—';
   return <div className={styles.page}>
-    <h1>Xác nhận mua hàng</h1><p>COD mô phỏng · Phí vận chuyển demo 0 ₫. Giỏ hàng không giữ kho.</p>
-    <Link to="/cart">Quay lại giỏ hàng</Link> · <Link to="/account/addresses">Quản lý địa chỉ</Link>
-    <p>Kiểm tra địa chỉ nhận hàng và các mặt hàng đã chọn trước khi đặt hàng. Bạn có thể quay lại giỏ để đổi số lượng.</p>
+    <h1 className={styles.checkoutTitle}>Xác nhận mua hàng</h1>
+    <nav className={styles.crumbs} aria-label="Điều hướng thanh toán">
+      <Link to="/cart">Quay lại giỏ hàng</Link>
+      <Link to="/account/addresses">Quản lý địa chỉ</Link>
+    </nav>
     {error && <p className={styles.error} role="alert">{error} {error.startsWith('Cần xác minh email trong Tài khoản') && <Link to="/account">Mở Tài khoản</Link>}</p>}
-    {refreshRequired && !intent && <button disabled={busy || loading} onClick={reloadCart}>Tải lại giỏ và giá</button>}
-    {selectionError && <p role="alert">{selectionError}</p>}
-    {!selection.ids.length && !selection.error && !intent && <p>Chưa chọn món. Đánh dấu các món muốn mua bên dưới; không tự mua toàn bộ giỏ.</p>}
+    {refreshRequired && !intent && <button className={styles.btnSecondary} disabled={busy || loading} onClick={reloadCart}>Tải lại giỏ và giá</button>}
+    {selectionError && <p className={styles.error} role="alert">{selectionError}</p>}
+    {!selection.ids.length && !selection.error && !intent && <p className={styles.hint}>Chưa chọn món. Đánh dấu các món muốn mua bên dưới; không tự mua toàn bộ giỏ.</p>}
     {intent && <section className={styles.card} aria-label="Yêu cầu chưa rõ kết quả">
       <h2>Yêu cầu đang chờ đối chiếu</h2><p>Không tạo mã đặt hàng mới. Tra biên nhận hoặc gửi lại đúng yêu cầu cũ; 404 khi tra chưa chứng minh yêu cầu trước chưa được ghi nhận.</p>
       <button disabled={busy} onClick={() => void run(async () => accept(await lookupReceipt(intent.key), intent.key))}>Tra biên nhận</button>
-      <button disabled={busy} onClick={() => void run(async () => accept(await write<Receipt>(intent.path, intent.body, intent.key), intent.key))}>Gửi lại cùng yêu cầu</button>
+      <button className={styles.btnSecondary} disabled={busy} onClick={() => void run(async () => accept(await write<Receipt>(intent.path, intent.body, intent.key), intent.key))}>Gửi lại cùng yêu cầu</button>
     </section>}
-    {loading ? <p role="status">Đang tải địa chỉ và giỏ hàng…</p> : <>
+    {loading ? <p className={styles.hint} role="status">Đang tải địa chỉ và giỏ hàng…</p> : <>
       {!dataReady ? <button disabled={busy || !!intent} onClick={reloadCart}>Tải lại</button> : <>
-      <div className={styles.checkoutGrid}><div className={styles.checkoutMain}>
-      <div className={styles.addressSection}>
+      <section className={styles.addressSection} aria-labelledby="checkout-address-title">
         <div className={styles.addressHeaderRow}>
-          <h2 className={styles.addressTitle}>📍 Địa chỉ nhận hàng</h2>
+          <h2 id="checkout-address-title" className={styles.addressTitle}><MapPinIcon aria-hidden="true" />Địa chỉ nhận hàng</h2>
           <div className={styles.addressActionBtns}>
-            <button
-              type="button"
-              className={styles.btnInlineSecondary}
-              disabled={busy || !!intent || addressSaving}
-              onClick={() => setShowAddressForm(prev => prev === 'create' ? null : 'create')}
-            >
+            <button type="button" className={styles.linkButton} disabled={busy || !!intent || addressSaving}
+              onClick={() => setShowAddressForm(prev => prev === 'create' ? null : 'create')}>
               {showAddressForm === 'create' ? 'Đóng' : '+ Thêm địa chỉ mới'}
             </button>
-            {selectedAddress && (
-              <button
-                type="button"
-                className={styles.btnInlineSecondary}
-                disabled={busy || !!intent || addressSaving}
-                onClick={() => setShowAddressForm(prev => prev === 'edit' ? null : 'edit')}
-              >
-                {showAddressForm === 'edit' ? 'Đóng' : 'Sửa địa chỉ này'}
-              </button>
-            )}
+            {selectedAddress && <button type="button" className={styles.linkButton} disabled={busy || !!intent || addressSaving}
+              onClick={() => setShowAddressForm(prev => prev === 'edit' ? null : 'edit')}>
+              {showAddressForm === 'edit' ? 'Đóng' : 'Sửa địa chỉ này'}
+            </button>}
           </div>
         </div>
-
-        {showAddressForm && (
-          <div className={styles.addressInlineForm}>
-            
-            <AddressForm
-              address={showAddressForm === 'edit' ? (selectedAddress as any) : null}
-              disabled={busy || !!intent}
-              saving={addressSaving}
-              onSave={handleSaveAddress}
-              onCancel={() => setShowAddressForm(null)}
-            />
-          </div>
-        )}
-
-        {!addresses.length && <p>Chưa có địa chỉ nhận hàng. Bấm “+ Thêm địa chỉ mới” để thêm ngay tại đây.</p>}
-        <label>
-          Địa chỉ nhận hàng
-          <select
-            disabled={busy || !!intent}
-            value={addressId}
-            onChange={(e) => {
-              setAddressId(Number(e.target.value));
-              setPreview(null);
-            }}
-          >
+        {selectedAddress && <p className={styles.addressLine} aria-label="Địa chỉ giao hàng đã chọn">
+          <strong>{selectedAddress.recipientName}{selectedAddress.phone ? ` · ${selectedAddress.phone}` : ''}</strong>
+          <span>{selectedAddress.addressLine}, {selectedAddress.ward}, {selectedAddress.province}</span>
+          {selectedAddress.isDefault && <span className={styles.defaultTag}>Mặc định</span>}
+        </p>}
+        {!addresses.length && <p className={styles.hint}>Chưa có địa chỉ nhận hàng. Bấm “+ Thêm địa chỉ mới” để thêm ngay tại đây.</p>}
+        {addresses.length > 0 && <label className={styles.addressPicker}>
+          <span>Địa chỉ nhận hàng đã lưu</span>
+          <select disabled={busy || !!intent} value={addressId} onChange={(e) => { setAddressId(Number(e.target.value)); setPreview(null); }}>
             <option value={0}>Chọn địa chỉ</option>
-            {addresses.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.recipientName} — {a.addressLine}, {a.ward}, {a.province}
-              </option>
-            ))}
+            {addresses.map((a) => <option key={a.id} value={a.id}>{a.recipientName} — {a.addressLine}, {a.ward}, {a.province}</option>)}
           </select>
-        </label>
-        {selectedAddress && (
-          <p aria-label="Địa chỉ giao hàng đã chọn">
-            {selectedAddress.recipientName} — {selectedAddress.addressLine}, {selectedAddress.ward}, {selectedAddress.province}
-          </p>
-        )}
-      </div>
+        </label>}
+        {showAddressForm && <div className={styles.addressInlineForm}>
+          <AddressForm address={showAddressForm === 'edit' ? (selectedAddress as any) : null} disabled={busy || !!intent}
+            saving={addressSaving} onSave={handleSaveAddress} onCancel={() => setShowAddressForm(null)} />
+        </div>}
+      </section>
 
+      <div className={styles.itemsHead} aria-hidden="true">
+        <span>Sản phẩm</span><span>Đơn giá</span><span>Số lượng</span><span>Thành tiền</span>
+      </div>
       {cart?.groups.map((group) => (
-        <section className={styles.checkoutGroupCard} key={group.store.id}>
-          <div className={styles.storeBanner}>
-            <h2>{group.store.name}</h2>
-          </div>
+        <section className={styles.checkoutGroupCard} key={group.store.id} aria-label={`Cửa hàng ${group.store.name}`}>
+          <div className={styles.storeBanner}><h2>{group.store.name}</h2></div>
           {group.items.map((i) => (
             <div className={styles.checkoutItemRow} key={i.variantId}>
-              <label className={styles.line}>
-                <input
-                  type="checkbox"
-                  disabled={busy || !!intent || !i.available}
-                  checked={selected.includes(i.variantId)}
-                  onChange={(e) => {
-                    setSelected((ids) =>
-                      e.target.checked
-                        ? [...ids, i.variantId]
-                        : ids.filter((id) => id !== i.variantId),
-                    );
-                    setPreview(null);
-                  }}
-                />
-              </label>
-              {i.imageUrl ? (
-                <img
-                  src={mediaUrl(i.imageUrl)}
-                  alt=""
-                  className={styles.checkoutItemImg}
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              ) : (
-                <div className={styles.checkoutItemPlaceholder}>📦</div>
-              )}
+              <input type="checkbox" aria-label={`Chọn ${i.productName ?? `mặt hàng #${i.variantId}`}`}
+                disabled={busy || !!intent || !i.available} checked={selected.includes(i.variantId)}
+                onChange={(e) => {
+                  setSelected((ids) => e.target.checked ? [...ids, i.variantId] : ids.filter((id) => id !== i.variantId));
+                  setPreview(null);
+                }} />
+              {i.imageUrl
+                ? <img src={mediaUrl(i.imageUrl)} alt="" className={styles.checkoutItemImg}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }} />
+                : <span className={styles.checkoutItemImg} aria-hidden="true" />}
               <div className={styles.checkoutItemContent}>
-                <h3 className={styles.checkoutItemTitle}>
-                  {i.productName ?? `Mặt hàng #${i.variantId}`}
-                </h3>
-                {i.optionValues && i.optionValues.length > 0 && (
-                  <p className={styles.checkoutItemVariant}>
-                    Phân loại: {i.optionValues.join(' / ')}
-                  </p>
-                )}
-                <p className={styles.checkoutItemQtyPrice}>
-                  Số lượng: {i.quantity} × {i.currentUnitPrice ? money(i.currentUnitPrice) : 'Không thể mua'}
-                  {!i.available && <span> · Không thể mua: {i.unavailableReason}</span>}
-                </p>
+                <h3 className={styles.checkoutItemTitle}>{i.productName ?? `Mặt hàng #${i.variantId}`}</h3>
+                {i.optionValues && i.optionValues.length > 0 && <p className={styles.checkoutItemVariant}>Phân loại: {i.optionValues.join(' / ')}</p>}
+                {!i.available && <p className={styles.unavailable}>Không thể mua: {unavailableText[i.unavailableReason ?? ''] ?? 'Không còn bán'}</p>}
               </div>
-              <div className={styles.checkoutItemTotal}>
-                {i.currentUnitPrice ? (i.lineTotal ? money(i.lineTotal) : money((BigInt(i.currentUnitPrice.split('.')[0]!) * BigInt(i.quantity)).toString() + '.00')) : ''}
-              </div>
+              <div className={styles.cellPrice}>{i.currentUnitPrice ? money(i.currentUnitPrice) : '—'}</div>
+              <div className={styles.cellQty}><span className={styles.mobileLabel}>Số lượng: </span>{i.quantity}</div>
+              <div className={styles.checkoutItemTotal}>{lineAmount(i)}</div>
             </div>
           ))}
         </section>
       ))}
-      {!!cart?.unavailableItems.length && <p role="alert">Có {cart.unavailableItems.length} dòng không còn bán công khai; quay lại giỏ để xóa. Không hiển thị nội dung nháp.</p>}
-      {!items.length && cart && <p>Giỏ chưa có mặt hàng mua được.</p>}
-      </div><aside className={`${styles.card} ${styles.checkoutSummary}`} aria-label="Xác nhận thanh toán">
-      <h2>Thanh toán {provider==='COD'?'COD':'VNPay sandbox'}</h2><p>Kiểm tra lại giá và tồn kho trước khi đặt hàng.</p>
-      {import.meta.env.VITE_VNPAY_SANDBOX_ENABLED==='true'&&<label>Phương thức thanh toán<select value={provider} disabled={busy||!!intent||storageBlocked} onChange={e=>{setProvider(e.target.value as 'COD'|'VNPAY');setPreview(null);}}><option value="COD">Thanh toán khi nhận hàng (COD)</option><option value="VNPAY">VNPay sandbox — không tiền thật</option></select></label>}
-      <button disabled={busy || !!intent || storageBlocked || refreshRequired || !!selectionError || !cart || !addressId || body.items.length < 1 || body.items.length > 50} onClick={() => void run(async () => { if (!selectionError && cart && dataReady && !loading && !refreshRequired) setPreview(await write<Preview>('/checkout/preview', body)); })}>Kiểm tra giá và kho</button>
-      {preview && <section className={styles.card}>
-        {preview.groups.flatMap(g => g.items).filter(i => i.errors.length).map(i => <p role="alert" key={i.variantId}>Mặt hàng #{i.variantId}: {i.errors.join(', ')}. Giá hiện tại {money(i.unitPrice)}.</p>)}
-        {preview.canCheckout && preview.totals ? <h2>Tổng thanh toán: {money(preview.totals.total)}</h2> : <p role="alert">Chưa thể đặt hàng. Giá/kho hoặc mặt hàng đã thay đổi; tải lại giỏ để xác nhận.</p>}
-        <button disabled={busy || !!intent || storageBlocked || !preview.canCheckout || !preview.totals} onClick={submit}>Đặt hàng {provider==='COD'?'COD':'VNPay sandbox'}</button>
-        {!preview.canCheckout && <button disabled={busy || !!intent} onClick={reloadCart}>Tải lại giỏ và giá</button>}
-      </section>}
-      </aside></div></>}
+      {!!cart?.unavailableItems.length && <p className={styles.error} role="alert">Có {cart.unavailableItems.length} dòng không còn bán công khai; quay lại giỏ để xóa. Không hiển thị nội dung nháp.</p>}
+      {!items.length && cart && <p className={styles.hint}>Giỏ chưa có mặt hàng mua được.</p>}
+
+      <section className={`${styles.card} ${styles.checkoutSummary}`} aria-label="Xác nhận thanh toán">
+        <div className={styles.paymentRow}>
+          <h2>Phương thức thanh toán</h2>
+          {import.meta.env.VITE_VNPAY_SANDBOX_ENABLED === 'true'
+            ? <label className={styles.paymentSelect}><span className={styles.srOnly}>Phương thức thanh toán</span>
+                <select value={provider} disabled={busy || !!intent || storageBlocked} onChange={e => { setProvider(e.target.value as 'COD' | 'VNPAY'); setPreview(null); }}>
+                  <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                  <option value="VNPAY">VNPay sandbox — không tiền thật</option>
+                </select></label>
+            : <span className={styles.paymentChosen}>Thanh toán khi nhận hàng</span>}
+        </div>
+        <div className={styles.summaryBody}>
+          {preview && preview.groups.flatMap(g => g.items).filter(i => i.errors.length).map(i => <p className={styles.error} role="alert" key={i.variantId}>Mặt hàng #{i.variantId}: {i.errors.join(', ')}. Giá hiện tại {money(i.unitPrice)}.</p>)}
+          {preview && !preview.canCheckout && <p className={styles.error} role="alert">Chưa thể đặt hàng. Giá/kho hoặc mặt hàng đã thay đổi; tải lại giỏ để xác nhận.</p>}
+          <dl className={styles.totals}>
+            <div><dt>Phí vận chuyển</dt><dd>0 ₫</dd></div>
+            <div className={styles.grandTotal}><dt>Tổng thanh toán</dt><dd>{preview?.canCheckout && preview.totals ? money(preview.totals.total) : '—'}</dd></div>
+          </dl>
+        </div>
+        <div className={styles.placeOrderRow}>
+          <p className={styles.hint}>{preview?.canCheckout ? 'Giá và tồn kho đã được kiểm tra. Bấm đặt hàng để tạo đơn.' : 'Bấm kiểm tra để xác nhận giá và tồn kho mới nhất trước khi đặt hàng.'}</p>
+          {!preview ? <button disabled={busy || !!intent || storageBlocked || refreshRequired || !!selectionError || !cart || !addressId || body.items.length < 1 || body.items.length > 50}
+              onClick={() => void run(async () => { if (!selectionError && cart && dataReady && !loading && !refreshRequired) setPreview(await write<Preview>('/checkout/preview', body)); })}>Kiểm tra giá và kho</button>
+            : <>
+              {!preview.canCheckout && <button className={styles.btnSecondary} disabled={busy || !!intent} onClick={reloadCart}>Tải lại giỏ và giá</button>}
+              <button className={styles.placeOrder} disabled={busy || !!intent || storageBlocked || !preview.canCheckout || !preview.totals} onClick={submit}>Đặt hàng {provider === 'COD' ? 'COD' : 'VNPay sandbox'}</button>
+            </>}
+        </div>
+      </section>
+      </>}
     </>}
-    {busy && <p role="status">Đang xử lý… Không đóng trang hoặc gửi yêu cầu mới.</p>}
+    {busy && <p className={styles.hint} role="status">Đang xử lý… Không đóng trang hoặc gửi yêu cầu mới.</p>}
   </div>;
 }

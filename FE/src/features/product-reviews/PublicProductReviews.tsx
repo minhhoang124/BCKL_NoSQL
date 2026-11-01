@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { readPublic, type PublicPage } from "./reviewClient";
 import styles from "./ReviewPage.module.css";
+import marketStyles from "../../pages/Marketplace.module.css";
 export function PublicProductReviews({ productId }: { productId: number }) {
   return <Reviews key={productId} productId={productId} />;
 }
 function Reviews({ productId }: { productId: number }) {
+  const [star, setStar] = useState<number | null>(null);
   const [data, setData] = useState<PublicPage | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -67,31 +69,35 @@ function Reviews({ productId }: { productId: number }) {
   }, [productId]);
   return (
     <section
-      className={styles.panel}
+      className={`${styles.panel} ${marketStyles.publicReviews}`}
       aria-label="Đánh giá sản phẩm"
       aria-busy={busy}
     >
       <h2>Đánh giá từ người mua</h2>
       {error && <p role="alert">{error}</p>}
-      <button disabled={busy} onClick={() => void load()}>
+      {error && <button className={marketStyles.reviewRetry} disabled={busy} onClick={() => void load()}>
         Tải lại đánh giá sản phẩm
-      </button>
+      </button>}
       {!data && !error && <p>Đang tải đánh giá…</p>}
       {data && (
         <>
+          <div className={marketStyles.reviewSummary}>
           <p className={styles.score}>
             {data.average === null
               ? "Chưa có đánh giá"
               : `${data.average}/5 từ ${data.count} đánh giá`}
           </p>
-          <ul className={styles.histogram}>
+          <div className={marketStyles.reviewFilters} aria-label="Lọc đánh giá theo sao">
+            <button type="button" aria-pressed={star === null} onClick={() => setStar(null)}>Tất cả ({data.count})</button>
             {[5, 4, 3, 2, 1].map((n) => (
-              <li key={n}>
-                {n} sao · {data.counts[n]}
-              </li>
+              <button type="button" key={n} aria-pressed={star === n} onClick={() => setStar(n)}>
+                {n} sao ({data.counts[n]})
+              </button>
             ))}
-          </ul>
-          {data.items.map((r) => (
+          </div>
+          </div>
+          {star !== null && !data.items.some((r) => r.rating === star) && <p role="status">Chưa có đánh giá {star} sao trong các đánh giá đã tải.</p>}
+          {data.items.filter((r) => star === null || r.rating === star).map((r) => (
             <article className={styles.review} key={r.id}>
               <strong>
                 {r.author} · {r.rating}/5

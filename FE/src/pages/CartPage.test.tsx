@@ -359,6 +359,8 @@ describe('Buyer Cart UI', () => {
       ],
     });
     render(page());
-    expect(await screen.findByText('Thành tiền: 2.580.000 ₫')).toBeInTheDocument();
+    // The "Số tiền" column cell shows the server line total (the column header carries the label).
+    const row = (await screen.findByText('Tai nghe mẫu')).closest('div')?.parentElement as HTMLElement;
+    expect(within(row).getByText('2.580.000 ₫')).toBeInTheDocument();
   });
 });

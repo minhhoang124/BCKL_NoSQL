@@ -105,15 +105,10 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
   };
   const keyword = query.trim();
 
-  return <div className={styles.page}>
-    {!searched && <section className={styles.heroGrid}>
-      <div className={styles.hero}>
-        <div className={styles.heroBadgeRow} aria-hidden="true">
-          <span className={styles.heroSeasonPill}>🎄 Mùa lễ hội Noel 2026</span>
-        </div>
-        <h1>Khám phá sản phẩm phù hợp</h1>
-        <p>Tìm bằng từ khóa hoặc hình ảnh, so sánh phân loại và đặt hàng từ nhiều cửa hàng.</p>
-      </div>
+  return <div className={`${styles.page} ${styles.buyerSurface}`}>
+    {!!categories.length && <section className={styles.categoryShelf} aria-label="Khám phá danh mục">
+      <h1>Danh mục</h1>
+      <div className={styles.categoryChips}>{categories.map((category) => <button type="button" key={category.id} aria-pressed={categoryId === String(category.id)} onClick={() => setCategoryId(String(category.id))}>{category.name}</button>)}</div>
     </section>}
 
     <div className={styles.searchLayout}>

@@ -125,7 +125,8 @@ describe("Prepared panels — fixture/component tests, NOT live Web transactions
     expect(screen.getByText("Tên sản phẩm lúc mua")).toBeInTheDocument();
     expect(screen.getByText(/SKU-SNAPSHOT/)).toHaveTextContent("Đen / M");
     expect(screen.getByText(/Địa chỉ đã lưu/)).toBeInTheDocument();
-    expect(screen.getByText(/không tự suy đoán COD/)).toBeInTheDocument();
+    expect(screen.getByText("Chưa có dữ liệu thanh toán")).toBeInTheDocument();
+    expect(screen.queryByText(/Thanh toán khi nhận hàng/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Xác nhận đơn" })).toBeDisabled();
   });
   it("requires a caller to connect commands; no callback means disabled buttons", () => {

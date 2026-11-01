@@ -61,7 +61,7 @@ function Storefront({ storeId }: { storeId: number }) {
     };
   }, [load]);
   return (
-    <section className={styles.page} aria-label="Cửa hàng công khai">
+    <section className={`${styles.page} ${styles.buyerSurface}`} aria-label="Cửa hàng công khai">
       <nav aria-label="Đường dẫn" className={storeStyles.crumbs}>
         <Link to="/">Trang chủ</Link> <span aria-hidden="true">›</span> Cửa hàng
       </nav>
@@ -82,7 +82,7 @@ function Storefront({ storeId }: { storeId: number }) {
             </span>
             <div className={storeStyles.info}>
               <h1>{data.store.name}</h1>
-              <p>{data.store.description || "Cửa hàng chưa thêm giới thiệu."}</p>
+              {data.store.description && <p>{data.store.description}</p>}
             </div>
             {import.meta.env.VITE_CHAT_ENABLED === "true" && (
               <Link className={storeStyles.chat} to={`/messages?storeId=${storeId}`}>

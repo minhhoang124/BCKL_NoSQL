@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode } from 'react';
@@ -66,7 +66,10 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
   });
   it('displays the full selected address outside the native select', async () => {
     show(<CheckoutPage />);
-    expect(await screen.findByLabelText('Địa chỉ giao hàng đã chọn')).toHaveTextContent('Buyer — 12 A, W, P');
+    // Parcel-label layout: recipient (bold) then the full address line, outside the native select.
+    const shown = await screen.findByLabelText('Địa chỉ giao hàng đã chọn');
+    expect(within(shown).getByText('Buyer')).toBeInTheDocument();
+    expect(within(shown).getByText('12 A, W, P')).toBeInTheDocument();
   });
   it('shows a real empty-address message only after successful reads', async () => {
     api.mockImplementation(async path => path === '/cart' ? basket : { items: [] });

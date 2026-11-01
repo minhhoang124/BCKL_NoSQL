@@ -63,3 +63,10 @@
 .catalog {
   color: var(--market-ink);
 }
+
+.profile { padding: 28px 24px; border-color: #e8e8e8; border-radius: 4px; box-shadow: none; border-top: 3px solid var(--market-brand); }
+.avatar { border: 1px solid #e8e8e8; background: #fafafa; color: #555; font-weight: 500; }
+.info h1 { font-size: 24px; font-weight: 500; }
+.info p { font-size: 14px; }
+.chat { border-color: var(--market-brand); border-radius: 4px; background: #fff; font-size: 14px; }
+@media (max-width: 600px) { .profile { padding: 20px 16px; } .info { flex-basis: calc(100% - 90px); } .chat { justify-content: center; } }

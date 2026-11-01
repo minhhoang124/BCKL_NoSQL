@@ -18,7 +18,7 @@ export function Footer() {
 
         <div className={styles.columns}>
           <div className={styles.col}>
-            <strong>BCKL · CHỢ HIỆN ĐẠI (NOEL 2026)</strong>
+            <strong>BCKL · Chợ hiện đại</strong>
             <p>Khám phá những lựa chọn yêu thích cho cuộc sống mỗi ngày.</p>
           </div>
           <div className={styles.col}>
@@ -31,7 +31,7 @@ export function Footer() {
         </div>
 
         <div className={styles.bottom}>
-          <p>&copy; 2026 BCKL E-Commerce. All rights reserved.</p>
+          <p>&copy; 2026 BCKL. Bảo lưu mọi quyền.</p>
         </div>
       </div>
     </footer>

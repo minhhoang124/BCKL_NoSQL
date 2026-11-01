@@ -209,9 +209,6 @@ export function SellerDashboardPage() {
     <div className={styles.page}>
       <div className={styles.sellerHeaderBanner}>
         <div>
-          <span className={styles.sellerKicker} aria-hidden="true">
-            🎄 KÊNH NGƯỜI BÁN · MÙA LỄ HỘI NOEL 2026
-          </span>
           <h1>Kênh người bán</h1>
           <p>Hoàn thiện thông tin cửa hàng và sản phẩm trước khi gửi duyệt.</p>
         </div>

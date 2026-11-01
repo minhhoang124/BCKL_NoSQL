@@ -93,7 +93,7 @@ export function OrderListPanel({
 }) {
   return (
     <section
-      className={styles.panel}
+      className={`${styles.panel} ${scope === "buyer" ? styles.buyerPanel : ""}`}
       aria-label={scope === "buyer" ? "Đơn mua" : "Đơn của Store"}
       aria-busy={state.status === "loading"}
     >
@@ -109,10 +109,11 @@ export function OrderListPanel({
           <ul className={styles.list}>
             {state.data.items.map((order) => (
               <li key={order.id} className={styles.card}>
-                <h2>{order.orderNumber}</h2>
-                <p className={styles.status}>
-                  {order.store.name} · {orderStatusLabels[order.status]}
-                </p>
+                <header className={styles.orderHeader}>
+                  <strong>{order.store.name}</strong>
+                  <span className={styles.status}>{orderStatusLabels[order.status]}</span>
+                </header>
+                <h2 className={styles.orderCode} title={order.orderNumber}>{order.orderNumber}</h2>
                 {order.itemPreview && order.itemPreview.length > 0 && (
                   <div className={styles.previewItemList}>
                     {order.itemPreview.map((item) => (
@@ -127,7 +128,7 @@ export function OrderListPanel({
                             }}
                           />
                         ) : (
-                          <div className={styles.previewItemPlaceholder}>📦</div>
+                          <div className={styles.previewItemPlaceholder} aria-hidden="true" />
                         )}
                         <div className={styles.previewItemInfo}>
                           <h4 className={styles.previewItemTitle}>{item.productName}</h4>
@@ -150,12 +151,13 @@ export function OrderListPanel({
                     )}
                   </div>
                 )}
-                <p className={styles.total}>
-                  {orderMoney(order.total)} ·{" "}
+                <footer className={styles.orderFooter}>
+                <p className={styles.paymentMeta}>
                   {order.payment
                     ? paymentText(order.payment.provider, order.payment.status)
                     : "Chưa có dữ liệu thanh toán"}
                 </p>
+                <p className={styles.orderTotal}>Thành tiền: <strong className={styles.total}>{orderMoney(order.total)}</strong></p>
                 <button
                   type="button"
                   className={styles.detailButton}
@@ -164,6 +166,7 @@ export function OrderListPanel({
                 >
                   Xem chi tiết
                 </button>
+                </footer>
               </li>
             ))}
           </ul>
@@ -229,6 +232,7 @@ function Actions({
         <div key={action.id}>
           <button
             type="button"
+            className={action.id === "cancel" ? styles.cancelButton : undefined}
             disabled={!action.enabled || !onAction}
             onClick={() => {
               if (!action.enabled || !onAction || latch.current === readKey)
@@ -303,8 +307,8 @@ export function OrderDetailPanel({
   const order = state.data,
     address = order.shippingAddress;
   return (
-    <section className={styles.panel} aria-label="Chi tiết đơn hàng">
-      <h1>{order.orderNumber}</h1>
+    <section className={`${styles.panel} ${context.scope === "buyer" ? styles.buyerPanel : ""}`} aria-label="Chi tiết đơn hàng">
+      <h1 className={styles.orderCode} title={order.orderNumber}>{order.orderNumber}</h1>
       <Evidence source={source} />
       <p className={styles.status}>
         {orderStatusLabels[order.status]} · {order.store.name}
@@ -314,6 +318,7 @@ export function OrderDetailPanel({
         <ol className={styles.timeline}>
           {order.timeline.map((event, index) => (
             <li key={`${event.createdAt}:${index}`}>
+              <span className={styles.stepNumber} aria-hidden="true">{index + 1}</span>
               <strong>{orderStatusLabels[event.toStatus]}</strong>
               <p>
                 <time dateTime={event.createdAt}>
@@ -361,17 +366,21 @@ export function OrderDetailPanel({
           <p>
             {order.payment
               ? paymentText(order.payment.provider, order.payment.status)
-              : "Chưa có dữ liệu thanh toán — không tự suy đoán COD."}
+              : "Chưa có dữ liệu thanh toán"}
           </p>
-          <p>Số tiền đã lưu: {orderMoney(order.total)}</p>
+          <p>Số tiền: {orderMoney(order.total)}</p>
         </section>
       </div>
       <section className={styles.card} aria-label="Sản phẩm trong đơn">
         <h2>Sản phẩm trong đơn</h2>
         <div className={styles.itemsGrid}>
-          <ul className={styles.list}>
+          <div className={styles.orderItemsTableWrap}>
+          <table className={styles.orderItemsTable}>
+            <thead><tr><th scope="col">Sản phẩm</th><th scope="col">Đơn giá</th><th scope="col">Số lượng</th><th scope="col">Thành tiền</th></tr></thead>
+            <tbody>
             {order.items.map((item) => (
-              <li key={item.id} className={styles.orderDetailItem}>
+              <tr key={item.id}>
+                <td>
                 <div className={styles.orderDetailItemHead}>
                   {item.imageUrl ? (
                     <img
@@ -383,31 +392,32 @@ export function OrderDetailPanel({
                       }}
                     />
                   ) : (
-                    <div className={styles.previewItemPlaceholder}>📦</div>
+                    <div className={styles.previewItemPlaceholder} aria-hidden="true" />
                   )}
                   <div className={styles.orderDetailItemContent}>
                     <h3>{item.productName}</h3>
                 <p>
-                  SKU {item.sku} · {item.options.join(" / ")} · Số lượng{" "}
-                  {item.quantity}
+                  SKU {item.sku} · {item.options.join(" / ")}
                 </p>
-                <p>
-                  {orderMoney(item.unitPrice)} / món ·{" "}
-                  {orderMoney(item.lineTotal)}
-                </p>
-                  </div>
+                </div>
                 </div>
                 {context.scope === 'buyer' && context.fresh && !context.busy && !context.outcomeUnknown && source === 'api' && ['DELIVERED', 'COMPLETED'].includes(order.status) && order.payment?.status === 'PAID' && import.meta.env.VITE_AFTERSALES_ENABLED !== 'false' && <Link to={`/account/aftersales?orderId=${order.id}&itemId=${item.id}`}>Yêu cầu hỗ trợ cho mặt hàng này</Link>}
                 {context.scope === 'buyer' && context.fresh && !context.busy && !context.outcomeUnknown && source === 'api' && order.status === 'COMPLETED' && import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED === 'true' && <p><Link to={`/account/reviews?itemId=${item.id}`}>Đánh giá mặt hàng này</Link></p>}
-              </li>
+                </td>
+                <td>{orderMoney(item.unitPrice)}</td>
+                <td>x{item.quantity}</td>
+                <td>{orderMoney(item.lineTotal)}</td>
+              </tr>
             ))}
-          </ul>
+            </tbody>
+          </table>
+          </div>
           <div className={styles.summary}>
             <p>Tiền hàng: {orderMoney(order.subtotal)}</p>
-            <p>Phí giao mô phỏng: {orderMoney(order.shippingFee)}</p>
-            <p>Giảm giá đã lưu: {orderMoney(order.discountTotal)}</p>
+            <p>Phí vận chuyển: {orderMoney(order.shippingFee)}</p>
+            <p>Giảm giá: {orderMoney(order.discountTotal)}</p>
             <strong className={styles.total}>
-              Tổng đã lưu: {orderMoney(order.total)}
+              Tổng: {orderMoney(order.total)}
             </strong>
           </div>
         </div>

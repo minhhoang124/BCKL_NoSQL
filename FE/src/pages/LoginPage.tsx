@@ -78,9 +78,6 @@ export function LoginPage() {
 
   return (
     <AuthLayout><div className={styles.container}>
-      <div className={styles.cardTopMeta}>
-        <span className={styles.festiveChip}>🎅 Mùa lễ hội Noel 2026</span>
-      </div>
       <h1 className={styles.title}>Đăng nhập</h1>
       <p className={styles.subtitle}>Chào mừng bạn trở lại với BCKL · Chợ hiện đại.</p>
       {new URLSearchParams(location.search).get('google') === 'collision' && <p role="alert">Email đã có tài khoản BCKL. Hãy đăng nhập bằng mật khẩu rồi vào Tài khoản để chủ động liên kết Google.</p>}

@@ -25,7 +25,6 @@ export function AccountPage() {
     <div className={styles.container}>
       <div className={styles.headerBanner}>
         <div>
-          <span className={styles.kicker} aria-hidden="true">🎄 TRUNG TÂM TÀI KHOẢN &amp; BẢO MẬT</span>
           <h1>Thông tin tài khoản</h1>
         </div>
         <div className={styles.securitySeal} aria-hidden="true">
@@ -62,9 +61,7 @@ export function AccountPage() {
                 <h2>Hồ sơ của tôi</h2>
                 <p className={styles.profileSubtitle}>Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
               </div>
-              <span className={user.isActive ? styles.activeBadge : styles.lockedBadge} aria-hidden="true">
-                {user.isActive ? '✓ Đang bảo vệ' : 'Đã khóa'}
-              </span>
+              {!user.isActive && <span className={styles.lockedBadge}>Đã khóa</span>}
             </div>
             <div className={styles.infoGrid}>
               <div className={styles.infoRow}>

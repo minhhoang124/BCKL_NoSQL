@@ -43,3 +43,6 @@
   color: #684500;
   background: #fff5df;
 }
+
+.workspace { font-size: 14px; }
+.workspace > button.quietRefresh { display: block; margin-left: auto; min-height: 32px; padding: 4px 10px; border: 0; background: transparent; color: #757575; font-size: 12px; border-radius: 4px; }

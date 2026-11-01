@@ -43,12 +43,8 @@ export function RegisterPage() {
   return (
     <AuthLayout>
       <div className={styles.container}>
-        <div className={styles.cardTopMeta}>
-          <span className={styles.festiveChip}>🎅 Mùa lễ hội Noel 2026</span>
-          <span className={styles.qrBadge}>🎁 Ưu đãi thành viên mới</span>
-        </div>
         <h1 className={styles.title}>Đăng ký</h1>
-        <p className={styles.subtitle}>Tạo tài khoản mua sắm và nhận ngay ưu đãi mùa Giáng Sinh.</p>
+        <p className={styles.subtitle}>Tạo tài khoản để mua sắm, trò chuyện với cửa hàng và theo dõi đơn hàng.</p>
         {error && <ErrorMessage message={error} />}
         <form className={styles.form} onSubmit={submit}>
           <label>
