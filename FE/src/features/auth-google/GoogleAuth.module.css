@@ -57,7 +57,7 @@
 }
 
 .panel button:hover:not(:disabled) {
-  background: #FFF5F5;
+  background: var(--market-soft);
   border-color: var(--market-brand);
   color: var(--market-brand);
 }

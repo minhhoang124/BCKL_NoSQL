@@ -8,6 +8,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -386,5 +387,24 @@ describe('AdminDashboardPage notification bell', () => {
     } finally {
       vi.unstubAllEnvs();
     }
+  });
+  it('toggles user menu on avatar click without signing out, and exposes an explicit sign out button', async () => {
+    mockProduct45();
+    renderAdminRoutes();
+    const avatar = await screen.findByRole('button', { name: /Menu tài khoản/i });
+    expect(avatar).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('menu', { name: 'Menu tài khoản quản trị' })).not.toBeInTheDocument();
+
+    fireEvent.click(avatar);
+    expect(avatar).toHaveAttribute('aria-expanded', 'true');
+    const menu = await screen.findByRole('menu', { name: 'Menu tài khoản quản trị' });
+    expect(menu).toBeInTheDocument();
+    expect(within(menu).getByText(/Quản trị viên/i)).toBeInTheDocument();
+    expect(within(menu).getByRole('menuitem', { name: /Hồ sơ cá nhân & Bảo mật/i })).toBeInTheDocument();
+    expect(within(menu).getByRole('menuitem', { name: /Đăng xuất/i })).toBeInTheDocument();
+
+    // Escape closes the menu
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('menu', { name: 'Menu tài khoản quản trị' })).not.toBeInTheDocument();
   });
 });

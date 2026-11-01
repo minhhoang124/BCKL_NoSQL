@@ -11,7 +11,7 @@
 .page label { display: block; margin: 14px 0; }
 .page label > select, .page label > textarea, .page label > input:not([type=checkbox]) { display: block; width: min(100%, 560px); margin-top: 6px; }
 .line { display: flex !important; gap: 12px; align-items: center; flex-wrap: wrap; }
-.error { background: #fff0ec; border-left: 4px solid #a82c05; padding: 12px; }
+.error { background: #fff0ed; border-left: 4px solid #a82c05; padding: 12px; }
 .page :focus-visible { outline: 3px solid var(--market-brand); outline-offset: 3px; }
 .checkoutGrid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
 .checkoutMain, .checkoutSummary { min-width: 0; }
@@ -25,3 +25,163 @@
 .table { width: 100%; border-collapse: collapse; }
 .table th, .table td { padding: 12px 8px; border-bottom: 1px solid #dce0e5; text-align: left; overflow-wrap: anywhere; }
 @media (max-width: 600px) { .page { padding: 20px 12px; } .card { padding: 14px; } .table { display: block; overflow-x: auto; } .page button { width: 100%; margin-right: 0; } }
+
+.addressSection {
+  background: #ffffff;
+  border: 1px solid var(--market-line);
+  border-radius: var(--market-radius);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.addressHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.addressTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.addressActionBtns {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btnInlineSecondary {
+  background: transparent !important;
+  border: 1px solid #cfd4d9 !important;
+  color: #20242b !important;
+  padding: 6px 14px !important;
+  min-height: 36px !important;
+  font-size: 0.88rem !important;
+}
+
+.btnInlineSecondary:hover:not(:disabled) {
+  background: #eef0f2 !important;
+  border-color: #8a919b !important;
+}
+
+.btnInlinePrimary {
+  background: var(--market-brand) !important;
+  border: 1px solid var(--market-brand) !important;
+  color: #fff !important;
+  padding: 6px 14px !important;
+  min-height: 36px !important;
+  font-size: 0.88rem !important;
+}
+
+.addressInlineCard {
+  background: #f6f7f8;
+  border: 1px solid #e3e6e9;
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 10px;
+}
+
+.addressInlineForm {
+  background: #fff;
+  border: 1px solid #cfd4d9;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.checkoutGroupCard {
+  background: #fff;
+  border: 1px solid var(--market-line);
+  border-radius: var(--market-radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.storeBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e3e6e9;
+  margin-bottom: 14px;
+}
+
+.storeBanner h2 {
+  font-size: 1.05rem;
+  margin: 0;
+  color: #20242b;
+}
+
+.checkoutItemRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eef0f2;
+}
+
+.checkoutItemRow:last-child {
+  border-bottom: none;
+}
+
+.checkoutItemImg {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e3e6e9;
+  background: #f6f7f8;
+  flex-shrink: 0;
+}
+
+.checkoutItemPlaceholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  background: #eef0f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.checkoutItemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkoutItemTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: #20242b;
+}
+
+.checkoutItemVariant {
+  font-size: 0.82rem;
+  color: #69717c;
+  margin: 0 0 4px;
+}
+
+.checkoutItemQtyPrice {
+  font-size: 0.85rem;
+  color: #4b525c;
+  margin: 0;
+}
+
+.checkoutItemTotal {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--market-brand);
+  text-align: right;
+  white-space: nowrap;
+}

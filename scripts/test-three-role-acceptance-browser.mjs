@@ -223,14 +223,9 @@ try {
   const cr = await created;
   assert.equal(cr.status(), 201);
   const product = await cr.json();
-  await s.getByText("Đã tạo sản phẩm nháp.", { exact: true }).waitFor();
-  // Choose the nearest product row by its edit control, independent of generated CSS.
-  await s
-    .getByText(marker, { exact: true })
-    .locator("..")
-    .locator("..")
-    .getByRole("button", { name: "Chỉnh sửa", exact: true })
-    .click();
+  // Guided wizard (FE orange G4): creating the draft selects it and opens step 2.
+  await s.getByText(/^Đã tạo sản phẩm nháp/).waitFor();
+  await s.getByRole("heading", { name: "2. Ảnh đại diện sản phẩm" }).waitFor();
   const png = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
     "base64",
@@ -238,8 +233,9 @@ try {
   await s
     .locator("input[type=file]")
     .setInputFiles({ name: "qa.png", mimeType: "image/png", buffer: png });
-  await s.getByRole("button", { name: "Tải ảnh", exact: true }).click();
-  await s.getByText("Đã tải ảnh chính.", { exact: true }).waitFor();
+  await s.getByRole("button", { name: "Tải ảnh & tiếp tục", exact: true }).click();
+  await s.getByText(/^Đã tải ảnh chính/).waitFor();
+  await s.getByRole("heading", { name: /^3\. Phân loại/ }).waitFor();
   if (values["multi-sku"]) {
     for (const [name, options] of [
       ["Màu sắc", ["Đen", "Trắng"]],
@@ -312,9 +308,11 @@ try {
       .click();
     await s.getByText("Đã thêm phiên bản bán.", { exact: true }).waitFor();
   }
-  await s.getByPlaceholder("Khối lượng (gram)").fill("100");
+  await s.getByRole("button", { name: "Tiếp tục sang bước Kiện hàng ›", exact: true }).click();
+  await s.getByLabel(/Khối lượng kiện hàng/).fill("100");
   await s.getByRole("button", { name: "Lưu kiện hàng", exact: true }).click();
   await s.getByText("Đã lưu kiện hàng.", { exact: true }).waitFor();
+  await s.getByRole("button", { name: "Tiếp tục sang bước Kiểm tra & Gửi duyệt ›", exact: true }).click();
   if (attribute) {
     const denied = s.waitForResponse(
       (r) => r.url() === api + `/seller/products/${product.id}/submit`,
@@ -326,6 +324,8 @@ try {
         .moderationStatus,
       "NOT_SUBMITTED",
     );
+    // Required attributes live in step 3 of the wizard.
+    await s.getByRole("button", { name: "3. Phân loại & Giá/Kho", exact: true }).click();
     await s
       .getByLabel("Chất liệu", { exact: true })
       .selectOption(String(attribute.options[0].id));
@@ -333,6 +333,7 @@ try {
     await s
       .getByText("Đã lưu thuộc tính Chất liệu.", { exact: true })
       .waitFor();
+    await s.getByRole("button", { name: "5. Gửi duyệt", exact: true }).click();
     results.push({
       name: "required_attribute_blocks_submit_then_single_select_saved",
       result: "PASS",
@@ -471,7 +472,7 @@ try {
       .selectOption({ label: "M" });
     assert(
       await b
-        .getByRole("button", { name: "Lưu vào giỏ", exact: true })
+        .getByRole("button", { name: "Thêm vào giỏ hàng", exact: true })
         .isDisabled(),
     );
     await b
@@ -480,7 +481,7 @@ try {
     await b
       .getByLabel("Kích thước muốn mua", { exact: true })
       .selectOption({ label: "L" });
-    await b.getByLabel("Số lượng trong giỏ", { exact: true }).fill("2");
+    await b.getByLabel("Số lượng", { exact: true }).fill("2");
     let puts = 0;
     b.on("request", (r) => {
       if (
@@ -490,13 +491,12 @@ try {
         puts++;
     });
     await b
-      .getByRole("button", { name: "Lưu vào giỏ", exact: true })
+      .getByRole("button", { name: "Thêm vào giỏ hàng", exact: true })
       .dblclick();
     await b.getByText("Đã lưu số lượng 2 vào giỏ.", { exact: true }).waitFor();
     assert.equal(puts, 1);
-    await b
-      .getByRole("link", { name: "Xem giỏ và thanh toán", exact: true })
-      .click();
+    // PDP no longer shows a cart link after saving; open the cart directly.
+    await b.goto(web + "/cart");
     await b
       .getByLabel(`Chọn biến thể ${variants[1].id}`, { exact: true })
       .check();
@@ -611,7 +611,7 @@ try {
     for (const [command, status, payment, count] of [
       ["ship", "SHIPPING", "UNPAID", 4], ["mark-delivered", "DELIVERED", "PAID", 5],
     ]) {
-      await a.getByLabel("Mã đơn hàng", { exact: true }).fill(String(orderId));
+      await a.getByLabel("Mã nội bộ của đơn", { exact: true }).fill(String(orderId));
       await a.getByRole("button", { name: "Tải đơn", exact: true }).click();
       await a.getByRole("heading", { name: "Đơn " + orders[0].orderNumber, exact: true }).waitFor();
       const select = a.getByLabel("Thao tác", { exact: true });
@@ -704,6 +704,8 @@ try {
       .locator("..")
       .getByRole("button", { name: "Chỉnh sửa", exact: true })
       .click();
+    // Wizard opens on step 1; the SKU editor is step 3.
+    await s.getByRole("button", { name: "3. Phân loại & Giá/Kho", exact: true }).click();
     await s.getByLabel("Màu sắc cho SKU", { exact: true }).waitFor();
     for (const viewport of [
       { width: 390, height: 844 },

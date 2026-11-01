@@ -7,6 +7,7 @@ import type { Brand, Category, Product } from '../types/marketplace';
 import { SearchResultCard } from '../services/searchTelemetry';
 import { analyticsToken, prepareSearchTelemetry } from '../services/searchAnalyticsClient';
 import { ApiError } from '../services/apiClient';
+import { StateCard } from '../components/StateCard/StateCard';
 import styles from './Marketplace.module.css';
 
 const searchWithTelemetry = async (body:Record<string,unknown>) => {await prepareSearchTelemetry();return marketplaceApi.search(body);};
@@ -29,6 +30,8 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
   const [categoryId, setCategoryId] = useState('');
   const [brandId, setBrandId] = useState('');
   const [inStock, setInStock] = useState(false);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
@@ -60,9 +63,16 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
     event.preventDefault(); setError(''); setLoading(true);
     const current = Symbol(); requestId.current = current;
     setTracking(undefined); setProducts([]); setNextCursor(null);
+    // Price range exists only on the keyword search API; never sent to the catalog list.
+    const priceRange = query.trim() ? priceFilter(minPrice, maxPrice) : {};
+    if (priceRange === null) {
+      setLoading(false);
+      setError('Khoảng giá không hợp lệ: nhập số nguyên từ 0, giá “Từ” không lớn hơn giá “Đến”.');
+      return;
+    }
     try {
       if (query.trim()) {
-        const result = await searchWithTelemetry({ query: query.trim(), topK: 24, candidateK: 100, ...(categoryId ? { categoryIds: [Number(categoryId)] } : {}), ...(brandId ? { brandIds: [Number(brandId)] } : {}), ...(inStock ? { inStock: true } : {}) });
+        const result = await searchWithTelemetry({ query: query.trim(), topK: 24, candidateK: 100, ...(categoryId ? { categoryIds: [Number(categoryId)] } : {}), ...(brandId ? { brandIds: [Number(brandId)] } : {}), ...(inStock ? { inStock: true } : {}), ...priceRange });
         if (requestId.current !== current) return;
         setTracking(analyticsToken(result.analytics)); setProducts(result.items.map((item) => item.product)); setSearched(true);
       } else {
@@ -90,60 +100,74 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
     } finally { if (requestId.current === current) setLoading(false); }
   };
 
+  const clearFilters = () => {
+    setCategoryId(''); setBrandId(''); setInStock(false); setMinPrice(''); setMaxPrice('');
+  };
+  const keyword = query.trim();
+
   return <div className={styles.page}>
-    <section className={styles.heroGrid}>
+    {!searched && <section className={styles.heroGrid}>
       <div className={styles.hero}>
         <div className={styles.heroBadgeRow} aria-hidden="true">
-          <span className={styles.heroSeasonPill}>🎄 NOEL MEGA SALE 2026</span>
-          <span className={styles.heroGuaranteePill}>✓ Mall Chính Hãng · Freeship 0Đ</span>
+          <span className={styles.heroSeasonPill}>🎄 Mùa lễ hội Noel 2026</span>
         </div>
         <h1>Khám phá sản phẩm phù hợp</h1>
-        <p>Chọn món quà yêu thích, trao gửi niềm vui mùa lễ hội.</p>
-        <div className={styles.voucherRow} aria-hidden="true">
-          <div className={styles.voucherChip}>
-            <strong>GIẢM 120K</strong>
-            <span>Đơn từ 499K · Noel2026</span>
-          </div>
-          <div className={styles.voucherChip}>
-            <strong>FREESHIP 0Đ</strong>
-            <span>Mọi đơn hàng Mall</span>
-          </div>
-        </div>
+        <p>Tìm bằng từ khóa hoặc hình ảnh, so sánh phân loại và đặt hàng từ nhiều cửa hàng.</p>
       </div>
-      <div className={styles.heroSide} aria-hidden="true">
-        <div className={styles.sideBannerGold}>
-          <span className={styles.sideTag}>KHUNG GIỜ VÀNG 0H · 12H · 21H</span>
-          <strong>Săn Voucher Giáng Sinh 50%</strong>
-          <span>Cộng dồn ưu đãi cửa hàng &amp; miễn phí vận chuyển</span>
-        </div>
-        <div className={styles.sideBannerPine}>
-          <span className={styles.sideTag}>ĐỐI TÁC THANH TOÁN</span>
-          <strong>VNPay-QR Hoàn Tiền Đến 20%</strong>
-          <span>Bảo vệ người mua 100% · Đồng kiểm khi nhận hàng</span>
-        </div>
-      </div>
-    </section>
+    </section>}
 
-    <div className={styles.flashRibbon} aria-hidden="true">
-      <div className={styles.flashTitle}>
-        <span>⚡ FLASH SALE GIÁNG SINH</span>
-        <div className={styles.countdown}>
-          <b>02</b>:<b>18</b>:<b>45</b>
-        </div>
-      </div>
+    <div className={styles.searchLayout}>
+      <form className={styles.filterPanel} onSubmit={submit} aria-label="Bộ lọc sản phẩm">
+        <h2>Bộ lọc</h2>
+        <label className={styles.filterField}>
+          <span>Từ khóa</span>
+          <input aria-label="Từ khóa" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tai nghe, loa, bàn phím..." />
+        </label>
+        <label className={styles.filterField}>
+          <span>Danh mục</span>
+          <select aria-label="Danh mục" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}><option value="">Mọi danh mục</option>{flatCategories.map((item) => <option key={item.id} value={item.id}>{'—'.repeat(item.depth)} {item.name}</option>)}</select>
+        </label>
+        <label className={styles.filterField}>
+          <span>Thương hiệu</span>
+          <select aria-label="Thương hiệu" value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">Mọi thương hiệu</option>{brands.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+        </label>
+        <fieldset className={styles.filterField} disabled={!keyword}>
+          <legend>Khoảng giá</legend>
+          <div className={styles.priceRange}>
+            <input aria-label="Giá từ" inputMode="numeric" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="Từ ₫" />
+            <input aria-label="Giá đến" inputMode="numeric" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="Đến ₫" />
+          </div>
+          {!keyword && <small>Nhập từ khóa để lọc theo giá.</small>}
+        </fieldset>
+        <label className={styles.stockCheck}><input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} /> Còn hàng</label>
+        <button className={styles.filterSubmit} disabled={loading}>{loading ? 'Đang tìm…' : 'Tìm kiếm'}</button>
+        <button type="button" className={styles.filterClear} onClick={clearFilters}>Xóa bộ lọc</button>
+        {import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' && <p className={styles.hint}><Link to="/search/image">Tìm sản phẩm bằng ảnh</Link></p>}
+      </form>
+
+      <section className={styles.results} aria-live="polite">
+        <header className={styles.resultsHeader}>
+          <h2>{searched && initialQuery ? `Kết quả cho “${initialQuery}”` : searched ? 'Kết quả tìm kiếm' : 'Sản phẩm mới'}</h2>
+          {searched && <p className={styles.searchStats}>{products.length} kết quả</p>}
+        </header>
+        {error && <p className={styles.error} role="alert">{error}</p>}
+        {!loading && !error && !products.length && nextCursor === null ? <StateCard title={searched ? 'Không có kết quả' : 'Chưa có sản phẩm'} role="status" action={searched ? { label: 'Xóa bộ lọc', onClick: clearFilters } : undefined}><p>{searched ? 'Không có kết quả phù hợp. Hãy thử từ khóa khác hoặc bỏ bớt bộ lọc.' : 'Chưa có sản phẩm phù hợp.'}</p></StateCard> : <div className={styles.grid}>{products.map((item) => <SearchResultCard key={`${tracking?.token??"catalog"}:${item.id}`} product={item} token={tracking?.token} />)}</div>}
+        {nextCursor !== null && <div className={styles.loadMoreWrap}><button className={styles.loadMoreBtn} disabled={loading} onClick={() => void loadMore()}>Tải thêm sản phẩm</button></div>}
+      </section>
     </div>
-
-    <form className={styles.toolbar} onSubmit={submit}>
-      <input aria-label="Từ khóa" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tai nghe chống ồn, giày chạy bộ..." />
-      <select aria-label="Danh mục" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}><option value="">Mọi danh mục</option>{flatCategories.map((item) => <option key={item.id} value={item.id}>{'—'.repeat(item.depth)} {item.name}</option>)}</select>
-      <select aria-label="Thương hiệu" value={brandId} onChange={(e) => setBrandId(e.target.value)}><option value="">Mọi thương hiệu</option>{brands.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
-      <label className={styles.stockCheck}><input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} /> Còn hàng</label>
-      <button disabled={loading}>{loading ? 'Đang tìm…' : 'Tìm kiếm'}</button>
-    </form>
-    {import.meta.env.VITE_IMAGE_SEARCH_ENABLED === 'true' && <p className={styles.hint}><Link to="/search/image">Tìm sản phẩm bằng ảnh</Link></p>}
-    {error && <p className={styles.error} role="alert">{error}</p>}
-    {searched && <p className={styles.searchStats}>{products.length} kết quả</p>}
-    {!loading && !error && !products.length && nextCursor === null ? <div className={styles.empty}>{searched ? 'Không có kết quả phù hợp. Hãy thử từ khóa khác hoặc bỏ bớt bộ lọc.' : 'Chưa có sản phẩm phù hợp.'}</div> : <section className={styles.grid}>{products.map((item) => <SearchResultCard key={`${tracking?.token??"catalog"}:${item.id}`} product={item} token={tracking?.token} />)}</section>}
-    {nextCursor !== null && <div className={styles.loadMoreWrap}><button className={styles.loadMoreBtn} disabled={loading} onClick={() => void loadMore()}>Tải thêm sản phẩm</button></div>}
   </div>;
+}
+
+/** Whole-VND, non-negative, min ≤ max. {} when empty; null when invalid. */
+export function priceFilter(min: string, max: string): { minPrice?: number; maxPrice?: number } | null {
+  const parse = (value: string) => {
+    const v = value.trim().replace(/[.\s]/g, '');
+    if (!v) return undefined;
+    if (!/^\d{1,12}$/.test(v)) return null;
+    return Number(v);
+  };
+  const lo = parse(min), hi = parse(max);
+  if (lo === null || hi === null) return null;
+  if (lo !== undefined && hi !== undefined && lo > hi) return null;
+  return { ...(lo !== undefined ? { minPrice: lo } : {}), ...(hi !== undefined ? { maxPrice: hi } : {}) };
 }

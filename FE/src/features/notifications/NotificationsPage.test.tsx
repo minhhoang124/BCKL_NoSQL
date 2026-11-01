@@ -182,3 +182,22 @@ it("badge removes old count on account change", async () => {
   ).not.toBeInTheDocument();
   await waitFor(() => expect(screen.getByLabelText("Thông báo")).toBeVisible());
 });
+
+it('opens notifications dropdown and renders recent items and view all link', async () => {
+  vi.stubEnv('VITE_NOTIFICATIONS_ENABLED', 'true');
+  setup();
+  render(
+    <MemoryRouter>
+      <NotificationBadge />
+    </MemoryRouter>,
+  );
+  const badge = await screen.findByLabelText('Thông báo, 3 chưa đọc');
+  fireEvent.click(badge);
+
+  expect(screen.getByRole('menu', { name: 'Thông báo mới nhất' })).toBeInTheDocument();
+  expect(screen.getByText('Đơn của tài khoản một')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Xem tất cả thông báo ›' })).toHaveAttribute(
+    'href',
+    '/account/notifications',
+  );
+});

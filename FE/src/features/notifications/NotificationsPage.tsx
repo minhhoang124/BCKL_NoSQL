@@ -101,8 +101,7 @@ function Inbox() {
     <section className={styles.inbox} aria-busy={busy}>
       <h1>Thông báo</h1>
       <p>
-        Thông báo trong ứng dụng. Trang đích sẽ kiểm tra lại quyền hiện tại của
-        bạn.
+        Cập nhật về đơn hàng, cửa hàng và tin nhắn của bạn.
       </p>
       <div className={styles.toolbar}>
         <label>
@@ -190,6 +189,27 @@ export function NotificationBadge() {
 }
 function Badge() {
   const [count, setCount] = useState<number | null>(null);
+  const [recentItems, setRecentItems] = useState<NoticePage['items']>([]);
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleDown);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleDown);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, []);
+
   useEffect(() => {
     const api = createNotificationApi();
     let active = true,
@@ -203,9 +223,15 @@ function Badge() {
       const timeout = setTimeout(() => current.abort(), 15000);
       try {
         const p = await api.list(null, null, current.signal);
-        if (active) setCount(p.unreadCount);
+        if (active) {
+          setCount(p.unreadCount);
+          setRecentItems(p.items.slice(0, 5));
+        }
       } catch {
-        if (active) setCount(null);
+        if (active) {
+          setCount(null);
+          setRecentItems([]);
+        }
       } finally {
         clearTimeout(timeout);
         busy = false;
@@ -219,13 +245,59 @@ function Badge() {
       clearInterval(interval);
     };
   }, []);
+
   return (
-    <Link
-      to="/account/notifications"
-      aria-label={count === null ? "Thông báo" : `Thông báo, ${count} chưa đọc`}
+    <div
+      ref={menuRef}
+      className={styles.badgeDropdownWrapper}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
     >
-      Thông báo
-      {count !== null && count > 0 ? ` (${count > 99 ? "99+" : count})` : ""}
-    </Link>
+      <Link
+        to="/account/notifications"
+        aria-label={count === null ? "Thông báo" : `Thông báo, ${count} chưa đọc`}
+        className={styles.badgeLink}
+        onClick={() => setOpen((o) => !o)}
+      >
+        Thông báo
+        {count !== null && count > 0 ? ` (${count > 99 ? "99+" : count})` : ""}
+      </Link>
+      {open && (
+        <div className={styles.noticeDropdown} role="menu" aria-label="Thông báo mới nhất">
+          <div className={styles.dropdownHeader}>
+            <strong>Thông báo mới nhận</strong>
+            {count !== null && count > 0 && <span className={styles.unreadTag}>{count} mới</span>}
+          </div>
+          {recentItems.length === 0 ? (
+            <p className={styles.emptyNotice}>Chưa có thông báo nào.</p>
+          ) : (
+            <ul className={styles.dropdownList}>
+              {recentItems.map((n) => (
+                <li key={n.id} className={!n.readAt ? styles.dropdownItemUnread : styles.dropdownItem}>
+                  {n.link ? (
+                    <Link to={n.link} onClick={() => setOpen(false)} className={styles.dropdownItemLink}>
+                      <span className={styles.itemTitle}>{n.title}</span>
+                      <p className={styles.itemText}>{n.text}</p>
+                      <time className={styles.itemTime}>{new Date(n.eventAt).toLocaleDateString('vi-VN')}</time>
+                    </Link>
+                  ) : (
+                    <div className={styles.dropdownItemLink}>
+                      <span className={styles.itemTitle}>{n.title}</span>
+                      <p className={styles.itemText}>{n.text}</p>
+                      <time className={styles.itemTime}>{new Date(n.eventAt).toLocaleDateString('vi-VN')}</time>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className={styles.dropdownFooter}>
+            <Link to="/account/notifications" onClick={() => setOpen(false)} className={styles.viewAllBtn}>
+              Xem tất cả thông báo ›
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

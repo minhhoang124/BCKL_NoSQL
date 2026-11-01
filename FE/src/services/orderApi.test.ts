@@ -398,4 +398,39 @@ describe('Order response contracts derived from local Backend DTOs', () => {
       ).toThrow();
     },
   );
+  it('accepts order list with itemPreview projection conforming to BE-UX-01', () => {
+    const orderWithPreview = {
+      ...summaryFixture(19),
+      itemPreview: [
+        {
+          orderItemId: 501,
+          productId: 88,
+          variantId: 301,
+          productName: 'Tai nghe X',
+          options: ['Đen'],
+          quantity: 2,
+          unitPrice: '20000.00',
+          lineTotal: '40000.00',
+          imageUrl: '/uploads/products/88/main.webp',
+        },
+      ],
+      itemCount: 1,
+      totalQuantity: 2,
+      hasMoreItems: false,
+    };
+    const validated = validateOrderList({ items: [orderWithPreview], nextCursor: null });
+    expect(validated.items[0].itemPreview).toHaveLength(1);
+    expect(validated.items[0].itemPreview?.[0].productName).toBe('Tai nghe X');
+  });
+
+  it('accepts order detail with items[].imageUrl conforming to BE-UX-01', () => {
+    const detail = detailFixture(19);
+    detail.items[0] = {
+      ...detail.items[0],
+      imageUrl: '/uploads/products/88/main.webp',
+    } as any;
+    const validated = validateOrderDetail(detail, 19);
+    expect(validated.items[0].imageUrl).toBe('/uploads/products/88/main.webp');
+  });
+
 });

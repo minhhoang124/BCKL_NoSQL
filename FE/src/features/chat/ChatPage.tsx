@@ -220,6 +220,7 @@ function ChatSession({
             actorId={actorId}
             id={id}
             session={session}
+            title={conversationTitle(items.find((item) => item.id === id))}
             productId={
               /^[1-9]\d*$/.test(query.get("productId") ?? "") &&
               Number(query.get("productId")) <= 2147483647
@@ -240,13 +241,23 @@ function ChatSession({
     </main>
   );
 }
-function ChatThread({
+/** Display name for a conversation; falls back to the id when the inbox row is not loaded. */
+export function conversationTitle(item?: InboxItem) {
+  if (!item) return undefined;
+  return item.context === "BUYER"
+    ? item.store.name
+    : item.buyer.fullName || `Khách #${item.buyer.id}`;
+}
+/** One thread = one realtime socket. Shared by the Messages page and the mini widget. */
+export function ChatThread({
   actorId,
   id,
   session,
   onChange,
   productId,
   orderId,
+  title,
+  compact = false,
 }: {
   actorId: number;
   id: number;
@@ -254,6 +265,8 @@ function ChatThread({
   onChange: () => void;
   productId?: number;
   orderId?: number;
+  title?: string;
+  compact?: boolean;
 }) {
   const [initialPending] = useState(() => {
     try {
@@ -519,10 +532,20 @@ function ChatThread({
     }
   };
   return (
-    <section aria-label={`Hội thoại ${id}`} className={styles.thread}>
-      <h2>Hội thoại #{id}</h2>
-      <p role="status">{status}</p>
-      <div className={styles.actions}>
+    <section
+      aria-label={`Hội thoại ${id}`}
+      className={compact ? `${styles.thread} ${styles.compactThread}` : styles.thread}
+    >
+      {compact ? null : <h2>{title ?? `Hội thoại #${id}`}</h2>}
+      <p role="status" className={styles.connection}>{status}</p>
+      {/* Recovery controls are always available, but only prominent when something is wrong. */}
+      <div
+        className={
+          error || status !== "Đang kết nối trực tiếp"
+            ? styles.actions
+            : `${styles.actions} ${styles.actionsQuiet}`
+        }
+      >
         <button onClick={() => void reconnect()}>Kết nối lại</button>
         <button onClick={() => void sync()}>Tải lại tin nhắn</button>
       </div>
@@ -652,10 +675,12 @@ function ChatThread({
           {busy ? "Đang gửi…" : pending ? "Gửi lại cùng mã" : "Gửi tin nhắn"}
         </button>
       </form>
-      <small>
-        Mã và nội dung tin đang chờ chỉ giữ trong phiên tab này để tránh gửi
-        trùng; không lưu token. Đóng tab có thể mất tin chưa xác nhận.
-      </small>
+      {!compact && (
+        <small>
+          Tin chưa gửi xong chỉ được giữ trong tab này để tránh gửi trùng. Đóng
+          tab có thể mất tin chưa xác nhận.
+        </small>
+      )}
     </section>
   );
 }

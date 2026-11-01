@@ -20,24 +20,24 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
         <div className={styles.perks}>
           <div className={styles.perkItem}>
-            <span className={styles.perkIcon} aria-hidden="true">🎁</span>
+            <span className={styles.perkIcon} aria-hidden="true">🔎</span>
             <div>
-              <strong>Voucher 120.000₫ cho đơn hàng đầu tiên</strong>
-              <span>Áp dụng mọi ngành hàng Thời trang, Công nghệ &amp; Gia dụng</span>
+              <strong>Tìm sản phẩm bằng chữ hoặc hình ảnh</strong>
+              <span>Lọc theo danh mục, thương hiệu và hàng còn sẵn</span>
             </div>
           </div>
           <div className={styles.perkItem}>
-            <span className={styles.perkIcon} aria-hidden="true">🚚</span>
+            <span className={styles.perkIcon} aria-hidden="true">💬</span>
             <div>
-              <strong>Freeship 0Đ toàn quốc mọi đơn từ 99K</strong>
-              <span>Giao nhanh hỏa tốc SPX Express chỉ trong 2 giờ</span>
+              <strong>Trao đổi trực tiếp với cửa hàng</strong>
+              <span>Hỏi về sản phẩm hoặc đơn hàng ngay trong tin nhắn</span>
             </div>
           </div>
           <div className={styles.perkItem}>
-            <span className={styles.perkIcon} aria-hidden="true">🛡️</span>
+            <span className={styles.perkIcon} aria-hidden="true">📦</span>
             <div>
-              <strong>Đổi trả miễn phí 7 ngày &amp; Hoàn tiền 100%</strong>
-              <span>Trọng tài sàn bảo vệ quyền lợi người mua tuyệt đối</span>
+              <strong>Theo dõi đơn hàng ngay trên tài khoản</strong>
+              <span>Xem trạng thái xác nhận, đóng gói và giao hàng của từng đơn</span>
             </div>
           </div>
         </div>

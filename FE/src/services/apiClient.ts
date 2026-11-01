@@ -46,6 +46,15 @@ function assertSession(version: number) {
   if (version !== authSessionVersion) throw new AuthSessionChangedError();
 }
 
+/** Shopper-facing fallback when the server sent no message; keeps the status for support. */
+export function fallbackErrorMessage(status: number) {
+  if (status === 429) return `Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút (mã ${status}).`;
+  if (status === 502 || status === 503 || status === 504)
+    return `Dịch vụ tạm thời chưa sẵn sàng. Vui lòng thử lại sau (mã ${status}).`;
+  if (status >= 500) return `Đã có lỗi xảy ra. Vui lòng thử lại sau (mã ${status}).`;
+  return `Yêu cầu thất bại (mã ${status}).`;
+}
+
 /**
  * Handle HTTP response and parse JSON.
  */
@@ -54,7 +63,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const envelope = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
     const message = Array.isArray(envelope.message) ? envelope.message.join(', ') : envelope.message;
-    throw new ApiError(typeof message === 'string' && message ? message : `Yêu cầu thất bại (${response.status})`,
+    throw new ApiError(typeof message === 'string' && message ? message : fallbackErrorMessage(response.status),
       response.status, typeof envelope.code === 'string' ? envelope.code : undefined);
   }
   return data as T;

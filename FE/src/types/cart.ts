@@ -15,6 +15,7 @@ export interface CartItem {
   optionValues?: string[];
   currentUnitPrice?: string;
   stock?: number;
+  lineTotal?: string;
 }
 
 export interface CartGroup {

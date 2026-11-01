@@ -1,76 +1,99 @@
-/* Source: deliverables/ui-shopee-shein-noel-figma-20261030/00-foundations-noel.svg
-   Nordic Festive Warmth (Shopee + Shein Ergonomics + Noel 2026 Event Layer).
-   Light storefront is intentional under either OS theme. */
+/* Source: deliverables/ui-orange-v1 (design-data.json colors), owner-selected
+   orange–white storefront. Orange marks the primary action and prices only;
+   surfaces stay neutral. Light storefront is intentional under either OS theme.
+   Legacy token names (--holiday-*, --admin-dark-*) are kept as aliases so
+   existing components follow the new palette without per-file rewrites. */
 :root {
-  /* Noel Holiday Festive Tokens */
-  --holiday-primary: #C92A2A;
-  --holiday-primary-hover: #A61E1E;
-  --holiday-primary-light: #FFF5F5;
-  --holiday-primary-border: #FFD8D8;
+  /* Orange–white palette (ui-orange-v1) */
+  --orange-brand: #d63b0b;
+  --orange-brand-hover: #b5330a;
+  --orange-soft: #fff2ec;
+  --orange-soft-border: #f6cdbb;
+  --orange-ink: #20242b;
+  --orange-muted: #69717c;
+  --orange-line: #e3e6e9;
+  --orange-bg: #f6f7f8;
+  --orange-green: #23734a;
+  --orange-green-bg: #eaf5ef;
+  --orange-amber: #8d5b0d;
+  --orange-amber-bg: #fff5df;
+  --orange-red: #b42318;
+  --orange-red-bg: #fff0ed;
+  --orange-blue: #245e9a;
 
-  --holiday-secondary: #1B4332;
-  --holiday-secondary-hover: #143325;
-  --holiday-secondary-light: #EBFBEE;
-  --holiday-secondary-border: #D3F9D8;
+  /* Legacy aliases (decorative seasonal layer now uses the same palette) */
+  --holiday-primary: var(--orange-brand);
+  --holiday-primary-hover: var(--orange-brand-hover);
+  --holiday-primary-light: var(--orange-soft);
+  --holiday-primary-border: var(--orange-soft-border);
+  --holiday-secondary: var(--orange-green);
+  --holiday-secondary-hover: #1b5c3b;
+  --holiday-secondary-light: var(--orange-green-bg);
+  --holiday-secondary-border: #c9e6d5;
+  --holiday-gold: var(--orange-amber);
+  --holiday-gold-light: var(--orange-amber-bg);
+  --holiday-gold-border: #f0d9a8;
 
-  --holiday-gold: #F59F00;
-  --holiday-gold-light: #FFF9DB;
-  --holiday-gold-border: #FDE047;
+  /* Surfaces */
+  --bg-canvas: var(--orange-bg);
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
 
-  /* Snowy Surfaces & Backgrounds */
-  --bg-canvas: #F8FAFC;
-  --bg-surface: #FFFFFF;
-  --bg-surface-elevated: #FFFFFF;
+  /* Ink & typography */
+  --text-main: var(--orange-ink);
+  --text-body: var(--orange-ink);
+  --text-muted: var(--orange-muted);
+  --text-subtle: #8a919b;
 
-  /* Ink & Typography Hierarchy */
-  --text-main: #0F172A;
-  --text-body: #334155;
-  --text-muted: #64748B;
-  --text-subtle: #94A3B8;
+  /* Dividers & focus */
+  --border-subtle: var(--orange-line);
+  --border-strong: #cfd4d9;
+  --border-focus: var(--orange-brand);
 
-  /* Dividers & Focus */
-  --border-subtle: #E2E8F0;
-  --border-strong: #CBD5E1;
-  --border-focus: #C92A2A;
+  /* Admin uses the same light surfaces as the storefront (white sidebar). */
+  --admin-dark-bg: #ffffff;
+  --admin-dark-surface: var(--orange-soft);
+  --admin-dark-muted: var(--orange-muted);
+  --admin-dark-border: var(--orange-line);
 
-  /* Admin Dark Slate Governance Theme */
-  --admin-dark-bg: #0F172A;
-  --admin-dark-surface: #1E293B;
-  --admin-dark-muted: #94A3B8;
-  --admin-dark-border: #334155;
+  /* Shadows */
+  --shadow-card: 0 1px 2px 0 rgba(32, 36, 43, 0.05);
+  --shadow-card-hover: 0 8px 18px -6px rgba(32, 36, 43, 0.14);
+  --shadow-dropdown: 0 12px 28px -6px rgba(32, 36, 43, 0.16), 0 8px 10px -6px rgba(32, 36, 43, 0.08);
 
-  /* Ergonomic Shadows */
-  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
-  --shadow-card-hover: 0 10px 20px -5px rgba(201, 42, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
-  --shadow-dropdown: 0 12px 28px -6px rgba(15, 23, 42, 0.14), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
-
-  /* Border Radii */
+  /* Radii */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-full: 9999px;
 
-  /* Core Marketplace Token Mappings (includes baseline token for static theme contract) */
+  /* Core marketplace tokens (static theme contract) */
   --market-brand: #d63b0b;
-  --market-brand: #C92A2A;
-  --market-brand-hover: #A61E1E;
-  --market-soft: #FFF5F5;
-  --market-soft-border: #FFD8D8;
-  --market-pine: #1B4332;
-  --market-pine-hover: #143325;
-  --market-pine-soft: #EBFBEE;
-  --market-pine-border: #D3F9D8;
-  --market-gold: #F59F00;
-  --market-gold-soft: #FFF9DB;
+  --market-brand-hover: var(--orange-brand-hover);
+  --market-soft: var(--orange-soft);
+  --market-soft-border: var(--orange-soft-border);
+  --market-pine: var(--orange-green);
+  --market-pine-hover: #1b5c3b;
+  --market-pine-soft: var(--orange-green-bg);
+  --market-pine-border: #c9e6d5;
+  --market-gold: var(--orange-amber);
+  --market-gold-soft: var(--orange-amber-bg);
   --market-ink: #20242b;
-  --market-ink-strong: #0F172A;
-  --market-body: #334155;
-  --market-muted: #64748B;
-  --market-subtle: #94A3B8;
-  --market-line: #E2E8F0;
-  --market-line-strong: #CBD5E1;
-  --market-bg: #F8FAFC;
-  --market-surface: #FFFFFF;
+  --market-ink-strong: #20242b;
+  --market-body: #20242b;
+  --market-muted: #69717c;
+  --market-subtle: #8a919b;
+  --market-line: #e3e6e9;
+  --market-line-strong: #cfd4d9;
+  --market-bg: #f6f7f8;
+  --market-surface: #ffffff;
+  --market-success: var(--orange-green);
+  --market-success-soft: var(--orange-green-bg);
+  --market-warning: var(--orange-amber);
+  --market-warning-soft: var(--orange-amber-bg);
+  --market-danger: var(--orange-red);
+  --market-danger-soft: var(--orange-red-bg);
+  --market-info: var(--orange-blue);
   --market-radius: 6px;
   --market-space-1: 8px;
   --market-space-2: 16px;
@@ -94,7 +117,7 @@
 .market-button:hover:not(:disabled) {
   background: var(--market-brand-hover);
   border-color: var(--market-brand-hover);
-  box-shadow: 0 4px 12px rgba(201, 42, 42, 0.22);
+  box-shadow: 0 4px 12px rgba(214, 59, 11, 0.22);
 }
 .market-button:disabled {
   background: #e4e7eb;

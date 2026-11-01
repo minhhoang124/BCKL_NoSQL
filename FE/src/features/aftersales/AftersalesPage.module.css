@@ -127,3 +127,74 @@
     font-size: 1.4rem;
   }
 }
+
+/* ui-orange-v1 / 31: neutral cards, one orange primary, state pill. */
+.page {
+  color: var(--market-ink);
+}
+.panel {
+  border-color: var(--market-line);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+.page :focus-visible {
+  outline-color: var(--market-brand);
+}
+.back {
+  color: var(--market-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+.back:hover {
+  color: var(--market-brand);
+}
+.page .requestList {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.page .requestList li {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--market-line);
+  border-radius: 8px;
+}
+.page .requestList li p {
+  margin: 0.25rem 0;
+}
+.page .requestList li.selectedRow {
+  border-color: var(--market-brand);
+  background: var(--market-soft);
+}
+.statePill {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: #fff4dc;
+  color: #8a5a00;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.money {
+  color: var(--market-brand);
+  white-space: nowrap;
+}
+.amountLine .money {
+  font-size: 1.35rem;
+  margin-left: 0.4rem;
+}
+.confirmation {
+  border: 1px solid var(--market-line);
+  background: #fffaf7;
+}
+.page button.primary {
+  border-color: var(--market-brand);
+  background: var(--market-brand);
+  color: #ffffff;
+}
+.page button.primary:hover:not(:disabled) {
+  background: var(--market-brand-hover);
+}

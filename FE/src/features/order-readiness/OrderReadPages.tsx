@@ -147,16 +147,20 @@ function List({ scope }: { scope: OrderScope }) {
     );
   return (
     <>
-      <div className={styles.statusTabStrip} aria-hidden="true">
-        <span
+      <nav className={styles.statusTabStrip} aria-label="Lọc nhanh theo trạng thái">
+        <button
+          type="button"
+          aria-pressed={!status}
           onClick={() => setParams({})}
           className={!status ? `${styles.statusTab} ${styles.statusTabActive}` : styles.statusTab}
         >
           Tất cả
-        </span>
+        </button>
         {ORDER_STATUSES.map((s) => (
-          <span
+          <button
+            type="button"
             key={s}
+            aria-pressed={status === s}
             onClick={() => setParams({ status: s })}
             className={
               status === s
@@ -165,9 +169,9 @@ function List({ scope }: { scope: OrderScope }) {
             }
           >
             {orderStatusLabels[s]}
-          </span>
+          </button>
         ))}
-      </div>
+      </nav>
       <div className={styles.filterToolbar}>
         <label>
           Trạng thái đơn

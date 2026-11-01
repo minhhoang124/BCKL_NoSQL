@@ -111,6 +111,8 @@ export function ProductDetailsEditor({
           Sản phẩm đang chờ duyệt hoặc bị đóng băng. Các trường chỉ đọc.
         </p>
       )}
+      <div className={styles.editorGrid}>
+      <div className={styles.editorCol}>
       <h2>Thuộc tính danh mục</h2>
       {schemaState === "loading" ? (
         <p>Đang tải thuộc tính…</p>
@@ -136,6 +138,7 @@ export function ProductDetailsEditor({
       )}
       <button
         type="button"
+        className={styles.secondary}
         disabled={busy}
         onClick={() => {
           setAttributeState("loading");
@@ -162,7 +165,7 @@ export function ProductDetailsEditor({
             Tên nhóm phân loại
             <input name="groupName" required maxLength={80} />
           </label>
-          <button>Thêm nhóm phân loại</button>
+          <button className={styles.secondary}>Thêm nhóm phân loại</button>
         </fieldset>
       </form>
       {product.variants.length > 0 && (
@@ -201,10 +204,12 @@ export function ProductDetailsEditor({
               Giá trị mới cho {g.name}
               <input name="value" required maxLength={120} />
             </label>
-            <button>Thêm giá trị {g.name}</button>
+            <button className={styles.secondary}>Thêm giá trị {g.name}</button>
           </fieldset>
         </form>
       ))}
+      </div>
+      <div className={styles.editorCol}>
       <form
         className={styles.form}
         onSubmit={variant}
@@ -316,6 +321,8 @@ export function ProductDetailsEditor({
           </table>
         </div>
       )}
+      </div>
+      </div>
     </section>
   );
 }
@@ -430,7 +437,7 @@ function AttributeField({
             />
           </label>
         )}
-        <button>Lưu {d.name}</button>
+        <button className={styles.secondary}>Lưu {d.name}</button>
       </fieldset>
     </form>
   );

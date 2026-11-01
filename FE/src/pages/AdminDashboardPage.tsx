@@ -1239,7 +1239,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
   return (
     <>
       <PageHeading
-        eyebrow="CATALOG"
+        eyebrow="DANH MỤC"
         title="Danh mục & thương hiệu"
         description="Tổ chức cây danh mục và chuẩn hóa thương hiệu dùng trong toàn sàn."
         action={
@@ -1370,7 +1370,7 @@ function CatalogPage({ notify }: { notify: (toast: Toast) => void }) {
             </select>
             <div className={styles.formActions}>
               <button
-                className={styles.approveButton}
+                className={styles.primaryButton}
                 disabled={busy || loading || !ready || (selectedId !== null && !selected)}
                 onClick={() => void saveCategory()}
               >
@@ -1534,6 +1534,8 @@ export function AdminDashboardPage() {
 function AdminConsole() {
   const { user, logout } = useAuth();
   const [toast, setToast] = useState<Toast>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const showToast = useCallback((next: Toast) => {
     setToast(next);
     window.setTimeout(() => setToast(null), 4000);
@@ -1545,6 +1547,28 @@ function AdminConsole() {
     [user],
   );
   const navigate = useNavigate();
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setUserMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userMenuOpen]);
   const signOut = async () => {
     try {
       await logout();
@@ -1563,7 +1587,7 @@ function AdminConsole() {
           <span className={styles.brandMark}>B</span>
           <span>
             <b>BCKL</b>
-            <small>ADMIN CONSOLE</small>
+            <small>QUẢN TRỊ SÀN</small>
           </span>
         </Link>
         <div className={styles.sideSection}>MENU CHÍNH</div>
@@ -1598,17 +1622,7 @@ function AdminConsole() {
           <div className={styles.helpCard}>
             <span>✦</span>
             <b>Trung tâm hỗ trợ</b>
-            <small>Cần trợ giúp khi vận hành?</small>
-            <button
-              onClick={() =>
-                showToast({
-                  kind: 'error',
-                  message: 'Kênh hỗ trợ chưa được cấu hình.',
-                })
-              }
-            >
-              Liên hệ nhóm dự án　›
-            </button>
+            <small>Kênh hỗ trợ vận hành chưa được cấu hình.</small>
           </div>
           <div className={styles.sideUser}>
             <span className={styles.avatar}>{initials}</span>
@@ -1639,13 +1653,64 @@ function AdminConsole() {
             >
               ♧
             </button>
-            <button
-              className={styles.topAvatar}
-              onClick={() => void signOut()}
-              title="Đăng xuất"
-            >
-              {initials}
-            </button>
+            <div className={styles.topUserWrapper} ref={userMenuRef}>
+              <button
+                type="button"
+                className={styles.topAvatar}
+                onClick={() => setUserMenuOpen((prev) => !prev)}
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
+                aria-label={`Menu tài khoản ${user?.fullName || 'Quản trị viên'}`}
+                title={`Tài khoản: ${user?.fullName || user?.email || 'Quản trị viên'}`}
+              >
+                {initials}
+              </button>
+              {userMenuOpen && (
+                <div
+                  className={styles.userMenuDropdown}
+                  role="menu"
+                  aria-label="Menu tài khoản quản trị"
+                >
+                  <div className={styles.userMenuHeader}>
+                    <span className={styles.userMenuAvatar}>{initials}</span>
+                    <div className={styles.userMenuMeta}>
+                      <strong>{user?.fullName || 'Quản trị viên'}</strong>
+                      <span>{user?.email}</span>
+                      <span className={styles.adminRoleTag}>Quản trị viên</span>
+                    </div>
+                  </div>
+                  <div className={styles.userMenuDivider} />
+                  <Link
+                    to="/account"
+                    className={styles.userMenuItem}
+                    role="menuitem"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <span>⚙</span> Hồ sơ cá nhân &amp; Bảo mật
+                  </Link>
+                  <Link
+                    to="/"
+                    className={styles.userMenuItem}
+                    role="menuitem"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <span>🏪</span> Xem giao diện mua sắm
+                  </Link>
+                  <div className={styles.userMenuDivider} />
+                  <button
+                    type="button"
+                    className={`${styles.userMenuItem} ${styles.userMenuLogout}`}
+                    role="menuitem"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      void signOut();
+                    }}
+                  >
+                    <span>↗</span> Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
         <div className={styles.content}>

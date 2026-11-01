@@ -66,7 +66,7 @@ const tree = (id = actorId) => (
 );
 async function open() {
   render(tree());
-  fireEvent.change(screen.getByLabelText("Mã đơn hàng", { exact: true }), {
+  fireEvent.change(screen.getByLabelText("Mã nội bộ của đơn", { exact: true }), {
     target: { value: "11" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Tải đơn" }));
@@ -102,7 +102,7 @@ describe("Admin simulation safety boundary", () => {
         }),
     );
     const view = render(tree());
-    fireEvent.change(screen.getByLabelText("Mã đơn hàng", { exact: true }), {
+    fireEvent.change(screen.getByLabelText("Mã nội bộ của đơn", { exact: true }), {
       target: { value: "11" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Tải đơn" }));
@@ -141,7 +141,7 @@ describe("Admin simulation safety boundary", () => {
       retryCount: 0,
       currentAttempt: { trackingReference: "NEXT" },
     });
-    fireEvent.change(screen.getByLabelText("Mã đơn hàng", { exact: true }), {
+    fireEvent.change(screen.getByLabelText("Mã nội bộ của đơn", { exact: true }), {
       target: { value: "12" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Tải đơn" }));
@@ -161,11 +161,11 @@ describe("Admin simulation safety boundary", () => {
         : Promise.resolve({ ...ready, id: 12, orderNumber: "ORD-NEXT" }),
     );
     render(tree());
-    fireEvent.change(screen.getByLabelText("Mã đơn hàng", { exact: true }), {
+    fireEvent.change(screen.getByLabelText("Mã nội bộ của đơn", { exact: true }), {
       target: { value: "11" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Tải đơn" }));
-    fireEvent.change(screen.getByLabelText("Mã đơn hàng", { exact: true }), {
+    fireEvent.change(screen.getByLabelText("Mã nội bộ của đơn", { exact: true }), {
       target: { value: "12" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Tải đơn" }));
@@ -262,7 +262,7 @@ describe("Admin simulation safety boundary", () => {
         }),
     );
     const view = render(tree());
-    fireEvent.change(screen.getByLabelText("Mã đơn hàng", { exact: true }), {
+    fireEvent.change(screen.getByLabelText("Mã nội bộ của đơn", { exact: true }), {
       target: { value: "11" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Tải đơn" }));
@@ -321,5 +321,22 @@ describe("Admin simulation safety boundary", () => {
     expect(
       definiteRejection(new ApiError("stale", 409, "STALE_DELIVERY_ATTEMPT")),
     ).toBe(true);
+  });
+  it('searches orders by ORD display number and loads detail on selection', async () => {
+    api.list.mockResolvedValueOnce([]); // initial queue
+    api.list.mockResolvedValueOnce([ready]); // search result
+    api.detail.mockResolvedValueOnce(ready);
+
+    render(tree());
+    fireEvent.change(screen.getByLabelText('Mã hiển thị đơn (ORD-...)'), {
+      target: { value: 'ORD-QA' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Tìm kiếm theo mã' }));
+
+    expect(await screen.findByText('Kết quả tìm kiếm (1 đơn):')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Xem đơn ORD-QA' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Xem đơn ORD-QA' }));
+    expect(await screen.findByRole('heading', { name: 'Đơn ORD-QA' })).toBeInTheDocument();
   });
 });

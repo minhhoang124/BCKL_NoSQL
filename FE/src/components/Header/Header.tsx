@@ -48,15 +48,9 @@ export function Header() {
           <div className={styles.utilityLeft}>
             <span className={styles.festivePill}>🎄 Mùa Lễ Hội Noel 2026</span>
             <span className={styles.utilityDivider}>·</span>
-            <span>Cam kết Chính hãng 100%</span>
-            <span className={styles.utilityDivider}>·</span>
-            <span>Freeship 0Đ toàn quốc</span>
+            <span>Thanh toán khi nhận hàng hoặc qua VNPay</span>
           </div>
           <div className={styles.utilityRight}>
-            <span>Đổi trả 7 ngày</span>
-            <span className={styles.utilityDivider}>·</span>
-            <span>Hỗ trợ 24/7: 1900 8822</span>
-            <span className={styles.utilityDivider}>·</span>
             <span>Tiếng Việt</span>
           </div>
         </div>
@@ -85,7 +79,7 @@ export function Header() {
               <input
                 aria-label="Tìm sản phẩm"
                 type="search"
-                placeholder="Tìm kiếm sản phẩm, thương hiệu, quà tặng Noel..."
+                placeholder="Tìm sản phẩm, thương hiệu..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -144,7 +138,7 @@ export function Header() {
               )}
               {user.role === 'USER' && import.meta.env.VITE_SELLER_ONBOARDING_ENABLED === 'true' && (
                 <Link to="/account/store-application" className={styles.roleBadgeLink}>
-                  Mở Store
+                  Mở cửa hàng
                 </Link>
               )}
               {user.role === 'ADMIN' && (

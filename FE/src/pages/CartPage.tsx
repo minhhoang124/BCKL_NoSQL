@@ -282,16 +282,66 @@ function CartContent({ user }: { user: User }) {
                       {item.unavailableReason !== 'VARIANT_UNAVAILABLE' && <>
                         {!!item.optionValues?.length && <small>Phân loại: {item.optionValues.join(' / ')}</small>}
                         {item.currentUnitPrice && <strong>{moneyLabel(item.currentUnitPrice)}</strong>}
+                        {item.lineTotal && <small className={styles.lineTotalText}>Thành tiền: {moneyLabel(item.lineTotal)}</small>}
                         {item.stock !== undefined && <small>Tồn kho hiện tại: {item.stock}</small>}
                       </>}
                       {!item.available && <p className={styles.unavailable}>{unavailableLabel[item.unavailableReason ?? 'VARIANT_UNAVAILABLE']}</p>}
                       <div className={styles.actions}>
-                        <label>Số lượng <input type="number" aria-label={`Số lượng biến thể ${item.variantId}`} min={1} max={99} step={1} inputMode="numeric"
-                          value={drafts[item.variantId] ?? ''} disabled={disabled || !canEditQuantity(item)}
-                          onChange={(event) => setDrafts((previous) => ({ ...previous, [item.variantId]: event.target.value }))} /></label>
-                        <button type="button" disabled={disabled || !canEditQuantity(item) || drafts[item.variantId] === String(item.quantity)} onClick={() => updateQuantity(item)}>Cập nhật</button>
-                        {drafts[item.variantId] !== String(item.quantity) && <button type="button" disabled={disabled}
-                          onClick={() => setDrafts((previous) => ({ ...previous, [item.variantId]: String(item.quantity) }))}>Hủy sửa</button>}
+                        <div className={styles.quantitySection}>
+                          <span className={styles.quantityLabel}>Số lượng</span>
+                          <div className={styles.stepperWrapper}>
+                            <button
+                              type="button"
+                              className={styles.stepperBtn}
+                              aria-label={`Giảm số lượng biến thể ${item.variantId}`}
+                              disabled={disabled || !canEditQuantity(item) || Number(drafts[item.variantId] ?? item.quantity) <= 1}
+                              onClick={() => {
+                                const currentQty = Number(drafts[item.variantId] ?? item.quantity);
+                                if (currentQty > 1) {
+                                  const nextQty = String(currentQty - 1);
+                                  setDrafts(prev => ({ ...prev, [item.variantId]: nextQty }));
+                                  void run(() => cartApi.put(item.variantId, Number(nextQty)), 'Đã cập nhật giỏ hàng.', item.variantId);
+                                }
+                              }}
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              aria-label={`Số lượng biến thể ${item.variantId}`}
+                              min={1}
+                              max={99}
+                              step={1}
+                              inputMode="numeric"
+                              value={drafts[item.variantId] ?? ''}
+                              disabled={disabled || !canEditQuantity(item)}
+                              onChange={(event) => setDrafts((previous) => ({ ...previous, [item.variantId]: event.target.value }))}
+                              className={styles.stepperInput}
+                            />
+                            <button
+                              type="button"
+                              className={styles.stepperBtn}
+                              aria-label={`Tăng số lượng biến thể ${item.variantId}`}
+                              disabled={disabled || !canEditQuantity(item) || Number(drafts[item.variantId] ?? item.quantity) >= 99}
+                              onClick={() => {
+                                const currentQty = Number(drafts[item.variantId] ?? item.quantity);
+                                if (currentQty < 99) {
+                                  const nextQty = String(currentQty + 1);
+                                  setDrafts(prev => ({ ...prev, [item.variantId]: nextQty }));
+                                  void run(() => cartApi.put(item.variantId, Number(nextQty)), 'Đã cập nhật giỏ hàng.', item.variantId);
+                                }
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                        {drafts[item.variantId] !== String(item.quantity) && (
+                          <>
+                            <button type="button" disabled={disabled || !canEditQuantity(item)} onClick={() => updateQuantity(item)}>Cập nhật</button>
+                            <button type="button" disabled={disabled} onClick={() => setDrafts((previous) => ({ ...previous, [item.variantId]: String(item.quantity) }))}>Hủy sửa</button>
+                          </>
+                        )}
                         <button type="button" className={styles.remove} disabled={disabled} onClick={() => openDelete(item)}>Xóa</button>
                       </div>
                     </div>
@@ -309,14 +359,11 @@ function CartContent({ user }: { user: User }) {
       </div>
       <aside className={styles.summary} aria-label="Tóm tắt giỏ hàng">
         <h2>Tóm tắt</h2>
-        <p>Dòng trong giỏ <strong>{visibleSummary ? cart?.lineCount : '—'}</strong></p>
-        <p>Tổng số lượng <strong>{visibleSummary ? cart?.totalQuantity : '—'}</strong></p>
-        <p>Hàng còn mua được <strong>{visibleSummary && cart ? moneyLabel(cart.purchasableSubtotal) : '—'}</strong></p>
+        <p>Đã chọn <strong>{visibleSummary ? `${selectedItems.length} dòng · ${selectedItems.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm` : '—'}</strong></p>
+        <p>Phí vận chuyển <strong className={styles.summaryMuted}>Tính ở bước sau</strong></p>
         <hr />
-        <p>Đã chọn <strong>{visibleSummary ? `${selectedItems.length} dòng` : '—'}</strong></p>
-        <p>Số lượng đã chọn <strong>{visibleSummary ? selectedItems.reduce((sum, item) => sum + item.quantity, 0) : '—'}</strong></p>
         <p className={styles.total}>Tạm tính đã chọn <strong>{!visibleSummary ? '—' : selectedCents === null ? 'Không xác định' : formatCartMoney(selectedCents)}</strong></p>
-        <small>Giá và tình trạng còn hàng được cập nhật khi bạn xác nhận đặt hàng.</small>
+        <small>Chỉ tính các dòng đã chọn. Giá và tình trạng còn hàng được kiểm tra lại khi bạn xác nhận đặt hàng.</small>
         {canCheckout ? <Link className={styles.checkout} to={`/checkout?${checkoutQuery.toString()}`}>Tiếp tục thanh toán</Link>
           : <button className={styles.checkout} type="button" disabled>Tiếp tục thanh toán</button>}
         {visibleSummary && selectedItems.length > 50 && <p role="alert">Chỉ chọn tối đa 50 dòng để thanh toán.</p>}

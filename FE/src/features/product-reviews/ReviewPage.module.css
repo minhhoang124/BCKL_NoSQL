@@ -72,10 +72,10 @@
 }
 .page button,
 .panel > button {
-  border: 1px solid #007b80;
+  border: 1px solid var(--market-brand);
   border-radius: 8px;
   padding: 11px 16px;
-  background: #007b80;
+  background: var(--market-brand);
   color: white;
   font: inherit;
   font-weight: 600;
@@ -131,7 +131,7 @@
   overflow-wrap: anywhere;
 }
 .list button[aria-pressed="true"] {
-  border: 2px solid #007b80;
+  border: 2px solid var(--market-brand);
 }
 .list span {
   display: block;
@@ -161,7 +161,7 @@
 }
 .panel blockquote {
   background: #f2f6f8;
-  border-left: 3px solid #007b80;
+  border-left: 3px solid var(--market-brand);
   margin: 18px 0;
   padding: 16px;
   overflow-wrap: anywhere;

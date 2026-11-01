@@ -1,31 +1,31 @@
 .settings {
   margin-top: 0.25rem;
   padding: 1.5rem 1.65rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e3e6e9;
   border-radius: 16px;
   background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+  color: #20242b;
+  box-shadow: 0 4px 14px rgba(32, 36, 43, 0.04);
 }
 
 .settings h2 {
   margin: 0 0 0.35rem;
   font-size: 1.2rem;
-  color: #0f172a;
+  color: #20242b;
 }
 
 .settings fieldset {
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e3e6e9;
   border-radius: 12px;
   padding: 1.15rem 1.25rem;
   margin: 1rem 0;
-  background: #f8fafc;
+  background: #f6f7f8;
   min-width: 0;
 }
 
 .settings legend {
   padding: 0 0.45rem;
-  color: #c92a2a;
+  color: var(--market-brand);
   font-weight: 700;
 }
 
@@ -34,7 +34,7 @@
   display: grid;
   gap: 0.65rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #20242b;
 }
 
 .settings input {
@@ -42,17 +42,17 @@
   box-sizing: border-box;
   font: inherit;
   font-weight: 400;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #cfd4d9;
   border-radius: 9px;
   padding: 0.72rem 0.85rem;
   background: #ffffff;
-  color: #0f172a;
+  color: #20242b;
 }
 
 .settings input:focus {
   outline: none;
-  border-color: #c92a2a;
-  box-shadow: 0 0 0 3px rgba(201, 42, 42, 0.12);
+  border-color: var(--market-brand);
+  box-shadow: 0 0 0 3px rgba(214, 59, 11, 0.12);
 }
 
 .settings button {
@@ -63,7 +63,7 @@
 
 .settings p {
   line-height: 1.6;
-  color: #475569;
+  color: #4b525c;
 }
 
 .settings fieldset:disabled {

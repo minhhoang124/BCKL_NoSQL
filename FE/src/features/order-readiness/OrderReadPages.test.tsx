@@ -272,4 +272,37 @@ describe("Order routes + merged GET client/validators (mock HTTP boundary, not l
       screen.getByRole("link", { name: "Đơn mua của tôi" }),
     ).toHaveAttribute("href", "/account/orders");
   });
+  it('renders item preview with product details and hasMoreItems note in list panel', async () => {
+    api.mockResolvedValueOnce({
+      items: [
+        {
+          ...summaryFixture(19),
+          itemPreview: [
+            {
+              orderItemId: 501,
+              productId: 88,
+              variantId: 301,
+              productName: 'Tai nghe Bluetooth XYZ',
+              options: ['Đen', 'Pro'],
+              quantity: 2,
+              unitPrice: '20000.00',
+              lineTotal: '40000.00',
+              imageUrl: '/uploads/products/88/main.webp',
+            },
+          ],
+          itemCount: 3,
+          totalQuantity: 4,
+          hasMoreItems: true,
+        },
+      ],
+      nextCursor: null,
+    });
+    render(tree('/account/orders'));
+    expect(await screen.findByText('Tai nghe Bluetooth XYZ')).toBeInTheDocument();
+    expect(screen.getByText('Phân loại: Đen / Pro')).toBeInTheDocument();
+    expect(screen.getByText('x2')).toBeInTheDocument();
+    expect(screen.getByText('40.000 đ')).toBeInTheDocument();
+    expect(screen.getByText('và 2 sản phẩm khác...')).toBeInTheDocument();
+  });
+
 });

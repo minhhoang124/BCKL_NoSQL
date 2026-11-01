@@ -71,4 +71,29 @@ describe('Seller product editing', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tạo mới / bỏ chỉnh sửa' }));
     for (const label of ['Tên', 'Danh mục', 'Thương hiệu', 'Mô tả']) expect(screen.getByLabelText(label)).toHaveValue('');
   });
+  it('renders guided step wizard and allows switching between available steps', async () => {
+    await open();
+    // In edit mode (product 1 selected), all 5 step tabs should be rendered
+    expect(screen.getByRole('button', { name: '1. Thông tin cơ bản' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '2. Ảnh sản phẩm' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '3. Phân loại & Giá/Kho' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '4. Kiện hàng' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '5. Gửi duyệt' })).toBeInTheDocument();
+
+    // Click step 2
+    fireEvent.click(screen.getByRole('button', { name: '2. Ảnh sản phẩm' }));
+    expect(screen.getByRole('heading', { name: '2. Ảnh đại diện sản phẩm' })).toBeInTheDocument();
+
+    // Click step 3
+    fireEvent.click(screen.getByRole('button', { name: '3. Phân loại & Giá/Kho' }));
+    expect(screen.getByRole('heading', { name: '3. Phân loại, Thuộc tính & Giá/Kho SKU' })).toBeInTheDocument();
+
+    // Click step 4
+    fireEvent.click(screen.getByRole('button', { name: '4. Kiện hàng' }));
+    expect(screen.getByRole('heading', { name: '4. Thông tin kiện hàng & Vận chuyển' })).toBeInTheDocument();
+
+    // Click step 5
+    fireEvent.click(screen.getByRole('button', { name: '5. Gửi duyệt' }));
+    expect(screen.getByRole('heading', { name: '5. Kiểm tra & gửi duyệt' })).toBeInTheDocument();
+  });
 });

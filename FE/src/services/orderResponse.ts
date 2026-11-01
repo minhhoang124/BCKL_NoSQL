@@ -105,6 +105,12 @@ const summaryFields = [
   'createdAt',
   'updatedAt',
 ] as const;
+const previewFields = [
+  'itemPreview',
+  'itemCount',
+  'totalQuantity',
+  'hasMoreItems',
+] as const;
 function summary(row: Record<string, unknown>) {
   if (
     !validOrderId(row.id) ||
@@ -118,6 +124,36 @@ function summary(row: Record<string, unknown>) {
   const store = exact(row.store, ['id', 'name']);
   if (!validOrderId(store.id) || !text(store.name)) invalid();
   if (row.payment !== null) validateOrderPayment(row.payment);
+  if (Object.hasOwn(row, 'itemPreview')) {
+    if (!Array.isArray(row.itemPreview) || row.itemPreview.length > 3) invalid();
+    for (const preview of row.itemPreview) {
+      if (!preview || typeof preview !== 'object') invalid();
+      const p = preview as Record<string, unknown>;
+      if (
+        !validOrderId(p.orderItemId) ||
+        !validOrderId(p.productId) ||
+        !validOrderId(p.variantId) ||
+        !text(p.productName) ||
+        !Array.isArray(p.options) ||
+        !p.options.every(text) ||
+        !validOrderId(p.quantity) ||
+        !validOrderMoney(p.unitPrice) ||
+        !validOrderMoney(p.lineTotal) ||
+        !nullable(p.imageUrl, text)
+      )
+        invalid();
+    }
+    if (
+      typeof row.itemCount !== 'number' ||
+      !Number.isInteger(row.itemCount) ||
+      row.itemCount < 0 ||
+      typeof row.totalQuantity !== 'number' ||
+      !Number.isInteger(row.totalQuantity) ||
+      row.totalQuantity < 0 ||
+      typeof row.hasMoreItems !== 'boolean'
+    )
+      invalid();
+  }
 }
 export function validateOrderList(value: unknown): OrderList {
   const data = exact(value, ['items', 'nextCursor']);
@@ -129,7 +165,9 @@ export function validateOrderList(value: unknown): OrderList {
     invalid();
   let previous = 2147483648;
   for (const item of data.items) {
-    const row = exact(item, summaryFields);
+    const hasPreview = item && typeof item === 'object' && Object.hasOwn(item, 'itemPreview');
+    const allowed = hasPreview ? [...summaryFields, ...previewFields] : summaryFields;
+    const row = exact(item, allowed);
     summary(row);
     if ((row.id as number) >= previous) invalid();
     previous = row.id as number;
@@ -183,17 +221,11 @@ export function validateOrderDetail(
   if (!Array.isArray(d.items) || !Array.isArray(d.timeline)) invalid();
   const ids = new Set<number>();
   for (const item of d.items) {
-    const r = exact(item, [
-      'id',
-      'productId',
-      'variantId',
-      'productName',
-      'sku',
-      'options',
-      'unitPrice',
-      'quantity',
-      'lineTotal',
-    ]);
+    const hasImage = item && typeof item === 'object' && Object.hasOwn(item, 'imageUrl');
+    const allowed = hasImage
+      ? ['id', 'productId', 'variantId', 'productName', 'sku', 'options', 'unitPrice', 'quantity', 'lineTotal', 'imageUrl']
+      : ['id', 'productId', 'variantId', 'productName', 'sku', 'options', 'unitPrice', 'quantity', 'lineTotal'];
+    const r = exact(item, allowed);
     if (
       ![r.id, r.productId, r.variantId, r.quantity].every(validOrderId) ||
       !text(r.productName) ||
@@ -202,6 +234,7 @@ export function validateOrderDetail(
       !r.options.every(text) ||
       !validOrderMoney(r.unitPrice) ||
       !validOrderMoney(r.lineTotal) ||
+      (hasImage && !nullable(r.imageUrl, text)) ||
       ids.has(r.id as number)
     )
       invalid();

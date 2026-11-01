@@ -237,11 +237,11 @@ try {
   });
   assert.equal(owner.role, "USER");
   assert.equal(await db.store.count({ where: { sellerId: owner.id } }), 0);
-  await ownerPage.getByRole("link", { name: "Mở Store", exact: true }).click();
-  await ownerPage.getByLabel("Tên Store", { exact: true }).waitFor();
+  await ownerPage.getByRole("link", { name: "Mở cửa hàng", exact: true }).click();
+  await ownerPage.getByLabel("Tên cửa hàng", { exact: true }).waitFor();
   const profile = {
-    "Tên Store": `Synthetic Store ${marker.slice(0, 8)}`,
-    "Mô tả Store": "Synthetic browser QA Store",
+    "Tên cửa hàng": `Synthetic Store ${marker.slice(0, 8)}`,
+    "Mô tả cửa hàng": "Synthetic browser QA Store",
     "Người liên hệ": "Synthetic QA Owner",
     "Số điện thoại liên hệ": "+84901234567",
     "Địa chỉ lấy hàng": "Synthetic pickup address 01",
@@ -282,7 +282,7 @@ try {
     });
   await lostSubmitResponse;
   await ownerPage
-    .getByRole("complementary", { name: "Phục hồi yêu cầu Store", exact: true })
+    .getByRole("complementary", { name: "Phục hồi yêu cầu cửa hàng", exact: true })
     .waitFor();
   assert.equal(submitPosts, 1);
   assert(Number.isInteger(storeId));
@@ -327,7 +327,7 @@ try {
   });
   async function version(page, n) {
     await page
-      .getByText(`Store #${storeId} · phiên bản ${n}`, { exact: true })
+      .getByText(`Hồ sơ cửa hàng · phiên bản ${n}`, { exact: true })
       .waitFor();
   }
   async function decide(page, operation, reason) {
@@ -415,7 +415,7 @@ try {
     .click();
   await lostApproveResponse;
   await adminPage
-    .getByRole("complementary", { name: "Phục hồi yêu cầu Store", exact: true })
+    .getByRole("complementary", { name: "Phục hồi yêu cầu cửa hàng", exact: true })
     .waitFor();
   assert.equal(approvePosts, 1);
   await adminPage.reload();
@@ -466,7 +466,7 @@ try {
     .getByRole("link", { name: "Kênh người bán", exact: true })
     .click();
   await ownerPage
-    .getByRole("link", { name: "Mở hồ sơ Store", exact: true })
+    .getByRole("link", { name: "Mở hồ sơ cửa hàng", exact: true })
     .waitFor();
   const cartRead = ownerPage.waitForResponse(
     (r) =>
@@ -490,7 +490,7 @@ try {
   await version(adminPage, 6);
   await ownerPage.goto(web + "/account/store-application");
   await version(ownerPage, 6);
-  assert(await ownerPage.getByLabel("Tên Store", { exact: true }).isDisabled());
+  assert(await ownerPage.getByLabel("Tên cửa hàng", { exact: true }).isDisabled());
   await decide(
     adminPage,
     "ACTIVE",
@@ -528,7 +528,7 @@ try {
     ]) {
       await page.setViewportSize(viewport);
       const section = page.getByRole("region", {
-        name: name === "OWNER" ? "Đăng ký và hồ sơ Store" : "Duyệt hồ sơ Store",
+        name: name === "OWNER" ? "Đăng ký và hồ sơ cửa hàng" : "Duyệt hồ sơ cửa hàng",
         exact: true,
       });
       assert(await section.evaluate((e) => e.scrollWidth <= e.clientWidth + 1));

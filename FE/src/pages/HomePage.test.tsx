@@ -95,3 +95,39 @@ it('waits for initial session bootstrap before public Search/listing calls',asyn
   const page=render(<MemoryRouter><HomePage/></MemoryRouter>);expect(screen.getByRole('status')).toHaveTextContent('Đang chuẩn bị');expect(list).not.toHaveBeenCalled();expect(marketplaceApi.categories).not.toHaveBeenCalled();
   session.loading=false;page.rerender(<MemoryRouter><HomePage/></MemoryRouter>);await waitFor(()=>expect(list).toHaveBeenCalledOnce());
 });
+
+it('sends a price range only with a keyword search, and refuses an invalid range without calling the API', async () => {
+  const list = vi.spyOn(marketplaceApi, 'publicProducts').mockResolvedValue({ items: [], nextCursor: null });
+  const search = vi.spyOn(marketplaceApi, 'search').mockResolvedValue({ items: [], responseTimeMs: 1 });
+  render(<MemoryRouter><HomePage /></MemoryRouter>);
+  await screen.findByRole('button', { name: 'Tìm kiếm' });
+  // Without a keyword the price inputs are disabled and never reach the catalog list.
+  expect(screen.getByLabelText('Giá từ')).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Tìm kiếm' }));
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith({ limit: 24 }));
+
+  fireEvent.change(screen.getByLabelText('Từ khóa'), { target: { value: 'loa' } });
+  fireEvent.change(screen.getByLabelText('Giá từ'), { target: { value: '100.000' } });
+  fireEvent.change(screen.getByLabelText('Giá đến'), { target: { value: '500000' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Tìm kiếm' }));
+  await waitFor(() => expect(search).toHaveBeenLastCalledWith({ query: 'loa', topK: 24, candidateK: 100, minPrice: 100000, maxPrice: 500000 }));
+
+  const calls = search.mock.calls.length;
+  fireEvent.change(screen.getByLabelText('Giá từ'), { target: { value: '900000' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Tìm kiếm' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Khoảng giá không hợp lệ');
+  expect(search).toHaveBeenCalledTimes(calls);
+});
+
+it('"Xóa bộ lọc" resets the filters without searching', async () => {
+  const list = vi.spyOn(marketplaceApi, 'publicProducts').mockResolvedValue({ items: [], nextCursor: null });
+  render(<MemoryRouter><HomePage /></MemoryRouter>);
+  await screen.findByRole('button', { name: 'Tìm kiếm' });
+  fireEvent.change(screen.getByLabelText('Danh mục'), { target: { value: '2' } });
+  fireEvent.click(screen.getByLabelText('Còn hàng'));
+  const calls = list.mock.calls.length;
+  fireEvent.click(screen.getByRole('button', { name: 'Xóa bộ lọc' }));
+  expect(screen.getByLabelText('Danh mục')).toHaveValue('');
+  expect(screen.getByLabelText('Còn hàng')).not.toBeChecked();
+  expect(list).toHaveBeenCalledTimes(calls);
+});

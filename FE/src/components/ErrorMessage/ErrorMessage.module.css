@@ -1,6 +1,6 @@
 .error {
   background-color: #fee2e2;
-  color: #b91c1c;
+  color: var(--market-brand-hover);
   padding: 1rem;
   border-radius: 4px;
   margin: 1rem 0;

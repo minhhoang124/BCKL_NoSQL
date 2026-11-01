@@ -20,15 +20,12 @@ export function Footer() {
           <div className={styles.col}>
             <strong>BCKL · CHỢ HIỆN ĐẠI (NOEL 2026)</strong>
             <p>Khám phá những lựa chọn yêu thích cho cuộc sống mỗi ngày.</p>
-            <p>Địa chỉ: 140 Lê Trọng Tấn, Phường Tây Thạnh, Quận Tân Phú, TP. Hồ Chí Minh</p>
           </div>
           <div className={styles.col}>
-            <strong>THANH TOÁN &amp; VẬN CHUYỂN</strong>
+            <strong>THANH TOÁN</strong>
             <div className={styles.badges}>
-              <span className={styles.badge}>VNPay QR</span>
-              <span className={styles.badge}>COD Đồng Kiểm</span>
-              <span className={styles.badge}>SPX Express</span>
-              <span className={styles.badge}>GHN / GHTK</span>
+              <span className={styles.badge}>Thanh toán khi nhận hàng</span>
+              <span className={styles.badge}>VNPay</span>
             </div>
           </div>
         </div>

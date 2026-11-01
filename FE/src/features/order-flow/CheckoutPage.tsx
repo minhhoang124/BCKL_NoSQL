@@ -1,3 +1,7 @@
+import { mediaUrl } from '../../services/marketplaceApi';
+import { addressApi } from '../../services/addressApi';
+import { AddressForm } from '../../components/Address/AddressForm';
+import type { AddressInput } from '../../types/address';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
@@ -33,6 +37,30 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
   const gate = useRef(false);
   const activeKey = useRef(initial.pending?.key ?? '');
   const [reload, setReload] = useState(0);
+  const [showAddressForm, setShowAddressForm] = useState<'create' | 'edit' | null>(null);
+  const [addressSaving, setAddressSaving] = useState(false);
+
+  const handleSaveAddress = async (input: AddressInput) => {
+    setAddressSaving(true);
+    try {
+      if (showAddressForm === 'create') {
+        const created = await addressApi.create(input);
+        setAddresses((prev) => [...prev, created as any]);
+        setAddressId(created.id);
+      } else if (selectedAddress) {
+        const updated = await addressApi.update(selectedAddress.id, input);
+        setAddresses((prev) =>
+          prev.map((a) => (a.id === updated.id ? (updated as any) : a)),
+        );
+      }
+      setShowAddressForm(null);
+      setPreview(null);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Không lưu được địa chỉ.');
+    } finally {
+      setAddressSaving(false);
+    }
+  };
   useEffect(() => {
     const controller = new AbortController();
     Promise.all([read<Cart>('/cart', controller.signal), read<{ items: Address[] }>('/me/addresses', controller.signal)])
@@ -108,10 +136,125 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
     {loading ? <p role="status">Đang tải địa chỉ và giỏ hàng…</p> : <>
       {!dataReady ? <button disabled={busy || !!intent} onClick={reloadCart}>Tải lại</button> : <>
       <div className={styles.checkoutGrid}><div className={styles.checkoutMain}>
-      {!addresses.length && <p>Chưa có địa chỉ nhận hàng. Thêm địa chỉ ở màn Address trước khi đặt.</p>}
-      <label>Địa chỉ nhận hàng<select disabled={busy || !!intent} value={addressId} onChange={e => { setAddressId(Number(e.target.value)); setPreview(null); }}><option value={0}>Chọn địa chỉ</option>{addresses.map(a => <option key={a.id} value={a.id}>{a.recipientName} — {a.addressLine}, {a.ward}, {a.province}</option>)}</select></label>
-      {selectedAddress && <p aria-label="Địa chỉ giao hàng đã chọn">{selectedAddress.recipientName} — {selectedAddress.addressLine}, {selectedAddress.ward}, {selectedAddress.province}</p>}
-      {cart?.groups.map(group => <section className={styles.card} key={group.store.id}><h2>{group.store.name}</h2>{group.items.map(i => <label className={styles.line} key={i.variantId}><input type="checkbox" disabled={busy || !!intent || !i.available} checked={selected.includes(i.variantId)} onChange={e => { setSelected(ids => e.target.checked ? [...ids, i.variantId] : ids.filter(id => id !== i.variantId)); setPreview(null); }} />{i.productName ?? `Mặt hàng #${i.variantId}`} × {i.quantity} — {i.currentUnitPrice ? money(i.currentUnitPrice) : 'Không thể mua'}{!i.available && <span> · Không thể mua: {i.unavailableReason}</span>}</label>)}</section>)}
+      <div className={styles.addressSection}>
+        <div className={styles.addressHeaderRow}>
+          <h2 className={styles.addressTitle}>📍 Địa chỉ nhận hàng</h2>
+          <div className={styles.addressActionBtns}>
+            <button
+              type="button"
+              className={styles.btnInlineSecondary}
+              disabled={busy || !!intent || addressSaving}
+              onClick={() => setShowAddressForm(prev => prev === 'create' ? null : 'create')}
+            >
+              {showAddressForm === 'create' ? 'Đóng' : '+ Thêm địa chỉ mới'}
+            </button>
+            {selectedAddress && (
+              <button
+                type="button"
+                className={styles.btnInlineSecondary}
+                disabled={busy || !!intent || addressSaving}
+                onClick={() => setShowAddressForm(prev => prev === 'edit' ? null : 'edit')}
+              >
+                {showAddressForm === 'edit' ? 'Đóng' : 'Sửa địa chỉ này'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {showAddressForm && (
+          <div className={styles.addressInlineForm}>
+            
+            <AddressForm
+              address={showAddressForm === 'edit' ? (selectedAddress as any) : null}
+              disabled={busy || !!intent}
+              saving={addressSaving}
+              onSave={handleSaveAddress}
+              onCancel={() => setShowAddressForm(null)}
+            />
+          </div>
+        )}
+
+        {!addresses.length && <p>Chưa có địa chỉ nhận hàng. Bấm “+ Thêm địa chỉ mới” để thêm ngay tại đây.</p>}
+        <label>
+          Địa chỉ nhận hàng
+          <select
+            disabled={busy || !!intent}
+            value={addressId}
+            onChange={(e) => {
+              setAddressId(Number(e.target.value));
+              setPreview(null);
+            }}
+          >
+            <option value={0}>Chọn địa chỉ</option>
+            {addresses.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.recipientName} — {a.addressLine}, {a.ward}, {a.province}
+              </option>
+            ))}
+          </select>
+        </label>
+        {selectedAddress && (
+          <p aria-label="Địa chỉ giao hàng đã chọn">
+            {selectedAddress.recipientName} — {selectedAddress.addressLine}, {selectedAddress.ward}, {selectedAddress.province}
+          </p>
+        )}
+      </div>
+
+      {cart?.groups.map((group) => (
+        <section className={styles.checkoutGroupCard} key={group.store.id}>
+          <div className={styles.storeBanner}>
+            <h2>{group.store.name}</h2>
+          </div>
+          {group.items.map((i) => (
+            <div className={styles.checkoutItemRow} key={i.variantId}>
+              <label className={styles.line}>
+                <input
+                  type="checkbox"
+                  disabled={busy || !!intent || !i.available}
+                  checked={selected.includes(i.variantId)}
+                  onChange={(e) => {
+                    setSelected((ids) =>
+                      e.target.checked
+                        ? [...ids, i.variantId]
+                        : ids.filter((id) => id !== i.variantId),
+                    );
+                    setPreview(null);
+                  }}
+                />
+              </label>
+              {i.imageUrl ? (
+                <img
+                  src={mediaUrl(i.imageUrl)}
+                  alt=""
+                  className={styles.checkoutItemImg}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className={styles.checkoutItemPlaceholder}>📦</div>
+              )}
+              <div className={styles.checkoutItemContent}>
+                <h3 className={styles.checkoutItemTitle}>
+                  {i.productName ?? `Mặt hàng #${i.variantId}`}
+                </h3>
+                {i.optionValues && i.optionValues.length > 0 && (
+                  <p className={styles.checkoutItemVariant}>
+                    Phân loại: {i.optionValues.join(' / ')}
+                  </p>
+                )}
+                <p className={styles.checkoutItemQtyPrice}>
+                  Số lượng: {i.quantity} × {i.currentUnitPrice ? money(i.currentUnitPrice) : 'Không thể mua'}
+                  {!i.available && <span> · Không thể mua: {i.unavailableReason}</span>}
+                </p>
+              </div>
+              <div className={styles.checkoutItemTotal}>
+                {i.currentUnitPrice ? (i.lineTotal ? money(i.lineTotal) : money((BigInt(i.currentUnitPrice.split('.')[0]!) * BigInt(i.quantity)).toString() + '.00')) : ''}
+              </div>
+            </div>
+          ))}
+        </section>
+      ))}
       {!!cart?.unavailableItems.length && <p role="alert">Có {cart.unavailableItems.length} dòng không còn bán công khai; quay lại giỏ để xóa. Không hiển thị nội dung nháp.</p>}
       {!items.length && cart && <p>Giỏ chưa có mặt hàng mua được.</p>}
       </div><aside className={`${styles.card} ${styles.checkoutSummary}`} aria-label="Xác nhận thanh toán">

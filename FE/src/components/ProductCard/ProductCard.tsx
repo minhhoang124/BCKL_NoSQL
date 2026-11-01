@@ -12,9 +12,6 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article className={styles.card}>
       <Link to={`/products/${product.id}`} className={styles.imageWrap}>
-        <span className={product.brand ? styles.mallBadge : styles.noelBadge} aria-hidden="true">
-          {product.brand ? '✓ Chính hãng' : '🎄 Noel Deal'}
-        </span>
         {secondaryImage && (
           <span className={styles.angleBadge} aria-hidden="true">
             2 góc ảnh
@@ -52,17 +49,14 @@ export function ProductCard({ product }: { product: Product }) {
           <strong className={styles.price}>
             {formatPrice(product.minPrice ?? product.variants[0]?.price)}
           </strong>
-          <span className={styles.promoMini} aria-hidden="true">
-            Voucher Noel
-          </span>
         </div>
         <div className={styles.statusRow}>
           <span className={product.inStock === false ? styles.out : styles.stock}>
             {product.inStock === false ? 'Hết hàng' : 'Còn hàng'}
           </span>
-          <span className={styles.ratingTag} aria-hidden="true">
-            ★ 4.9
-          </span>
+          {product.store && (
+            <span className={styles.storeName}>{product.store.name}</span>
+          )}
         </div>
       </div>
     </article>

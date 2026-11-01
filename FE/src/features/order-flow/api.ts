@@ -1,7 +1,7 @@
 import { fetchApi, ApiError } from '../../services/apiClient';
 
-export interface Address { id: number; recipientName: string; addressLine: string; ward: string; province: string; isDefault: boolean }
-export interface CartItem { variantId: number; quantity: number; available: boolean; currentUnitPrice?: string; productName?: string; unavailableReason: string | null }
+export interface Address { id: number; recipientName: string; phone?: string; addressLine: string; ward: string; province: string; district?: string | null; postalCode?: string | null; deliveryNote?: string | null; isDefault: boolean; }
+export interface CartItem { variantId: number; quantity: number; available: boolean; currentUnitPrice?: string; productName?: string; unavailableReason: string | null; imageUrl?: string; optionValues?: string[]; lineTotal?: string; }
 export interface Cart { groups: { store: { id: number; name: string }; items: CartItem[] }[]; unavailableItems: CartItem[] }
 export interface CheckoutBody { addressId: number; paymentProvider: 'COD'|'VNPAY'; items: { variantId: number; quantity: number; expectedUnitPrice: string }[] }
 export interface Preview { canCheckout: boolean; groups: { store: { id: number; name: string }; items: { variantId: number; unitPrice: string; quantity: number; errors: string[] }[] }[]; unavailableItems: { variantId: number }[]; totals: { total: string } | null }

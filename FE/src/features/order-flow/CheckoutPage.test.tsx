@@ -218,4 +218,50 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
     await waitFor(() => expect(screen.queryByText('Đang tải địa chỉ và giỏ hàng…')).not.toBeInTheDocument());
     expect(preview).toBeDisabled(); expect(api.mock.calls.some(([, opts]) => opts?.method === 'POST')).toBe(false);
   });
+  it('allows opening inline address form and creating address without leaving checkout or losing draft', async () => {
+    const newAddr = {
+      id: 99,
+      recipientName: 'Người nhận mới',
+      phone: '0912345678',
+      province: 'TP.HCM',
+      ward: 'Phường 1',
+      district: 'Quận 1',
+      addressLine: '123 Nguyễn Huệ',
+      postalCode: null,
+      deliveryNote: null,
+      isDefault: false,
+    };
+    api.mockImplementation(async (path, options) => {
+      if (path === '/cart') return basket;
+      if (path === '/me/addresses') {
+        if (options?.method === 'POST') return newAddr;
+        return addresses;
+      }
+      if (path === '/checkout/preview') return { canCheckout: true, groups: [], unavailableItems: [], totals: { total: '20000.00' } };
+      throw new Error(path);
+    });
+
+    show(<CheckoutPage />);
+    await screen.findByRole('button', { name: '+ Thêm địa chỉ mới' });
+    fireEvent.click(screen.getByRole('button', { name: '+ Thêm địa chỉ mới' }));
+
+    // Form is open
+    expect(screen.getByRole('heading', { name: 'Thêm địa chỉ nhận hàng mới' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Họ và tên người nhận *'), { target: { value: 'Người nhận mới' } });
+    fireEvent.change(screen.getByLabelText('Số điện thoại *'), { target: { value: '0912345678' } });
+    fireEvent.change(screen.getByLabelText('Tỉnh / thành phố *'), { target: { value: 'TP.HCM' } });
+    fireEvent.change(screen.getByLabelText('Phường / xã *'), { target: { value: 'Phường 1' } });
+    fireEvent.change(screen.getByLabelText('Địa chỉ cụ thể *'), { target: { value: '123 Nguyễn Huệ' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu địa chỉ' }));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Thêm địa chỉ nhận hàng mới')).not.toBeInTheDocument();
+    });
+
+    // Checkbox and Tai nghe are still present and checked
+    expect(screen.getByRole('checkbox')).toBeChecked();
+    expect(screen.getByText('Tai nghe')).toBeInTheDocument();
+  });
+
 });

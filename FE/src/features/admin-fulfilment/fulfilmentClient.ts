@@ -188,8 +188,11 @@ export function validateReceipt(
   return r;
 }
 export const adminFulfilmentApi = {
-  async list() {
-    const r = await fetchApi<{ items: unknown[] }>("/admin/fulfilment/orders", {
+  async list(orderNumber?: string) {
+    const url = orderNumber?.trim()
+      ? `/admin/fulfilment/orders?orderNumber=${encodeURIComponent(orderNumber.trim())}`
+      : "/admin/fulfilment/orders";
+    const r = await fetchApi<{ items: unknown[] }>(url, {
       cache: "no-store",
       signal: AbortSignal.timeout(15000),
     });

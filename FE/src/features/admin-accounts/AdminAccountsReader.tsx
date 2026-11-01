@@ -32,7 +32,7 @@ function AccountScreen({ api, pageSize = 50, embedded = false, onManage }: Props
   };
   const reset = () => { setSearch(''); setRole('ALL'); setActive('ALL'); setValidation(''); setApplied({}); setAttempt(previous => previous + 1); };
   return <section className={`${styles.layout} ${embedded ? styles.embedded : ''}`} aria-label="Accounts chỉ đọc"><div className={styles.pageContent}>
-    <header className={styles.header}><div><p className={styles.eyebrow}>BCKL / ADMIN · ACCOUNTS</p>
+    <header className={styles.header}><div><p className={styles.eyebrow}>QUẢN TRỊ · TÀI KHOẢN</p>
       <h1>{onManage ? 'Quản lý tài khoản' : 'Quản lý tài khoản — chỉ đọc'}</h1><p>{onManage ? 'Xem trạng thái, lịch sử và xác nhận khóa/mở tài khoản.' : 'Tìm kiếm và xem thông tin tài khoản.'}</p></div>
       <span className={styles.preparationBadge}>{onManage ? 'Có lịch sử và đối chiếu' : 'Chưa bật khóa/mở'}</span></header>
     <aside className={styles.notice}>{onManage ? 'Khóa và mở tài khoản đều yêu cầu đăng nhập lại. Thao tác không thay đổi trạng thái Store.' : 'Hiện chỉ có thể xem thông tin. Trạng thái tài khoản và trạng thái gian hàng được quản lý riêng.'}</aside>
@@ -102,7 +102,7 @@ function AccountResults({ api, query, onBlocked, onManage }: { api: AccountReadA
             <td data-label="Tài khoản"><div className={styles.identity}><span className={styles.avatar} aria-hidden="true">{(account.fullName || account.email).slice(0, 1).toLocaleUpperCase('vi')}</span>
               <div><strong>{account.fullName || 'Chưa có tên hiển thị'}</strong><span>{account.email}</span><small>ID {account.id}</small></div></div></td>
             <td data-label="Vai trò">{roles[account.role]}</td><td data-label="Trạng thái tài khoản"><span className={account.isActive ? styles.active : styles.locked}>{account.isActive ? 'Đang hoạt động' : 'Đã khóa'}</span></td>
-            <td data-label="Cửa hàng">{account.store ? <>{account.store.name}<br /><small>Store #{account.store.id} · {storeStatuses[account.store.status]}</small></> : 'Chưa có Store'}</td>
+            <td data-label="Cửa hàng">{account.store ? <>{account.store.name}<br /><small>Mã cửa hàng #{account.store.id} · {storeStatuses[account.store.status]}</small></> : 'Chưa có cửa hàng'}</td>
             {onManage && <td data-label="Thao tác"><button type="button" className={styles.secondary} disabled={blocked} onClick={() => onManage(account.id)}>Quản lý tài khoản #{account.id}</button></td>}
           </tr>)}</tbody></table>}
       {page.nextCursor !== null && <div className={styles.footer}><button className={styles.secondary} disabled={busy || blocked} onClick={() => void load(page.nextCursor!)}>Tải thêm tài khoản</button></div>}

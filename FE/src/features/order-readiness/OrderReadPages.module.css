@@ -12,7 +12,7 @@
 }
 
 .page nav a {
-  color: #c92a2a;
+  color: var(--market-brand);
   font-weight: 700;
   text-decoration: none;
 }
@@ -24,28 +24,28 @@
 .scopeIntro {
   margin: 0 0 1rem;
   padding: 0.7rem 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e3e6e9;
   border-radius: 10px;
   background: #ffffff;
-  color: #475569;
+  color: #4b525c;
   font-size: 0.88rem;
 }
 
 .statusTabStrip {
   display: flex;
   overflow-x: auto;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e3e6e9;
   border-radius: 12px;
   background: #ffffff;
   margin-bottom: 0.85rem;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 2px 8px rgba(32, 36, 43, 0.03);
 }
 
 .statusTab {
   flex: 1 0 auto;
   padding: 0.8rem 1rem;
   border-bottom: 3px solid transparent;
-  color: #475569;
+  color: #4b525c;
   font-size: 0.86rem;
   font-weight: 600;
   text-align: center;
@@ -56,14 +56,14 @@
 }
 
 .statusTab:hover {
-  color: #c92a2a;
-  background: #fff5f5;
+  color: var(--market-brand);
+  background: var(--market-soft);
 }
 
 .statusTabActive {
-  border-bottom-color: #c92a2a;
-  color: #c92a2a;
-  background: #fff5f5;
+  border-bottom-color: var(--market-brand);
+  color: var(--market-brand);
+  background: var(--market-soft);
   font-weight: 800;
 }
 
@@ -82,7 +82,7 @@
   gap: 0.55rem;
   align-items: center;
   font-weight: 650;
-  color: #1e293b;
+  color: #20242b;
 }
 
 .page select,
@@ -94,8 +94,8 @@
   padding: 0.55rem 0.9rem;
   margin-block: 0.35rem;
   background: #ffffff;
-  color: #0f172a;
-  border: 1px solid #cbd5e1;
+  color: #20242b;
+  border: 1px solid #cfd4d9;
   border-radius: 9px;
   font: inherit;
   font-weight: 600;
@@ -105,9 +105,9 @@
 .page > button:hover:not(:disabled),
 .content > button:hover:not(:disabled),
 .filterToolbar button:hover:not(:disabled) {
-  border-color: #c92a2a;
-  color: #c92a2a;
-  background: #fff5f5;
+  border-color: var(--market-brand);
+  color: var(--market-brand);
+  background: var(--market-soft);
 }
 
 .page :focus-visible {
@@ -128,10 +128,10 @@
 
 .accountSidebar {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e3e6e9;
   border-radius: 14px;
   padding: 20px 14px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 14px rgba(32, 36, 43, 0.04);
 }
 
 .accountSidebar h2,
@@ -143,11 +143,11 @@
 
 .accountSidebar h2 {
   font-size: 1.1rem;
-  color: #0f172a;
+  color: #20242b;
 }
 
 .accountSidebar > p {
-  color: #64748b;
+  color: #69717c;
   font-size: 13px;
   overflow-wrap: anywhere;
 }
@@ -163,19 +163,19 @@
   padding: 10px 14px;
   border-radius: 8px;
   text-decoration: none;
-  color: #334155;
+  color: #20242b;
   font-weight: 600;
 }
 
 .accountSidebar a:hover {
-  background: #f8fafc;
-  color: #c92a2a;
+  background: #f6f7f8;
+  color: var(--market-brand);
 }
 
 .accountSidebar a[aria-current] {
-  background: #fff5f5;
-  border: 1px solid #ffd8d8;
-  color: #c92a2a;
+  background: var(--market-soft);
+  border: 1px solid var(--market-soft-border);
+  color: var(--market-brand);
   font-weight: 700;
 }
 
@@ -201,4 +201,16 @@
   .page label {
     display: grid;
   }
+}
+/* Tabs are real buttons now (keyboard + screen reader); keep the tab look. */
+button.statusTab {
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  background: transparent;
+  font-family: inherit;
+}
+button.statusTab:focus-visible {
+  outline: 2px solid var(--market-brand);
+  outline-offset: -2px;
 }

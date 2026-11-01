@@ -6,6 +6,7 @@ import { ApiError, AuthSessionChangedError } from '../services/apiClient';
 import styles from './Marketplace.module.css';
 import { PublicProductReviews } from '../features/product-reviews/PublicProductReviews';
 import { ProductPurchase } from '../features/seller-listing/ProductPurchase';
+import { StateCard } from '../components/StateCard/StateCard';
 
 export function ProductDetailPage() {
   const { id } = useParams();
@@ -59,7 +60,6 @@ export function ProductDetailPage() {
         <div className={styles.panel}>
           <div className={styles.badgeRow}>
             <span className={styles.badge}>{product.category.name}</span>
-            <span className={styles.festiveBadge} aria-hidden="true">🎄 Noel Deal 2026</span>
           </div>
           <h1 className={styles.productTitle}>{product.name}</h1>
           <p className={styles.storeMeta}>{product.brand?.name ?? 'Không thương hiệu'} · {product.store && <Link to={`/stores/${product.store.id}`}>{product.store.name}</Link>}</p>
@@ -67,15 +67,21 @@ export function ProductDetailPage() {
             <strong className={styles.price}>{formatPrice(product.minPrice ?? product.variants[0]?.price)}</strong>
             <span className={product.inStock ? styles.inStockPill : styles.outStockPill}>{product.inStock ? 'Còn hàng' : 'Hết hàng'}</span>
           </div>
-          <div className={styles.policyStrip} aria-hidden="true">
-            <span>✓ Đổi trả miễn phí 15 ngày</span>
-            <span>✓ Cam kết chính hãng 100%</span>
-            <span>✓ Hỗ trợ Freeship Noel</span>
-          </div>
           <p className={styles.descriptionText}>{product.description || 'Sản phẩm chưa có mô tả.'}</p>
         </div>
         <ProductPurchase product={product} />
-        {import.meta.env.VITE_CHAT_ENABLED === 'true' && product.store && (
+        {product.inStock === false && (
+          <StateCard
+            title="Sản phẩm đang hết hàng"
+            role="status"
+            action={import.meta.env.VITE_CHAT_ENABLED === 'true' && product.store
+              ? { label: 'Chat với cửa hàng', to: `/messages?storeId=${product.store.id}&productId=${product.id}` }
+              : undefined}
+          >
+            <p>Bạn vẫn có thể xem thông tin sản phẩm. Tạm thời chưa thể thêm sản phẩm này vào giỏ.</p>
+          </StateCard>
+        )}
+        {import.meta.env.VITE_CHAT_ENABLED === 'true' && product.store && product.inStock !== false && (
           <div className={styles.chatStoreBar}>
             <Link to={`/messages?storeId=${product.store.id}&productId=${product.id}`} className={styles.chatStoreLink}>Chat với cửa hàng</Link>
           </div>

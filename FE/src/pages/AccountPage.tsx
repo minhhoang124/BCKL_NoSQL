@@ -43,27 +43,45 @@ export function AccountPage() {
               <span>{maskEmail(user.email)}</span>
             </div>
           </div>
-          <div className={styles.quickLinks}>
+          <div className={styles.quickNav}>
+            <span className={styles.quickNavTitle}>Tài khoản của tôi</span>
+            <p><Link to="/account" className={styles.quickNavActive}>Hồ sơ &amp; Bảo mật</Link></p>
             {hasBuyerAccess(user) && <p><Link to="/account/addresses">Quản lý địa chỉ nhận hàng</Link></p>}
             {hasBuyerAccess(user) && <p><Link to="/account/orders">Đơn mua của tôi</Link></p>}
-            {hasBuyerAccess(user) && <p><Link to="/account/aftersales">Yêu cầu hậu mãi của tôi</Link></p>}
-            {user.role!=='ADMIN' && (user.role==='SELLER'||import.meta.env.VITE_SELLER_ONBOARDING_ENABLED==='true') && <p><Link to="/account/store-application">Đăng ký / quản lý hồ sơ Store</Link></p>}
+            {hasBuyerAccess(user) && <p><Link to="/account/aftersales">Yêu cầu hậu mãi</Link></p>}
+            {user.role !== 'ADMIN' && (user.role === 'SELLER' || import.meta.env.VITE_SELLER_ONBOARDING_ENABLED === 'true') && (
+              <p><Link to="/account/store-application">Đăng ký / quản lý hồ sơ Store</Link></p>
+            )}
           </div>
         </aside>
 
         <div className={styles.detailColumn}>
           <div className={styles.profileCard}>
             <div className={styles.profileHeader}>
-              <h2>{user.fullName || user.email}</h2>
+              <div>
+                <h2>Hồ sơ của tôi</h2>
+                <p className={styles.profileSubtitle}>Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
+              </div>
               <span className={user.isActive ? styles.activeBadge : styles.lockedBadge} aria-hidden="true">
                 {user.isActive ? '✓ Đang bảo vệ' : 'Đã khóa'}
               </span>
             </div>
             <div className={styles.infoGrid}>
-              <p>Email: {user.email}</p>
-              <p>Vai trò: {user.role}</p>
-              <p>ID: #{user.id}</p>
-              <p>Trạng thái: {user.isActive ? 'Hoạt động' : 'Đã khóa'}</p>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Họ và tên</span>
+                <span className={styles.infoValue}>{user.fullName || 'Chưa thiết lập'}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Email</span>
+                <span className={styles.infoValue}>{maskEmail(user.email)}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Trạng thái tài khoản</span>
+                <span className={styles.infoValue}>
+                  <span className={user.isActive ? styles.statusActiveDot : styles.statusLockedDot}>●</span>
+                  {' '}{user.isActive ? 'Tài khoản hoạt động bình thường' : 'Tài khoản đang bị tạm khóa'}
+                </span>
+              </div>
             </div>
           </div>
           {import.meta.env.VITE_ACCOUNT_SETTINGS_ENABLED === 'true' && <AccountSettings />}

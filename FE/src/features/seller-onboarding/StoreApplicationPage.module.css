@@ -19,7 +19,7 @@
   line-height: 1.6;
 }
 .eyebrow {
-  color: #007d7b;
+  color: var(--market-brand);
   font-size: 12px;
   font-weight: 750;
   letter-spacing: 0.1em;
@@ -44,9 +44,9 @@
 .root button {
   padding: 10px 16px;
   border-radius: 8px;
-  background: #007d7b;
+  background: var(--market-brand);
   color: white;
-  border: 1px solid #007d7b;
+  border: 1px solid var(--market-brand);
   cursor: pointer;
   font-weight: 600;
 }
@@ -113,7 +113,7 @@
   resize: vertical;
 }
 .summary {
-  border-left: 4px solid #007d7b;
+  border-left: 4px solid var(--market-brand);
   background: #edf8f6;
   padding: 14px;
   display: grid;
@@ -134,7 +134,7 @@
   border-radius: 8px;
 }
 .error {
-  background: #fff0ec;
+  background: #fff0ed;
   color: #8f2b22;
   padding: 16px;
   border-radius: 8px;
