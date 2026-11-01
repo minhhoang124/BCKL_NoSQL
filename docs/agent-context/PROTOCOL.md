@@ -27,6 +27,8 @@ Không mặc định dùng model mạnh nhất. Không tự nâng High/xhigh/max
 Gọi Codex review chỉ đọc (Windows, CLI không nằm trong PATH; không sửa PATH, không dùng cờ bypass):
 `& 'C:\Users\ADMIN\AppData\Local\OpenAI\Codex\bin\22cfb1d302613eae\codex.exe' exec --ephemeral --sandbox read-only "<prompt>"`, đặt effort Low (Astra) hoặc Medium theo bảng trên. Đường dẫn chỉ đúng trên máy owner; kiểm `Test-Path` trước khi dùng.
 
+Lưu ý PowerShell 5.1 (đã gặp 01/11): **không đặt dấu nháy kép `"` trong prompt** (kể cả trong here-string). Windows PowerShell tách đối số tại đó, Codex báo `unexpected argument` và thoát mã 2. Dùng nháy đơn, ghi log bằng `*> <file>.log` và kiểm `$LASTEXITCODE`, không `Out-Null`. Effort truyền dạng `-c model_reasoning_effort=medium`.
+
 ### Giao task theo D19
 
 1. Task ID, mục tiêu cụ thể, lý do ưu tiên và tiêu chí đạt.
