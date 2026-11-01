@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError } from '../services/apiClient';
-import { marketplaceApi } from '../services/marketplaceApi';
+import { formatPrice, marketplaceApi, mediaUrl } from '../services/marketplaceApi';
 import type { Brand, Category, Product, Store } from '../types/marketplace';
 import styles from './Marketplace.module.css';
 import { SearchAnalytics } from '../features/SearchAnalytics';
@@ -48,6 +48,7 @@ export function SellerDashboardPage() {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
+  const [query, setQuery] = useState('');
   const pending = useRef(false);
 
   const selectProduct = (product: Product | null) => {
@@ -204,505 +205,312 @@ export function SellerDashboardPage() {
 
   const approvedCount = products.filter((item) => item.moderationStatus === 'APPROVED').length;
   const pendingCount = products.filter((item) => item.moderationStatus === 'PENDING').length;
+  const visibleProducts = query.trim()
+    ? products.filter((item) => item.name.toLowerCase().includes(query.trim().toLowerCase()))
+    : products;
+  const priceRange = (item: Product) => {
+    const prices = (item.variants ?? []).map((v) => Number(v.price)).filter((v) => Number.isFinite(v));
+    if (!prices.length) return '—';
+    const min = Math.min(...prices), max = Math.max(...prices);
+    return min === max ? formatPrice(String(min)) : `${formatPrice(String(min))} – ${formatPrice(String(max))}`;
+  };
+  const stockTotal = (item: Product) => {
+    const variants = item.variants ?? [];
+    // Only show a total when every SKU reports stock; a partial sum would look complete.
+    if (!variants.length || variants.some((v) => typeof v.stock !== 'number')) return '—';
+    return variants.reduce((sum, v) => sum + (v.stock as number), 0);
+  };
+  const statusTone = (item: Product) =>
+    item.moderationStatus === 'APPROVED' ? styles.scToneOk
+      : item.moderationStatus === 'REJECTED' || item.moderationStatus === 'FROZEN' ? styles.scToneBad
+        : item.moderationStatus === 'PENDING' ? styles.scToneWait : styles.scToneMuted;
+  const done = (ok: boolean) => <span className={ok ? styles.scCheckOk : styles.scCheckMissing}>{ok ? 'Đã xong' : 'Còn thiếu'}</span>;
 
   return (
-    <div className={styles.page}>
-      <div className={styles.sellerHeaderBanner}>
-        <div>
+    <div className={styles.scShell}>
+      <aside className={styles.scSidebar} aria-label="Kênh người bán">
+        <div className={styles.scStoreCard}>
           <h1>Kênh người bán</h1>
-          <p>Hoàn thiện thông tin cửa hàng và sản phẩm trước khi gửi duyệt.</p>
+          <strong>{store?.name ?? 'Chưa có cửa hàng'}</strong>
+          <span>{store ? (storeStatusLabels[store.status] ?? store.status) : 'Chưa tạo'}</span>
         </div>
-        <div className={styles.sellerQuickNav}>
-          <Link to="/seller/orders" className={styles.sellerNavBtn}>
-            Đơn hàng của cửa hàng
-          </Link>
-          <p>
-            <Link to="/seller/aftersales" className={styles.sellerNavBtnSecondary}>
-              Xử lý hậu mãi
-            </Link>
-          </p>
-          {import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED === 'true' && (
-            <p>
-              <Link to="/seller/reviews" className={styles.sellerNavBtnSecondary}>
-                Phản hồi đánh giá
-              </Link>
-            </p>
-          )}
-        </div>
-      </div>
+        <nav className={styles.scNav}>
+          <span className={styles.scNavGroup}>Sản phẩm</span>
+          <button type="button" className={tab === 'products' ? styles.scNavActive : undefined} onClick={() => setTab('products')}>
+            Sản phẩm ({products.length})
+          </button>
+          <span className={styles.scNavGroup}>Đơn hàng</span>
+          <Link to="/seller/orders">Đơn hàng của cửa hàng</Link>
+          <Link to="/seller/aftersales">Xử lý hậu mãi</Link>
+          {import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED === 'true' && <Link to="/seller/reviews">Phản hồi đánh giá</Link>}
+          <span className={styles.scNavGroup}>Cửa hàng</span>
+          <button type="button" className={tab === 'store' ? styles.scNavActive : undefined} onClick={() => setTab('store')}>
+            Cửa hàng
+          </button>
+          <button type="button" className={tab === 'dashboard' ? styles.scNavActive : undefined} onClick={() => setTab('dashboard')}>
+            Thống kê
+          </button>
+        </nav>
+      </aside>
 
-      <div className={styles.sellerKpiGrid} aria-hidden="true">
-        <div className={styles.sellerKpiCard}>
-          <span>Trạng thái gian hàng</span>
-          <strong>{store ? (storeStatusLabels[store.status] ?? store.status) : 'Chưa tạo'}</strong>
-          <small>{store?.name ?? 'Chưa đăng ký tên cửa hàng'}</small>
-        </div>
-        <div className={styles.sellerKpiCard}>
-          <span>Sản phẩm đã duyệt</span>
-          <strong>
-            {approvedCount} / {products.length}
-          </strong>
-          <small>Đang hiển thị trên sàn</small>
-        </div>
-        <div className={styles.sellerKpiCard}>
-          <span>Chờ Admin kiểm duyệt</span>
-          <strong>{pendingCount}</strong>
-          <small>Hàng chờ duyệt nội dung</small>
-        </div>
-        <div className={styles.sellerKpiCard}>
-          <span>Cập nhật Giá &amp; Kho SKU</span>
-          <strong>Áp dụng ngay</strong>
-          <small>Không cần chờ duyệt lại</small>
-        </div>
-      </div>
+      <main className={styles.scMain}>
+        {error && <p className={styles.error} role="alert">{error}</p>}
+        {message && <p className={styles.success}>{message}</p>}
 
-      <div className={styles.tabs}>
-        <button
-          className={tab === 'store' ? styles.active : ''}
-          onClick={() => setTab('store')}
-        >
-          Cửa hàng
-        </button>
-        <button
-          className={tab === 'products' ? styles.active : ''}
-          onClick={() => setTab('products')}
-        >
-          Sản phẩm ({products.length})
-        </button>
-        <button
-          className={tab === 'dashboard' ? styles.active : ''}
-          onClick={() => setTab('dashboard')}
-        >
-          Thống kê
-        </button>
-      </div>
-
-      {error && (
-        <p className={styles.error} role="alert">
-          {error}
-        </p>
-      )}
-      {message && <p className={styles.success}>{message}</p>}
-
-      {tab === 'dashboard' ? (
-        <>
-          <Dashboard scope="SELLER" storeId={store?.id} />
-          <SearchAnalytics scope="SELLER" />
-        </>
-      ) : tab === 'store' ? (
-        <section className={styles.columns}>
-          {store?.application ||
-          (!store && import.meta.env.VITE_SELLER_ONBOARDING_ENABLED === 'true') ? (
-            <div className={styles.panel}>
-              <h2>Hồ sơ mở cửa hàng</h2>
-              <p>
-                Thông tin liên hệ, địa chỉ lấy/trả hàng và lịch sử được quản lý cùng hồ sơ đã nộp.
-              </p>
-              <Link to="/account/store-application">Mở hồ sơ cửa hàng</Link>
+        {tab === 'dashboard' ? (
+          <>
+            <Dashboard scope="SELLER" storeId={store?.id} />
+            <SearchAnalytics scope="SELLER" />
+          </>
+        ) : tab === 'store' ? (
+          <section className={styles.scCard}>
+            <div className={styles.scCardHead}>
+              <h2>{store?.application || (!store && import.meta.env.VITE_SELLER_ONBOARDING_ENABLED === 'true') ? 'Hồ sơ mở cửa hàng' : store ? 'Thông tin cửa hàng' : 'Mở cửa hàng'}</h2>
+              <span className={styles.scStatus}>{store ? (storeStatusLabels[store.status] ?? store.status) : 'Chưa tạo'}</span>
             </div>
-          ) : (
-            <form className={`${styles.panel} ${styles.form}`} onSubmit={saveStore}>
-              <h2>{store ? 'Thông tin cửa hàng' : 'Mở cửa hàng'}</h2>
-              <label>
-                Tên cửa hàng
-                <input name="name" required minLength={3} defaultValue={store?.name} />
-              </label>
-              <label>
-                Mô tả
-                <textarea
-                  name="description"
-                  rows={5}
-                  defaultValue={store?.description ?? ''}
-                />
-              </label>
-              <button disabled={busy}>{store ? 'Lưu thay đổi' : 'Gửi yêu cầu'}</button>
-              {store?.status === 'REJECTED' && (
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  onClick={() => run(marketplaceApi.resubmitStore, 'Đã nộp lại hồ sơ cửa hàng.')}
-                >
-                  Nộp lại sau chỉnh sửa
-                </button>
-              )}
-            </form>
-          )}
-          <aside className={styles.panel}>
-            <h2>Trạng thái</h2>
-            <span className={styles.badge}>{store?.status ?? 'CHƯA TẠO'}</span>
-            <p>
-              {store?.status === 'ACTIVE'
-                ? 'Cửa hàng đã hoạt động; bạn có thể tạo và gửi sản phẩm.'
-                : 'Cửa hàng cần được duyệt trước khi thêm sản phẩm.'}
-            </p>
-          </aside>
-        </section>
-      ) : (
-        <section className={`${styles.columns} ${styles.sellerWorkspace}`}>
-          <div className={styles.panel}>
-            <div className={styles.panelHeaderRow}>
-              <h2>Sản phẩm của tôi</h2>
-              <button
-                type="button"
-                className={styles.newProductBtn}
-                disabled={busy}
-                onClick={() => selectProduct(null)}
-              >
-                + Thêm sản phẩm mới
-              </button>
-            </div>
-            <div className={styles.list}>
-              {products.map((item) => (
-                <div
-                  className={selected?.id === item.id ? `${styles.row} ${styles.rowActive}` : styles.row}
-                  key={item.id}
-                >
-                  <div>
-                    <strong>{item.name}</strong>
-                    <div className={styles.itemMetaLine}>
-                      <span className={styles.statusPill}>
-                        {item.moderationStatus ? (moderationLabels[item.moderationStatus] ?? item.moderationStatus) : 'Bản nháp'}
-                      </span>
-                      <span> · </span>
-                      <span>{item.sellerStatus ? (visibilityLabels[item.sellerStatus] ?? item.sellerStatus) : 'Đang bán'}</span>
-                    </div>
-                  </div>
-                  <div className={styles.actions}>
-                    <button disabled={busy} className={styles.secondary} onClick={() => selectProduct(item)}>
-                      Chỉnh sửa
+            {store?.application || (!store && import.meta.env.VITE_SELLER_ONBOARDING_ENABLED === 'true') ? (
+              <div className={styles.scBody}>
+                <p>Thông tin liên hệ, địa chỉ lấy/trả hàng và lịch sử được quản lý cùng hồ sơ đã nộp.</p>
+                <Link className={styles.scSecondaryLink} to="/account/store-application">Mở hồ sơ cửa hàng</Link>
+              </div>
+            ) : (
+              <form className={styles.scForm} onSubmit={saveStore}>
+                <label className={styles.scRow}>
+                  <span>Tên cửa hàng</span>
+                  <input name="name" required minLength={3} defaultValue={store?.name} />
+                </label>
+                <label className={styles.scRow}>
+                  <span>Mô tả</span>
+                  <textarea name="description" rows={5} defaultValue={store?.description ?? ''} />
+                </label>
+                <p className={styles.scRowNote}>
+                  {store?.status === 'ACTIVE'
+                    ? 'Cửa hàng đã hoạt động; bạn có thể tạo và gửi sản phẩm.'
+                    : 'Cửa hàng cần được duyệt trước khi thêm sản phẩm.'}
+                </p>
+                <div className={styles.scActionsRow}>
+                  {store?.status === 'REJECTED' && (
+                    <button type="button" className={styles.scSecondary} onClick={() => run(marketplaceApi.resubmitStore, 'Đã nộp lại hồ sơ cửa hàng.')}>
+                      Nộp lại sau chỉnh sửa
                     </button>
-                    {item.moderationStatus === 'NOT_SUBMITTED' ||
-                    item.moderationStatus === 'REJECTED' ? (
-                      <button
-                        disabled={busy}
-                        aria-label={`Gửi duyệt ${item.name}`}
-                        onClick={() =>
-                          run(() => marketplaceApi.submitProduct(item.id), 'Đã gửi duyệt.')
-                        }
-                      >
-                        Gửi duyệt
-                      </button>
-                    ) : null}
-                    {item.moderationStatus === 'APPROVED' && item.version && (
-                      <button
-                        disabled={busy}
-                        className={styles.secondary}
-                        onClick={() =>
-                          run(
-                            () =>
-                              marketplaceApi.visibility(
-                                item.id,
-                                item.version!,
-                                item.sellerStatus === 'HIDDEN' ? 'ACTIVE' : 'HIDDEN',
-                              ),
-                            'Đã đổi hiển thị.',
-                          )
-                        }
-                      >
-                        {item.sellerStatus === 'HIDDEN' ? 'Hiện' : 'Ẩn'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {products.length === 0 && (
-                <p className={styles.emptyHint}>Chưa có sản phẩm nào. Hãy tạo sản phẩm đầu tiên bên phải.</p>
-              )}
-            </div>
-          </div>
-
-          <div className={styles.panel}>
-            {/* Guided Multi-Step Wizard Header */}
-            <div className={styles.stepWizard}>
-              <div className={styles.stepWizardHead}>
-                <h2>{selected ? 'Sửa #' + selected.id : 'Tạo sản phẩm'}</h2>
-                {selected && (
-                  <span className={styles.stepCurrentNotice}>
-                    Mã sản phẩm: #{selected.id} · Trạng thái: {moderationLabels[selected.moderationStatus ?? 'NOT_SUBMITTED'] ?? selected.moderationStatus}
-                  </span>
-                )}
-              </div>
-              <div className={styles.stepTabsRow} role="tablist">
-                <button
-                  type="button"
-                  className={activeStep === 'info' ? styles.stepTabActive : styles.stepTab}
-                  onClick={() => setActiveStep('info')}
-                >
-                  1. Thông tin cơ bản
-                </button>
-                <button
-                  type="button"
-                  className={activeStep === 'images' ? styles.stepTabActive : styles.stepTab}
-                  disabled={!selected}
-                  onClick={() => setActiveStep('images')}
-                  title={!selected ? 'Lưu thông tin cơ bản trước khi tải ảnh' : ''}
-                >
-                  2. Ảnh sản phẩm
-                </button>
-                <button
-                  type="button"
-                  className={activeStep === 'variants' ? styles.stepTabActive : styles.stepTab}
-                  disabled={!selected}
-                  onClick={() => setActiveStep('variants')}
-                  title={!selected ? 'Lưu thông tin cơ bản trước khi cấu hình phân loại' : ''}
-                >
-                  3. Phân loại &amp; Giá/Kho
-                </button>
-                <button
-                  type="button"
-                  className={activeStep === 'shipping' ? styles.stepTabActive : styles.stepTab}
-                  disabled={!selected}
-                  onClick={() => setActiveStep('shipping')}
-                  title={!selected ? 'Lưu thông tin cơ bản trước khi cấu hình vận chuyển' : ''}
-                >
-                  4. Kiện hàng
-                </button>
-                {selected && (
-                  <button
-                    type="button"
-                    className={activeStep === 'submit' ? styles.stepTabActive : styles.stepTab}
-                    onClick={() => setActiveStep('submit')}
-                  >
-                    5. Gửi duyệt
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Step 1: Basic Info */}
-            <div hidden={activeStep !== 'info'}>
-              <form className={styles.form} onSubmit={saveProduct} aria-label="Sản phẩm">
-                <h3>1. Thông tin cơ bản</h3>
-                <label>
-                  Tên
-                  <input
-                    name="name"
-                    required
-                    minLength={3}
-                    disabled={busy}
-                    value={draft.name}
-                    onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                  />
-                </label>
-                <label>
-                  Danh mục
-                  <select
-                    name="categoryId"
-                    required
-                    disabled={busy}
-                    value={draft.categoryId}
-                    onChange={(e) => setDraft({ ...draft, categoryId: e.target.value })}
-                  >
-                    <option value="">Chọn danh mục lá</option>
-                    {leafCategories.map((item) => (
-                      <option value={item.id} key={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Thương hiệu
-                  <select
-                    name="brandId"
-                    disabled={busy}
-                    value={draft.brandId}
-                    onChange={(e) => setDraft({ ...draft, brandId: e.target.value })}
-                  >
-                    <option value="">Không thương hiệu</option>
-                    {brands.map((item) => (
-                      <option value={item.id} key={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Mô tả
-                  <textarea
-                    name="description"
-                    rows={4}
-                    disabled={busy}
-                    value={draft.description}
-                    onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-                  />
-                </label>
-                <div className={styles.formButtonsRow}>
-                  <button disabled={busy}>Lưu sản phẩm</button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => selectProduct(null)}
-                  >
-                    Tạo mới / bỏ chỉnh sửa
-                  </button>
+                  )}
+                  <button className={styles.scPrimary} disabled={busy}>{store ? 'Lưu thay đổi' : 'Gửi yêu cầu'}</button>
                 </div>
               </form>
-            </div>
-
-            {/* Step 2: Product Images */}
-            {selected && (
-              <div hidden={activeStep !== 'images'}>
-                <form className={styles.form} onSubmit={upload}>
-                  <h3>2. Ảnh đại diện sản phẩm</h3>
-                  <p className={styles.stepHint}>
-                    Ảnh chính là hình ảnh đầu tiên người mua nhìn thấy trên sàn. Định dạng hỗ trợ: JPEG, PNG, WebP (tối đa 5MB).
-                  </p>
-                  {selected.images?.length > 0 && (
-                    <div className={styles.uploadedImagesPreview}>
-                      <span>Đã có {selected.images.length} ảnh được tải lên.</span>
-                    </div>
-                  )}
-                  <input
-                    name="file"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    required
-                    disabled={busy}
-                  />
-                  <div className={styles.formButtonsRow}>
-                    <button disabled={busy}>Tải ảnh &amp; tiếp tục</button>
-                    <button
-                      type="button"
-                      className={styles.secondary}
-                      onClick={() => setActiveStep('variants')}
-                    >
-                      Bỏ qua bước ảnh sang Phân loại ›
-                    </button>
-                  </div>
-                </form>
-              </div>
             )}
-
-            {/* Step 3: Variants, SKU, Prices, Stocks */}
-            {selected && (
-              <div hidden={activeStep !== 'variants'}>
-                <h3>3. Phân loại, Thuộc tính &amp; Giá/Kho SKU</h3>
-                <ProductDetailsEditor
-                  key={selected.id}
-                  product={selected}
-                  busy={busy}
-                  run={run}
-                  onInventoryChanged={(fresh) => {
-                    setProducts((rows) =>
-                      rows.map((row) => (row.id === fresh.id ? fresh : row)),
-                    );
-                    setSelected((current) =>
-                      current?.id === fresh.id ? fresh : current,
-                    );
-                  }}
-                />
-                <div className={styles.nextStepBar}>
-                  <button
-                    type="button"
-                    className={styles.primary}
-                    onClick={() => setActiveStep('shipping')}
-                  >
-                    Tiếp tục sang bước Kiện hàng ›
-                  </button>
+          </section>
+        ) : (
+          <>
+            <section className={styles.scCard}>
+              <div className={styles.scCardHead}>
+                <div>
+                  <h2>Sản phẩm của tôi</h2>
+                  <p className={styles.scMuted}>{products.length} sản phẩm · {approvedCount} đã duyệt · {pendingCount} chờ duyệt</p>
+                </div>
+                <div className={styles.scToolbar}>
+                  <input type="search" aria-label="Tìm sản phẩm của tôi" placeholder="Tìm theo tên sản phẩm" value={query} onChange={(e) => setQuery(e.target.value)} />
+                  <button type="button" className={styles.scPrimary} disabled={busy} onClick={() => selectProduct(null)}>+ Thêm sản phẩm mới</button>
                 </div>
               </div>
-            )}
+              <div className={styles.scTableWrap}>
+                <table className={styles.scTable}>
+                  <thead>
+                    <tr><th>Tên sản phẩm</th><th>Phân loại</th><th>Giá</th><th>Kho</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                  </thead>
+                  <tbody>
+                    {visibleProducts.map((item) => {
+                      const cover = item.images?.find((img) => img.isPrimary) ?? item.images?.[0];
+                      return (
+                        <tr key={item.id} className={selected?.id === item.id ? styles.scRowActive : undefined}>
+                          <td className={styles.scProductCell}>
+                            {cover ? <img src={mediaUrl(cover.url)} alt="" /> : <span className={styles.scThumbEmpty} aria-hidden="true" />}
+                            <strong>{item.name}</strong>
+                            <small>{item.category?.name}</small>
+                          </td>
+                          <td>{item.variants?.length ?? 0}</td>
+                          <td>{priceRange(item)}</td>
+                          <td>{stockTotal(item)}</td>
+                          <td>
+                            <span className={`${styles.scStatus} ${statusTone(item)}`}>
+                              {item.moderationStatus ? (moderationLabels[item.moderationStatus] ?? item.moderationStatus) : 'Bản nháp'}
+                            </span>
+                            <small className={styles.scMutedBlock}>{item.sellerStatus ? (visibilityLabels[item.sellerStatus] ?? item.sellerStatus) : 'Đang bán'}</small>
+                          </td>
+                          <td>
+                            <div className={styles.scRowActions}>
+                              <button type="button" disabled={busy} className={styles.scLinkBtn} onClick={() => selectProduct(item)}>Chỉnh sửa</button>
+                              {(item.moderationStatus === 'NOT_SUBMITTED' || item.moderationStatus === 'REJECTED') && (
+                                <button type="button" disabled={busy} className={styles.scLinkBtn} aria-label={`Gửi duyệt ${item.name}`}
+                                  onClick={() => run(() => marketplaceApi.submitProduct(item.id), 'Đã gửi duyệt.')}>Gửi duyệt</button>
+                              )}
+                              {item.moderationStatus === 'APPROVED' && item.version && (
+                                <button type="button" disabled={busy} className={styles.scLinkBtn}
+                                  onClick={() => run(() => marketplaceApi.visibility(item.id, item.version!, item.sellerStatus === 'HIDDEN' ? 'ACTIVE' : 'HIDDEN'), 'Đã đổi hiển thị.')}>
+                                  {item.sellerStatus === 'HIDDEN' ? 'Hiện' : 'Ẩn'}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {products.length === 0 && <p className={styles.scEmpty}>Chưa có sản phẩm nào. Bấm “+ Thêm sản phẩm mới” để tạo sản phẩm đầu tiên.</p>}
+                {products.length > 0 && visibleProducts.length === 0 && <p className={styles.scEmpty}>Không có sản phẩm khớp “{query.trim()}”.</p>}
+              </div>
+            </section>
 
-            {/* Step 4: Shipping Profile */}
-            {selected && (
-              <div hidden={activeStep !== 'shipping'}>
-                <form className={styles.form} onSubmit={saveShipping}>
-                  <h3>4. Thông tin kiện hàng &amp; Vận chuyển</h3>
-                  <p className={styles.stepHint}>
-                    Nhập khối lượng sau khi đóng gói. Đây là thông tin bắt buộc trước khi gửi duyệt.
-                  </p>
-                  <label>
-                    Khối lượng kiện hàng đóng gói (gram) *
-                    <input
-                      name="weight"
-                      type="number"
-                      min="1"
-                      placeholder="Ví dụ: 500"
-                      required
-                      disabled={busy}
-                      defaultValue={selected.shippingProfile?.packageWeightGrams ?? ''}
-                    />
+            <section className={styles.scCard} aria-label="Soạn sản phẩm">
+              <div className={styles.scCardHead}>
+                <div>
+                  <h2>{selected ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}</h2>
+                  {selected && (
+                    <p className={styles.scMuted}>
+                      {selected.name} · Mã #{selected.id} · {moderationLabels[selected.moderationStatus ?? 'NOT_SUBMITTED'] ?? selected.moderationStatus}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className={styles.scSteps} role="tablist">
+                <button type="button" className={activeStep === 'info' ? styles.scStepActive : undefined} onClick={() => setActiveStep('info')}>1. Thông tin cơ bản</button>
+                <button type="button" className={activeStep === 'images' ? styles.scStepActive : undefined} disabled={!selected} onClick={() => setActiveStep('images')} title={!selected ? 'Lưu thông tin cơ bản trước khi tải ảnh' : ''}>2. Ảnh sản phẩm</button>
+                <button type="button" className={activeStep === 'variants' ? styles.scStepActive : undefined} disabled={!selected} onClick={() => setActiveStep('variants')} title={!selected ? 'Lưu thông tin cơ bản trước khi cấu hình phân loại' : ''}>3. Phân loại &amp; Giá/Kho</button>
+                <button type="button" className={activeStep === 'shipping' ? styles.scStepActive : undefined} disabled={!selected} onClick={() => setActiveStep('shipping')} title={!selected ? 'Lưu thông tin cơ bản trước khi cấu hình vận chuyển' : ''}>4. Kiện hàng</button>
+                {selected && <button type="button" className={activeStep === 'submit' ? styles.scStepActive : undefined} onClick={() => setActiveStep('submit')}>5. Gửi duyệt</button>}
+              </div>
+
+              <div hidden={activeStep !== 'info'}>
+                <form className={styles.scForm} onSubmit={saveProduct} aria-label="Sản phẩm">
+                  <h3>1. Thông tin cơ bản</h3>
+                  <div className={styles.scRow}>
+                    <label htmlFor="seller-product-name">Tên</label>
+                    <span className={styles.scCounted}>
+                      <input id="seller-product-name" name="name" required minLength={3} maxLength={240} disabled={busy} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+                      <small aria-hidden="true">{draft.name.length}/240</small>
+                    </span>
+                  </div>
+                  <label className={styles.scRow}>
+                    <span>Danh mục</span>
+                    <select name="categoryId" required disabled={busy} value={draft.categoryId} onChange={(e) => setDraft({ ...draft, categoryId: e.target.value })}>
+                      <option value="">Chọn danh mục lá</option>
+                      {leafCategories.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
+                    </select>
                   </label>
-                  <div className={styles.formButtonsRow}>
-                    <button disabled={busy}>Lưu kiện hàng</button>
-                    <button
-                      type="button"
-                      className={styles.primary}
-                      onClick={() => setActiveStep('submit')}
-                    >
-                      Tiếp tục sang bước Kiểm tra &amp; Gửi duyệt ›
-                    </button>
+                  <label className={styles.scRow}>
+                    <span>Thương hiệu</span>
+                    <select name="brandId" disabled={busy} value={draft.brandId} onChange={(e) => setDraft({ ...draft, brandId: e.target.value })}>
+                      <option value="">Không thương hiệu</option>
+                      {brands.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
+                    </select>
+                  </label>
+                  <label className={styles.scRow}>
+                    <span>Mô tả</span>
+                    <textarea name="description" rows={6} disabled={busy} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
+                  </label>
+                  <div className={styles.scActionsRow}>
+                    <button type="button" className={styles.scSecondary} disabled={busy} onClick={() => selectProduct(null)}>Tạo mới / bỏ chỉnh sửa</button>
+                    <button className={styles.scPrimary} disabled={busy}>Lưu sản phẩm</button>
                   </div>
                 </form>
               </div>
-            )}
 
-            {/* Step 5: Review & Submit for Moderation */}
-            {selected && (
-              <div hidden={activeStep !== 'submit'}>
-                <div className={styles.reviewSubmissionCard}>
+              {selected && (
+                <div hidden={activeStep !== 'images'}>
+                  <form className={styles.scForm} onSubmit={upload}>
+                    <h3>2. Ảnh đại diện sản phẩm</h3>
+                    <div className={styles.scRow}>
+                      <span>Ảnh sản phẩm</span>
+                      <div>
+                        <div className={styles.scImageGrid}>
+                          {(selected.images ?? []).map((img, index, all) => {
+                            const coverIndex = Math.max(0, all.findIndex((x) => x.isPrimary));
+                            return (
+                              <figure key={img.id}>
+                                <img src={mediaUrl(img.url)} alt="" />
+                                <figcaption>{index === coverIndex ? 'Ảnh bìa' : `Ảnh ${index + 1}`}</figcaption>
+                              </figure>
+                            );
+                          })}
+                        </div>
+                        <input name="file" type="file" aria-label="Chọn ảnh sản phẩm" accept="image/jpeg,image/png,image/webp" required disabled={busy} />
+                        <p className={styles.scRowNote}>Định dạng JPEG, PNG hoặc WebP, tối đa 5MB. Ảnh mới tải lên được đặt làm ảnh bìa.</p>
+                      </div>
+                    </div>
+                    <div className={styles.scActionsRow}>
+                      <button type="button" className={styles.scSecondary} onClick={() => setActiveStep('variants')}>Bỏ qua bước ảnh sang Phân loại ›</button>
+                      <button className={styles.scPrimary} disabled={busy}>Tải ảnh &amp; tiếp tục</button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {selected && (
+                <div hidden={activeStep !== 'variants'} className={styles.scStepBody}>
+                  <h3>3. Phân loại, Thuộc tính &amp; Giá/Kho SKU</h3>
+                  <ProductDetailsEditor
+                    key={selected.id}
+                    product={selected}
+                    busy={busy}
+                    run={run}
+                    onInventoryChanged={(fresh) => {
+                      setProducts((rows) => rows.map((row) => (row.id === fresh.id ? fresh : row)));
+                      setSelected((current) => (current?.id === fresh.id ? fresh : current));
+                    }}
+                  />
+                  <div className={styles.scActionsRow}>
+                    <button type="button" className={styles.scSecondary} onClick={() => setActiveStep('shipping')}>Tiếp tục sang bước Kiện hàng ›</button>
+                  </div>
+                </div>
+              )}
+
+              {selected && (
+                <div hidden={activeStep !== 'shipping'}>
+                  <form className={styles.scForm} onSubmit={saveShipping}>
+                    <h3>4. Thông tin kiện hàng &amp; Vận chuyển</h3>
+                    <div className={styles.scRow}>
+                      <label htmlFor="seller-package-weight">Khối lượng kiện hàng đóng gói (gram) *</label>
+                      <span className={styles.scUnitInput}>
+                        <input id="seller-package-weight" name="weight" type="number" min="1" placeholder="Ví dụ: 500" required disabled={busy} defaultValue={selected.shippingProfile?.packageWeightGrams ?? ''} />
+                        <small aria-hidden="true">gr</small>
+                      </span>
+                    </div>
+                    <p className={styles.scRowNote}>Khối lượng sau khi đóng gói, bắt buộc trước khi gửi duyệt.</p>
+                    <div className={styles.scActionsRow}>
+                      <button type="button" className={styles.scSecondary} onClick={() => setActiveStep('submit')}>Tiếp tục sang bước Kiểm tra &amp; Gửi duyệt ›</button>
+                      <button className={styles.scPrimary} disabled={busy}>Lưu kiện hàng</button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {selected && (
+                <div hidden={activeStep !== 'submit'} className={styles.scStepBody}>
                   <h3>5. Kiểm tra &amp; gửi duyệt</h3>
-                  <p className={styles.stepHint}>
-                    Trước khi gửi duyệt, vui lòng kiểm tra xem bạn đã hoàn thành các thông tin cần thiết:
-                  </p>
-                  <ul className={styles.submissionChecklist}>
-                    <li>
-                      ✓ <strong>Thông tin cơ bản:</strong> {selected.name} ({selected.category.name})
-                    </li>
-                    <li>
-                      {selected.images?.length > 0 ? '✓' : '⚠️'} <strong>Ảnh chính:</strong>{' '}
-                      {selected.images?.length > 0
-                        ? `Đã có ${selected.images.length} ảnh`
-                        : 'Chưa có ảnh chính — cần có trước khi gửi duyệt'}
-                    </li>
-                    <li>
-                      {selected.variants?.length > 0 ? '✓' : '⚠️'} <strong>Phân loại &amp; Giá/Kho:</strong>{' '}
-                      {selected.variants?.length > 0
-                        ? `Đã có ${selected.variants.length} SKU biến thể`
-                        : 'Chưa tạo phân loại hàng'}
-                    </li>
-                    <li>
-                      {selected.shippingProfile?.packageWeightGrams ? '✓' : '⚠️'}{' '}
-                      <strong>Kiện hàng:</strong>{' '}
-                      {selected.shippingProfile?.packageWeightGrams
-                        ? `${selected.shippingProfile.packageWeightGrams}g`
-                        : 'Chưa lưu khối lượng kiện hàng'}
-                    </li>
+                  <ul className={styles.scChecklist}>
+                    <li><span>Thông tin cơ bản</span><span>{selected.name} · {selected.category.name}</span>{done(true)}</li>
+                    <li><span>Ảnh sản phẩm</span><span>{selected.images?.length ? `${selected.images.length} ảnh` : 'Chưa có ảnh chính'}</span>{done(!!selected.images?.length)}</li>
+                    <li><span>Phân loại &amp; Giá/Kho</span><span>{selected.variants?.length ? `${selected.variants.length} SKU` : 'Chưa tạo phân loại hàng'}</span>{done(!!selected.variants?.length)}</li>
+                    <li><span>Kiện hàng</span><span>{selected.shippingProfile?.packageWeightGrams ? `${selected.shippingProfile.packageWeightGrams} gr` : 'Chưa lưu khối lượng'}</span>{done(!!selected.shippingProfile?.packageWeightGrams)}</li>
                   </ul>
-
-                  <div className={styles.submissionActionsRow}>
-                    {selected.moderationStatus === 'NOT_SUBMITTED' ||
-                    selected.moderationStatus === 'REJECTED' ? (
-                      <button
-                        type="button"
-                        className={styles.submitForApprovalBtn}
-                        disabled={busy}
-                        onClick={() =>
-                          run(
-                            () => marketplaceApi.submitProduct(selected.id),
-                            'Đã gửi duyệt sản phẩm. Sản phẩm sẽ hiển thị trên sàn sau khi được duyệt.',
-                          )
-                        }
-                      >
+                  <div className={styles.scActionsRow}>
+                    {selected.moderationStatus === 'NOT_SUBMITTED' || selected.moderationStatus === 'REJECTED' ? (
+                      <button type="button" className={styles.scPrimary} disabled={busy}
+                        onClick={() => run(() => marketplaceApi.submitProduct(selected.id), 'Đã gửi duyệt sản phẩm. Sản phẩm sẽ hiển thị trên sàn sau khi được duyệt.')}>
                         Gửi duyệt
                       </button>
                     ) : selected.moderationStatus === 'PENDING' ? (
-                      <p className={styles.pendingReviewNotice}>
-                        ⏳ Sản phẩm đang trong hàng đợi kiểm duyệt của Admin.
-                      </p>
+                      <p className={styles.scRowNote}>Sản phẩm đang trong hàng đợi kiểm duyệt của Admin.</p>
                     ) : (
-                      <p className={styles.approvedNotice}>
-                        ✓ Sản phẩm đã được duyệt và đang hoạt động trên sàn.
-                      </p>
+                      <p className={styles.scRowNote}>Sản phẩm đã được duyệt và đang hoạt động trên sàn.</p>
                     )}
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+              )}
+            </section>
+          </>
+        )}
+      </main>
     </div>
   );
 }

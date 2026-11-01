@@ -69,9 +69,9 @@ function InventoryWorkspace({ productId, parentBusy, onChanged }: { productId: n
       if (live()) { setUncertain(true); setReview(null); setConsent(false); setError(e instanceof ApiError && e.status === 409 ? "Giá hoặc kho đã thay đổi. Tải lại rồi kiểm tra trước khi sửa tiếp." : "Chưa xác minh được kết quả. Tải lại giá/kho trước thao tác mới; không tự gửi lại."); }
     } finally { flight.current = false; if (live()) setBusy(false); }
   }
-  return <section className={styles.form} aria-label="Điều chỉnh giá và tồn kho SKU">
+  return <section className={`${styles.form} ${styles.scEditor} ${styles.scInventory}`} aria-label="Điều chỉnh giá và tồn kho SKU">
     <h2>Điều chỉnh giá và tồn kho</h2>
-    <p>Giá/kho mới áp dụng ngay. Thay đổi nội dung sản phẩm vẫn theo quy trình duyệt.</p>
+    <p className={styles.scRowNote}>Giá/kho mới áp dụng ngay. Thay đổi nội dung sản phẩm vẫn theo quy trình duyệt.</p>
     <button type="button" disabled={busy || parentBusy} onClick={() => void reload()}>Tải lại giá/kho</button>
     {error && <p role="alert">{error}</p>}{message && <p role="status">{message}</p>}
     {snapshot && variant && <>
@@ -90,7 +90,7 @@ function InventoryWorkspace({ productId, parentBusy, onChanged }: { productId: n
       {review && <div>
         <p>Giá: {formatPrice(review.expectedPrice)} → {formatPrice(review.price)}. Tồn kho: {review.expectedStock} → {review.stock}.</p>
         <label><input type="checkbox" checked={consent} disabled={busy} onChange={e => setConsent(e.target.checked)} />Tôi xác nhận điều chỉnh đúng SKU, giá và tồn kho đã kiểm tra.</label>
-        <button type="button" disabled={!consent || blocked} onClick={() => void save()}>{busy ? "Đang lưu…" : "Lưu giá/kho SKU"}</button>
+        <button type="button" className={styles.scPrimary} disabled={!consent || blocked} onClick={() => void save()}>{busy ? "Đang lưu…" : "Lưu giá/kho SKU"}</button>
         <button type="button" disabled={busy} onClick={() => { setReview(null); setConsent(false); }}>Sửa lại thay đổi</button>
       </div>}
     </>}

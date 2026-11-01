@@ -46,7 +46,8 @@ describe('Seller product editing', () => {
     fireEvent.change(screen.getByLabelText('Tên'), { target: { value: 'Edited B' } });
     fireEvent.click(screen.getByRole('button', { name: 'Lưu sản phẩm' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Save failed');
-    expect(screen.getByRole('heading', { name: 'Sửa #2' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Chỉnh sửa sản phẩm' })).toBeInTheDocument();
+    expect(screen.getByText(/Mã #2/)).toBeInTheDocument();
     expect(screen.getByLabelText('Tên')).toHaveValue('Edited B');
     expect(screen.getByLabelText('Danh mục')).toHaveValue('2');
     expect(screen.getByLabelText('Thương hiệu')).toHaveValue('');

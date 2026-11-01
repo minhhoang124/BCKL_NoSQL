@@ -104,7 +104,7 @@ export function ProductDetailsEditor({
     );
   }
   return (
-    <section className={styles.form} aria-label="Thuộc tính và phiên bản bán">
+    <section className={`${styles.form} ${styles.scEditor}`} aria-label="Thuộc tính và phiên bản bán">
       {import.meta.env.VITE_SELLER_VARIANT_INVENTORY_ENABLED === "true" && product.variants.length > 0 && <VariantInventoryEditor product={product} busy={busy} onChanged={onInventoryChanged} />}
       {!editable && (
         <p role="status">
@@ -148,9 +148,9 @@ export function ProductDetailsEditor({
         Tải lại thuộc tính
       </button>
       <h2>Phân loại sản phẩm</h2>
-      <p>
-        Khai báo tối đa hai nhóm trước khi tạo SKU đầu tiên, ví dụ Màu sắc và
-        Kích thước. Mỗi SKU chọn một giá trị của từng nhóm.
+      <p className={styles.scRowNote}>
+        Tối đa hai nhóm (ví dụ Màu sắc, Kích thước), khai báo trước khi tạo SKU
+        đầu tiên. Mỗi SKU chọn một giá trị của từng nhóm.
       </p>
       <form onSubmit={group} aria-label="Thêm nhóm phân loại">
         <fieldset
@@ -195,11 +195,13 @@ export function ProductDetailsEditor({
         >
           <fieldset disabled={busy || !editable}>
             <legend>{g.name}</legend>
-            <p>
-              {g.values.length
-                ? g.values.map((v) => v.value).join(", ")
-                : "Chưa có giá trị."}
-            </p>
+            {g.values.length ? (
+              <ul className={styles.scChips} aria-label={`Giá trị của ${g.name}`}>
+                {g.values.map((v) => <li key={v.id}>{v.value}</li>)}
+              </ul>
+            ) : (
+              <p className={styles.scRowNote}>Chưa có giá trị.</p>
+            )}
             <label>
               Giá trị mới cho {g.name}
               <input name="value" required maxLength={120} />
@@ -273,7 +275,7 @@ export function ProductDetailsEditor({
           {duplicate && (
             <p role="status">Tổ hợp này đã có SKU. Hãy chọn tổ hợp khác.</p>
           )}
-          <button disabled={busy || duplicate || !complete}>
+          <button className={styles.scPrimary} disabled={busy || duplicate || !complete}>
             Thêm phiên bản
           </button>
         </fieldset>
@@ -290,7 +292,7 @@ export function ProductDetailsEditor({
             <thead>
               <tr>
                 <th scope="col">Phân loại</th>
-                <th scope="col">SKU</th>
+                <th scope="col">Mã Seller SKU</th>
                 <th scope="col">Giá</th>
                 <th scope="col">Tồn kho</th>
               </tr>
@@ -311,7 +313,10 @@ export function ProductDetailsEditor({
                 return (
                   <tr key={v.id}>
                     <th scope="row">{label}</th>
-                    <td>{v.sellerSku || v.skuCode || `#${v.id}`}</td>
+                    <td>
+                      {v.sellerSku || "—"}
+                      {v.skuCode && <small className={styles.scSkuCode} title={v.skuCode}>{v.skuCode}</small>}
+                    </td>
                     <td>{formatPrice(v.price)}</td>
                     <td>{v.stock ?? "Chưa xác định"}</td>
                   </tr>

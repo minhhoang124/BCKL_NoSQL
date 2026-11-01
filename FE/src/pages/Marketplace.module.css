@@ -1451,3 +1451,133 @@
 .guestOptions .swatchChip { cursor: default; }
 .buyerSurface .purchaseArea .form > fieldset > .hint { display: none; }
 .buyerSurface .addToCartBtn > span[aria-hidden="true"] { display: none; }
+
+/* ===== Seller Centre shell (UI-E, Shopee-style): sidebar + full-width cards ===== */
+.scShell { box-sizing: border-box; max-width: 1280px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; align-items: start; color: #20242b; font-size: 14px; }
+.scSidebar { position: sticky; top: 112px; background: #fff; border-radius: 4px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); overflow: hidden; }
+.scStoreCard { display: grid; gap: 2px; padding: 16px; border-bottom: 1px solid #f0f0f0; }
+.scStoreCard h1 { margin: 0 0 6px; font-size: 13px; font-weight: 500; color: var(--market-brand); letter-spacing: 0; }
+.scStoreCard strong { font-size: 15px; overflow-wrap: anywhere; }
+.scStoreCard span { color: #69717c; font-size: 13px; }
+.scNav { display: grid; padding: 8px 0 12px; }
+.scNavGroup { padding: 12px 16px 4px; color: #69717c; font-size: 12px; font-weight: 600; }
+.scNav a, .scNav button { display: block; width: 100%; box-sizing: border-box; padding: 8px 16px 8px 28px; border: 0; background: none; color: #20242b; text-align: left; text-decoration: none; font: inherit; cursor: pointer; }
+.scNav a:hover, .scNav button:hover { color: var(--market-brand); }
+.scNav .scNavActive { color: var(--market-brand); font-weight: 600; background: #fff6f2; box-shadow: inset 3px 0 0 var(--market-brand); }
+.scMain { min-width: 0; display: grid; gap: 16px; }
+.scCard { background: #fff; border-radius: 4px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); min-width: 0; }
+.scCardHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 20px 24px 12px; }
+.scCardHead h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.scBody { padding: 0 24px 24px; display: grid; gap: 12px; justify-items: start; }
+.scMuted { margin: 4px 0 0; color: #69717c; font-size: 13px; }
+.scMutedBlock { display: block; margin-top: 4px; color: #69717c; font-size: 12px; }
+.scToolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+.scToolbar input { width: 240px; max-width: 100%; height: 36px; box-sizing: border-box; padding: 0 10px; border: 1px solid #d9d9d9; border-radius: 4px; font: inherit; color: #20242b; background: #fff; }
+.scPrimary, .scSecondary { height: 36px; padding: 0 16px; border-radius: 4px; font: inherit; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.scPrimary { border: 1px solid var(--market-brand); background: var(--market-brand); color: #fff; }
+.scPrimary:hover:not(:disabled) { background: var(--market-brand-hover); }
+.scSecondary { border: 1px solid #d9d9d9; background: #fff; color: #20242b; }
+.scSecondary:hover:not(:disabled) { border-color: #a6a6a6; }
+.scPrimary:disabled, .scSecondary:disabled, .scLinkBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.scSecondaryLink { padding: 8px 16px; border: 1px solid #d9d9d9; border-radius: 4px; color: #20242b; text-decoration: none; }
+.scLinkBtn { padding: 0; border: 0; background: none; color: #0a5bc4; font: inherit; cursor: pointer; text-align: left; }
+.scLinkBtn:hover:not(:disabled) { text-decoration: underline; }
+
+.scTableWrap { overflow-x: auto; padding: 0 24px 16px; }
+.scTable { width: 100%; border-collapse: collapse; min-width: 720px; }
+.scTable th { padding: 10px 12px; background: #fafafa; color: #69717c; font-size: 13px; font-weight: 500; text-align: left; border-bottom: 1px solid #f0f0f0; }
+.scTable td { padding: 14px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+.scTable tbody tr:hover { background: #fcfcfc; }
+.scRowActive { background: #fff6f2 !important; }
+.scTable td.scProductCell { position: relative; min-width: 220px; height: 56px; padding-left: 80px; }
+.scProductCell img, .scProductCell .scThumbEmpty { position: absolute; left: 12px; top: 14px; display: block; width: 56px; height: 56px; object-fit: contain; border: 1px solid #f0f0f0; border-radius: 2px; background: #f6f7f8; box-sizing: border-box; }
+.scProductCell strong { display: block; font-weight: 500; overflow-wrap: anywhere; }
+.scProductCell small { display: block; margin-top: 2px; color: #69717c; font-size: 12px; }
+.scRowActions { display: grid; gap: 6px; justify-items: start; }
+.scStatus { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 12px; background: #f2f3f5; color: #20242b; }
+.scToneOk { background: #eaf5ef; color: #1d6b42; }
+.scToneBad { background: #fff0ed; color: #b42318; }
+.scToneWait { background: #fff5df; color: #7a4f0b; }
+.scToneMuted { background: #f2f3f5; color: #4b525c; }
+.scEmpty { margin: 0; padding: 32px 0; text-align: center; color: #69717c; }
+
+.scSteps { display: flex; gap: 4px; overflow-x: auto; padding: 0 24px; border-bottom: 1px solid #f0f0f0; }
+.scSteps button { flex: none; padding: 12px 14px; border: 0; border-bottom: 2px solid transparent; background: none; color: #4b525c; font: inherit; cursor: pointer; white-space: nowrap; }
+.scSteps button:hover:not(:disabled) { color: var(--market-brand); }
+.scSteps button:disabled { color: #a3a8b0; cursor: not-allowed; }
+.scSteps .scStepActive { color: var(--market-brand); border-bottom-color: var(--market-brand); font-weight: 600; }
+.scForm, .scStepBody { display: grid; gap: 16px; padding: 20px 24px 24px; }
+.scCard [hidden] { display: none !important; }
+.scForm h3, .scStepBody h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.scRow { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 16px; align-items: start; }
+.scRow > span:first-child, .scRow > label:first-child { padding-top: 8px; color: #4b525c; text-align: right; }
+.scRow input:not([type=file]), .scRow select, .scRow textarea { width: 100%; max-width: 640px; box-sizing: border-box; padding: 8px 10px; border: 1px solid #d9d9d9; border-radius: 4px; font: inherit; color: #20242b; background: #fff; }
+.scRow input:focus-visible, .scRow select:focus-visible, .scRow textarea:focus-visible { outline: none; border-color: var(--market-brand); box-shadow: 0 0 0 2px rgba(214, 59, 11, 0.15); }
+.scRowNote { margin: 0; color: #69717c; font-size: 13px; }
+.scForm > .scRowNote { padding-left: 196px; }
+.scCounted, .scUnitInput { position: relative; display: block; max-width: 640px; }
+.scCounted input { padding-right: 64px !important; }
+.scCounted small, .scUnitInput small { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #69717c; font-size: 12px; pointer-events: none; }
+.scUnitInput { max-width: 240px; }
+.scUnitInput input { padding-right: 36px !important; }
+.scActionsRow { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+.scImageGrid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.scImageGrid figure { margin: 0; width: 88px; text-align: center; }
+.scImageGrid img { display: block; width: 88px; height: 88px; object-fit: contain; border: 1px solid #e8e8e8; border-radius: 2px; background: #f6f7f8; }
+.scImageGrid figcaption { margin-top: 4px; color: #69717c; font-size: 12px; }
+.scChecklist { margin: 0; padding: 0; list-style: none; border: 1px solid #f0f0f0; border-radius: 4px; }
+.scChecklist li { display: grid; grid-template-columns: 180px minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 12px 16px; border-top: 1px solid #f0f0f0; }
+.scChecklist li:first-child { border-top: 0; }
+.scChecklist li > span:first-child { color: #4b525c; }
+.scCheckOk, .scCheckMissing { padding: 2px 8px; border-radius: 2px; font-size: 12px; }
+.scCheckOk { background: #eaf5ef; color: #1d6b42; }
+.scCheckMissing { background: #fff0ed; color: #b42318; }
+
+@media (max-width: 900px) {
+  .scShell { grid-template-columns: 1fr; padding: 8px; }
+  .scSidebar { position: static; }
+  .scNav { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; }
+  .scNavGroup { display: none; }
+  .scNav a, .scNav button { width: auto; padding: 6px 10px; border: 1px solid #e8e8e8; border-radius: 4px; }
+  .scNav .scNavActive { box-shadow: none; border-color: var(--market-brand); }
+  .scCardHead, .scForm, .scStepBody { padding-left: 12px; padding-right: 12px; }
+  .scTableWrap { padding: 0 12px 12px; }
+  .scSteps { padding: 0 12px; }
+  .scRow { grid-template-columns: 1fr; gap: 6px; }
+  .scRow > span:first-child, .scRow > label:first-child { padding-top: 0; text-align: left; }
+  .scForm > .scRowNote { padding-left: 0; }
+  .scToolbar, .scToolbar input { width: 100%; }
+  .scChecklist li { grid-template-columns: 1fr auto; }
+  .scChecklist li > span:nth-child(2) { grid-column: 1; color: #69717c; font-size: 13px; }
+  .scActionsRow > * { flex: 1 1 auto; }
+  .scPrimary, .scSecondary { height: auto; min-height: 36px; padding: 8px 12px; white-space: normal; }
+}
+
+/* ===== Seller variant/attribute editor (UI-E): quiet secondary actions, one primary ===== */
+.scEditor { gap: 16px; }
+.scEditor h2 { margin: 8px 0 0; font-size: 15px; font-weight: 600; letter-spacing: 0; }
+.scEditor button { height: 34px; padding: 0 14px; border: 1px solid #d9d9d9 !important; border-radius: 4px; background: #fff !important; color: #20242b !important; font-weight: 500; white-space: nowrap; }
+.scEditor button:hover:not(:disabled) { border-color: #a6a6a6 !important; background: #fafafa !important; }
+.scEditor button.scPrimary { border-color: var(--market-brand) !important; background: var(--market-brand) !important; color: #fff !important; }
+.scEditor button.scPrimary:hover:not(:disabled) { background: var(--market-brand-hover) !important; }
+.scEditor fieldset { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; padding: 12px 14px; border: 1px solid #f0f0f0; border-radius: 4px; background: #fff; }
+.scEditor fieldset > legend { padding: 0 4px; font-size: 13px; font-weight: 600; color: #20242b; }
+.scEditor fieldset > label { display: grid; gap: 4px; flex: 1 1 220px; color: #4b525c; font-size: 13px; }
+.scEditor fieldset > p, .scEditor fieldset > ul { flex-basis: 100%; margin: 0; }
+.scEditor input, .scEditor select, .scEditor textarea { padding: 7px 10px !important; border-color: #d9d9d9 !important; border-radius: 4px !important; }
+.scEditor .editorGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 24px; align-items: start; }
+.scEditor .skuTable table { min-width: 460px; }
+.scEditor fieldset > button.scPrimary { margin-left: auto; }
+.scEditor .editorCol { display: grid; gap: 12px; min-width: 0; }
+.scChips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; list-style: none; }
+.scChips li { padding: 3px 10px; border: 1px solid #e3e6e9; border-radius: 2px; background: #fafafa; font-size: 13px; }
+.scEditor .skuTable th { text-transform: none; letter-spacing: 0; font-weight: 500; color: #69717c; background: #fafafa; }
+.scEditor .skuTable caption { font-size: 15px; font-weight: 600; }
+.scEditor .skuTable td:nth-child(3), .scEditor .skuTable td:nth-child(4) { text-align: right; }
+.scSkuCode { display: block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #69717c; font-size: 12px; }
+.scInventory { padding: 14px 16px; border: 1px solid #f0f0f0; border-radius: 4px; background: #fffaf7; }
+.scInventory > label { display: grid; gap: 4px; max-width: 360px; font-size: 13px; color: #4b525c; }
+@media (max-width: 900px) {
+  .scEditor .editorGrid { grid-template-columns: 1fr; }
+  .scEditor fieldset > label { flex-basis: 100%; }
+}
