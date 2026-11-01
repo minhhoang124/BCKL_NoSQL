@@ -43,7 +43,7 @@ export type Summary = {
   users?: Record<string, { active: number; inactive: number }>;
 };
 export type Quality = {
-  items: { orderId: number; storeId: number; issues: string[] }[];
+  items: { orderId: number; orderNumber: string | null; storeId: number; issues: string[] }[];
   nextBeforeId: number | null;
   asOf: string;
 };
@@ -288,8 +288,13 @@ export function parseQuality(
   const items = row.items.map((value) => {
     const item = object(value),
       orderId = id(item.orderId),
-      owner = id(item.storeId);
+      owner = id(item.storeId),
+      // Optional for an older API: absent → null; present must be a bounded non-empty string.
+      legacy = !("orderNumber" in item),
+      orderNumber = legacy ? null : item.orderNumber;
     if (
+      (!legacy &&
+        (typeof orderNumber !== "string" || !orderNumber.trim() || orderNumber.length > 64)) ||
       orderId >= previous ||
       (scope === "SELLER" && owner !== store?.id) ||
       !Array.isArray(item.issues) ||
@@ -306,12 +311,169 @@ export function parseQuality(
     )
       return invalid();
     previous = orderId;
-    return { orderId, storeId: owner, issues: item.issues as string[] };
+    return { orderId, orderNumber: orderNumber as string | null, storeId: owner, issues: item.issues as string[] };
   });
   const next = row.nextBeforeId === null ? null : id(row.nextBeforeId);
   if (next !== null && (items.length !== 20 || next !== previous))
     return invalid();
   return { items, nextBeforeId: next, asOf };
+}
+export type Transaction = {
+  key: string;
+  type: "PAYMENT" | "REFUND";
+  at: string;
+  orderNumber: string;
+  storeId: number;
+  storeName: string;
+  provider: "COD" | "VNPAY" | "MOMO";
+  status: string;
+  amount: string;
+};
+export type Transactions = {
+  asOf: string;
+  filterStoreId: number | null;
+  totals: {
+    paidCount: number;
+    paidAmount: string;
+    refundCount: number;
+    refundAmount: string;
+  };
+  items: Transaction[];
+  nextCursor: string | null;
+};
+const paymentStatuses = [
+  "UNPAID",
+  "PENDING",
+  "PAID",
+  "FAILED",
+  "CANCELLED",
+  "EXPIRED",
+  "REFUND_PENDING",
+  "REFUNDED",
+  "REVIEW_REQUIRED",
+];
+const cursorPattern = /^([1-9][0-9]{0,14})_([PR])([1-9][0-9]{0,18})$/;
+/** Server order is (at, kind, id) descending; kind "R" sorts above "P". */
+function sortKey(at: string, key: string) {
+  return { ms: Date.parse(at), kind: key[0]!, id: BigInt(key.slice(1)) };
+}
+function before(
+  a: ReturnType<typeof sortKey>,
+  b: ReturnType<typeof sortKey>,
+) {
+  return a.ms !== b.ms ? a.ms < b.ms : a.kind !== b.kind ? a.kind < b.kind : a.id < b.id;
+}
+export function parseTransactions(
+  value: unknown,
+  scope: Scope,
+  q: Query,
+  filterStoreId?: number,
+  storeId?: number,
+  sentCursor?: string,
+): Transactions {
+  const { row, store, asOf } = envelope(value, scope, q, storeId);
+  const totals = object(row.totals);
+  const expectedFilter = scope === "SELLER" ? store!.id : (filterStoreId ?? null);
+  if (
+    row.currency !== "VND" ||
+    row.filterStoreId !== expectedFilter ||
+    !Array.isArray(row.items) ||
+    row.items.length > 50
+  )
+    return invalid();
+  const seen = new Set<string>();
+  let previous: ReturnType<typeof sortKey> | null = null;
+  if (sentCursor !== undefined) {
+    const m = cursorPattern.exec(sentCursor) ?? invalid();
+    previous = { ms: Number(m[1]), kind: m[2]!, id: BigInt(m[3]!) };
+  }
+  const items = row.items.map((v): Transaction => {
+    const item = object(v),
+      key = text(item.key),
+      at = timestamp(item.at),
+      owner = id(item.storeId);
+    if (
+      !/^[PR][1-9][0-9]{0,18}$/.test(key) ||
+      seen.has(key) ||
+      (previous !== null && !before(sortKey(at, key), previous)) ||
+      (item.type !== "PAYMENT" && item.type !== "REFUND") ||
+      (item.type === "PAYMENT") !== key.startsWith("P") ||
+      !["COD", "VNPAY", "MOMO"].includes(item.provider as string) ||
+      !paymentStatuses.includes(item.status as string) ||
+      (item.type === "REFUND" && item.status !== "REFUNDED") ||
+      (expectedFilter !== null && owner !== expectedFilter) ||
+      text(item.orderNumber).length > 64
+    )
+      return invalid();
+    cents(item.amount);
+    seen.add(key);
+    previous = sortKey(at, key);
+    return {
+      key,
+      type: item.type,
+      at,
+      orderNumber: item.orderNumber as string,
+      storeId: owner,
+      storeName: text(item.storeName),
+      provider: item.provider as Transaction["provider"],
+      status: item.status as string,
+      amount: item.amount as string,
+    };
+  });
+  const paidAmount = cents(totals.paidAmount),
+    refundAmount = cents(totals.refundAmount),
+    paidCount = count(totals.paidCount),
+    refundCount = count(totals.refundCount);
+  const paid = items.filter((i) => i.type === "PAYMENT" && i.status === "PAID"),
+    refunds = items.filter((i) => i.type === "REFUND");
+  const sum = (rows: Transaction[]) =>
+    rows.reduce((total, i) => total + cents(i.amount), 0n);
+  // Totals cover the whole range: a page can never exceed them, and a single
+  // complete page (no cursor in or out) must match them exactly.
+  if (
+    paid.length > paidCount ||
+    refunds.length > refundCount ||
+    sum(paid) > paidAmount ||
+    sum(refunds) > refundAmount
+  )
+    return invalid();
+  const last = items[items.length - 1];
+  const next =
+    row.nextCursor === null
+      ? null
+      : last &&
+          row.nextCursor ===
+            `${Date.parse(last.at)}_${last.key[0]}${last.key.slice(1)}`
+        ? (row.nextCursor as string)
+        : invalid();
+  if (
+    sentCursor === undefined &&
+    next === null &&
+    (paid.length !== paidCount ||
+      refunds.length !== refundCount ||
+      sum(paid) !== paidAmount ||
+      sum(refunds) !== refundAmount)
+  )
+    return invalid();
+  return {
+    asOf,
+    filterStoreId: expectedFilter,
+    totals: {
+      paidCount,
+      paidAmount: totals.paidAmount as string,
+      refundCount,
+      refundAmount: totals.refundAmount as string,
+    },
+    items,
+    nextCursor: next,
+  };
+}
+export function parseStores(value: unknown) {
+  if (!Array.isArray(value) || value.length > 10000) return invalid();
+  return value.map((v) => {
+    const s = object(v);
+    return { id: id(s.id), name: text(s.name) };
+  });
 }
 export function dashboardApi(
   scope: Scope,
@@ -354,6 +516,54 @@ export function dashboardApi(
         query,
         beforeId,
         storeId,
+      );
+    },
+    async transactions(
+      q: Query,
+      signal: AbortSignal,
+      options: { cursor?: string; filterStoreId?: number } = {},
+    ) {
+      const query = Object.freeze({ ...q });
+      windows(query);
+      if (options.filterStoreId !== undefined) {
+        if (scope !== "ADMIN") return invalid();
+        id(options.filterStoreId);
+      }
+      if (
+        options.cursor !== undefined &&
+        !/^[1-9][0-9]{0,14}_[PR][1-9][0-9]{0,18}$/.test(options.cursor)
+      )
+        return invalid();
+      const params = new URLSearchParams({
+        from: query.from,
+        to: query.to,
+        limit: "20",
+        ...(options.filterStoreId
+          ? { storeId: String(options.filterStoreId) }
+          : {}),
+        ...(options.cursor ? { cursor: options.cursor } : {}),
+      });
+      return parseTransactions(
+        await requester(`${prefix}/transactions?${params}`, {
+          method: "GET",
+          signal,
+          cache: "no-store",
+        }),
+        scope,
+        query,
+        options.filterStoreId,
+        storeId,
+        options.cursor,
+      );
+    },
+    async stores(signal: AbortSignal) {
+      if (scope !== "ADMIN") return [];
+      return parseStores(
+        await requester("/admin/stores", {
+          method: "GET",
+          signal,
+          cache: "no-store",
+        }),
       );
     },
   };

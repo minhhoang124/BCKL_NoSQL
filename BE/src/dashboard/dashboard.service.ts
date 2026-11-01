@@ -20,6 +20,8 @@ import {
   bucketWindows,
   countNumber,
   parseDashboardQuery,
+  parseTransactionQuery,
+  transactionCursor,
 } from './dashboard-input.js';
 import {
   financialOrders,
@@ -210,13 +212,115 @@ export class DashboardService {
       };
     });
   }
+  /**
+   * Per-store payment and refund history (CN3-YC2). Payments use paidAt when
+   * set, else createdAt; refunds use succeededAt. Totals cover the whole range,
+   * items are one keyset page ordered by (at, kind, id) descending.
+   */
+  transactions(actor: AuthenticatedUser, scope: Scope, url: string) {
+    const range = parseTransactionQuery(url, scope === 'ADMIN');
+    return this.read(actor, scope, async (tx, store, asOf) => {
+      const storeId = store?.id ?? range.storeId ?? null;
+      const scoped =
+        storeId === null ? Prisma.sql`TRUE` : Prisma.sql`o."storeId"=${storeId}`;
+      const events = Prisma.sql`WITH events AS (
+        SELECT 'P'::text AS kind, p.id::bigint AS id,
+          COALESCE(p."paidAt",p."createdAt")::timestamp(3) AS at,
+          p.provider::text AS provider, p.status::text AS status,
+          p.amount, o."orderNumber", o."storeId", s.name AS "storeName"
+        FROM payments p JOIN orders o ON o.id=p."orderId" JOIN stores s ON s.id=o."storeId"
+        WHERE ${scoped}
+        UNION ALL
+        SELECT 'R', r.id, r."succeededAt"::timestamp(3), p.provider::text, 'REFUNDED',
+          r.amount, o."orderNumber", o."storeId", s.name
+        FROM refund_records r JOIN payments p ON p.id=r."paymentId"
+          JOIN orders o ON o.id=p."orderId" JOIN stores s ON s.id=o."storeId"
+        WHERE ${scoped}
+      ), ranged AS (
+        SELECT * FROM events WHERE at>=${range.from} AND at<${range.to}
+      )`;
+      const [totals] = await tx.$queryRaw<
+        {
+          paidCount: string;
+          paidAmount: string;
+          refundCount: string;
+          refundAmount: string;
+        }[]
+      >(
+        Prisma.sql`${events} SELECT
+          count(*) FILTER (WHERE kind='P' AND status='PAID')::text AS "paidCount",
+          round(coalesce(sum(amount) FILTER (WHERE kind='P' AND status='PAID'),0),2)::text AS "paidAmount",
+          count(*) FILTER (WHERE kind='R')::text AS "refundCount",
+          round(coalesce(sum(amount) FILTER (WHERE kind='R'),0),2)::text AS "refundAmount"
+        FROM ranged`,
+      );
+      const c = range.cursor;
+      const rows = await tx.$queryRaw<
+        {
+          kind: 'P' | 'R';
+          id: string;
+          at: Date;
+          provider: string;
+          status: string;
+          amount: string;
+          orderNumber: string;
+          storeId: number;
+          storeName: string;
+        }[]
+      >(
+        // Qualified r.* in WHERE/ORDER BY: an unqualified "id" in ORDER BY would
+        // bind to the text output alias and sort "10" before "9".
+        Prisma.sql`${events} SELECT r.kind,r.id::text AS id,r.at,r.provider,r.status,
+          round(r.amount,2)::text AS amount,r."orderNumber",r."storeId",r."storeName"
+        FROM ranged r ${c ? Prisma.sql`WHERE (r.at,r.kind,r.id)<(${c.at},${c.kind}::text,${c.id}::bigint)` : Prisma.empty}
+        ORDER BY r.at DESC,r.kind DESC,r.id DESC LIMIT ${range.limit + 1}`,
+      );
+      if (!totals)
+        throw new ServiceUnavailableException({
+          code: 'DASHBOARD_INVALID_PROJECTION',
+        });
+      const page = rows.slice(0, range.limit);
+      const last = page[page.length - 1];
+      return {
+        scope,
+        store,
+        filterStoreId: storeId,
+        asOf: asOf.toISOString(),
+        timezone: range.timezone,
+        currency: 'VND',
+        range: { from: range.localFrom, to: range.localTo },
+        totals: {
+          paidCount: countNumber(totals.paidCount),
+          paidAmount: money(totals.paidAmount),
+          refundCount: countNumber(totals.refundCount),
+          refundAmount: money(totals.refundAmount),
+        },
+        items: page.map((row) => ({
+          key: `${row.kind}${row.id}`,
+          type: row.kind === 'P' ? 'PAYMENT' : 'REFUND',
+          at: row.at.toISOString(),
+          orderNumber: row.orderNumber,
+          storeId: row.storeId,
+          storeName: row.storeName,
+          provider: row.provider,
+          status: row.status,
+          amount: money(row.amount),
+        })),
+        nextCursor:
+          rows.length > range.limit && last
+            ? transactionCursor(last.at, last.kind, last.id)
+            : null,
+      };
+    });
+  }
   quality(actor: AuthenticatedUser, scope: Scope, url: string) {
     const range = parseDashboardQuery(url, true);
     return this.read(actor, scope, async (tx, store, asOf) => {
       const rows = await tx.$queryRaw<
-        { id: number; storeId: number; issues: string[] }[]
+        { id: number; storeId: number; orderNumber: string; issues: string[] }[]
       >(
-        Prisma.sql`${financialOrders(store?.id ?? null, range, asOf)} SELECT id,"storeId",issues FROM financial_orders WHERE NOT valid ${range.beforeId ? Prisma.sql`AND id<${range.beforeId}` : Prisma.empty} ORDER BY id DESC LIMIT ${range.limit + 1}`,
+        // orderNumber is the displayed code; the numeric id stays the cursor.
+        Prisma.sql`${financialOrders(store?.id ?? null, range, asOf)} SELECT f.id,f."storeId",o."orderNumber",f.issues FROM financial_orders f JOIN orders o ON o.id=f.id WHERE NOT f.valid ${range.beforeId ? Prisma.sql`AND f.id<${range.beforeId}` : Prisma.empty} ORDER BY f.id DESC LIMIT ${range.limit + 1}`,
       );
       return {
         scope,
@@ -226,6 +330,7 @@ export class DashboardService {
         range: { from: range.localFrom, to: range.localTo },
         items: rows.slice(0, range.limit).map((value) => ({
           orderId: value.id,
+          orderNumber: value.orderNumber,
           storeId: value.storeId,
           issues: value.issues,
         })),

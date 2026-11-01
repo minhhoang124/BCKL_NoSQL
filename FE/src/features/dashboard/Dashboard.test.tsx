@@ -206,7 +206,7 @@ describe("Dashboard actual adapter and React lifecycle", () => {
       requester.mock.calls.filter((c) => c[0].includes("data-quality")),
     ).toHaveLength(1);
     fireEvent.click(more);
-    await screen.findByText("Đơn #80", { exact: false });
+    await screen.findByText("Đơn ORD-80", { exact: false });
     const qualitySection = screen
       .getByRole("heading", { name: "Đối chiếu dữ liệu" })
       .closest("section")!;
@@ -259,7 +259,7 @@ describe("Dashboard actual adapter and React lifecycle", () => {
       delayed.resolve(parseQuality(qualityFixture(old), "ADMIN", old)),
     );
     expect(
-      screen.queryByText("Đơn #100", { exact: false }),
+      screen.queryByText("Đơn ORD-100", { exact: false }),
     ).not.toBeInTheDocument();
   });
   it("remounts Seller reads when the canonical Store finishes loading", async () => {

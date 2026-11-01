@@ -29,6 +29,19 @@ export class DashboardController {
   seller(@Req() req: ActorRequest) {
     return this.dashboard.summary(req.user, 'SELLER', req.originalUrl);
   }
+  @Get('admin/dashboard/transactions')
+  @ApiQuery({ name: 'from', example: '2026-10-01' })
+  @ApiQuery({ name: 'to', example: '2026-11-01' })
+  @ApiQuery({ name: 'storeId', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'cursor', required: false })
+  adminTransactions(@Req() req: ActorRequest) {
+    return this.dashboard.transactions(req.user, 'ADMIN', req.originalUrl);
+  }
+  @Get('seller/dashboard/transactions')
+  sellerTransactions(@Req() req: ActorRequest) {
+    return this.dashboard.transactions(req.user, 'SELLER', req.originalUrl);
+  }
   @Get('admin/dashboard/data-quality')
   adminQuality(@Req() req: ActorRequest) {
     return this.dashboard.quality(req.user, 'ADMIN', req.originalUrl);

@@ -13,6 +13,7 @@ import {
   type Summary,
 } from "./dashboardApi";
 import styles from "./Dashboard.module.css";
+import { TransactionHistory } from "./TransactionHistory";
 
 export function Dashboard({
   scope,
@@ -405,7 +406,7 @@ function DashboardScreen({ api }: { api: DashboardApi }) {
                   <ul>
                     {quality.items.map((item) => (
                       <li key={item.orderId}>
-                        Đơn #{item.orderId} · Store #{item.storeId}:{" "}
+                        {item.orderNumber ? `Đơn ${item.orderNumber}` : `Đơn (mã nội bộ #${item.orderId})`} · cửa hàng mã #{item.storeId}:{" "}
                         {item.issues
                           .map((code) => issueLabels[code])
                           .join("; ")}
@@ -424,6 +425,12 @@ function DashboardScreen({ api }: { api: DashboardApi }) {
               </>
             )}
           </section>
+          <TransactionHistory
+            key={`${data.query.from}:${data.query.to}`}
+            api={api}
+            scope={summary.scope}
+            query={data.query}
+          />
           <div className={styles.operational}>
             <Counts
               title="Đơn tạo trong kỳ · trạng thái hiện tại"

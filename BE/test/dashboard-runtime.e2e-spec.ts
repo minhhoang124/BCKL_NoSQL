@@ -96,6 +96,7 @@ describe('Dashboard shared revenue/refund HTTP and PostgreSQL', () => {
     amount = '100000.00',
     completedAt: Date | null = date('2026-01-31T16:59:59.999Z'),
     shipping = '20000.00',
+    pay: { id?: number; paidAt?: Date } = {},
   ) {
     const checkout = await db.checkout.create({
       data: {
@@ -130,10 +131,11 @@ describe('Dashboard shared revenue/refund HTTP and PostgreSQL', () => {
         total: totalMoney,
         payment: {
           create: {
+            ...(pay.id ? { id: pay.id } : {}),
             provider: 'COD',
             status: 'PAID',
             amount: totalMoney,
-            paidAt: date('2026-01-15T00:00:00Z'),
+            paidAt: pay.paidAt ?? date('2026-01-15T00:00:00Z'),
           },
         },
         items: {
@@ -155,8 +157,8 @@ describe('Dashboard shared revenue/refund HTTP and PostgreSQL', () => {
   async function refund(
     o: Awaited<ReturnType<typeof order>>,
     missingAdjustment = false,
+    succeededAt = date('2026-02-03T00:00:00Z'),
   ) {
-    const succeededAt = date('2026-02-03T00:00:00Z');
     const q = await db.aftersaleRequest.create({
       data: {
         orderItemId: o.items[0]!.id,
@@ -329,8 +331,10 @@ describe('Dashboard shared revenue/refund HTTP and PostgreSQL', () => {
     expect(Object.keys(b.items[0]).sort()).toEqual([
       'issues',
       'orderId',
+      'orderNumber',
       'storeId',
     ]);
+    expect(typeof b.items[0].orderNumber).toBe('string');
   });
   it('aligns actual SQL day/month/quarter events with local half-open boundaries', async () => {
     const f = await fixture();
@@ -394,6 +398,7 @@ describe('Dashboard shared revenue/refund HTTP and PostgreSQL', () => {
     expect(quality.items).toEqual([
       {
         orderId: o.id,
+        orderNumber: o.orderNumber,
         storeId: f.store.id,
         issues: ['MONEY_SNAPSHOT_INVALID'],
       },
@@ -482,6 +487,148 @@ describe('Dashboard shared revenue/refund HTTP and PostgreSQL', () => {
       .expect(401)
       .expect('Cache-Control', 'no-store');
   });
+  it('transaction history: own Store only, payments + refunds, totals and keyset pages', async () => {
+    const f = await fixture(),
+      other = await fixture(),
+      admin = await actor('ADMIN');
+    const o1 = await order(f),
+      o2 = await order(f, '50000.00');
+    await refund(o1);
+    await order(other);
+    const q = '?from=2026-01-01&to=2026-03-01';
+    const route = '/seller/dashboard/transactions';
+    const page = (
+      await get(f.seller.token, q, route)
+        .expect(200)
+        .expect('Cache-Control', 'no-store')
+    ).body;
+    expect(page).toMatchObject({
+      scope: 'SELLER',
+      store: { id: f.store.id },
+      filterStoreId: f.store.id,
+      currency: 'VND',
+      range: { from: '2026-01-01', to: '2026-03-01' },
+      totals: {
+        paidCount: 2,
+        paidAmount: '190000.00',
+        refundCount: 1,
+        refundAmount: '100000.00',
+      },
+      nextCursor: null,
+    });
+    expect(page.items).toHaveLength(3);
+    // Refund (02-03) is newest; both payments share paidAt and order by id desc.
+    expect(page.items[0]).toMatchObject({
+      type: 'REFUND',
+      orderNumber: o1.orderNumber,
+      provider: 'COD',
+      status: 'REFUNDED',
+      amount: '100000.00',
+      storeName: f.store.name,
+    });
+    expect(page.items.slice(1).map((i: { orderNumber: string }) => i.orderNumber)).toEqual([
+      o2.orderNumber,
+      o1.orderNumber,
+    ]);
+    expect(
+      page.items.every((i: { storeId: number }) => i.storeId === f.store.id),
+    ).toBe(true);
+    // Range excludes the February refund.
+    const january = (await get(f.seller.token, jan, route).expect(200)).body;
+    expect(january.totals).toMatchObject({ paidCount: 2, refundCount: 0 });
+    // Keyset paging walks the same rows without duplicates.
+    const keys: string[] = [];
+    let cursor: string | null = '';
+    while (cursor !== null) {
+      const body: { items: { key: string }[]; nextCursor: string | null } = (
+        await get(
+          f.seller.token,
+          q + '&limit=1' + (cursor ? '&cursor=' + cursor : ''),
+          route,
+        ).expect(200)
+      ).body;
+      keys.push(...body.items.map((i: { key: string }) => i.key));
+      cursor = body.nextCursor;
+      expect(keys.length).toBeLessThanOrEqual(3);
+    }
+    expect(keys).toEqual(page.items.map((i: { key: string }) => i.key));
+    // A Seller cannot widen scope; Admin filters by Store; roles are enforced.
+    await get(f.seller.token, q + '&storeId=' + other.store.id, route).expect(400);
+    await get(other.seller.token, q, route)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.totals.paidCount).toBe(1);
+        expect(
+          body.items.some((i: { orderNumber: string }) =>
+            [o1.orderNumber, o2.orderNumber].includes(i.orderNumber),
+          ),
+        ).toBe(false);
+      });
+    const adminPage = (
+      await get(
+        admin.token,
+        q + '&storeId=' + f.store.id,
+        '/admin/dashboard/transactions',
+      ).expect(200)
+    ).body;
+    expect(adminPage).toMatchObject({
+      scope: 'ADMIN',
+      store: null,
+      filterStoreId: f.store.id,
+      totals: page.totals,
+    });
+    expect(adminPage.items).toEqual(page.items);
+    await get(admin.token, q, route).expect(403);
+    await get(f.seller.token, q, '/admin/dashboard/transactions').expect(403);
+    await get(f.buyer.token, q, route).expect(403);
+    await http().get(route + q).expect(401);
+    for (const bad of ['&cursor=abc', '&limit=0', '&bucket=day', ''])
+      await get(f.seller.token, bad ? q + bad : '', route).expect(400);
+  });
+  it('transaction keyset: numeric id order across digit boundary, P/R in the same millisecond', async () => {
+    const f = await fixture();
+    // Same paidAt with milliseconds; ids straddle 9→10 so text ordering would differ.
+    const at = date('2026-01-20T05:06:07.891Z');
+    // 10^k−1 and 10^k differ in digit count ("9999999" > "10000000" as text).
+    let k = 7;
+    while (
+      (await db.payment.count({ where: { id: { in: [10 ** k - 1, 10 ** k] } } })) > 0
+    )
+      k++;
+    expect(10 ** k).toBeLessThanOrEqual(2147483647);
+    const low = 10 ** k - 1,
+      high = 10 ** k;
+    const o9 = await order(f, '100000.00', undefined, undefined, { id: low, paidAt: at });
+    const o10 = await order(f, '100000.00', undefined, undefined, { id: high, paidAt: at });
+    await refund(o9, false, at);
+    const q = '?from=2026-01-01&to=2026-03-01';
+    const route = '/seller/dashboard/transactions';
+    const keys: string[] = [];
+    let cursor: string | null = '';
+    while (cursor !== null) {
+      const body: { items: { key: string; at: string }[]; nextCursor: string | null } = (
+        await get(
+          f.seller.token,
+          q + '&limit=1' + (cursor ? '&cursor=' + cursor : ''),
+          route,
+        ).expect(200)
+      ).body;
+      keys.push(...body.items.map((i) => i.key));
+      expect(body.items.every((i) => i.at === at.toISOString())).toBe(true);
+      cursor = body.nextCursor;
+      expect(keys.length).toBeLessThanOrEqual(3);
+    }
+    // kind DESC puts R before P; ids numerically descending.
+    expect(keys[0]).toMatch(/^R\d+$/);
+    expect(keys.slice(1)).toEqual([`P${high}`, `P${low}`]);
+    const full = (await get(f.seller.token, q, route).expect(200)).body;
+    expect(full.items.map((i: { key: string }) => i.key)).toEqual(keys);
+    expect(full.items.map((i: { orderNumber: string }) => i.orderNumber)).toEqual([
+      o9.orderNumber,
+      o10.orderNumber,
+      o9.orderNumber,
+    ]);
+  });
   it('does not mutate source orders, money, audits, inventory or Search queues', async () => {
     const f = await fixture(),
       o = await order(f);
@@ -508,6 +655,9 @@ describe('Dashboard shared revenue/refund HTTP and PostgreSQL', () => {
     await get(f.seller.token).expect(200);
     await get(f.seller.token, feb).expect(200);
     await get(f.seller.token, jan, '/seller/dashboard/data-quality').expect(
+      200,
+    );
+    await get(f.seller.token, jan, '/seller/dashboard/transactions').expect(
       200,
     );
     expect(await snapshot()).toEqual(before);

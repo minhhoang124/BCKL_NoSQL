@@ -3,6 +3,8 @@ import {
   bucketWindows,
   countNumber,
   parseDashboardQuery,
+  parseTransactionQuery,
+  transactionCursor,
 } from './dashboard-input.js';
 describe('Dashboard exact query and calendar boundaries', () => {
   const base = '/admin/dashboard?from=2026-01-01&to=2026-02-01';
@@ -81,6 +83,35 @@ describe('Dashboard exact query and calendar boundaries', () => {
       '&bucket=month',
     ])
       expect(() => parseDashboardQuery(base + bad, true)).toThrow();
+  });
+  it('transaction query: Seller cannot pass storeId; cursor is strict', () => {
+    const t = '/x?from=2026-01-01&to=2026-02-01';
+    expect(parseTransactionQuery(t, false)).toMatchObject({
+      limit: 20,
+      storeId: undefined,
+      cursor: undefined,
+    });
+    expect(() => parseTransactionQuery(t + '&storeId=3', false)).toThrow();
+    expect(parseTransactionQuery(t + '&storeId=3&limit=50', true)).toMatchObject({
+      storeId: 3,
+      limit: 50,
+    });
+    const c = parseTransactionQuery(t + '&cursor=1767225600000_R42', false).cursor!;
+    expect(c.at.toISOString()).toBe('2026-01-01T00:00:00.000Z');
+    expect(c).toMatchObject({ kind: 'R', id: 42n });
+    expect(transactionCursor(c.at, c.kind, '42')).toBe('1767225600000_R42');
+    for (const bad of [
+      '&cursor=0_P1',
+      '&cursor=1767225600000_X1',
+      '&cursor=1767225600000_P01',
+      '&cursor=1767225600000_P1;--',
+      '&cursor=1767225600000_P99999999999999999999',
+      '&limit=51',
+      '&bucket=day',
+      '&limit=1&limit=2',
+    ])
+      expect(() => parseTransactionQuery(t + bad, true)).toThrow();
+    expect(() => parseTransactionQuery('/x?from=2026-01-01', true)).toThrow();
   });
   it('never rounds bigint counts silently', () => {
     expect(countNumber('9007199254740991')).toBe(Number.MAX_SAFE_INTEGER);
