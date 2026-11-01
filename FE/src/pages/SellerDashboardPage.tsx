@@ -60,6 +60,9 @@ export function SellerDashboardPage() {
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
   const [query, setQuery] = useState('');
+  const [missingAttributes, setMissingAttributes] = useState<string[] | null>(null);
+  const [attributeCheckFailed, setAttributeCheckFailed] = useState(false);
+  const errorRef = useRef<HTMLParagraphElement>(null);
   const pending = useRef(false);
 
   const selectProduct = (product: Product | null) => {
@@ -104,6 +107,26 @@ export function SellerDashboardPage() {
       current ? productRows.find((item) => item.id === current.id) ?? null : null,
     );
   };
+
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+  }, [error]);
+
+  // Submit checklist: required category attributes that are not saved yet.
+  useEffect(() => {
+    if (activeStep !== 'submit' || !selected) return;
+    let active = true;
+    setMissingAttributes(null);
+    setAttributeCheckFailed(false);
+    marketplaceApi.categoryAttributes(selected.category.id)
+      .then((schema) => {
+        if (!active) return;
+        const saved = new Set((selected.attributeValues ?? []).map((v) => v.attributeDefinitionId));
+        setMissingAttributes(schema.attributeDefinitions.filter((d) => d.isRequired && !saved.has(d.id)).map((d) => d.name));
+      })
+      .catch(() => { if (active) setAttributeCheckFailed(true); });
+    return () => { active = false; };
+  }, [activeStep, selected]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -214,6 +237,8 @@ export function SellerDashboardPage() {
     );
   };
 
+  // Step 3 attributes follow the SAVED category: block other steps until a category change is saved.
+  const categoryDirty = !!selected && draft.categoryId !== String(selected.category.id);
   const approvedCount = products.filter((item) => item.moderationStatus === 'APPROVED').length;
   const pendingCount = products.filter((item) => item.moderationStatus === 'PENDING').length;
   const visibleProducts = query.trim()
@@ -265,7 +290,7 @@ export function SellerDashboardPage() {
       </aside>
 
       <div className={styles.scMain}>
-        {error && <p className={styles.error} role="alert">{error}</p>}
+        {error && <p ref={errorRef} className={styles.error} role="alert">{error}</p>}
         {message && <p className={styles.success}>{message}</p>}
 
         {tab === 'dashboard' ? (
@@ -385,10 +410,10 @@ export function SellerDashboardPage() {
               </div>
               <div className={styles.scSteps} role="tablist">
                 <button type="button" className={activeStep === 'info' ? styles.scStepActive : undefined} onClick={() => setActiveStep('info')}>1. Thông tin cơ bản</button>
-                <button type="button" className={activeStep === 'images' ? styles.scStepActive : undefined} disabled={!selected} onClick={() => setActiveStep('images')} title={!selected ? 'Lưu thông tin cơ bản trước khi tải ảnh' : ''}>2. Ảnh sản phẩm</button>
-                <button type="button" className={activeStep === 'variants' ? styles.scStepActive : undefined} disabled={!selected} onClick={() => setActiveStep('variants')} title={!selected ? 'Lưu thông tin cơ bản trước khi cấu hình phân loại' : ''}>3. Phân loại &amp; Giá/Kho</button>
-                <button type="button" className={activeStep === 'shipping' ? styles.scStepActive : undefined} disabled={!selected} onClick={() => setActiveStep('shipping')} title={!selected ? 'Lưu thông tin cơ bản trước khi cấu hình vận chuyển' : ''}>4. Kiện hàng</button>
-                {selected && <button type="button" className={activeStep === 'submit' ? styles.scStepActive : undefined} onClick={() => setActiveStep('submit')}>5. Gửi duyệt</button>}
+                <button type="button" className={activeStep === 'images' ? styles.scStepActive : undefined} disabled={!selected || categoryDirty} onClick={() => setActiveStep('images')} title={categoryDirty ? 'Lưu sản phẩm để áp dụng danh mục mới' : !selected ? 'Lưu thông tin cơ bản trước khi tải ảnh' : ''}>2. Ảnh sản phẩm</button>
+                <button type="button" className={activeStep === 'variants' ? styles.scStepActive : undefined} disabled={!selected || categoryDirty} onClick={() => setActiveStep('variants')} title={categoryDirty ? 'Lưu sản phẩm để áp dụng danh mục mới' : !selected ? 'Lưu thông tin cơ bản trước khi cấu hình phân loại' : ''}>3. Phân loại &amp; Giá/Kho</button>
+                <button type="button" className={activeStep === 'shipping' ? styles.scStepActive : undefined} disabled={!selected || categoryDirty} onClick={() => setActiveStep('shipping')} title={categoryDirty ? 'Lưu sản phẩm để áp dụng danh mục mới' : !selected ? 'Lưu thông tin cơ bản trước khi cấu hình vận chuyển' : ''}>4. Kiện hàng</button>
+                {selected && <button type="button" className={activeStep === 'submit' ? styles.scStepActive : undefined} disabled={categoryDirty} onClick={() => setActiveStep('submit')}>5. Gửi duyệt</button>}
               </div>
 
               <div hidden={activeStep !== 'info'}>
@@ -408,6 +433,7 @@ export function SellerDashboardPage() {
                       {leafCategories.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
                     </select>
                   </label>
+                  {categoryDirty && <p className={styles.scRowNote} role="status">Danh mục đã đổi nhưng chưa lưu. Bấm “Lưu sản phẩm” để cập nhật thuộc tính theo danh mục mới.</p>}
                   <label className={styles.scRow}>
                     <span>Thương hiệu</span>
                     <select name="brandId" disabled={busy} value={draft.brandId} onChange={(e) => setDraft({ ...draft, brandId: e.target.value })}>
@@ -501,6 +527,7 @@ export function SellerDashboardPage() {
                   <ul className={styles.scChecklist}>
                     <li><span>Thông tin cơ bản</span><span>{selected.name} · {selected.category.name}</span>{done(true)}</li>
                     <li><span>Ảnh sản phẩm</span><span>{selected.images?.length ? `${selected.images.length} ảnh` : 'Chưa có ảnh chính'}</span>{done(!!selected.images?.length)}</li>
+                    <li><span>Thuộc tính bắt buộc</span><span>{attributeCheckFailed ? 'Không kiểm tra được; mở bước 3 để xem thuộc tính' : missingAttributes === null ? 'Đang kiểm tra…' : missingAttributes.length ? `Chưa lưu: ${missingAttributes.join(', ')}` : 'Đã lưu đủ'}</span>{done(missingAttributes !== null && missingAttributes.length === 0)}</li>
                     <li><span>Phân loại &amp; Giá/Kho</span><span>{selected.variants?.length ? `${selected.variants.length} SKU` : 'Chưa tạo phân loại hàng'}</span>{done(!!selected.variants?.length)}</li>
                     <li><span>Kiện hàng</span><span>{selected.shippingProfile?.packageWeightGrams ? `${selected.shippingProfile.packageWeightGrams} gr` : 'Chưa lưu khối lượng'}</span>{done(!!selected.shippingProfile?.packageWeightGrams)}</li>
                   </ul>

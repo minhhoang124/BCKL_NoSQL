@@ -357,20 +357,39 @@ function AttributeField({
           : (saved?.textValue ?? saved?.numberValue ?? ""),
   );
   const [custom, setCustom] = useState(saved?.textValue ?? "");
+  const [localError, setLocalError] = useState("");
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (disabled) return;
+    setLocalError("");
     let input: AttributeInput;
-    if (d.dataType === "SINGLE_SELECT")
+    if (d.dataType === "SINGLE_SELECT") {
+      if (value === "custom" && !custom.trim()) {
+        setLocalError(`Nhập giá trị khác cho ${d.name}.`);
+        return;
+      }
       input =
         value === "custom"
-          ? { textValue: custom }
+          ? { textValue: custom.trim() }
           : { optionId: Number(value) };
-    else if (d.dataType === "BOOLEAN")
+    } else if (d.dataType === "BOOLEAN")
       input = { booleanValue: value === "true" };
-    else
-      input =
-        d.dataType === "NUMBER" ? { numberValue: value } : { textValue: value };
+    else if (d.dataType === "NUMBER") {
+      // Accept a Vietnamese decimal comma; the API expects a plain number string.
+      const normalized = String(value).trim().replace(",", ".");
+      // Same shape as the API's IsNumberString: optional sign, optional leading digits before '.'.
+      if (!/^[+-]?(\d*\.)?\d+$/.test(normalized)) {
+        setLocalError(`${d.name} cần là số, ví dụ 6.5.`);
+        return;
+      }
+      input = { numberValue: normalized };
+    } else {
+      if (!String(value).trim()) {
+        setLocalError(`${d.name} không được để trống.`);
+        return;
+      }
+      input = { textValue: String(value).trim() };
+    }
     void run(
       () => marketplaceApi.saveAttribute(productId, d.id, input),
       `Đã lưu thuộc tính ${d.name}.`,
@@ -443,6 +462,7 @@ function AttributeField({
           </label>
         )}
         <button className={styles.secondary}>Lưu {d.name}</button>
+        {localError && <p role="alert" className={styles.scFieldError}>{localError}</p>}
       </fieldset>
     </form>
   );

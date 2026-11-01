@@ -72,6 +72,16 @@ describe('Seller product editing', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tạo mới / bỏ chỉnh sửa' }));
     for (const label of ['Tên', 'Danh mục', 'Thương hiệu', 'Mô tả']) expect(screen.getByLabelText(label)).toHaveValue('');
   });
+  it('blocks later steps until a changed category is saved (attributes follow the saved category)', async () => {
+    await open();
+    expect(screen.getByRole('button', { name: '3. Phân loại & Giá/Kho' })).toBeEnabled();
+    fireEvent.change(screen.getByLabelText('Danh mục'), { target: { value: '2' } });
+    expect(screen.getByRole('button', { name: '3. Phân loại & Giá/Kho' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '5. Gửi duyệt' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Danh mục đã đổi nhưng chưa lưu');
+    fireEvent.change(screen.getByLabelText('Danh mục'), { target: { value: '1' } });
+    expect(screen.getByRole('button', { name: '3. Phân loại & Giá/Kho' })).toBeEnabled();
+  });
   it('renders guided step wizard and allows switching between available steps', async () => {
     await open();
     // In edit mode (product 1 selected), all 5 step tabs should be rendered

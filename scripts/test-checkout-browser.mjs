@@ -280,13 +280,14 @@ try {
       .uncheck();
     await page.getByRole("link", { name: "Tiếp tục thanh toán" }).click();
     await page.getByRole("heading", { name: "Xác nhận mua hàng" }).waitFor();
-    const preview = page.getByRole("button", { name: "Kiểm tra giá và kho" });
-    await preview.waitFor();
+    // The price/stock check runs automatically; wait until it enables "Đặt hàng COD".
+    const placeAuto = page.getByRole("button", { name: "Đặt hàng COD" });
+    await placeAuto.waitFor();
     await page.waitForFunction(
       () =>
-        ![...document.querySelectorAll("button")].find(
-          (b) => b.textContent === "Kiểm tra giá và kho",
-        )?.disabled,
+        [...document.querySelectorAll("button")].find(
+          (b) => b.textContent === "Đặt hàng COD",
+        )?.disabled === false,
     );
     const screens = [await shot("01-checkout")];
     const measurements = await page
@@ -316,12 +317,12 @@ try {
       `${name} horizontal overflow ${JSON.stringify(measurements)}`,
     );
     await page.keyboard.press("Tab"); // Enter keyboard modality before checking :focus-visible.
-    await preview.focus();
+    await placeAuto.focus();
     assert.equal(
-      await preview.evaluate((e) => getComputedStyle(e).outlineStyle),
+      await placeAuto.evaluate((e) => getComputedStyle(e).outlineStyle),
       "solid",
     );
-    await preview.press("Enter");
+    // Do not press: the scenario below must be installed before the first submit.
     const place = page.getByRole("button", {
       name: "Đặt hàng COD",
       exact: true,
@@ -357,8 +358,13 @@ try {
         data: { price: "10000.00", stock: 5 },
       });
       await page.getByRole("button", { name: "Tải lại giỏ và giá" }).click();
-      await preview.click();
-      await place.waitFor();
+      // Reload triggers a fresh automatic price/stock check; wait for it to enable ordering.
+      await page.waitForFunction(
+        () =>
+          [...document.querySelectorAll("button")].find(
+            (b) => b.textContent === "Đặt hàng COD",
+          )?.disabled === false,
+      );
     }
     const posts = [];
     if (scenario === "lost-response") {
@@ -790,7 +796,7 @@ try {
       await page
         .getByText("Giỏ chưa có mặt hàng mua được.", { exact: true })
         .waitFor();
-      assert(await preview.isDisabled());
+      assert(await placeAuto.isDisabled());
       screens.push(await shot("05-empty"));
       let release;
       const held = new Promise((resolve) => {
@@ -820,7 +826,7 @@ try {
         await page.getByText(/Chưa có địa chỉ nhận hàng/).count(),
         0,
       );
-      assert.equal(await preview.count(), 0);
+      assert.equal(await placeAuto.count(), 0);
       screens.push(await shot("07-network-error"));
       await page.unroute(api + "/cart");
       await page.getByRole("button", { name: "Tải lại", exact: true }).click();

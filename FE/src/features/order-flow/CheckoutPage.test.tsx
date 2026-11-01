@@ -30,6 +30,10 @@ beforeEach(() => {
   });
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); sessionStorage.clear(); });
+// The price/stock check (POST /checkout/preview) now runs automatically; only "Đặt hàng" is shown.
+const previewCalls = () => api.mock.calls.filter(([path]) => path === '/checkout/preview');
+const placeButton = () => screen.getByRole('button', { name: 'Đặt hàng COD' });
+const placeReady = () => waitFor(() => expect(placeButton()).toBeEnabled());
 describe('Checkout UI — mocked HTTP, not cross-service integration evidence', () => {
   it('releases only the rejected checkout intent after an email precondition failure and never retries automatically', async () => {
     api.mockImplementation(async path => {
@@ -40,11 +44,10 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
       throw new Error(path);
     });
     show(<CheckoutPage />);
-    const preview = await screen.findByRole('button', { name: 'Kiểm tra giá và kho' });
-    await waitFor(() => expect(preview).toBeEnabled());
-    fireEvent.click(preview);
-    fireEvent.click(await screen.findByRole('button', { name: 'Đặt hàng COD' }));
+    await placeReady();
+    fireEvent.click(placeButton());
     await screen.findByText(/Cần xác minh email trong Tài khoản/);
+    expect(previewCalls()).toHaveLength(1);
     expect(sessionStorage.getItem(slot)).toBeNull();
     expect(screen.queryByRole('button', { name: 'Gửi lại cùng yêu cầu' })).not.toBeInTheDocument();
     expect(api.mock.calls.filter(([path]) => path === '/checkouts')).toHaveLength(1);
@@ -54,15 +57,16 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
     let fail = true;
     api.mockImplementation(async path => {
       if (fail && path === '/cart') throw new TypeError('offline');
-      return path === '/cart' ? basket : addresses;
+      return path === '/cart' ? basket : path === '/checkout/preview' ? { canCheckout: true, groups: [], unavailableItems: [], totals: { total: '20000.00' } } : addresses;
     });
     show(<CheckoutPage />);
     expect(await screen.findByRole('alert')).toHaveTextContent('Không tải được địa chỉ và giỏ hàng. Kiểm tra kết nối rồi thử lại.');
     expect(screen.queryByText(/Chưa có địa chỉ nhận hàng/)).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Kiểm tra giá và kho' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Đặt hàng COD' })).not.toBeInTheDocument();
+    expect(previewCalls()).toHaveLength(0);
     fail = false; fireEvent.click(screen.getByRole('button', { name: /^Tải lại$/ }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeEnabled());
-    expect(api.mock.calls.some(([, options]) => options?.method === 'POST')).toBe(false);
+    await waitFor(() => expect(previewCalls()).toHaveLength(1));
+    expect(api.mock.calls.some(([path]) => path === '/checkouts')).toBe(false);
   });
   it('displays the full selected address outside the native select', async () => {
     show(<CheckoutPage />);
@@ -75,7 +79,8 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
     api.mockImplementation(async path => path === '/cart' ? basket : { items: [] });
     show(<CheckoutPage />);
     await screen.findByText(/Chưa có địa chỉ nhận hàng/);
-    expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeDisabled();
+    expect(placeButton()).toBeDisabled();
+    expect(previewCalls()).toHaveLength(0);
   });
   it('requires explicit price reload after rejection, uses new price and hides stale data if reload fails', async () => {
     let price = '10000.00'; let fail = false;
@@ -90,22 +95,21 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
       throw new Error(path);
     });
     show(<CheckoutPage />);
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra giá và kho' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Đặt hàng COD' }));
+    await placeReady();
+    fireEvent.click(placeButton());
     await screen.findByText('Giá đã đổi');
     expect(sessionStorage.getItem(slot)).toBeNull();
-    expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeDisabled();
+    // After a rejection nothing is re-checked or re-sent until the buyer reloads explicitly.
+    expect(placeButton()).toBeDisabled();
+    expect(previewCalls()).toHaveLength(1);
     fail = true; fireEvent.click(screen.getByRole('button', { name: 'Tải lại giỏ và giá' }));
     await screen.findByRole('button', { name: /^Tải lại$/ });
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Kiểm tra giá và kho' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Đặt hàng COD' })).not.toBeInTheDocument();
     fail = false; price = '12000.00';
     fireEvent.click(screen.getByRole('button', { name: /^Tải lại$/ }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeEnabled());
+    await placeReady();
     expect(screen.getByRole('checkbox')).toBeChecked();
-    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra giá và kho' }));
-    await screen.findByRole('button', { name: 'Đặt hàng COD' });
     const previews = api.mock.calls.filter(([path]) => path === '/checkout/preview');
     expect(previews).toHaveLength(2);
     expect(JSON.parse(previews[1]![1]!.body as string).items).toEqual([{ variantId: 10, quantity: 2, expectedUnitPrice: '12000.00' }]);
@@ -120,20 +124,51 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
     expect(screen.getByRole('button', { name: /^Tải lại$/ })).toBeDisabled();
     expect(JSON.parse(sessionStorage.getItem(slot)!)).toEqual(saved);
     expect(screen.getByRole('button', { name: 'Gửi lại cùng yêu cầu' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Kiểm tra giá và kho' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Đặt hàng COD' })).not.toBeInTheDocument();
+    expect(previewCalls()).toHaveLength(0);
   });
   it('does not auto-select the whole cart on direct Checkout navigation', async () => {
     show(<CheckoutPage />, 'USER', '/checkout');
     await screen.findByRole('checkbox');
     expect(screen.getByRole('checkbox')).not.toBeChecked();
-    expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeDisabled();
+    expect(placeButton()).toBeDisabled();
+    expect(previewCalls()).toHaveLength(0);
     fireEvent.click(screen.getByRole('checkbox'));
-    expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeEnabled();
+    await placeReady();
+    expect(previewCalls()).toHaveLength(1);
+  });
+  it('re-checks automatically when the result was cleared even if the final body is unchanged', async () => {
+    show(<CheckoutPage />);
+    await placeReady();
+    expect(previewCalls()).toHaveLength(1);
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(placeButton()).toBeDisabled();
+    fireEvent.click(screen.getByRole('checkbox'));
+    await placeReady();
+    expect(previewCalls()).toHaveLength(2);
+    expect(api.mock.calls.some(([path]) => path === '/checkouts')).toBe(false);
+  });
+  it('does not retry a failed automatic check by itself; "Thử lại" re-checks once', async () => {
+    let failing = true;
+    api.mockImplementation(async path => {
+      if (path === '/cart') return basket;
+      if (path === '/me/addresses') return addresses;
+      if (path === '/checkout/preview') { if (failing) throw new ApiError('Tạm thời lỗi', 500); return { canCheckout: true, groups: [], unavailableItems: [], totals: { total: '20000.00' } }; }
+      throw new Error(path);
+    });
+    show(<CheckoutPage />);
+    const retry = await screen.findByRole('button', { name: 'Thử lại' });
+    await new Promise(r => setTimeout(r, 50));
+    expect(previewCalls()).toHaveLength(1);
+    failing = false;
+    fireEvent.click(retry);
+    await placeReady();
+    expect(previewCalls()).toHaveLength(2);
   });
   it.each(['?variantId=999', '?variantId=10&variantId=999', '?variantId=', '?variantId=1.5', '?variantId=10&variantId=10'])('fails closed for invalid or missing Cart selection %s', async search => {
     show(<CheckoutPage />, 'USER', `/checkout${search}`);
     await screen.findByRole('checkbox');
-    expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeDisabled();
+    expect(placeButton()).toBeDisabled();
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(api.mock.calls.some(([, options]) => options?.method === 'POST')).toBe(false);
   });
@@ -141,13 +176,10 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
     let changed = false;
     api.mockImplementation(async path => path === '/cart' ? { ...basket, groups: [{ ...basket.groups[0], items: [{ ...basket.groups[0]!.items[0], quantity: changed ? 1 : 2, currentUnitPrice: changed ? '11000.00' : '10000.00' }, { ...basket.groups[0]!.items[0], variantId: 25 }] }] } : path === '/me/addresses' ? addresses : { canCheckout: false, groups: [], totals: null });
     show(<CheckoutPage />);
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeEnabled());
+    await waitFor(() => expect(previewCalls()).toHaveLength(1));
     expect(screen.getAllByRole('checkbox').map(box => (box as HTMLInputElement).checked)).toEqual([true, false]);
-    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra giá và kho' }));
     changed = true;
     fireEvent.click(await screen.findByRole('button', { name: 'Tải lại giỏ và giá' }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra giá và kho' }));
     await waitFor(() => expect(api.mock.calls.filter(([path]) => path === '/checkout/preview')).toHaveLength(2));
     const calls = api.mock.calls.filter(([path]) => path === '/checkout/preview');
     expect(JSON.parse(calls[1]![1]!.body as string).items).toEqual([{ variantId: 10, quantity: 1, expectedUnitPrice: '11000.00' }]);
@@ -165,14 +197,13 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
     api.mockImplementation(async path => path === '/cart' ? { ...basket, groups: [{ ...basket.groups[0], items: [basket.groups[0]!.items[0], { ...basket.groups[0]!.items[0], variantId: 25, available: false, unavailableReason: 'OUT_OF_STOCK' }] }] } : addresses);
     show(<CheckoutPage />, 'USER', '/checkout?variantId=10&variantId=25');
     await screen.findByText(/Món đã chọn không còn mua được/);
-    expect(screen.getByRole('button', { name: 'Kiểm tra giá và kho' })).toBeDisabled();
+    expect(placeButton()).toBeDisabled();
     expect(api.mock.calls.some(([, options]) => options?.method === 'POST')).toBe(false);
   });
   it('previews exact variant/quantity/Decimal strings and preserves the same intent after lost response/remount/lookup 404', async () => {
     const view = show(<CheckoutPage />);
-    const preview = await screen.findByRole('button', { name: 'Kiểm tra giá và kho' });
-    await waitFor(() => expect(preview).toBeEnabled()); fireEvent.click(preview);
-    const place = await screen.findByRole('button', { name: 'Đặt hàng COD' });
+    await placeReady();
+    const place = placeButton();
     fireEvent.click(place); fireEvent.click(place);
     await screen.findByRole('button', { name: 'Gửi lại cùng yêu cầu' });
     const saved = JSON.parse(sessionStorage.getItem(slot)!);
@@ -201,25 +232,23 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
   it('blocks create when preview detects price/stock changes', async () => {
     api.mockImplementation(async path => path === '/cart' ? basket : path === '/me/addresses' ? addresses : { canCheckout: false, groups: [], unavailableItems: [], totals: null });
     show(<CheckoutPage />);
-    const preview = await screen.findByRole('button', { name: 'Kiểm tra giá và kho' });
-    await waitFor(() => expect(preview).toBeEnabled()); fireEvent.click(preview);
-    expect(await screen.findByRole('button', { name: 'Đặt hàng COD' })).toBeDisabled();
+    await waitFor(() => expect(previewCalls()).toHaveLength(1));
+    await screen.findByRole('button', { name: 'Tải lại giỏ và giá' });
+    expect(placeButton()).toBeDisabled();
     expect(api.mock.calls.some(([path]) => path === '/checkouts')).toBe(false);
   });
   it('does not send a write when browser storage cannot persist the replay key', async () => {
     show(<CheckoutPage />);
-    const preview = await screen.findByRole('button', { name: 'Kiểm tra giá và kho' });
-    await waitFor(() => expect(preview).toBeEnabled()); fireEvent.click(preview);
+    await placeReady();
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('quota'); });
-    fireEvent.click(await screen.findByRole('button', { name: 'Đặt hàng COD' }));
+    fireEvent.click(placeButton());
     await screen.findByRole('alert');
     expect(api.mock.calls.some(([path]) => path === '/checkouts')).toBe(false);
   });
   it('fails closed for corrupt saved intent', async () => {
     sessionStorage.setItem(slot, '{broken'); show(<CheckoutPage />);
-    const preview = await screen.findByRole('button', { name: 'Kiểm tra giá và kho' });
     await waitFor(() => expect(screen.queryByText('Đang tải địa chỉ và giỏ hàng…')).not.toBeInTheDocument());
-    expect(preview).toBeDisabled(); expect(api.mock.calls.some(([, opts]) => opts?.method === 'POST')).toBe(false);
+    expect(placeButton()).toBeDisabled(); expect(api.mock.calls.some(([, opts]) => opts?.method === 'POST')).toBe(false);
   });
   it('allows opening inline address form and creating address without leaving checkout or losing draft', async () => {
     const newAddr = {

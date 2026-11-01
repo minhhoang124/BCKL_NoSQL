@@ -42,7 +42,9 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
   const [addressSaving, setAddressSaving] = useState(false);
 
   const handleSaveAddress = async (input: AddressInput) => {
+    // The order snapshot must not race an address being saved: drop the old check and block ordering.
     setAddressSaving(true);
+    setPreview(null);
     try {
       if (showAddressForm === 'create') {
         const created = await addressApi.create(input);
@@ -82,10 +84,42 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
   const selectionError = intent ? '' : selection.error || (invalidIds.length ? `Món đã chọn không còn mua được hoặc không còn trong giỏ: Variant ${invalidIds.join(', ')}. Quay lại giỏ để chọn lại; chưa gửi yêu cầu mua.` : '');
   function reloadCart() {
     if (gate.current || intent) return;
+    // A reload must re-check prices even when the request body ends up identical.
+    setFailedKey('');
     setLoading(true); setDataReady(false); setRefreshRequired(false); setPreview(null); setError(''); setReload(n => n + 1);
   }
   const selectedAddress = addresses.find(a => a.id === addressId);
   const body: CheckoutBody = { addressId, paymentProvider: provider, items: items.filter(i => selected.includes(i.variantId) && i.available && i.currentUnitPrice).map(i => ({ variantId: i.variantId, quantity: i.quantity, expectedUnitPrice: i.currentUnitPrice! })) };
+  // Price/stock check runs automatically (Shopee-style single "Đặt hàng"). Each result is tied to
+  // the exact request body it checked: a late response for an older body is ignored, ordering is
+  // only enabled while the shown result matches the current body, and a cleared result re-checks.
+  // A failed check is not retried automatically for the same body ("Thử lại" instead).
+  const previewKey = JSON.stringify(body);
+  const latestKey = useRef(previewKey);
+  latestKey.current = previewKey;
+  const [previewFor, setPreviewFor] = useState('');
+  const [failedKey, setFailedKey] = useState('');
+  const previewValid = !!preview && previewFor === previewKey;
+  const canPreview = !previewValid && !intent && !storageBlocked && !refreshRequired && !selectionError && !!cart && dataReady && !loading && !addressSaving && !!addressId && body.items.length >= 1 && body.items.length <= 50;
+  function checkPrice() {
+    const key = previewKey, request = body;
+    void run(async () => {
+      try {
+        const result = await write<Preview>('/checkout/preview', request);
+        if (key !== latestKey.current) return;
+        setPreview(result); setPreviewFor(key); setFailedKey('');
+      } catch (e) {
+        if (key === latestKey.current) setFailedKey(key);
+        throw e;
+      }
+    });
+  }
+  useEffect(() => {
+    if (!canPreview || busy || gate.current || failedKey === previewKey) return;
+    checkPrice();
+    // checkPrice reads this render's body; previewKey identifies it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canPreview, busy, previewKey, failedKey]);
   async function run(action: () => Promise<void>) {
     if (gate.current) return;
     gate.current = true; setBusy(true); setError('');
@@ -107,7 +141,7 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
   }
   function submit() {
     void run(async () => {
-      if (!preview?.canCheckout || !preview.totals || intent || storageBlocked || selectionError || !cart || !dataReady || loading || refreshRequired) return;
+      if (addressSaving || !previewValid || !preview?.canCheckout || !preview.totals || intent || storageBlocked || selectionError || !cart || !dataReady || loading || refreshRequired) return;
       const pending = saveIntent(slot, '/checkouts', body);
       activeKey.current = pending.key;
       setIntent(pending);
@@ -241,21 +275,18 @@ function CheckoutView({ userId, search }: { userId: number; search: string }) {
             : <span className={styles.paymentChosen}>Thanh toán khi nhận hàng</span>}
         </div>
         <div className={styles.summaryBody}>
-          {preview && preview.groups.flatMap(g => g.items).filter(i => i.errors.length).map(i => <p className={styles.error} role="alert" key={i.variantId}>Mặt hàng #{i.variantId}: {i.errors.join(', ')}. Giá hiện tại {money(i.unitPrice)}.</p>)}
-          {preview && !preview.canCheckout && <p className={styles.error} role="alert">Chưa thể đặt hàng. Giá/kho hoặc mặt hàng đã thay đổi; tải lại giỏ để xác nhận.</p>}
+          {previewValid && preview && preview.groups.flatMap(g => g.items).filter(i => i.errors.length).map(i => <p className={styles.error} role="alert" key={i.variantId}>Mặt hàng #{i.variantId}: {i.errors.join(', ')}. Giá hiện tại {money(i.unitPrice)}.</p>)}
+          {previewValid && preview && !preview.canCheckout && <p className={styles.error} role="alert">Chưa thể đặt hàng. Giá/kho hoặc mặt hàng đã thay đổi; tải lại giỏ để xác nhận.</p>}
           <dl className={styles.totals}>
             <div><dt>Phí vận chuyển</dt><dd>0 ₫</dd></div>
-            <div className={styles.grandTotal}><dt>Tổng thanh toán</dt><dd>{preview?.canCheckout && preview.totals ? money(preview.totals.total) : '—'}</dd></div>
+            <div className={styles.grandTotal}><dt>Tổng thanh toán</dt><dd>{previewValid && preview?.canCheckout && preview.totals ? money(preview.totals.total) : '—'}</dd></div>
           </dl>
         </div>
         <div className={styles.placeOrderRow}>
-          <p className={styles.hint}>{preview?.canCheckout ? 'Giá và tồn kho đã được kiểm tra. Bấm đặt hàng để tạo đơn.' : 'Bấm kiểm tra để xác nhận giá và tồn kho mới nhất trước khi đặt hàng.'}</p>
-          {!preview ? <button disabled={busy || !!intent || storageBlocked || refreshRequired || !!selectionError || !cart || !addressId || body.items.length < 1 || body.items.length > 50}
-              onClick={() => void run(async () => { if (!selectionError && cart && dataReady && !loading && !refreshRequired) setPreview(await write<Preview>('/checkout/preview', body)); })}>Kiểm tra giá và kho</button>
-            : <>
-              {!preview.canCheckout && <button className={styles.btnSecondary} disabled={busy || !!intent} onClick={reloadCart}>Tải lại giỏ và giá</button>}
-              <button className={styles.placeOrder} disabled={busy || !!intent || storageBlocked || !preview.canCheckout || !preview.totals} onClick={submit}>Đặt hàng {provider === 'COD' ? 'COD' : 'VNPay sandbox'}</button>
-            </>}
+          <p className={styles.hint} role="status">{previewValid && preview?.canCheckout ? 'Giá và tồn kho đã được kiểm tra.' : busy && !previewValid ? 'Đang kiểm tra giá và tồn kho mới nhất…' : canPreview ? 'Chưa kiểm tra được giá và tồn kho.' : ''}</p>
+          {failedKey === previewKey && !previewValid && canPreview && <button className={styles.btnSecondary} disabled={busy} onClick={checkPrice}>Thử lại</button>}
+          {previewValid && !preview?.canCheckout && <button className={styles.btnSecondary} disabled={busy || !!intent} onClick={reloadCart}>Tải lại giỏ và giá</button>}
+          <button className={styles.placeOrder} disabled={busy || addressSaving || !!intent || storageBlocked || !previewValid || !preview?.canCheckout || !preview?.totals} onClick={submit}>Đặt hàng {provider === 'COD' ? 'COD' : 'VNPay sandbox'}</button>
         </div>
       </section>
       </>}

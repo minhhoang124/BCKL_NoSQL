@@ -503,9 +503,6 @@ try {
     await b
       .getByRole("link", { name: "Tiếp tục thanh toán", exact: true })
       .click();
-    await b
-      .getByRole("button", { name: "Kiểm tra giá và kho", exact: true })
-      .click();
     const checkout = b.waitForResponse(
       (r) => r.url() === api + "/checkouts" && r.request().method() === "POST",
     );
