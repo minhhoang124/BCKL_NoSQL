@@ -109,7 +109,7 @@ function Workspace({
           Không dùng trạng thái cũ để gửi lại lệnh.
         </p>
       )}
-      {state.order?.payment?.provider==='VNPAY'&&<VnpayPayment orderId={orderId} amount={state.order.total}/>}
+      {state.order?.payment?.provider==='VNPAY'&&<VnpayPayment orderId={orderId} amount={state.order.total} knownPaymentStatus={state.order.payment.status} onPaymentChanged={() => { if (!busy && !confirming) void flow.reload(); }}/>}
       {(state.order || state.phase === "loading") && (
         <OrderDetailPanel
           source="api"

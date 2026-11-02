@@ -219,7 +219,7 @@ function Detail({ scope, orderId }: { scope: OrderScope; orderId: number }) {
   const { state, reload, readKey } = useOrderDetail(scope, orderId);
   return (
     <>
-      {scope==='buyer'&&state.status==='ready'&&state.data.payment?.provider==='VNPAY'&&<VnpayPayment orderId={orderId} amount={state.data.total}/>}
+      {scope==='buyer'&&state.status==='ready'&&state.data.payment?.provider==='VNPAY'&&<VnpayPayment orderId={orderId} amount={state.data.total} knownPaymentStatus={state.data.payment.status} onPaymentChanged={reload}/>}
       <button className={styles.quietRefresh} disabled={state.status === "loading"} onClick={reload}>
         Làm mới chi tiết đơn
       </button>

@@ -121,3 +121,23 @@ describe("VNPay UI explicit start and uncertain responses", () => {
     expect(screen.queryByRole("checkbox")).toBeNull();
   });
 });
+describe("VNPay panel keeps the parent order in sync", () => {
+  it("asks the parent to reload once when the gateway reports PAID but the order card does not", async () => {
+    api.mockResolvedValue({ ...empty, paymentStatus: "PAID", canStart: false });
+    const changed = vi.fn();
+    render(<VnpayPayment orderId={7} amount="10000.00" knownPaymentStatus="UNPAID" onPaymentChanged={changed} />);
+    expect(await screen.findByText(/Đã thanh toán/)).toBeInTheDocument();
+    expect(changed).toHaveBeenCalledTimes(1);
+  });
+  it("does not reload when the order already shows PAID or the gateway is still unpaid", async () => {
+    const changed = vi.fn();
+    api.mockResolvedValue({ ...empty, paymentStatus: "PAID", canStart: false });
+    render(<VnpayPayment orderId={7} amount="10000.00" knownPaymentStatus="PAID" onPaymentChanged={changed} />);
+    expect(await screen.findByText(/Đã thanh toán/)).toBeInTheDocument();
+    cleanup();
+    api.mockResolvedValue(empty);
+    render(<VnpayPayment orderId={7} amount="10000.00" knownPaymentStatus="UNPAID" onPaymentChanged={changed} />);
+    await waitFor(() => expect(api).toHaveBeenCalledTimes(2));
+    expect(changed).not.toHaveBeenCalled();
+  });
+});
