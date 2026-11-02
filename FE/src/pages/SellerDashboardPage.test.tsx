@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SellerDashboardPage } from './SellerDashboardPage';
 import { MemoryRouter } from 'react-router-dom';
@@ -17,11 +17,12 @@ beforeEach(() => {
   vi.spyOn(marketplaceApi, 'brands').mockResolvedValue([{ id: 1, name: 'Brand 1', slug: 'brand-1' }]);
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+const editButton = (name: string) => within(screen.getByText(name, { selector: 'strong' }).closest('tr')!).getByRole('button', { name: 'Chỉnh sửa' });
 const backToList = () => fireEvent.click(screen.getByRole('button', { name: '← Danh sách sản phẩm' }));
 async function open() {
   render(<MemoryRouter><SellerDashboardPage /></MemoryRouter>);
   fireEvent.click(await screen.findByRole('button', { name: 'Sản phẩm (2)' }));
-  fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh sửa' })[0]);
+  fireEvent.click(editButton('Product 1'));
 }
 describe('Seller product editing', () => {
   it('switches A to B without leaking category or brand, then resets after save', async () => {
@@ -30,7 +31,7 @@ describe('Seller product editing', () => {
     expect(screen.getByLabelText('Danh mục')).toHaveValue('1');
     expect(screen.getByLabelText('Thương hiệu')).toHaveValue('1');
     backToList();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh sửa' })[1]);
+    fireEvent.click(editButton('Product 2'));
     expect(screen.getByLabelText('Tên')).toHaveValue('Product 2');
     expect(screen.getByLabelText('Danh mục')).toHaveValue('2');
     expect(screen.getByLabelText('Thương hiệu')).toHaveValue('');
@@ -49,7 +50,7 @@ describe('Seller product editing', () => {
     vi.spyOn(marketplaceApi, 'updateProduct').mockRejectedValue(new ApiError('Save failed', 400));
     await open();
     backToList();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh sửa' })[1]);
+    fireEvent.click(editButton('Product 2'));
     fireEvent.change(screen.getByLabelText('Tên'), { target: { value: 'Edited B' } });
     fireEvent.click(screen.getByRole('button', { name: 'Lưu sản phẩm' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Save failed');
@@ -131,5 +132,43 @@ describe('Seller product editing', () => {
     // Click step 5
     fireEvent.click(screen.getByRole('button', { name: '5. Gửi duyệt' }));
     expect(screen.getByRole('heading', { name: '5. Kiểm tra & gửi duyệt' })).toBeInTheDocument();
+  });
+});
+
+describe('Seller product list filters', () => {
+  const variant = (id: number, price: string, stock: number) => ({ id, price, stock, sku: `SKU-${id}` }) as unknown as NonNullable<Product['variants']>[number];
+  const rows: Product[] = [
+    { ...products[0], id: 11, name: 'Áo live', moderationStatus: 'APPROVED', sellerStatus: 'ACTIVE', variants: [variant(1, '300000', 0)] },
+    { ...products[1], id: 12, name: 'Bình pending', moderationStatus: 'PENDING', sellerStatus: 'ACTIVE', variants: [variant(2, '100000', 3)] },
+    { ...products[0], id: 13, name: 'Cốc hidden', moderationStatus: 'APPROVED', sellerStatus: 'HIDDEN', variants: [variant(3, '200000', 40)] },
+  ];
+  const names = () => screen.getAllByRole('row').slice(1).map((row) => row.querySelector('strong')?.textContent);
+  it('filters by status tab, category, stock and sorts', async () => {
+    vi.spyOn(marketplaceApi, 'myProducts').mockResolvedValue(rows);
+    render(<MemoryRouter initialEntries={['/seller?tab=products']}><SellerDashboardPage /></MemoryRouter>);
+    expect(await screen.findByRole('button', { name: 'Đang bán (1)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Chờ duyệt (1)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Đã ẩn (1)' })).toBeInTheDocument();
+    expect(names()).toEqual(['Cốc hidden', 'Bình pending', 'Áo live']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Đã ẩn (1)' }));
+    expect(names()).toEqual(['Cốc hidden']);
+    fireEvent.click(screen.getByRole('button', { name: 'Tất cả (3)' }));
+
+    fireEvent.change(screen.getByLabelText('Lọc theo tồn kho'), { target: { value: 'out' } });
+    expect(names()).toEqual(['Áo live']);
+    fireEvent.change(screen.getByLabelText('Lọc theo tồn kho'), { target: { value: 'low' } });
+    expect(names()).toEqual(['Bình pending']);
+    fireEvent.change(screen.getByLabelText('Lọc theo tồn kho'), { target: { value: 'all' } });
+
+    fireEvent.change(screen.getByLabelText('Lọc theo danh mục'), { target: { value: '2' } });
+    expect(names()).toEqual(['Bình pending']);
+    fireEvent.click(screen.getByRole('button', { name: 'Xóa bộ lọc' }));
+    expect(screen.getByRole('status')).toHaveTextContent('3/3 sản phẩm');
+
+    fireEvent.change(screen.getByLabelText('Sắp xếp sản phẩm'), { target: { value: 'price-asc' } });
+    expect(names()).toEqual(['Bình pending', 'Cốc hidden', 'Áo live']);
+    fireEvent.change(screen.getByLabelText('Sắp xếp sản phẩm'), { target: { value: 'stock-asc' } });
+    expect(names()).toEqual(['Áo live', 'Bình pending', 'Cốc hidden']);
   });
 });

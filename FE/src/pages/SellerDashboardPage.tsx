@@ -36,6 +36,32 @@ const storeStatusLabels: Record<string, string> = {
 
 type StepKey = 'info' | 'images' | 'variants' | 'shipping' | 'submit';
 
+// Seller product list filters (client-side over the seller's own products).
+type StatusFilter = 'all' | 'live' | 'pending' | 'fix' | 'hidden' | 'draft';
+type StockFilter = 'all' | 'out' | 'low';
+type SortKey = 'newest' | 'oldest' | 'price-asc' | 'price-desc' | 'stock-asc' | 'name';
+const LOW_STOCK = 5;
+const statusTabs: Array<[StatusFilter, string]> = [
+  ['all', 'Tất cả'], ['live', 'Đang bán'], ['pending', 'Chờ duyệt'], ['fix', 'Cần chỉnh sửa'], ['hidden', 'Đã ẩn'], ['draft', 'Bản nháp'],
+];
+const statusGroup = (item: Product): Exclude<StatusFilter, 'all'> => {
+  const moderation = item.moderationStatus ?? 'NOT_SUBMITTED';
+  if (moderation === 'PENDING') return 'pending';
+  if (moderation === 'REJECTED' || moderation === 'FROZEN') return 'fix';
+  if (item.sellerStatus === 'HIDDEN') return 'hidden';
+  if (moderation === 'APPROVED') return 'live';
+  return 'draft';
+};
+const knownStock = (item: Product): number | null => {
+  const variants = item.variants ?? [];
+  if (!variants.length || variants.some((v) => typeof v.stock !== 'number')) return null;
+  return variants.reduce((sum, v) => sum + (v.stock as number), 0);
+};
+const minPrice = (item: Product): number | null => {
+  const prices = (item.variants ?? []).map((v) => Number(v.price)).filter((v) => Number.isFinite(v));
+  return prices.length ? Math.min(...prices) : null;
+};
+
 export function SellerDashboardPage() {
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -70,6 +96,10 @@ export function SellerDashboardPage() {
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
   const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [stockFilter, setStockFilter] = useState<StockFilter>('all');
+  const [sortKey, setSortKey] = useState<SortKey>('newest');
   const [missingAttributes, setMissingAttributes] = useState<string[] | null>(null);
   const [attributeCheckFailed, setAttributeCheckFailed] = useState(false);
   const errorRef = useRef<HTMLParagraphElement>(null);
@@ -264,9 +294,36 @@ export function SellerDashboardPage() {
   const categoryDirty = !!selected && draft.categoryId !== String(selected.category.id);
   const approvedCount = products.filter((item) => item.moderationStatus === 'APPROVED').length;
   const pendingCount = products.filter((item) => item.moderationStatus === 'PENDING').length;
-  const visibleProducts = query.trim()
-    ? products.filter((item) => item.name.toLowerCase().includes(query.trim().toLowerCase()))
-    : products;
+  const keyword = query.trim().toLowerCase();
+  const statusCounts = products.reduce<Record<StatusFilter, number>>((acc, item) => {
+    acc[statusGroup(item)] += 1;
+    return acc;
+  }, { all: products.length, live: 0, pending: 0, fix: 0, hidden: 0, draft: 0 });
+  const productCategories = [...new Map(products.map((item) => [item.category.id, item.category.name])).entries()]
+    .sort((a, b) => a[1].localeCompare(b[1], 'vi'));
+  const filtersActive = !!keyword || statusFilter !== 'all' || !!categoryFilter || stockFilter !== 'all';
+  const clearFilters = () => { setQuery(''); setStatusFilter('all'); setCategoryFilter(''); setStockFilter('all'); };
+  const nullsLast = (a: number | null, b: number | null, dir: 1 | -1) =>
+    a === null ? (b === null ? 0 : 1) : b === null ? -1 : (a - b) * dir;
+  const visibleProducts = products
+    .filter((item) => !keyword || item.name.toLowerCase().includes(keyword))
+    .filter((item) => statusFilter === 'all' || statusGroup(item) === statusFilter)
+    .filter((item) => !categoryFilter || String(item.category.id) === categoryFilter)
+    .filter((item) => {
+      if (stockFilter === 'all') return true;
+      const stock = knownStock(item);
+      return stock !== null && (stockFilter === 'out' ? stock === 0 : stock > 0 && stock <= LOW_STOCK);
+    })
+    .sort((a, b) => {
+      switch (sortKey) {
+        case 'oldest': return a.id - b.id;
+        case 'price-asc': return nullsLast(minPrice(a), minPrice(b), 1);
+        case 'price-desc': return nullsLast(minPrice(a), minPrice(b), -1);
+        case 'stock-asc': return nullsLast(knownStock(a), knownStock(b), 1);
+        case 'name': return a.name.localeCompare(b.name, 'vi');
+        default: return b.id - a.id;
+      }
+    });
   const priceRange = (item: Product) => {
     const prices = (item.variants ?? []).map((v) => Number(v.price)).filter((v) => Number.isFinite(v));
     if (!prices.length) return '—';
@@ -369,9 +426,37 @@ export function SellerDashboardPage() {
                   <p className={styles.scMuted}>{products.length} sản phẩm · {approvedCount} đã duyệt · {pendingCount} chờ duyệt</p>
                 </div>
                 <div className={styles.scToolbar}>
-                  <input type="search" aria-label="Tìm sản phẩm của tôi" placeholder="Tìm theo tên sản phẩm" value={query} onChange={(e) => setQuery(e.target.value)} />
                   <button type="button" className={styles.scPrimary} disabled={busy} onClick={() => openEditor(null)}>+ Thêm sản phẩm mới</button>
                 </div>
+              </div>
+              <div className={styles.scStatusTabs} role="group" aria-label="Lọc theo trạng thái">
+                {statusTabs.map(([key, label]) => (
+                  <button type="button" key={key} aria-pressed={statusFilter === key} className={statusFilter === key ? styles.scStatusTabActive : undefined} onClick={() => setStatusFilter(key)}>
+                    {label} <span>({statusCounts[key]})</span>
+                  </button>
+                ))}
+              </div>
+              <div className={styles.scFilterBar}>
+                <input type="search" aria-label="Tìm sản phẩm của tôi" placeholder="Tìm theo tên sản phẩm" value={query} onChange={(e) => setQuery(e.target.value)} />
+                <select aria-label="Lọc theo danh mục" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+                  <option value="">Tất cả danh mục</option>
+                  {productCategories.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                </select>
+                <select aria-label="Lọc theo tồn kho" value={stockFilter} onChange={(e) => setStockFilter(e.target.value as StockFilter)}>
+                  <option value="all">Mọi mức tồn kho</option>
+                  <option value="out">Hết hàng</option>
+                  <option value="low">Sắp hết (≤ {LOW_STOCK})</option>
+                </select>
+                <select aria-label="Sắp xếp sản phẩm" value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)}>
+                  <option value="newest">Mới nhất</option>
+                  <option value="oldest">Cũ nhất</option>
+                  <option value="price-asc">Giá thấp → cao</option>
+                  <option value="price-desc">Giá cao → thấp</option>
+                  <option value="stock-asc">Tồn kho ít nhất</option>
+                  <option value="name">Tên A → Z</option>
+                </select>
+                {filtersActive && <button type="button" className={styles.scLinkBtn} onClick={clearFilters}>Xóa bộ lọc</button>}
+                <span className={styles.scMuted} role="status">{visibleProducts.length}/{products.length} sản phẩm</span>
               </div>
               <div className={styles.scTableWrap}>
                 <table className={styles.scTable}>
@@ -418,7 +503,7 @@ export function SellerDashboardPage() {
                   </tbody>
                 </table>
                 {products.length === 0 && <p className={styles.scEmpty}>Chưa có sản phẩm nào. Bấm “+ Thêm sản phẩm mới” để tạo sản phẩm đầu tiên.</p>}
-                {products.length > 0 && visibleProducts.length === 0 && <p className={styles.scEmpty}>Không có sản phẩm khớp “{query.trim()}”.</p>}
+                {products.length > 0 && visibleProducts.length === 0 && <p className={styles.scEmpty}>Không có sản phẩm phù hợp bộ lọc. <button type="button" className={styles.scLinkBtn} onClick={clearFilters}>Xóa bộ lọc</button></p>}
               </div>
             </section>
         ) : (

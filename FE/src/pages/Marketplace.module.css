@@ -1473,6 +1473,15 @@
 .scMuted { margin: 4px 0 0; color: #69717c; font-size: 13px; }
 .scMutedBlock { display: block; margin-top: 4px; color: #69717c; font-size: 12px; }
 .scToolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+.scStatusTabs { display: flex; gap: 4px; overflow-x: auto; padding: 0 24px; border-bottom: 1px solid #f0f0f0; }
+.scStatusTabs button { flex: none; padding: 10px 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: #20242b; font: inherit; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.scStatusTabs button span { color: #69717c; }
+.scStatusTabs .scStatusTabActive { border-bottom-color: #ee4d2d; color: #ee4d2d; }
+.scStatusTabs .scStatusTabActive span { color: inherit; }
+.scFilterBar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 24px; }
+.scFilterBar input, .scFilterBar select { height: 36px; box-sizing: border-box; padding: 0 10px; border: 1px solid #d9d9d9; border-radius: 4px; font: inherit; color: #20242b; background: #fff; }
+.scFilterBar input { width: 240px; max-width: 100%; }
+.scFilterBar .scMuted { margin: 0 0 0 auto; }
 .scToolbar input { width: 240px; max-width: 100%; height: 36px; box-sizing: border-box; padding: 0 10px; border: 1px solid #d9d9d9; border-radius: 4px; font: inherit; color: #20242b; background: #fff; }
 .scPrimary, .scSecondary { height: 36px; padding: 0 16px; border-radius: 4px; font: inherit; font-weight: 500; cursor: pointer; white-space: nowrap; }
 .scPrimary { border: 1px solid var(--market-brand); background: var(--market-brand); color: #fff; }
