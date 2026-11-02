@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -22,8 +22,10 @@ const db = new URL(process.env.DATABASE_URL ?? "");
 assert.equal(db.protocol, "postgresql:");
 assert.equal(db.hostname, "127.0.0.1");
 assert.equal(db.port, "5549");
+// Fresh single-use QA database from machine-local/qa-scripts/run-fe-orange-buyer.mjs (DML-only role).
+const freshQa = /^\/bckl_order_resolution_test_drivers_20261031_\d{13}$/.test(db.pathname);
 const integratedQa =
-  db.pathname === "/bckl_order_resolution_test_hardening_20261029" &&
+  (db.pathname === "/bckl_order_resolution_test_hardening_20261029" || freshQa) &&
   db.username === "bckl_local_app";
 assert(
   integratedQa ||
@@ -101,7 +103,10 @@ try {
   }
   if (integratedQa) {
     const [migrations] = await prisma.$queryRaw`SELECT count(*)::int AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;
-    assert.equal(migrations.n, 39);
+    const expected = freshQa
+      ? (await readdir(path.join(root, "BE/prisma/migrations"), { withFileTypes: true })).filter((e) => e.isDirectory()).length
+      : 39;
+    assert.equal(migrations.n, expected);
   }
   process.env.VITE_API_URL = api;
   if (values["integrated-aftersales"]) { process.env.VITE_AFTERSALES_ENABLED="true";  }

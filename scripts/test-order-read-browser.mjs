@@ -13,7 +13,9 @@ assert(values.output && values['playwright-module']);
 const db = new URL(process.env.DATABASE_URL ?? '');
 assert.equal(db.hostname, '127.0.0.1'); assert.equal(db.port, '5549');
 assert.equal(db.protocol, 'postgresql:');
-const integratedQa = db.pathname === '/bckl_order_resolution_test_hardening_20261029' && db.username === 'bckl_local_app';
+// Fresh single-use QA database from machine-local/qa-scripts/run-fe-orange-buyer.mjs (DML-only role).
+const freshQa = /^\/bckl_order_resolution_test_drivers_20261031_\d{13}$/.test(db.pathname);
+const integratedQa = (db.pathname === '/bckl_order_resolution_test_hardening_20261029' || freshQa) && db.username === 'bckl_local_app';
 assert(integratedQa || ['/bckl_checkout_web_20261012', '/bckl_pr59_combined_20261020'].includes(db.pathname));
 assert([...db.searchParams].every(([k, v]) => k === 'schema' && v === 'public')); assert(!db.hash);
 assert(db.searchParams.getAll('schema').length <= 1);
@@ -75,7 +77,7 @@ try {
   const [identity] = await prisma.$queryRaw`SELECT current_database() AS name,rolsuper,rolcreatedb,rolcreaterole FROM pg_roles WHERE rolname=current_user`;
   assert.equal(identity.name,db.pathname.slice(1));
   assert(!identity.rolsuper && !identity.rolcreatedb && !identity.rolcreaterole);
-  if(integratedQa){const [migrations]=await prisma.$queryRaw`SELECT count(*)::int AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;assert.equal(migrations.n,39);}
+  if(integratedQa){const [migrations]=await prisma.$queryRaw`SELECT count(*)::int AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;const expected=freshQa?(await import('node:fs')).readdirSync(path.join(root,'BE/prisma/migrations'),{withFileTypes:true}).filter(e=>e.isDirectory()).length:39;assert.equal(migrations.n,expected);}
   vite = await createServer({ root: path.join(root, 'FE'), envDir:false, server: { host: '127.0.0.1', port: 5187, strictPort: true } }); await vite.listen();
   browser = await chromium.launch({ headless: true, channel: 'chrome' });
   const seller = await prisma.user.create({ data: { email: `${marker}-seller@example.test`, passwordHash: await requireBE('bcryptjs').hash(password, 10), role: 'SELLER' } });
@@ -131,10 +133,12 @@ try {
     await page.getByRole('button', { name: `Xem chi tiết ${a.orders[0].orderNumber}` }).waitFor();
     assert.equal(await page.getByRole('button', { name: /^Xem chi tiết / }).count(), 1);
     await shot(page, `${name}-02-next-page`);
-    await page.getByRole('combobox', { name: /Trạng thái đơn/ }).selectOption('COMPLETED');
+    // Buyer list filters by the status tab strip (the duplicate status select was removed for buyers).
+    const statusTabs = page.getByRole('navigation', { name: 'Lọc nhanh theo trạng thái' });
+    await statusTabs.getByRole('button', { name: 'Hoàn tất', exact: true }).click();
     await page.getByText('Chưa có đơn trong bộ lọc này.', { exact: true }).waitFor(); assert(!page.url().includes('afterId'));
     await shot(page, `${name}-03-empty-filter`);
-    await page.getByRole('combobox', { name: /Trạng thái đơn/ }).selectOption('');
+    await statusTabs.getByRole('button', { name: 'Tất cả', exact: true }).click();
     await page.getByRole('button', { name: `Xem chi tiết ${order.orderNumber}` }).click();
     await page.getByRole('heading', { name: order.orderNumber, exact: true }).waitFor();
     assert(await page.getByRole('button', { name: 'Hủy đơn', exact: true }).isDisabled());

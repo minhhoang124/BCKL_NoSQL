@@ -327,10 +327,10 @@
 .buyerPanel .card, .buyerPanel > .list > .card { border: 1px solid #e8e8e8; border-radius: 4px; box-shadow: none; padding: 20px; }
 .orderHeader { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .buyerPanel .status { border: 0; padding: 0; background: none; color: var(--market-brand); text-transform: uppercase; font-size: 12px; border-radius: 0; font-weight: 500; }
-.buyerPanel .orderCode { max-width: 25ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: #757575; margin: 8px 0; }
+.buyerPanel .orderCode { max-width: 25ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: #69717c; margin: 8px 0; }
 .buyerPanel > h1.orderCode { max-width: 100%; width: 32ch; font-size: 18px; }
 .orderFooter { text-align: right; }
-.paymentMeta { color: #757575; font-size: 12px; }
+.paymentMeta { color: #69717c; font-size: 12px; }
 .orderTotal { padding: 12px 0; }
 .buyerPanel .total { font-size: 24px; font-weight: 500; margin-left: 8px; }
 .buyerPanel button.detailButton { background: #fff; border-color: #d8d8d8; color: #333; border-radius: 4px; min-width: 140px; font-weight: 400; }
@@ -352,7 +352,7 @@
 .buyerPanel .orderDetailItemHead { display: flex; gap: 16px; align-items: center; }
 .buyerPanel .orderDetailItemContent { flex: 1; min-width: 0; }
 .buyerPanel .orderDetailItemContent h3 { font-size: 14px; font-weight: 400; }
-.buyerPanel .orderDetailItemContent p { font-size: 12px; color: #757575; }
+.buyerPanel .orderDetailItemContent p { font-size: 12px; color: #69717c; }
 .itemPrice { text-align: right; font-size: 13px; }
 .buyerPanel a { display: inline-block; color: var(--market-brand); text-decoration: none; padding: 6px 0; font-size: 13px; }
 .buyerPanel a:hover { text-decoration: underline; }
@@ -372,7 +372,7 @@
 .orderItemsTableWrap { min-width: 0; max-width: 100%; overflow-x: auto; }
 .orderItemsTable { border-collapse: collapse; width: 100%; text-align: left; font-size: 14px; }
 .orderItemsTable th, .orderItemsTable td { padding: 14px 10px; border-bottom: 1px solid #e8e8e8; vertical-align: middle; }
-.orderItemsTable th { background: #fafafa; color: #757575; font-weight: 400; font-size: 12px; }
+.orderItemsTable th { background: #fafafa; color: #69717c; font-weight: 400; font-size: 12px; }
 .orderItemsTable th:first-child, .orderItemsTable td:first-child { min-width: 180px; }
 .orderItemsTable th:not(:first-child), .orderItemsTable td:not(:first-child) { text-align: right; white-space: nowrap; }
 .buyerPanel button.cancelButton, .buyerPanel button.cancelButton:hover:not(:disabled) { color: #555; border: 1px solid #d8d8d8; border-radius: 4px; background: #fff; }
@@ -388,3 +388,6 @@
   .panel .timeline { flex-wrap: wrap; overflow-x: visible; }
   .panel .timeline > li { flex: 1 1 120px; }
 }
+
+/* Detail page heading is the order number: full-strength text colour (list keeps the muted code). */
+.buyerPanel h1.orderCode { max-width: 100%; color: #20242b; font-size: 18px; font-weight: 600; }

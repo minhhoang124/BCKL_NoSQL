@@ -8,7 +8,8 @@ import {parseArgs} from 'node:util';
 import path from 'node:path';
 const {values}=parseArgs({options:{output:{type:'string'},'playwright-module':{type:'string'}}});
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),u=new URL(process.env.DATABASE_URL??'');
-assert.equal(u.protocol,'postgresql:');assert.equal(u.hostname,'127.0.0.1');assert.equal(u.port,'5549');assert.equal(u.pathname,'/bckl_order_resolution_test_attributes_20261019_v967');assert.equal(u.username,'bckl_qa_app_20261021');assert(!u.hash&&[...u.searchParams].every(([k,v])=>k==='schema'&&v==='public')&&u.searchParams.getAll('schema').length<=1);
+assert.equal(u.protocol,'postgresql:');assert.equal(u.hostname,'127.0.0.1');assert.equal(u.port,'5549');const freshQa=/^\/bckl_order_resolution_test_drivers_20261031_\d{13}$/.test(u.pathname)&&u.username==='bckl_local_app';
+assert(freshQa||(u.pathname==='/bckl_order_resolution_test_attributes_20261019_v967'&&u.username==='bckl_qa_app_20261021'));// (role checked together with the database above; fresh QA uses the DML-only app role);assert(!u.hash&&[...u.searchParams].every(([k,v])=>k==='schema'&&v==='public')&&u.searchParams.getAll('schema').length<=1);
 for(const f of ['.env','BE/.env','FE/.env','FE/.env.local'])try{await access(path.join(root,f));throw Error('Refusing dotenv');}catch(e){if(e.code!=='ENOENT')throw e;}
 for(const f of ['SEARCH_SYNC_ENABLED','SEARCH_RECONCILIATION_ENABLED','PRODUCT_IMAGE_REPAIR_ENABLED','ORDER_AUTO_COMPLETE_ENABLED'])assert.equal(process.env[f],'false');
 const api='http://localhost:3397',web='http://localhost:5197',secret='SyntheticVnpayChecksumKeyAtLeast32Characters';
