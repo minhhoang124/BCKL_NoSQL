@@ -9,6 +9,12 @@ import {
   validateQueryFile,
 } from "../services/imageSearchApi";
 import type { SearchResponse } from "../types/marketplace";
+import {
+  DEFAULT_SEARCH_TOP_K,
+  SEARCH_TOP_K_OPTIONS,
+  parseSearchTopK,
+  type SearchTopK,
+} from "../services/searchTopK";
 import { SearchResultCard } from "../services/searchTelemetry";
 import { prepareSearchTelemetry } from "../services/searchAnalyticsClient";
 import styles from "./ImageSearchPage.module.css";
@@ -33,6 +39,7 @@ function ImageQuery() {
   const [result, setResult] = useState<SearchResponse | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [topK, setTopK] = useState<SearchTopK>(DEFAULT_SEARCH_TOP_K);
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const [now, setNow] = useState(Date.now);
   const remaining = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
@@ -116,7 +123,7 @@ function ImageQuery() {
     try {
       await prepareSearchTelemetry();
       if(cancel.signal.aborted) return;
-      const response = await searchImage(selection.file, cancel.signal);
+      const response = await searchImage(selection.file, cancel.signal, topK);
       if (resources.current.mounted && request === resources.current.generation)
         setResult(response);
     } catch (reason) {
@@ -189,6 +196,20 @@ function ImageQuery() {
             }}
           />
         )}
+        <label htmlFor="image-top-k">Số kết quả</label>
+        <select
+          id="image-top-k"
+          className={styles.topK}
+          value={topK}
+          disabled={pending}
+          onChange={(event) => setTopK(parseSearchTopK(event.target.value))}
+        >
+          {SEARCH_TOP_K_OPTIONS.map((value) => (
+            <option key={value} value={value}>
+              {value} sản phẩm
+            </option>
+          ))}
+        </select>
         <div className={styles.actions}>
           <button
             type="submit"

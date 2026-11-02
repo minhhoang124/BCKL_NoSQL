@@ -8,6 +8,7 @@ import { SearchResultCard } from '../services/searchTelemetry';
 import { analyticsToken, prepareSearchTelemetry } from '../services/searchAnalyticsClient';
 import { ApiError } from '../services/apiClient';
 import { StateCard } from '../components/StateCard/StateCard';
+import { DEFAULT_SEARCH_TOP_K, SEARCH_CANDIDATE_K, SEARCH_TOP_K_OPTIONS, parseSearchTopK, type SearchTopK } from '../services/searchTopK';
 import styles from './Marketplace.module.css';
 
 const searchWithTelemetry = async (body:Record<string,unknown>) => {await prepareSearchTelemetry();return marketplaceApi.search(body);};
@@ -32,6 +33,7 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
   const [inStock, setInStock] = useState(false);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [topK, setTopK] = useState<SearchTopK>(DEFAULT_SEARCH_TOP_K);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
@@ -44,7 +46,7 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
     const current = Symbol();
     requestId.current = current;
     const productRequest = initialQuery
-      ? searchWithTelemetry({ query: initialQuery, topK: 24, candidateK: 100 })
+      ? searchWithTelemetry({ query: initialQuery, topK: DEFAULT_SEARCH_TOP_K, candidateK: SEARCH_CANDIDATE_K })
       : marketplaceApi.publicProducts({ limit: 24 });
     Promise.all([productRequest, marketplaceApi.categories(), marketplaceApi.brands()])
       .then(([result, categoryRows, brandRows]) => {
@@ -78,7 +80,7 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
     }
     try {
       if (query.trim()) {
-        const result = await searchWithTelemetry({ query: query.trim(), topK: 24, candidateK: 100, ...(categoryId ? { categoryIds: [Number(categoryId)] } : {}), ...(brandId ? { brandIds: [Number(brandId)] } : {}), ...(inStock ? { inStock: true } : {}), ...priceRange });
+        const result = await searchWithTelemetry({ query: query.trim(), topK, candidateK: SEARCH_CANDIDATE_K, ...(categoryId ? { categoryIds: [Number(categoryId)] } : {}), ...(brandId ? { brandIds: [Number(brandId)] } : {}), ...(inStock ? { inStock: true } : {}), ...priceRange });
         if (requestId.current !== current) return;
         setTracking(analyticsToken(result.analytics)); setProducts(result.items.map((item) => item.product)); setSearched(true);
       } else {
@@ -107,7 +109,7 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
   };
 
   const clearFilters = () => {
-    setCategoryId(''); setBrandId(''); setInStock(false); setMinPrice(''); setMaxPrice('');
+    setCategoryId(''); setBrandId(''); setInStock(false); setMinPrice(''); setMaxPrice(''); setTopK(DEFAULT_SEARCH_TOP_K);
   };
   const keyword = query.trim();
 
@@ -140,6 +142,10 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
           </div>
           {!keyword && <small>Nhập từ khóa để lọc theo giá.</small>}
         </fieldset>
+        <label className={styles.filterField}>
+          <span>Số kết quả</span>
+          <select aria-label="Số kết quả" value={topK} disabled={!keyword} onChange={(e) => setTopK(parseSearchTopK(e.target.value))}>{SEARCH_TOP_K_OPTIONS.map((value) => <option key={value} value={value}>{value} sản phẩm</option>)}</select>
+        </label>
         <label className={styles.stockCheck}><input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} /> Còn hàng</label>
         <button className={styles.filterSubmit} disabled={loading}>{loading ? 'Đang tìm…' : 'Tìm kiếm'}</button>
         <button type="button" className={styles.filterClear} onClick={clearFilters}>Xóa bộ lọc</button>
