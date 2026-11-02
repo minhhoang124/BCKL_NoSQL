@@ -38,7 +38,7 @@ describe('BUY-02 AccountSettings in EMAIL mode', () => {
     expect(screen.getByRole('button', { name: 'Gửi email xác nhận' })).toBeDisabled();
   });
   it('stores the binding before announcing the email and never calls the direct endpoint', async () => {
-    mocks.request.mockResolvedValue({ email: 'qa***@example.invalid', expiresAt: future(), bindingSecret: BINDING });
+    mocks.request.mockResolvedValue({ email: 'qa***@example.invalid', expiresAt: future(), bindingSecret: BINDING, delivered: true });
     view();
     fireEvent.change(screen.getByLabelText('Mật khẩu hiện tại'), { target: { value: 'CurrentPass123!' } });
     fireEvent.click(screen.getByLabelText(/Gửi thư xác nhận/));
@@ -49,6 +49,16 @@ describe('BUY-02 AccountSettings in EMAIL mode', () => {
     expect(screen.getByText('qa***@example.invalid')).toBeInTheDocument();
     expect(mocks.request).toHaveBeenCalledTimes(1);
     expect(mocks.changePassword).not.toHaveBeenCalled();
+    expect(loadBinding(3)).toBe(BINDING);
+  });
+  it('says honestly when the provider did not confirm the email (still keeps the binding)', async () => {
+    mocks.request.mockResolvedValue({ email: 'qa***@example.invalid', expiresAt: future(), bindingSecret: BINDING, delivered: false });
+    view();
+    fireEvent.change(screen.getByLabelText('Mật khẩu hiện tại'), { target: { value: 'CurrentPass123!' } });
+    fireEvent.click(screen.getByLabelText(/Gửi thư xác nhận/));
+    fireEvent.click(screen.getByRole('button', { name: 'Gửi email xác nhận' }));
+    expect(await screen.findByText(/chưa xác nhận được việc gửi thư/)).toBeInTheDocument();
+    expect(screen.queryByText(/và gửi thư xác nhận tới/)).not.toBeInTheDocument();
     expect(loadBinding(3)).toBe(BINDING);
   });
   it('maps wrong current password and unverified email to clear messages', async () => {

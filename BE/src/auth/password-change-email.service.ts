@@ -196,9 +196,10 @@ export class PasswordChangeEmailService {
       });
     }
     // After commit, never inside the lock; token is never logged or stored raw.
-    this.mail.enqueue(issued.email, token, PURPOSE, issued.id);
+    // Awaited so the user is told honestly whether the provider accepted the mail.
+    const delivered = await this.mail.deliver(issued.email, token, PURPOSE, issued.id);
     return {
-      status: 'CHANGE_EMAIL_SENT' as const,
+      status: delivered ? ('CHANGE_EMAIL_SENT' as const) : ('CHANGE_EMAIL_UNCONFIRMED' as const),
       email: maskEmail(issued.email),
       expiresAt: issued.expiresAt.toISOString(),
       // Keep only in this browser (e.g. sessionStorage); required to confirm.

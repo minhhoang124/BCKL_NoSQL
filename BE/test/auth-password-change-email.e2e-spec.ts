@@ -24,6 +24,7 @@ describe('Email-confirmed password change — HTTP/PostgreSQL', () => {
   const password = 'old password 1';
   const nextPassword = 'new password 2';
   const mail: { email: string; token: string; purpose: MailPurpose }[] = [];
+  let failDelivery = false;
   const keys = [
     'AUTH_EMAIL_ENABLED',
     'AUTH_EMAIL_HMAC_SECRET',
@@ -47,6 +48,11 @@ describe('Email-confirmed password change — HTTP/PostgreSQL', () => {
           configured: () => ({}),
           enqueue: (email: string, token: string, purpose: MailPurpose) =>
             mail.push({ email, token, purpose }),
+          deliver: async (email: string, token: string, purpose: MailPurpose) => {
+            if (failDelivery) return false;
+            mail.push({ email, token, purpose });
+            return true;
+          },
         })
         // Per-minute settings quota is not under test; DB rate limit is.
         .overrideGuard(AccountSettingsGuard)
@@ -147,6 +153,26 @@ describe('Email-confirmed password change — HTTP/PostgreSQL', () => {
         where: { userId: { in: [unverified.id, u.id] } },
       }),
     ).toBe(0);
+  });
+
+  it('reports CHANGE_EMAIL_UNCONFIRMED (not SENT) when the provider does not confirm delivery', async () => {
+    const u = await actor();
+    failDelivery = true;
+    try {
+      const res = await post('request', u, {
+        currentPassword: password,
+        confirmed: true,
+      }).expect(200);
+      expect(res.body.status).toBe('CHANGE_EMAIL_UNCONFIRMED');
+      expect(res.body.bindingSecret).toEqual(expect.any(String));
+      expect(mail.filter((x) => x.email === u.email)).toHaveLength(0);
+      // The committed link stays usable in case the mail did arrive.
+      const row = await db.authEmailToken.findFirstOrThrow({ where: { userId: u.id } });
+      expect(row.revokedAt).toBeNull();
+      expect(row.usedAt).toBeNull();
+    } finally {
+      failDelivery = false;
+    }
   });
 
   it('happy path: verify does not consume; other browser refused; confirm rotates credentials atomically', async () => {

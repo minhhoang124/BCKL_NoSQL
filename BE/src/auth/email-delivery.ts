@@ -80,6 +80,20 @@ export class AuthEmailDelivery implements OnModuleDestroy {
     this.pending.add(job);
     void job.finally(() => this.pending.delete(job));
   }
+  /**
+   * Awaited delivery for flows that report the outcome to the user (password change).
+   * Returns false when the provider did not confirm the send (error or 5s timeout);
+   * the caller keeps the committed token so a mail that did arrive still works.
+   */
+  async deliver(email: string, token: string, purpose: MailPurpose, id: string): Promise<boolean> {
+    try {
+      await this.send(email, token, purpose, id);
+      return true;
+    } catch {
+      this.logger.warn('AUTH_EMAIL_DELIVERY_UNCONFIRMED');
+      return false;
+    }
+  }
   async send(email: string, token: string, purpose: MailPurpose, id: string) {
     const config = this.configured();
     const [path, label] = {

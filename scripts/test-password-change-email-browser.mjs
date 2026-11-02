@@ -57,7 +57,7 @@ const check = (name, ok, detail) => { results.push({ name, ok: Boolean(ok), ...(
 let app, vite, browser;
 try {
   const builder = Test.createTestingModule({ imports: [AppModule] });
-  builder.overrideProvider(AuthEmailDelivery).useValue({ configured: () => ({}), enqueue: (email, token, purpose, id) => mail.push({ email, token, purpose, id }) });
+  builder.overrideProvider(AuthEmailDelivery).useValue({ configured: () => ({}), enqueue: (email, token, purpose, id) => mail.push({ email, token, purpose, id }), deliver: async (email, token, purpose, id) => { mail.push({ email, token, purpose, id }); return true; } });
   app = (await builder.compile()).createNestApplication();
   configureApp(app);
   await app.listen(3393, '127.0.0.1');

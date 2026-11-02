@@ -135,3 +135,18 @@ it.each([
   vi.stubEnv(key, value);
   expect(() => new AuthEmailDelivery().configured()).toThrow();
 });
+it('deliver() reports true only when the provider confirms, false on error status or network failure', async () => {
+  const id = 'synthetic-id', token = 'A'.repeat(43);
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 200 })));
+  await expect(new AuthEmailDelivery().deliver('r@example.invalid', token, 'CHANGE_PASSWORD', id)).resolves.toBe(true);
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 502 })));
+  await expect(new AuthEmailDelivery().deliver('r@example.invalid', token, 'CHANGE_PASSWORD', id)).resolves.toBe(false);
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network down')));
+  const delivery = new AuthEmailDelivery();
+  const spy = vi.spyOn((delivery as unknown as { logger: { warn: (m: string) => void } }).logger, 'warn');
+  await expect(delivery.deliver('r@example.invalid', token, 'CHANGE_PASSWORD', id)).resolves.toBe(false);
+  // Only a constant marker is logged: never the token or the recipient.
+  expect(spy).toHaveBeenCalledWith('AUTH_EMAIL_DELIVERY_UNCONFIRMED');
+  expect(JSON.stringify(spy.mock.calls)).not.toContain(token);
+  expect(JSON.stringify(spy.mock.calls)).not.toContain('r@example.invalid');
+});

@@ -95,7 +95,7 @@ function EmailPasswordChange({ user, disabled }: { user: User; disabled: boolean
   const [current, setCurrent] = useState('');
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState<{ email: string; expiresAt: string } | null>(null);
+  const [sent, setSent] = useState<{ email: string; expiresAt: string; delivered: boolean } | null>(null);
   const [error, setError] = useState('');
   const flight = useRef(false);
   const navigate = useNavigate();
@@ -105,7 +105,8 @@ function EmailPasswordChange({ user, disabled }: { user: User; disabled: boolean
     if (flight.current || !consent) return;
     flight.current = true; setBusy(true); setError('');
     try {
-      const result = await requestPasswordChangeEmail(current, AbortSignal.timeout(15000));
+      // The request also waits for the mail provider (max 5s), so allow more than the usual 15s.
+      const result = await requestPasswordChangeEmail(current, AbortSignal.timeout(25000));
       setCurrent('');
       if (version.current !== getAuthSessionVersion()) return;
       // The browser must hold the binding before we tell the user to open the email.
@@ -113,7 +114,7 @@ function EmailPasswordChange({ user, disabled }: { user: User; disabled: boolean
         setError('Trình duyệt đang chặn lưu dữ liệu nên không thể xác nhận liên kết trong email. Hãy bật lưu trữ cho trang này rồi gửi yêu cầu mới.');
         return;
       }
-      setSent({ email: result.email, expiresAt: result.expiresAt });
+      setSent({ email: result.email, expiresAt: result.expiresAt, delivered: result.delivered });
     } catch (reason) {
       setCurrent('');
       if (reason instanceof ApiError && reason.status === 401) {
@@ -136,7 +137,9 @@ function EmailPasswordChange({ user, disabled }: { user: User; disabled: boolean
     <legend>Đổi mật khẩu</legend>
     <p>Để bảo vệ tài khoản, bạn xác nhận việc đổi mật khẩu qua email. Sau khi đổi, mọi phiên đăng nhập cũ hết hiệu lực.</p>
     {sent ? <div role="status">
-      <p>Đã tiếp nhận yêu cầu. Thư xác nhận sẽ được gửi tới <strong>{sent.email}</strong>.</p>
+      {sent.delivered
+        ? <p>Đã tiếp nhận yêu cầu và gửi thư xác nhận tới <strong>{sent.email}</strong>.</p>
+        : <p>Đã tiếp nhận yêu cầu nhưng <strong>chưa xác nhận được việc gửi thư</strong> tới <strong>{sent.email}</strong>. Hãy kiểm tra hộp thư (kể cả Thư rác) sau vài phút; nếu không có, gửi yêu cầu mới.</p>}
       <p>Mở liên kết trong thư <strong>trên trình duyệt này</strong> trước {new Date(sent.expiresAt).toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}. Nếu không nhận được thư sau vài phút, bạn có thể gửi yêu cầu mới; liên kết cũ sẽ hết hiệu lực.</p>
       <button type="button" className="market-button" onClick={() => { setSent(null); setConsent(false); }}>Gửi yêu cầu mới</button>
     </div> : <form onSubmit={event => void submit(event)}>

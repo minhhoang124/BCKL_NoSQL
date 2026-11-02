@@ -20,7 +20,7 @@ function exact(data: unknown, keys: string[]): Record<string, unknown> {
   return data as Record<string, unknown>;
 }
 
-export type PasswordChangeRequested = { email: string; expiresAt: string; bindingSecret: string };
+export type PasswordChangeRequested = { email: string; expiresAt: string; bindingSecret: string; delivered: boolean };
 export async function requestPasswordChangeEmail(currentPassword: string, signal: AbortSignal): Promise<PasswordChangeRequested> {
   const data = exact(
     await fetchApi<unknown>('/auth/password-change/request', {
@@ -28,10 +28,10 @@ export async function requestPasswordChangeEmail(currentPassword: string, signal
     }),
     ['status', 'email', 'expiresAt', 'bindingSecret'],
   );
-  if (data.status !== 'CHANGE_EMAIL_SENT' || typeof data.email !== 'string' || !/^[^@\s]{0,64}\*{3}@[^@\s]{1,255}$/.test(data.email) ||
+  if ((data.status !== 'CHANGE_EMAIL_SENT' && data.status !== 'CHANGE_EMAIL_UNCONFIRMED') || typeof data.email !== 'string' || !/^[^@\s]{0,64}\*{3}@[^@\s]{1,255}$/.test(data.email) ||
       !timestamp(data.expiresAt) || !isOpaqueSecret(data.bindingSecret))
     throw new ApiError('Phản hồi đổi mật khẩu không hợp lệ');
-  return { email: data.email, expiresAt: data.expiresAt as string, bindingSecret: data.bindingSecret };
+  return { email: data.email, expiresAt: data.expiresAt as string, bindingSecret: data.bindingSecret, delivered: data.status === 'CHANGE_EMAIL_SENT' };
 }
 
 export async function verifyPasswordChangeLink(token: string, bindingSecret: string, signal: AbortSignal): Promise<{ expiresAt: string }> {

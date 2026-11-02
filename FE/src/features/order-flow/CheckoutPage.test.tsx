@@ -148,6 +148,42 @@ describe('Checkout UI — mocked HTTP, not cross-service integration evidence', 
     expect(previewCalls()).toHaveLength(2);
     expect(api.mock.calls.some(([path]) => path === '/checkouts')).toBe(false);
   });
+  it('blocks ordering while an address is being saved, then re-checks and orders with the new address only', async () => {
+    let finishSave!: (value: unknown) => void;
+    const newAddress = { id: 99, recipientName: 'Người nhận mới', phone: '0912345678', province: 'TP.HCM', ward: 'Phường 1', district: null, addressLine: '123 Nguyễn Huệ', postalCode: null, deliveryNote: null, isDefault: false };
+    api.mockImplementation(async (path, options) => {
+      if (path === '/cart') return basket;
+      if (path === '/me/addresses') return options?.method === 'POST' ? new Promise(done => { finishSave = done; }) : addresses;
+      if (path === '/checkout/preview') return { canCheckout: true, groups: [], unavailableItems: [], totals: { total: '20000.00' } };
+      if (path === '/checkouts') return { ...receipt, replayed: false };
+      throw new Error(path);
+    });
+    show(<CheckoutPage />);
+    await placeReady();
+    expect(JSON.parse(previewCalls()[0]![1]!.body as string).addressId).toBe(3);
+    fireEvent.click(screen.getByRole('button', { name: '+ Thêm địa chỉ mới' }));
+    fireEvent.change(screen.getByLabelText('Họ và tên người nhận *'), { target: { value: 'Người nhận mới' } });
+    fireEvent.change(screen.getByLabelText('Số điện thoại *'), { target: { value: '0912345678' } });
+    fireEvent.change(screen.getByLabelText('Tỉnh / thành phố *'), { target: { value: 'TP.HCM' } });
+    fireEvent.change(screen.getByLabelText('Phường / xã *'), { target: { value: 'Phường 1' } });
+    fireEvent.change(screen.getByLabelText('Địa chỉ cụ thể *'), { target: { value: '123 Nguyễn Huệ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu địa chỉ' }));
+    // Saving: the old check no longer authorizes ordering and no new check starts.
+    await waitFor(() => expect(placeButton()).toBeDisabled());
+    fireEvent.click(placeButton());
+    await new Promise(r => setTimeout(r, 30));
+    expect(previewCalls()).toHaveLength(1);
+    expect(api.mock.calls.some(([path]) => path === '/checkouts')).toBe(false);
+    finishSave(newAddress);
+    await placeReady();
+    expect(previewCalls()).toHaveLength(2);
+    expect(JSON.parse(previewCalls()[1]![1]!.body as string).addressId).toBe(99);
+    fireEvent.click(placeButton());
+    await screen.findByText(/Đã ghi nhận đặt hàng COD/);
+    const orders = api.mock.calls.filter(([path]) => path === '/checkouts');
+    expect(orders).toHaveLength(1);
+    expect(JSON.parse(orders[0]![1]!.body as string).addressId).toBe(99);
+  });
   it('does not retry a failed automatic check by itself; "Thử lại" re-checks once', async () => {
     let failing = true;
     api.mockImplementation(async path => {
