@@ -6,3 +6,9 @@
 /docs/testing/electronics/preliminary/**/*.xlsx -text -diff -merge
 /docs/testing/electronics/ai-assisted-evaluation-protocol-proposal-2026-10-21.md text eol=lf
 /docs/testing/electronics/evaluation-lock-v2.json text eol=lf
+# Docker build inputs run inside Linux containers.
+/BE/docker-entrypoint.sh text eol=lf
+/BE/Dockerfile text eol=lf
+/FE/Dockerfile text eol=lf
+/FE/nginx.conf text eol=lf
+/.dockerignore text eol=lf
