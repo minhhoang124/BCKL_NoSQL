@@ -66,12 +66,7 @@ export function ProductDetailPage() {
           </div>
         </div>
         <div className={styles.purchaseArea}>
-          <div className={styles.guestOptions} aria-label="Phân loại sản phẩm">
-            {(product.optionGroups ?? []).map((group) => <div key={group.id}>
-              <p>{group.name}</p>
-              <div className={styles.swatchList}>{group.values.map((value) => <span className={styles.swatchChip} key={value.id}>{value.value}</span>)}</div>
-            </div>)}
-          </div>
+          {/* Options render once inside ProductPurchase: read-only chips for guests, selectors for buyers. */}
           <ProductPurchase product={product} />
         </div>
       </div>

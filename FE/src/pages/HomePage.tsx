@@ -59,8 +59,14 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
     return () => { requestId.current = Symbol(); };
   }, [initialQuery]);
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault(); setError(''); setLoading(true);
+  const submit = (event: FormEvent) => { event.preventDefault(); void runFilters(categoryId); };
+  // Category chips apply immediately; clicking the active chip clears the category filter.
+  const pickCategory = (id: string) => {
+    const next = categoryId === id ? '' : id;
+    setCategoryId(next); void runFilters(next);
+  };
+  const runFilters = async (categoryId: string) => {
+    setError(''); setLoading(true);
     const current = Symbol(); requestId.current = current;
     setTracking(undefined); setProducts([]); setNextCursor(null);
     // Price range exists only on the keyword search API; never sent to the catalog list.
@@ -108,7 +114,7 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
   return <div className={`${styles.page} ${styles.buyerSurface}`}>
     {!!categories.length && <section className={styles.categoryShelf} aria-label="Khám phá danh mục">
       <h1>Danh mục</h1>
-      <div className={styles.categoryChips}>{categories.map((category) => <button type="button" key={category.id} aria-pressed={categoryId === String(category.id)} onClick={() => setCategoryId(String(category.id))}>{category.name}</button>)}</div>
+      <div className={styles.categoryChips}>{categories.map((category) => <button type="button" key={category.id} aria-pressed={categoryId === String(category.id)} onClick={() => pickCategory(String(category.id))}>{category.name}</button>)}</div>
     </section>}
 
     <div className={styles.searchLayout}>
@@ -142,7 +148,7 @@ function HomeResults({ initialQuery }: { initialQuery: string }) {
 
       <section className={styles.results} aria-live="polite">
         <header className={styles.resultsHeader}>
-          <h2>{searched && initialQuery ? `Kết quả cho “${initialQuery}”` : searched ? 'Kết quả tìm kiếm' : 'Sản phẩm mới'}</h2>
+          <h2>{searched && initialQuery ? `Kết quả cho “${initialQuery}”` : searched ? 'Kết quả tìm kiếm' : (flatCategories.find((item) => item.id === appliedFilters?.categoryId)?.name ?? 'Sản phẩm mới')}</h2>
           {searched && <p className={styles.searchStats}>{products.length} kết quả</p>}
         </header>
         {error && <p className={styles.error} role="alert">{error}</p>}

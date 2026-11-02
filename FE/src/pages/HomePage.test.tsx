@@ -131,3 +131,18 @@ it('"Xóa bộ lọc" resets the filters without searching', async () => {
   expect(screen.getByLabelText('Còn hàng')).not.toBeChecked();
   expect(list).toHaveBeenCalledTimes(calls);
 });
+
+it('applies a category chip immediately and clears it on a second click', async () => {
+  const list = vi.spyOn(marketplaceApi, 'publicProducts').mockResolvedValue({ items: [product(9)], nextCursor: null });
+  render(<MemoryRouter><HomePage /></MemoryRouter>);
+  const chip = await screen.findByRole('button', { name: 'Electronics' });
+  fireEvent.click(chip);
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith({ limit: 24, categoryId: 1 }));
+  expect(chip).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByLabelText('Danh mục')).toHaveValue('1');
+  expect(screen.getByRole('heading', { name: 'Electronics' })).toBeInTheDocument();
+  fireEvent.click(chip);
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith({ limit: 24 }));
+  expect(chip).toHaveAttribute('aria-pressed', 'false');
+  expect(await screen.findByRole('heading', { name: 'Sản phẩm mới' })).toBeInTheDocument();
+});
