@@ -17,6 +17,7 @@ export function SellerLayout() {
         <nav className={styles.scNav}>
           <span className={styles.scNavGroup}>Sản phẩm</span>
           <NavLink to="/seller?tab=products" end>Sản phẩm của tôi</NavLink>
+          <NavLink to="/seller?tab=editor" end>Thêm sản phẩm mới</NavLink>
           <span className={styles.scNavGroup}>Đơn hàng</span>
           <NavLink to="/seller/orders" className={link}>Đơn hàng của cửa hàng</NavLink>
           <NavLink to="/seller/aftersales" className={link}>Xử lý hậu mãi</NavLink>

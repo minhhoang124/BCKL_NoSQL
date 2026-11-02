@@ -42,17 +42,27 @@ export function SellerDashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
-  type Tab = 'store' | 'products' | 'dashboard';
+  // 'products' = product list only; 'editor' = separate add/edit screen (no long scroll past the list).
+  type Tab = 'store' | 'products' | 'editor' | 'dashboard';
+  const isTab = (value: string | null): value is Tab => value === 'store' || value === 'products' || value === 'editor' || value === 'dashboard';
   const [params, setParams] = useSearchParams();
   const requested = params.get('tab');
-  const [tab, setTabState] = useState<Tab>(requested === 'products' || requested === 'dashboard' ? requested : 'store');
+  const [tab, setTabState] = useState<Tab>(isTab(requested) ? requested : 'store');
   // Links from the shared seller sidebar (?tab=) switch the section; buttons keep the URL in sync.
   useEffect(() => {
-    if (requested === 'store' || requested === 'products' || requested === 'dashboard') setTabState(requested);
+    if (isTab(requested)) setTabState(requested);
   }, [requested]);
-  const setTab = (next: Tab) => {
+  // ?tab=editor&product=<id> reopens the same product after a reload.
+  const requestedProduct = useRef(params.get('tab') === 'editor' ? Number(params.get('product')) || null : null);
+  const setTab = (next: Tab, productId?: number | null) => {
     setTabState(next);
-    setParams((current) => { const copy = new URLSearchParams(current); copy.set('tab', next); return copy; }, { replace: true });
+    setParams((current) => {
+      const copy = new URLSearchParams(current);
+      copy.set('tab', next);
+      if (next === 'editor' && productId) copy.set('product', String(productId)); else copy.delete('product');
+      return copy;
+    }, { replace: true });
+    window.scrollTo?.({ top: 0 });
   };
   const [activeStep, setActiveStep] = useState<StepKey>('info');
   const [error, setError] = useState('');
@@ -81,6 +91,12 @@ export function SellerDashboardPage() {
     );
   };
 
+  const openEditor = (product: Product | null) => {
+    if (pending.current) return;
+    selectProduct(product);
+    setTab('editor', product?.id ?? null);
+  };
+
   const leafCategories = useMemo(
     () => flat(categories).filter((item) => item.isLeaf),
     [categories],
@@ -106,6 +122,11 @@ export function SellerDashboardPage() {
     setSelected((current) =>
       current ? productRows.find((item) => item.id === current.id) ?? null : null,
     );
+    if (requestedProduct.current) {
+      const reopened = productRows.find((item) => item.id === requestedProduct.current);
+      requestedProduct.current = null;
+      if (reopened) selectProduct(reopened);
+    }
   };
 
   useEffect(() => {
@@ -189,6 +210,7 @@ export function SellerDashboardPage() {
           setSelected(null);
           setDraft(emptyDraft);
           setActiveStep('info');
+          setTab('products');
         },
       );
     } else {
@@ -196,6 +218,7 @@ export function SellerDashboardPage() {
         async () => {
           const created = await marketplaceApi.createProduct(body);
           setSelected(created);
+          setTab('editor', created.id);
           setDraft({
             name: created.name,
             description: created.description ?? '',
@@ -272,8 +295,11 @@ export function SellerDashboardPage() {
         </div>
         <nav className={styles.scNav}>
           <span className={styles.scNavGroup}>Sản phẩm</span>
-          <button type="button" className={tab === 'products' ? styles.scNavActive : undefined} onClick={() => setTab('products')}>
+          <button type="button" className={tab === 'products' || (tab === 'editor' && selected) ? styles.scNavActive : undefined} onClick={() => setTab('products')}>
             Sản phẩm ({products.length})
+          </button>
+          <button type="button" className={tab === 'editor' && !selected ? styles.scNavActive : undefined} disabled={busy} onClick={() => openEditor(null)}>
+            Thêm sản phẩm mới
           </button>
           <span className={styles.scNavGroup}>Đơn hàng</span>
           <Link to="/seller/orders">Đơn hàng của cửa hàng</Link>
@@ -335,8 +361,7 @@ export function SellerDashboardPage() {
               </form>
             )}
           </section>
-        ) : (
-          <>
+        ) : tab === 'products' ? (
             <section className={styles.scCard}>
               <div className={styles.scCardHead}>
                 <div>
@@ -345,7 +370,7 @@ export function SellerDashboardPage() {
                 </div>
                 <div className={styles.scToolbar}>
                   <input type="search" aria-label="Tìm sản phẩm của tôi" placeholder="Tìm theo tên sản phẩm" value={query} onChange={(e) => setQuery(e.target.value)} />
-                  <button type="button" className={styles.scPrimary} disabled={busy} onClick={() => selectProduct(null)}>+ Thêm sản phẩm mới</button>
+                  <button type="button" className={styles.scPrimary} disabled={busy} onClick={() => openEditor(null)}>+ Thêm sản phẩm mới</button>
                 </div>
               </div>
               <div className={styles.scTableWrap}>
@@ -374,7 +399,7 @@ export function SellerDashboardPage() {
                           </td>
                           <td>
                             <div className={styles.scRowActions}>
-                              <button type="button" disabled={busy} className={styles.scLinkBtn} onClick={() => selectProduct(item)}>Chỉnh sửa</button>
+                              <button type="button" disabled={busy} className={styles.scLinkBtn} onClick={() => openEditor(item)}>Chỉnh sửa</button>
                               {(item.moderationStatus === 'NOT_SUBMITTED' || item.moderationStatus === 'REJECTED') && (
                                 <button type="button" disabled={busy} className={styles.scLinkBtn} aria-label={`Gửi duyệt ${item.name}`}
                                   onClick={() => run(() => marketplaceApi.submitProduct(item.id), 'Đã gửi duyệt.')}>Gửi duyệt</button>
@@ -396,10 +421,11 @@ export function SellerDashboardPage() {
                 {products.length > 0 && visibleProducts.length === 0 && <p className={styles.scEmpty}>Không có sản phẩm khớp “{query.trim()}”.</p>}
               </div>
             </section>
-
+        ) : (
             <section className={styles.scCard} aria-label="Soạn sản phẩm">
               <div className={styles.scCardHead}>
                 <div>
+                  <button type="button" className={styles.scBackLink} disabled={busy} onClick={() => setTab('products')}>← Danh sách sản phẩm</button>
                   <h2>{selected ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}</h2>
                   {selected && (
                     <p className={styles.scMuted}>
@@ -446,7 +472,7 @@ export function SellerDashboardPage() {
                     <textarea name="description" rows={6} disabled={busy} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
                   </label>
                   <div className={styles.scActionsRow}>
-                    <button type="button" className={styles.scSecondary} disabled={busy} onClick={() => selectProduct(null)}>Tạo mới / bỏ chỉnh sửa</button>
+                    {selected && <button type="button" className={styles.scSecondary} disabled={busy} onClick={() => openEditor(null)}>Tạo mới / bỏ chỉnh sửa</button>}
                     <button className={styles.scPrimary} disabled={busy}>Lưu sản phẩm</button>
                   </div>
                 </form>
@@ -546,7 +572,6 @@ export function SellerDashboardPage() {
                 </div>
               )}
             </section>
-          </>
         )}
       </div>
     </div>

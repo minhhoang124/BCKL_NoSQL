@@ -1482,6 +1482,8 @@
 .scPrimary:disabled, .scSecondary:disabled, .scLinkBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 .scSecondaryLink { padding: 8px 16px; border: 1px solid #d9d9d9; border-radius: 4px; color: #20242b; text-decoration: none; }
 .scLinkBtn { padding: 0; border: 0; background: none; color: #0a5bc4; font: inherit; cursor: pointer; text-align: left; }
+.scBackLink { display: inline-block; margin-bottom: 6px; padding: 0; border: 0; background: none; color: #0a5bc4; font: inherit; font-size: 13px; cursor: pointer; }
+.scBackLink:disabled { color: #9aa1ab; cursor: not-allowed; }
 .scLinkBtn:hover:not(:disabled) { text-decoration: underline; }
 
 .scTableWrap { overflow-x: auto; padding: 0 24px 16px; }
@@ -1495,6 +1497,8 @@
 .scProductCell strong { display: block; font-weight: 500; overflow-wrap: anywhere; }
 .scProductCell small { display: block; margin-top: 2px; color: #69717c; font-size: 12px; }
 .scRowActions { display: grid; gap: 6px; justify-items: start; }
+.scRowActions button { white-space: nowrap; }
+.scTable th, .scTable td:nth-child(2), .scTable td:nth-child(3), .scTable td:nth-child(4) { white-space: nowrap; }
 .scStatus { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 12px; background: #f2f3f5; color: #20242b; }
 .scToneOk { background: #eaf5ef; color: #1d6b42; }
 .scToneBad { background: #fff0ed; color: #b42318; }

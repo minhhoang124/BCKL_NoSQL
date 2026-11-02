@@ -157,6 +157,8 @@ try {
   }
   const s = await page(seller.email, "/seller");
   await s.getByRole("button", { name: /^Sản phẩm \(/ }).click();
+  // Product list and the add/edit form are separate screens.
+  await s.getByRole("button", { name: "+ Thêm sản phẩm mới", exact: true }).click();
   const form = s.getByRole("form", { name: "Sản phẩm" });
   await form.getByLabel("Tên", { exact: true }).fill(marker);
   await form

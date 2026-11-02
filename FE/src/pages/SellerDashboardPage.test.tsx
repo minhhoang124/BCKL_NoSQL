@@ -17,6 +17,7 @@ beforeEach(() => {
   vi.spyOn(marketplaceApi, 'brands').mockResolvedValue([{ id: 1, name: 'Brand 1', slug: 'brand-1' }]);
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+const backToList = () => fireEvent.click(screen.getByRole('button', { name: '← Danh sách sản phẩm' }));
 async function open() {
   render(<MemoryRouter><SellerDashboardPage /></MemoryRouter>);
   fireEvent.click(await screen.findByRole('button', { name: 'Sản phẩm (2)' }));
@@ -28,13 +29,18 @@ describe('Seller product editing', () => {
     await open();
     expect(screen.getByLabelText('Danh mục')).toHaveValue('1');
     expect(screen.getByLabelText('Thương hiệu')).toHaveValue('1');
+    backToList();
     fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh sửa' })[1]);
     expect(screen.getByLabelText('Tên')).toHaveValue('Product 2');
     expect(screen.getByLabelText('Danh mục')).toHaveValue('2');
     expect(screen.getByLabelText('Thương hiệu')).toHaveValue('');
     fireEvent.click(screen.getByRole('button', { name: 'Lưu sản phẩm' }));
     await waitFor(() => expect(save).toHaveBeenCalledWith(2, { name: 'Product 2', description: 'Description 2', categoryId: 2, brandId: null }));
-    await waitFor(() => expect(screen.getByLabelText('Tên')).toHaveValue(''));
+    // A successful edit returns to the product list; the next "add" starts from a clean form.
+    expect(await screen.findByRole('heading', { name: 'Sản phẩm của tôi' })).toBeInTheDocument();
+    expect(screen.queryByRole('form', { name: 'Sản phẩm' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Thêm sản phẩm mới' }));
+    expect(screen.getByLabelText('Tên')).toHaveValue('');
     expect(screen.getByLabelText('Danh mục')).toHaveValue('');
     expect(marketplaceApi.myProducts).toHaveBeenCalledTimes(2);
   });
@@ -42,6 +48,7 @@ describe('Seller product editing', () => {
   it('preserves selection and edits when the save fails', async () => {
     vi.spyOn(marketplaceApi, 'updateProduct').mockRejectedValue(new ApiError('Save failed', 400));
     await open();
+    backToList();
     fireEvent.click(screen.getAllByRole('button', { name: 'Chỉnh sửa' })[1]);
     fireEvent.change(screen.getByLabelText('Tên'), { target: { value: 'Edited B' } });
     fireEvent.click(screen.getByRole('button', { name: 'Lưu sản phẩm' }));
@@ -62,15 +69,33 @@ describe('Seller product editing', () => {
     fireEvent.submit(form);
     expect(save).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Lưu sản phẩm' })).toBeDisabled();
-    expect(screen.getAllByRole('button', { name: 'Chỉnh sửa' })[1]).toBeDisabled();
+    expect(screen.getByRole('button', { name: '← Danh sách sản phẩm' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Thêm sản phẩm mới' })).toBeDisabled();
     await act(async () => resolve(products[0]));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Lưu sản phẩm' })).toBeEnabled());
+    expect(await screen.findByRole('heading', { name: 'Sản phẩm của tôi' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Thêm sản phẩm mới' })).toBeEnabled();
   });
 
   it('clears all fields explicitly when returning to create mode', async () => {
     await open();
     fireEvent.click(screen.getByRole('button', { name: 'Tạo mới / bỏ chỉnh sửa' }));
     for (const label of ['Tên', 'Danh mục', 'Thương hiệu', 'Mô tả']) expect(screen.getByLabelText(label)).toHaveValue('');
+  });
+  it('keeps the product list and the add/edit form on separate screens', async () => {
+    render(<MemoryRouter><SellerDashboardPage /></MemoryRouter>);
+    fireEvent.click(await screen.findByRole('button', { name: 'Sản phẩm (2)' }));
+    expect(screen.getByRole('heading', { name: 'Sản phẩm của tôi' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Soạn sản phẩm' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '+ Thêm sản phẩm mới' }));
+    expect(screen.getByRole('heading', { name: 'Thêm sản phẩm mới' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Sản phẩm của tôi' })).not.toBeInTheDocument();
+    backToList();
+    expect(screen.getByRole('heading', { name: 'Sản phẩm của tôi' })).toBeInTheDocument();
+  });
+  it('reopens the edited product from ?tab=editor&product=', async () => {
+    render(<MemoryRouter initialEntries={['/seller?tab=editor&product=2']}><SellerDashboardPage /></MemoryRouter>);
+    await waitFor(() => expect(screen.getByLabelText('Tên')).toHaveValue('Product 2'));
+    expect(screen.getByRole('heading', { name: 'Chỉnh sửa sản phẩm' })).toBeInTheDocument();
   });
   it('blocks later steps until a changed category is saved (attributes follow the saved category)', async () => {
     await open();
