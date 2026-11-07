@@ -128,3 +128,11 @@ Runbook `docs/architecture/redis-cart.md`: tạo PostgreSQL mới phải dùng R
 ## Review Codex lượt 3 (07/11): ĐẠT trong phạm vi NoSQL #24
 
 Codex đóng F1–F3 (gồm lỗi helper R15/R15b), đối chiếu SHA-256 `cart-redis.e2e-spec.ts` 74f6cb77… và timeline ba lượt QA; không chạy lại suite. Chấp nhận điều kiện vận hành "PostgreSQL mới phải đi với Redis sạch/index riêng" cho môi trường QA cô lập; namespace trong code để cho bước triển khai dùng chung hạ tầng. Ngoài lượt: full E2E 88 file, nghiệm thu giao diện ba vai trò với cờ bật. Commit/push/merge chờ owner duyệt; main giữ theo mốc nộp khóa luận.
+
+## Commit và nghiệm thu Buyer UI (07/11)
+
+Owner duyệt commit local `f4afc86` (24 file, chưa push). Nghiệm thu Buyer qua Chrome thật với `USE_REDIS_CART=true` trên `BE/dist` build từ `f4afc86` (source sạch), DB QA mới `bckl_order_resolution_test_drivers_20261031_1794033877707` (role app DML), Redis QA db11 trống lúc bắt đầu: `machine-local/acceptance-20261031/nosql24-buyer-ui-1794033877707/browser/report.json` 12/12 PASS, 15 ảnh. UI: thêm A/B từ trang sản phẩm, sửa A=2, xóa B, địa chỉ, đặt COD A×2, hủy đơn. HTTP (ghi riêng): gửi lại checkout cùng khóa + cùng payload → 200 replayed, cùng checkoutId/order; gửi lại lệnh hủy cùng khóa + payload → 200. Tồn kho A: trước mua 5, sau mua 3, sau gửi lại 3, sau hủy 5, sau gửi lại hủy 5; ledger CHECKOUT_DECREMENT:-2 + CANCELLATION_RESTORE:2; 1 order, 1 checkout, 1 order command; cart_items 0 suốt luồng. Lượt `…741922` FAIL ở bước hủy do driver đoán sai route `/orders/:id` (đúng là `/account/orders/:id`); lượt `…829842` 12/12 nhưng ảnh 06 chụp lúc giỏ đang tải — thêm assert UI trước khi chụp rồi chạy lại. Ảnh 13 full-page có header dính giữa trang (hiệu ứng chụp full-page với header sticky).
+
+## Chốt (07/11)
+
+Codex xác nhận nghiệm thu luồng Buyer trên `f4afc86` (đối chiếu report 12/12 và 15 ảnh, không chạy lại Chrome). Trạng thái NoSQL #24: DONE_LOCAL cho giỏ hàng Redis và luồng Buyer đã kiểm; chưa push/merge; không vào main trước mốc nộp 08/11. Còn mở, hạng mục riêng: nghiệm thu đủ ba vai trò với cờ bật, full E2E 88 file, namespace key Redis trong code (hiện chặn bằng runbook). Môi trường QA giữ lại: container `bckl_qa_redis_nosql24`, image `nosql24-backend:smoke`, `nosql24-web:smoke`.

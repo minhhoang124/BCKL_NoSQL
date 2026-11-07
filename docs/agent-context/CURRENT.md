@@ -122,3 +122,7 @@ Owner xác nhận Claude là leader/coordinator hiện hành; Codex/Antigravity 
 ## Checkpoint 01/11 — commit local sau CN3-YC2
 
 Owner bật Docker và yêu cầu thực hiện tiếp. CN3-YC2 DONE_LOCAL: E2E PG 20/20, Codex review 0 CONFIRMED còn mở, Chrome Demo Seller/Admin PASS (desktop + mobile). WIP được commit local theo nhóm: `d038a6c` (BE-UX), `59a1330` (FE UX), `ad6efa9` (CN3-YC2), kèm commit tài liệu. **Chưa push**, chưa CI/staging. Demo đang chạy với `BE/dist` mới. Việc tiếp theo trong kế hoạch: VNPay IPN online (B3, cần owner duyệt tunnel/TOS), đổi mật khẩu qua email (B4, tùy chọn), tài liệu đối chiếu đề cương cho Word (B6).
+
+## Checkpoint 07/11 — NoSQL #24 giỏ hàng Redis (nhánh `feat/nosql-24-redis-cart`)
+
+Owner duyệt phương án A v3; Claude viết, Codex review đối kháng 3 vòng (F1 lệnh cũ sau no-op, F2/R15 helper, F3 timeout — đã đóng). Commit local `f4afc86` (ahead 1, **chưa push/merge**, không vào main trước 08/11). Cờ `USE_REDIS_CART=false` mặc định giữ giỏ PostgreSQL. Bằng chứng: unit 2174, Redis e2e 17/17, PG-mode e2e 177 + 279, receipt-migration 24 (role DDL), CLI 15/15, compose 18/18, Chrome checkout 4/4 và Buyer UI 12/12 (`machine-local/acceptance-20261031/nosql24-buyer-ui-1794033877707`). Runbook `docs/architecture/redis-cart.md`: tạo PostgreSQL mới phải dùng Redis sạch/index riêng. Chi tiết: `handoffs/2026-11-07-NOSQL24-redis-cart-design-v3.md`. Còn mở: nghiệm thu ba vai trò với cờ bật, full E2E 88 file.
