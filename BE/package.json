@@ -24,6 +24,7 @@
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "prisma:seed": "prisma db seed",
     "products:import": "node scripts/import-products.mjs",
+    "cart:redis-admin": "node dist/cart/redis-cart-admin.cli.js",
     "qa:address-cart:guards": "node --test scripts/address-cart-handoff.test.mjs",
     "qa:aftersales:guards": "node --test scripts/aftersales-qa.test.mjs"
   },
@@ -45,6 +46,7 @@
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
     "google-auth-library": "^11.3.1",
+    "ioredis": "^5.11.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.23.0",

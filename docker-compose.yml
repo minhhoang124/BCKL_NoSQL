@@ -17,6 +17,24 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis cart (NoSQL #24), used only when USE_REDIS_CART=true. AOF everysec may lose up
+  # to ~1s of cart edits on a crash; noeviction makes a full Redis fail writes instead of
+  # silently dropping carts.
+  redis:
+    image: redis:7.4-alpine
+    container_name: bckl_redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   # Application containers are opt-in so `docker compose up -d postgres` keeps working:
   #   docker compose --profile app up -d --build
   # Required in the shell or a local .env (never commit values): JWT_ACCESS_SECRET, JWT_REFRESH_SECRET.
@@ -32,6 +50,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-klcn_ecommerce}?schema=public
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
@@ -46,6 +66,9 @@ services:
       ORDER_AUTO_COMPLETE_ENABLED: ${ORDER_AUTO_COMPLETE_ENABLED:-false}
       SELLER_ONBOARDING_ENABLED: ${SELLER_ONBOARDING_ENABLED:-true}
       VNPAY_SANDBOX_ENABLED: ${VNPAY_SANDBOX_ENABLED:-false}
+      USE_REDIS_CART: ${USE_REDIS_CART:-false}
+      REDIS_URL: ${REDIS_URL_IN_COMPOSE:-redis://redis:6379}
+      REDIS_CART_TTL_SECONDS: ${REDIS_CART_TTL_SECONDS:-604800}
     ports:
       - "${BACKEND_HOST_PORT:-3001}:3001"
     volumes:
@@ -73,5 +96,7 @@ services:
 volumes:
   pgdata:
     name: bckl_pgdata
+  redisdata:
+    name: bckl_redisdata
   uploads:
     name: bckl_uploads

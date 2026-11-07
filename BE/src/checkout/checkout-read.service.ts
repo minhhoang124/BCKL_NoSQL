@@ -1,11 +1,11 @@
-import { HttpException, Injectable, Logger } from '@nestjs/common';
+import { HttpException, Injectable, Logger, Optional } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { canActAsBuyer } from '../auth/buyer-access.js';
 import { PrismaService } from '../prisma.service.js';
+import { CartLineStore } from '../cart/cart-line-store.js';
 import {
   displayVariants,
   isPublicListing,
-  listingInclude,
 } from '../product/product-public-policy.js';
 import { checkoutError } from './checkout-error.js';
 import { checkedLineTotal, checkedSubtotal } from './checkout-money.js';
@@ -53,12 +53,20 @@ export interface CheckoutPreview {
 @Injectable()
 export class CheckoutReadService {
   private readonly logger = new Logger(CheckoutReadService.name);
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly store: CartLineStore;
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() store?: CartLineStore,
+  ) {
+    this.store = store ?? new CartLineStore();
+  }
 
   preview(buyerId: number, input: unknown): Promise<CheckoutPreview> {
     const request = normalizeCheckoutRequest(input,true);
     if(request.paymentProvider==='VNPAY')vnpayConfig();
-    return this.snapshot(buyerId, async (tx) => {
+    // Redis mode: versioned read around the PostgreSQL snapshot (no shared snapshot).
+    return this.store.versioned(buyerId, (cartSnapshot) =>
+      this.snapshot(buyerId, async (tx) => {
       const address = await tx.userAddress.findFirst({
         where: { id: request.addressId, userId: buyerId },
         select: { id: true },
@@ -69,21 +77,19 @@ export class CheckoutReadService {
           'ADDRESS_NOT_FOUND',
           'Không tìm thấy địa chỉ.',
         );
-      // Filter by the actor before loading any cart data; never inspect another cart.
-      const cart = await tx.cart.findUnique({
-        where: { userId: buyerId },
-        select: {
-          items: {
-            where: {
-              variantId: { in: request.items.map((item) => item.variantId) },
-            },
-            include: {
-              variant: { include: { product: { include: listingInclude } } },
-            },
-          },
-        },
-      });
-      const rows = new Map(cart?.items.map((row) => [row.variantId, row]));
+      // Only the actor's own cart is read; never inspect another cart.
+      const lines = await this.store.lines(
+        tx,
+        buyerId,
+        cartSnapshot,
+        request.items.map((item) => item.variantId),
+      );
+      const rows = new Map(
+        (await this.store.withVariants(tx, lines)).map((row) => [
+          row.variantId,
+          row,
+        ]),
+      );
       // Validate the entire selected subset before assembling public display fields.
       for (const item of request.items) {
         const row = rows.get(item.variantId);
@@ -99,7 +105,7 @@ export class CheckoutReadService {
             'CART_CHANGED',
             'Giỏ hàng đã thay đổi. Vui lòng tải lại.',
           );
-        if (row.variant.product.store.sellerId === buyerId)
+        if (row.variant?.product.store.sellerId === buyerId)
           throw checkoutError(
             409,
             'SELF_PURCHASE_FORBIDDEN',
@@ -120,11 +126,14 @@ export class CheckoutReadService {
       };
       const groups = new Map<number, CheckoutPreview['groups'][number]>();
       for (const item of request.items) {
-        const product = rows.get(item.variantId)!.variant.product;
-        const selected = displayVariants(product).find(
-          (variant) => variant.id === item.variantId,
-        );
-        if (!isPublicListing(product, categories) || !selected) {
+        // Redis has no FK: a missing variant is reported as unavailable.
+        const product = rows.get(item.variantId)!.variant?.product;
+        const selected =
+          product &&
+          displayVariants(product).find(
+            (variant) => variant.id === item.variantId,
+          );
+        if (!product || !isPublicListing(product, categories) || !selected) {
           result.canCheckout = false;
           result.unavailableItems.push({
             variantId: item.variantId,
@@ -184,7 +193,8 @@ export class CheckoutReadService {
           total: subtotal,
         };
       return result;
-    });
+      }),
+    );
   }
 
   lookup(buyerId: number, keyInput: unknown) {

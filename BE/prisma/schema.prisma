@@ -162,6 +162,7 @@ model User {
   productStatusActions    ProductStatusHistory[]   @relation("ProductStatusActor")
   addresses               UserAddress[]
   cart                    Cart?
+  cartConsumedLines       CartConsumedLine[]
   checkouts               Checkout[]
   orders                  Order[]                  @relation("OrderBuyer")
   orderStatusActions      OrderStatusHistory[]     @relation("OrderStatusActor")
@@ -947,6 +948,22 @@ model CartItem {
   @@map("cart_items")
 }
 
+// Redis cart fence (USE_REDIS_CART=true): a Redis cart line is effective only while
+// its seq is greater than consumedSeq. Written in the same transaction as the order.
+model CartConsumedLine {
+  buyerId     Int
+  variantId   Int
+  consumedSeq BigInt
+  checkoutId  Int
+  updatedAt   DateTime @default(now())
+  buyer       User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  checkout    Checkout @relation(fields: [checkoutId, buyerId], references: [id, buyerId], onDelete: Restrict)
+
+  @@id([buyerId, variantId])
+  @@index([checkoutId, buyerId])
+  @@map("cart_consumed_lines")
+}
+
 model Checkout {
   id             Int            @id @default(autoincrement())
   buyerId        Int
@@ -959,7 +976,8 @@ model Checkout {
   createdAt      DateTime       @default(now())
   completedAt    DateTime?
   buyer          User           @relation(fields: [buyerId], references: [id], onDelete: Restrict)
-  orders         Order[]
+  orders            Order[]
+  consumedCartLines CartConsumedLine[]
 
   @@unique([id, buyerId])
   @@unique([buyerId, idempotencyKey])

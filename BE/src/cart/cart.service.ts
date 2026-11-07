@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { canActAsBuyer } from '../auth/buyer-access.js';
@@ -14,14 +14,19 @@ import {
 } from '../product/transaction-conflict.js';
 import type { CartItemResponseDto, CartResponseDto } from './cart.dto.js';
 import { cartError } from './cart-http.js';
+import { CartLineStore, type RedisCartSnapshot } from './cart-line-store.js';
 
 @Injectable()
 export class CartService {
   private readonly maxQuantity: number;
+  private readonly store: CartLineStore;
   constructor(
     private readonly prisma: PrismaService,
     config: ConfigService,
+    @Optional() store?: CartLineStore,
   ) {
+    // Without an injected store (unit tests) the PostgreSQL cart is used.
+    this.store = store ?? new CartLineStore();
     this.maxQuantity = Number(config.get<string>('CART_MAX_QUANTITY', '99'));
     if (
       !Number.isSafeInteger(this.maxQuantity) ||
@@ -33,12 +38,15 @@ export class CartService {
 
   list(userId: number) {
     // All policy and display reads see one snapshot, including category ancestors.
-    return this.prisma.$transaction(
-      async (tx) => {
-        await this.actor(tx, userId);
-        return this.read(tx, userId);
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    // Redis mode: Redis is read before and re-checked after this snapshot (versioned).
+    return this.store.versioned(userId, (snapshot) =>
+      this.prisma.$transaction(
+        async (tx) => {
+          await this.actor(tx, userId);
+          return this.read(tx, userId, snapshot);
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+      ),
     );
   }
 
@@ -79,25 +87,8 @@ export class CartService {
         );
       if (quantity > variant.stock)
         throw cartError(409, 'INSUFFICIENT_STOCK', 'Tồn kho hiện không đủ.');
-      const cart = await tx.cart.upsert({
-        where: { userId },
-        create: { userId },
-        update: {},
-        select: { id: true },
-      });
-      const existing = await tx.cartItem.findUnique({
-        where: { cartId_variantId: { cartId: cart.id, variantId } },
-      });
-      // A replay of absolute quantity does not mutate even updatedAt.
-      if (!existing)
-        await tx.cartItem.create({
-          data: { cartId: cart.id, variantId, quantity },
-        });
-      else if (existing.quantity !== quantity)
-        await tx.cartItem.update({
-          where: { id: existing.id },
-          data: { quantity },
-        });
+      // Absolute quantity; a replay does not mutate (PostgreSQL: not even updatedAt).
+      await this.store.put(tx, userId, variantId, quantity);
       return this.read(tx, userId);
     });
   }
@@ -105,7 +96,7 @@ export class CartService {
   async remove(userId: number, variantId: number): Promise<void> {
     await this.write(userId, async (tx) => {
       // Missing cart/item is already the requested end state; do not create rows.
-      await tx.cartItem.deleteMany({ where: { variantId, cart: { userId } } });
+      await this.store.remove(tx, userId, variantId);
     });
   }
 
@@ -153,29 +144,27 @@ export class CartService {
     throw new Error('Unreachable cart retry');
   }
 
+  /**
+   * Writers call this under the buyer lock without a snapshot (Redis is read fresh);
+   * list() passes the versioned snapshot.
+   */
   private async read(
     tx: Prisma.TransactionClient,
     userId: number,
+    snapshot: RedisCartSnapshot | null = null,
   ): Promise<CartResponseDto> {
-    const cart = await tx.cart.findUnique({
-      where: { userId },
-      include: {
-        items: {
-          orderBy: { id: 'asc' },
-          include: {
-            variant: { include: { product: { include: listingInclude } } },
-          },
-        },
-      },
-    });
+    const items = await this.store.withVariants(
+      tx,
+      await this.store.lines(tx, userId, snapshot),
+    );
     const result: CartResponseDto = {
       groups: [],
       unavailableItems: [],
-      lineCount: cart?.items.length ?? 0,
+      lineCount: items.length,
       totalQuantity: 0,
       purchasableSubtotal: '0.00',
     };
-    if (!cart?.items.length) return result;
+    if (!items.length) return result;
     const categories = await tx.category.findMany({
       select: { id: true, parentId: true, isActive: true },
     });
@@ -188,10 +177,11 @@ export class CartService {
       }
     >();
     let subtotal = new Prisma.Decimal(0);
-    for (const row of cart.items) {
+    for (const row of items) {
       result.totalQuantity += row.quantity;
-      const product = row.variant.product;
+      const product = row.variant?.product;
       if (
+        !product ||
         product.store.sellerId === userId ||
         !isPublicListing(product, categories)
       ) {

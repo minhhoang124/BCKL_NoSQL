@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OrderActorType, Prisma } from '@prisma/client';
 import { canActAsBuyer } from '../auth/buyer-access.js';
@@ -8,6 +8,7 @@ import { vnpayConfig } from '../payment/vnpay-config.js';
 import { vnpayAmount } from '../payment/vnpay-input.js';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma.service.js';
+import { CartLineStore, type CartLine } from '../cart/cart-line-store.js';
 import {
   displayVariants,
   isPublicListing,
@@ -43,12 +44,15 @@ export class CheckoutCreateService {
   private readonly transactionMs: number;
   private readonly waitMs: number;
   private readonly deadlineMs: number;
+  private readonly store: CartLineStore;
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: SearchOutboxService,
     private readonly rate: CheckoutCreateRate,
     config: ConfigService,
+    @Optional() store?: CartLineStore,
   ) {
+    this.store = store ?? new CartLineStore();
     this.statementMs = checkoutConfigInt(
       config,
       'CHECKOUT_STATEMENT_TIMEOUT_MS',
@@ -81,6 +85,8 @@ export class CheckoutCreateService {
     for (let attempt = 0; attempt < 3; attempt++) {
       const remaining = deadline - Date.now();
       if (remaining <= this.waitMs) break;
+      // Lines consumed by this attempt; Redis cleanup runs only after a commit.
+      const consumed: CartLine[] = [];
       try {
         const result = await this.prisma.$transaction(
           async (tx) => {
@@ -110,6 +116,7 @@ export class CheckoutCreateService {
                 buyerId_idempotencyKey: { buyerId, idempotencyKey: key },
               },
             });
+            // Receipt replay precedes any cart read: works after TTL/Redis outage.
             const replay = resolveCheckoutReplay(stored, buyerId, requestHash);
             if (replay) return replay;
             if(canonicalRequest.paymentProvider==='VNPAY')vnpayConfig();
@@ -124,6 +131,7 @@ export class CheckoutCreateService {
               key,
               requestHash,
               canonicalRequest,
+              consumed,
             );
           },
           {
@@ -135,6 +143,7 @@ export class CheckoutCreateService {
         this.logger.log(
           `Checkout committed: buyerId=${buyerId} checkoutId=${result.checkoutId} replayed=${result.replayed}`,
         );
+        if (!result.replayed) await this.store.cleanup(buyerId, consumed);
         return result;
       } catch (error) {
         // Raw SELECT ... FOR UPDATE can expose SQLSTATE through P2010 rather
@@ -215,6 +224,7 @@ export class CheckoutCreateService {
     key: string,
     requestHash: string,
     request: CheckoutRequestInput,
+    consumed: CartLine[],
   ) {
     const address = await tx.userAddress.findFirst({
       where: { id: request.addressId, userId: buyerId },
@@ -234,18 +244,14 @@ export class CheckoutCreateService {
       await tx.$queryRaw(
         Prisma.sql`SELECT id FROM products WHERE id IN (${Prisma.join(productIds)}) ORDER BY id FOR UPDATE`,
       );
-    const cart = await tx.cart.findUnique({
-      where: { userId: buyerId },
-      include: {
-        items: {
-          where: { variantId: { in: variantIds } },
-          include: {
-            variant: { include: { product: { include: listingInclude } } },
-          },
-        },
-      },
-    });
-    const rows = new Map(cart?.items.map((row) => [row.variantId, row]));
+    // Under the buyer lock: Redis mode reads Redis now and filters by the fence.
+    const cartLines = await this.store.lines(tx, buyerId, null, variantIds);
+    const rows = new Map(
+      (await this.store.withVariants(tx, cartLines)).map((row) => [
+        row.variantId,
+        row,
+      ]),
+    );
     // Check all cart membership/ownership before public errors, as preview does.
     for (const item of request.items) {
       const row = rows.get(item.variantId);
@@ -261,7 +267,7 @@ export class CheckoutCreateService {
           'CART_CHANGED',
           'Giỏ hàng đã thay đổi. Vui lòng tải lại.',
         );
-      if (row.variant.product.store.sellerId === buyerId)
+      if (row.variant?.product.store.sellerId === buyerId)
         throw checkoutError(
           409,
           'SELF_PURCHASE_FORBIDDEN',
@@ -273,11 +279,11 @@ export class CheckoutCreateService {
     });
     const lines = request.items.map((item) => {
       const row = rows.get(item.variantId)!;
-      const product = row.variant.product;
-      const variant = displayVariants(product).find(
-        (v) => v.id === item.variantId,
-      );
-      if (!isPublicListing(product, categories) || !variant)
+      // Redis has no FK: a missing variant is simply not available.
+      const product = row.variant?.product;
+      const variant =
+        product && displayVariants(product).find((v) => v.id === item.variantId);
+      if (!product || !isPublicListing(product, categories) || !variant)
         throw checkoutError(
           409,
           'VARIANT_NOT_AVAILABLE',
@@ -460,10 +466,10 @@ export class CheckoutCreateService {
         product.version,
       );
     }
-    const removed = await tx.cartItem.deleteMany({
-      where: { cartId: cart!.id, variantId: { in: variantIds } },
-    });
-    if (removed.count !== lines.length)
+    // PostgreSQL: delete rows, count must match. Redis: write the fence in this
+    // transaction; a second checkout of the same line then sees it as consumed.
+    const purchased = lines.map((line) => line.row);
+    if (!(await this.store.consume(tx, buyerId, checkout.id, purchased)))
       throw checkoutError(
         409,
         'CART_CHANGED',
@@ -479,6 +485,7 @@ export class CheckoutCreateService {
         receiptJson: validReceipt as unknown as Prisma.InputJsonValue,
       },
     });
+    consumed.push(...purchased);
     return { ...validReceipt, replayed: false as const };
   }
 }
