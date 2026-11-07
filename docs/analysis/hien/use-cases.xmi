@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmi:version="2.1"
+  xmlns:xmi="http://schema.omg.org/spec/XMI/2.1"
+  xmlns:uml="http://www.eclipse.org/uml2/3.0.0/UML">
+  <uml:Model xmi:id="model_cntt_klcn201" name="CNTT-KLCN201 Thuong mai dien tu">
+
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_business" name="Use Case Nghiep vu">
+      <packagedElement xmi:type="uml:Actor" xmi:id="actor_buyer" name="Người mua"/>
+      <packagedElement xmi:type="uml:Actor" xmi:id="actor_seller_business" name="Người bán"/>
+      <packagedElement xmi:type="uml:Actor" xmi:id="actor_admin_business" name="Quản trị viên"/>
+
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_discover" name="Tìm và chọn sản phẩm"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_buy" name="Mua hàng và theo dõi đơn"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_buyer_chat" name="Trao đổi với người bán"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_review" name="Đánh giá sau mua"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_catalog" name="Quản lý hàng hóa"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_fulfill" name="Thực hiện đơn hàng"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_seller_chat" name="Trao đổi với người mua"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_revenue" name="Theo dõi doanh thu"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_govern" name="Quản lý hoạt động sàn"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_accounts" name="Kiểm soát tài khoản"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_moderate" name="Kiểm duyệt sản phẩm"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="buc_stats" name="Theo dõi thống kê"/>
+
+      <packagedElement xmi:type="uml:Association" xmi:id="ba01" memberEnd="ba01_a ba01_u">
+        <ownedEnd xmi:id="ba01_a" type="actor_buyer" association="ba01"/>
+        <ownedEnd xmi:id="ba01_u" type="buc_discover" association="ba01"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba02" memberEnd="ba02_a ba02_u">
+        <ownedEnd xmi:id="ba02_a" type="actor_buyer" association="ba02"/>
+        <ownedEnd xmi:id="ba02_u" type="buc_buy" association="ba02"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba03" memberEnd="ba03_a ba03_u">
+        <ownedEnd xmi:id="ba03_a" type="actor_buyer" association="ba03"/>
+        <ownedEnd xmi:id="ba03_u" type="buc_review" association="ba03"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba04" memberEnd="ba04_a ba04_u">
+        <ownedEnd xmi:id="ba04_a" type="actor_seller_business" association="ba04"/>
+        <ownedEnd xmi:id="ba04_u" type="buc_catalog" association="ba04"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba05" memberEnd="ba05_a ba05_u">
+        <ownedEnd xmi:id="ba05_a" type="actor_seller_business" association="ba05"/>
+        <ownedEnd xmi:id="ba05_u" type="buc_fulfill" association="ba05"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba06" memberEnd="ba06_a ba06_u">
+        <ownedEnd xmi:id="ba06_a" type="actor_seller_business" association="ba06"/>
+        <ownedEnd xmi:id="ba06_u" type="buc_revenue" association="ba06"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba07" memberEnd="ba07_a ba07_u">
+        <ownedEnd xmi:id="ba07_a" type="actor_admin_business" association="ba07"/>
+        <ownedEnd xmi:id="ba07_u" type="buc_govern" association="ba07"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba08" memberEnd="ba08_a ba08_u">
+        <ownedEnd xmi:id="ba08_a" type="actor_admin_business" association="ba08"/>
+        <ownedEnd xmi:id="ba08_u" type="buc_accounts" association="ba08"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba09" memberEnd="ba09_a ba09_u">
+        <ownedEnd xmi:id="ba09_a" type="actor_admin_business" association="ba09"/>
+        <ownedEnd xmi:id="ba09_u" type="buc_moderate" association="ba09"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba10" memberEnd="ba10_a ba10_u">
+        <ownedEnd xmi:id="ba10_a" type="actor_admin_business" association="ba10"/>
+        <ownedEnd xmi:id="ba10_u" type="buc_stats" association="ba10"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba11" memberEnd="ba11_a ba11_u">
+        <ownedEnd xmi:id="ba11_a" type="actor_buyer" association="ba11"/>
+        <ownedEnd xmi:id="ba11_u" type="buc_buyer_chat" association="ba11"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="ba12" memberEnd="ba12_a ba12_u">
+        <ownedEnd xmi:id="ba12_a" type="actor_seller_business" association="ba12"/>
+        <ownedEnd xmi:id="ba12_u" type="buc_seller_chat" association="ba12"/>
+      </packagedElement>
+    </packagedElement>
+
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_system" name="Use Case He thong Rut gon">
+      <packagedElement xmi:type="uml:Actor" xmi:id="actor_user" name="User"/>
+      <packagedElement xmi:type="uml:Actor" xmi:id="actor_seller" name="Seller"/>
+      <packagedElement xmi:type="uml:Actor" xmi:id="actor_admin" name="Admin"/>
+      <packagedElement xmi:type="uml:Actor" xmi:id="actor_ai" name="Search Service"/>
+
+      <packagedElement xmi:type="uml:UseCase" xmi:id="suc_auth" name="Quản lý tài khoản &amp; xác thực"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="suc_search" name="Quản lý tra cứu sản phẩm"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="suc_cart" name="Quản lý giỏ hàng"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="suc_order" name="Quản lý đơn mua hàng"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="suc_review" name="Quản lý đánh giá &amp; phản hồi"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="suc_seller_catalog" name="Quản lý cửa hàng và sản phẩm"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="suc_seller_order" name="Quản lý đơn hàng và doanh thu"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="suc_admin_manage" name="Quản lý danh mục &amp; kiểm duyệt"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="suc_admin_monitor" name="Quản lý thống kê hệ thống"/>
+      <packagedElement xmi:type="uml:UseCase" xmi:id="suc_chat" name="Trao đổi với cửa hàng"/>
+
+      <packagedElement xmi:type="uml:Association" xmi:id="sa01" memberEnd="sa01a sa01u"><ownedEnd xmi:id="sa01a" type="actor_user" association="sa01"/><ownedEnd xmi:id="sa01u" type="suc_auth" association="sa01"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa02" memberEnd="sa02a sa02u"><ownedEnd xmi:id="sa02a" type="actor_user" association="sa02"/><ownedEnd xmi:id="sa02u" type="suc_search" association="sa02"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa03" memberEnd="sa03a sa03u"><ownedEnd xmi:id="sa03a" type="actor_user" association="sa03"/><ownedEnd xmi:id="sa03u" type="suc_cart" association="sa03"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa04" memberEnd="sa04a sa04u"><ownedEnd xmi:id="sa04a" type="actor_user" association="sa04"/><ownedEnd xmi:id="sa04u" type="suc_order" association="sa04"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa05" memberEnd="sa05a sa05u"><ownedEnd xmi:id="sa05a" type="actor_user" association="sa05"/><ownedEnd xmi:id="sa05u" type="suc_review" association="sa05"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa06" memberEnd="sa06a sa06u"><ownedEnd xmi:id="sa06a" type="actor_seller" association="sa06"/><ownedEnd xmi:id="sa06u" type="suc_auth" association="sa06"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa07" memberEnd="sa07a sa07u"><ownedEnd xmi:id="sa07a" type="actor_seller" association="sa07"/><ownedEnd xmi:id="sa07u" type="suc_seller_catalog" association="sa07"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa08" memberEnd="sa08a sa08u"><ownedEnd xmi:id="sa08a" type="actor_seller" association="sa08"/><ownedEnd xmi:id="sa08u" type="suc_seller_order" association="sa08"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa09" memberEnd="sa09a sa09u"><ownedEnd xmi:id="sa09a" type="actor_admin" association="sa09"/><ownedEnd xmi:id="sa09u" type="suc_auth" association="sa09"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa10" memberEnd="sa10a sa10u"><ownedEnd xmi:id="sa10a" type="actor_admin" association="sa10"/><ownedEnd xmi:id="sa10u" type="suc_admin_manage" association="sa10"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa11" memberEnd="sa11a sa11u"><ownedEnd xmi:id="sa11a" type="actor_admin" association="sa11"/><ownedEnd xmi:id="sa11u" type="suc_admin_monitor" association="sa11"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa12" memberEnd="sa12a sa12u"><ownedEnd xmi:id="sa12a" type="actor_ai" association="sa12"/><ownedEnd xmi:id="sa12u" type="suc_search" association="sa12"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa13" memberEnd="sa13a sa13u"><ownedEnd xmi:id="sa13a" type="actor_ai" association="sa13"/><ownedEnd xmi:id="sa13u" type="suc_seller_catalog" association="sa13"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa14" memberEnd="sa14a sa14u"><ownedEnd xmi:id="sa14a" type="actor_user" association="sa14"/><ownedEnd xmi:id="sa14u" type="suc_chat" association="sa14"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa15" memberEnd="sa15a sa15u"><ownedEnd xmi:id="sa15a" type="actor_seller" association="sa15"/><ownedEnd xmi:id="sa15u" type="suc_chat" association="sa15"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa16" memberEnd="sa16a sa16u"><ownedEnd xmi:id="sa16a" type="actor_seller" association="sa16"/><ownedEnd xmi:id="sa16u" type="suc_review" association="sa16"/></packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="sa17" memberEnd="sa17a sa17u"><ownedEnd xmi:id="sa17a" type="actor_admin" association="sa17"/><ownedEnd xmi:id="sa17u" type="suc_review" association="sa17"/></packagedElement>
+    </packagedElement>
+  </uml:Model>
+</xmi:XMI>

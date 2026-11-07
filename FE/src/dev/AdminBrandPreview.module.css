@@ -1,0 +1,5 @@
+.banner { color-scheme: light; background: #20242b; color: #fff; padding: 16px 24px; font: 13px/1.55 'Segoe UI', Arial, sans-serif; }
+.banner label { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+.banner select { background: #fff; color: #20242b; min-height: 44px; font: inherit; border-radius: 8px; border: 1px solid #b9bec7; padding: 8px 12px; max-width: 100%; }
+.banner p { margin: 8px 0 0; color: #e0e3e8; }
+@media (max-width: 600px) { .banner { padding: 14px; } .banner label, .banner select { width: 100%; } }

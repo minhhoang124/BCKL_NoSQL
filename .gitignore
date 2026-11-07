@@ -36,6 +36,9 @@ logs/
 datasets/raw/
 datasets/processed/
 artifacts/
+!AI_CLIP/artifacts/
+AI_CLIP/artifacts/*
+!AI_CLIP/artifacts/.gitkeep
 models/
 *.npy
 *.npz
@@ -48,3 +51,7 @@ models/
 *.docx
 *.pdf
 
+# Reviewed SRS handoff explicitly shared by the thesis team
+!docs/analysis/hien/srs-v3.docx
+
+*.tsbuildinfo

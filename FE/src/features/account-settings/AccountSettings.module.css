@@ -1,0 +1,81 @@
+.settings {
+  margin-top: 0.25rem;
+  padding: 1.5rem 1.65rem;
+  border: 1px solid #e3e6e9;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #20242b;
+  box-shadow: 0 4px 14px rgba(32, 36, 43, 0.04);
+}
+
+.settings h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.2rem;
+  color: #20242b;
+}
+
+.settings fieldset {
+  border: 1px solid #e3e6e9;
+  border-radius: 12px;
+  padding: 1.15rem 1.25rem;
+  margin: 1rem 0;
+  background: #f6f7f8;
+  min-width: 0;
+}
+
+.settings legend {
+  padding: 0 0.45rem;
+  color: var(--market-brand);
+  font-weight: 700;
+}
+
+.settings form,
+.settings label {
+  display: grid;
+  gap: 0.65rem;
+  font-weight: 600;
+  color: #20242b;
+}
+
+.settings input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-weight: 400;
+  border: 1px solid #cfd4d9;
+  border-radius: 9px;
+  padding: 0.72rem 0.85rem;
+  background: #ffffff;
+  color: #20242b;
+}
+
+.settings input:focus {
+  outline: none;
+  border-color: var(--market-brand);
+  box-shadow: 0 0 0 3px rgba(214, 59, 11, 0.12);
+}
+
+.settings button {
+  margin-top: 0.45rem;
+  white-space: normal;
+  justify-self: start;
+}
+
+.settings p {
+  line-height: 1.6;
+  color: #4b525c;
+}
+
+.settings fieldset:disabled {
+  opacity: 0.65;
+}
+
+.settings .consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.settings .consent input {
+  width: auto;
+  margin-top: 0.2rem;
+}

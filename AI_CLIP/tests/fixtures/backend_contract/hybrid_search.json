@@ -1,0 +1,12 @@
+{
+  "query": "tai nghe bluetooth chống ồn",
+  "filters": {
+    "categoryIds": [12],
+    "brandIds": [8],
+    "minPrice": 500000,
+    "maxPrice": 2000000,
+    "inStock": true
+  },
+  "topK": 20,
+  "candidateK": 100
+}

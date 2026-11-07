@@ -1,0 +1,114 @@
+{
+  "source": "AI_CLIP/app/schemas/search.py",
+  "sourceSha256Lf": "fe2564a39402c1168970393d714e2bb23b9048276dd74fc6983e4d9e3b2ee5e1",
+  "routerSha256Lf": "a5c024a264bb9d21416d446ac52dce12e713ea1b6f8f72e6a6382a5aa957a74f",
+  "serialization": "by_alias=True, exclude_none=True (existing image router)",
+  "schema": {
+    "$defs": {
+      "SearchQuery": {
+        "properties": {
+          "type": {
+            "enum": [
+              "text",
+              "image",
+              "hybrid_text"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Text"
+          },
+          "topK": {
+            "title": "Topk",
+            "type": "integer"
+          },
+          "candidateK": {
+            "title": "Candidatek",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "topK",
+          "candidateK"
+        ],
+        "title": "SearchQuery",
+        "type": "object"
+      },
+      "SearchResult": {
+        "additionalProperties": false,
+        "properties": {
+          "productId": {
+            "title": "Productid",
+            "type": "integer"
+          },
+          "rank": {
+            "minimum": 1,
+            "title": "Rank",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "productId",
+          "rank",
+          "score"
+        ],
+        "title": "SearchResult",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "query": {
+        "$ref": "#/$defs/SearchQuery"
+      },
+      "items": {
+        "items": {
+          "$ref": "#/$defs/SearchResult"
+        },
+        "title": "Items",
+        "type": "array"
+      },
+      "responseTimeMs": {
+        "minimum": 0,
+        "title": "Responsetimems",
+        "type": "number"
+      }
+    },
+    "required": [
+      "query",
+      "items",
+      "responseTimeMs"
+    ],
+    "title": "SearchResponse",
+    "type": "object"
+  },
+  "example": {
+    "query": {
+      "type": "image",
+      "topK": 10,
+      "candidateK": 30
+    },
+    "items": [
+      {
+        "productId": 125,
+        "rank": 1,
+        "score": 0.91
+      }
+    ],
+    "responseTimeMs": 1.5
+  }
+}

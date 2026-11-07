@@ -1,0 +1,227 @@
+.page {
+  max-width: 1344px;
+  margin: 0 auto;
+  padding: 16px 0;
+  color: var(--market-ink);
+  font: 400 15px/1.5 var(--market-font);
+  overflow-wrap: anywhere;
+}
+
+.page nav {
+  margin-block: 0.4rem 0.85rem;
+}
+
+.page nav a {
+  color: var(--market-brand);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.page nav a:hover {
+  text-decoration: underline;
+}
+
+.scopeIntro {
+  margin: 0 0 1rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid #e3e6e9;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #4b525c;
+  font-size: 0.88rem;
+}
+
+.statusTabStrip {
+  display: flex;
+  overflow-x: auto;
+  border: 1px solid #e3e6e9;
+  border-radius: 12px;
+  background: #ffffff;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 2px 8px rgba(32, 36, 43, 0.03);
+}
+
+.statusTab {
+  flex: 1 0 auto;
+  padding: 0.8rem 1rem;
+  border-bottom: 3px solid transparent;
+  color: #4b525c;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.statusTab:hover {
+  color: var(--market-brand);
+  background: var(--market-soft);
+}
+
+.statusTabActive {
+  border-bottom-color: var(--market-brand);
+  color: var(--market-brand);
+  background: var(--market-soft);
+  font-weight: 800;
+}
+
+.filterToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.page label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+  font-weight: 650;
+  color: #20242b;
+}
+
+.page select,
+.page > button,
+.content > button,
+.filterToolbar button {
+  min-height: 42px;
+  max-width: 100%;
+  padding: 0.55rem 0.9rem;
+  margin-block: 0.35rem;
+  background: #ffffff;
+  color: #20242b;
+  border: 1px solid #cfd4d9;
+  border-radius: 9px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.page > button:hover:not(:disabled),
+.content > button:hover:not(:disabled),
+.filterToolbar button:hover:not(:disabled) {
+  border-color: var(--market-brand);
+  color: var(--market-brand);
+  background: var(--market-soft);
+}
+
+.page :focus-visible {
+  outline: 3px solid var(--market-brand);
+  outline-offset: 3px;
+}
+
+.accountGrid {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.content {
+  min-width: 0;
+}
+
+.accountSidebar {
+  background: #ffffff;
+  border: 1px solid #e3e6e9;
+  border-radius: 14px;
+  padding: 20px 14px;
+  box-shadow: 0 4px 14px rgba(32, 36, 43, 0.04);
+}
+
+.accountSidebar h2,
+.accountSidebar strong,
+.accountSidebar > p {
+  margin: 0 10px 8px;
+  display: block;
+}
+
+.accountSidebar h2 {
+  font-size: 1.1rem;
+  color: #20242b;
+}
+
+.accountSidebar > p {
+  color: #69717c;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.accountSidebar nav {
+  display: grid;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.accountSidebar a {
+  display: block;
+  padding: 10px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #20242b;
+  font-weight: 600;
+}
+
+.accountSidebar a:hover {
+  background: #f6f7f8;
+  color: var(--market-brand);
+}
+
+.accountSidebar a[aria-current] {
+  background: var(--market-soft);
+  border: 1px solid var(--market-soft-border);
+  color: var(--market-brand);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .accountGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .accountSidebar nav {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 12px 0 0;
+  }
+  .accountSidebar {
+    padding: 16px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 0.75rem;
+  }
+  .page label {
+    display: grid;
+  }
+}
+/* Tabs are real buttons now (keyboard + screen reader); keep the tab look. */
+button.statusTab {
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  background: transparent;
+  font-family: inherit;
+}
+button.statusTab:focus-visible {
+  outline: 2px solid var(--market-brand);
+  outline-offset: -2px;
+}
+
+.page { font-size: 14px; background: #f5f5f5; min-width: 0; }
+.statusTabStrip { max-width: 100%; min-width: 0; border-color: #e8e8e8; border-radius: 4px; box-shadow: none; }
+.accountSidebar { border-color: #e8e8e8; border-radius: 4px; box-shadow: none; }
+.page .chatLink { display: inline-flex; justify-self: start; padding: 8px 14px; border: 1px solid #e8e8e8; border-radius: 4px; background: #fff; color: #555; text-decoration: none; }
+.content > button.quietRefresh { min-height: 32px; padding: 4px 10px; border: 0; background: transparent; color: #69717c; font-size: 12px; font-weight: 400; border-radius: 4px; display: block; margin-left: auto; }
+
+/* UI-F: inside AccountLayout / SellerLayout, which own width and sidebar. */
+.page { max-width: none; margin: 0; padding: 0; font-size: 14px; min-width: 0; }
+.backNav { margin: 0 0 8px; }
+.backNav a { font-weight: 500; }

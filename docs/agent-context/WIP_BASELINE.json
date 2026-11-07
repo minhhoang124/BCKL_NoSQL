@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-10-30T15:20:11.3847275+07:00",
+  "meaning": "Baseline captured for MEM-01 only; does not bind historical test runs to this fingerprint",
+  "head": "6ea22d74e5088472cc4d270dac799b50c8210da0",
+  "files": [
+    {
+      "path": "FE/src/features/order-readiness/orderPolicy.ts",
+      "sha256": "69675adef27fb251b75fadbbda07687dcf05ae6b54da0e35646904aae5863aa4"
+    },
+    {
+      "path": "FE/src/features/order-recovery/BuyerCommandReview.module.css",
+      "sha256": "a0984967a17558ce44bf047bb4c6a2f73eaabcaeeff9cac41e1494cc29c1a498"
+    },
+    {
+      "path": "FE/src/features/order-recovery/SellerOrderWorkspace.test.tsx",
+      "sha256": "4a2701018f2146462ac66f3d98b95a24fc5fa4711811763025b39ba83e32c975"
+    },
+    {
+      "path": "FE/src/features/order-recovery/SellerOrderWorkspace.tsx",
+      "sha256": "93a241941cfe2774c6207e62140c532d43f052cbe2df8a22928089d3ce59601d"
+    },
+    {
+      "path": "FE/src/features/order-recovery/sellerOrderWorkflow.ts",
+      "sha256": "56a884f36f0fb9e864be19bef399000167a49c477ae879929191d0cd3650d239"
+    },
+    {
+      "path": "FE/src/routes/AppRouter.tsx",
+      "sha256": "7cf79da386c199cbaf8751f208f284aaabb8b28f44ca243c5000ca323c2ba510"
+    },
+    {
+      "path": "FE/src/features/order-recovery/SellerClosePage.tsx",
+      "sha256": "9ddf61e5234fa763be384bb7b4470ea407049c003416d4d6b05d470003ae74fb"
+    },
+    {
+      "path": "FE/src/features/order-recovery/sellerCloseClient.ts",
+      "sha256": "64c0632ba6c13bcd7d96f1f28a5c82b74b36a9df4abfcfd76ae154dca5b0a706"
+    }
+  ]
+}

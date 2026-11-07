@@ -1,0 +1,108 @@
+.workspace {
+  background: #fff;
+  color: #263244;
+  border: 1px solid #e3e6e9;
+  border-radius: 12px;
+  padding: clamp(16px, 3vw, 28px);
+  min-width: 0;
+}
+.workspace h1 {
+  font-size: 1.5rem;
+  margin-top: 0;
+}
+.workspace p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.fields {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 20px 0;
+  max-width: 640px;
+}
+.fields label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.fields input:not([type="checkbox"]),
+.fields select,
+.fields textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  border: 1px solid #8a919b;
+  border-radius: 6px;
+  padding: 10px;
+  font: inherit;
+}
+.workspace button {
+  border: 1px solid #cfd4d9;
+  background: #eef0f2;
+  color: #172033;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.workspace button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.workspace :focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}
+.workspace li {
+  margin: 8px 0;
+}
+.workspace ul {
+  padding-left: 20px;
+}
+
+.searchSection {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f6f7f8;
+  border: 1px solid #e3e6e9;
+  border-radius: 12px;
+}
+
+.searchSection h2 {
+  font-size: 1.15rem;
+  margin: 0 0 12px;
+  color: #20242b;
+}
+
+.searchResultsBox {
+  margin-top: 14px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #cfd4d9;
+  border-radius: 8px;
+}
+
+.searchResultsBox ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.searchResultsBox li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f6f7f8;
+  border-radius: 6px;
+  border: 1px solid #e3e6e9;
+}

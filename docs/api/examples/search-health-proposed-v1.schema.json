@@ -1,0 +1,566 @@
+{
+  "$defs": {
+    "Capabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "semanticText": {
+          "$ref": "#/$defs/Capability"
+        },
+        "imageSearch": {
+          "$ref": "#/$defs/Capability"
+        },
+        "hybridText": {
+          "$ref": "#/$defs/Capability"
+        }
+      },
+      "required": [
+        "semanticText",
+        "imageSearch",
+        "hybridText"
+      ],
+      "title": "Capabilities",
+      "type": "object"
+    },
+    "Capability": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "READY",
+            "DEGRADED",
+            "UNAVAILABLE",
+            "UNKNOWN"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reasonCodes": {
+          "items": {
+            "enum": [
+              "NOT_CHECKED",
+              "SNAPSHOT_STALE",
+              "PROBE_BUSY",
+              "PROBE_TIMEOUT",
+              "CLOCK_SKEW",
+              "MODEL_NOT_LOADED",
+              "ENCODE_FAILED",
+              "INVALID_EMBEDDING",
+              "DIMENSION_MISMATCH",
+              "INDEX_NOT_LOADED",
+              "INDEX_SEARCH_FAILED",
+              "INVALID_INDEX_RESULT",
+              "ES_UNREACHABLE",
+              "ES_TIMEOUT",
+              "ES_AUTH_FAILED",
+              "ES_INDEX_MISSING",
+              "ES_MAPPING_INVALID",
+              "ES_QUERY_FAILED",
+              "RRF_CONFIG_INVALID"
+            ],
+            "type": "string"
+          },
+          "title": "Reasoncodes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "reasonCodes"
+      ],
+      "title": "Capability",
+      "type": "object"
+    },
+    "ClipComponent": {
+      "additionalProperties": false,
+      "properties": {
+        "loaded": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Loaded"
+        },
+        "status": {
+          "enum": [
+            "READY",
+            "DEGRADED",
+            "UNAVAILABLE",
+            "UNKNOWN"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "checkedAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Checkedat"
+        },
+        "expiresAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expiresat"
+        },
+        "lastSuccessAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Lastsuccessat"
+        },
+        "durationMs": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Durationms"
+        },
+        "errorCode": {
+          "anyOf": [
+            {
+              "enum": [
+                "NOT_CHECKED",
+                "SNAPSHOT_STALE",
+                "PROBE_BUSY",
+                "PROBE_TIMEOUT",
+                "CLOCK_SKEW",
+                "MODEL_NOT_LOADED",
+                "ENCODE_FAILED",
+                "INVALID_EMBEDDING",
+                "DIMENSION_MISMATCH",
+                "INDEX_NOT_LOADED",
+                "INDEX_SEARCH_FAILED",
+                "INVALID_INDEX_RESULT",
+                "ES_UNREACHABLE",
+                "ES_TIMEOUT",
+                "ES_AUTH_FAILED",
+                "ES_INDEX_MISSING",
+                "ES_MAPPING_INVALID",
+                "ES_QUERY_FAILED",
+                "RRF_CONFIG_INVALID"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Errorcode"
+        },
+        "warningCodes": {
+          "items": {
+            "enum": [
+              "EMPTY_INDEX",
+              "ES_REPLICA_WARNING"
+            ],
+            "type": "string"
+          },
+          "title": "Warningcodes",
+          "type": "array"
+        },
+        "dimension": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Dimension"
+        }
+      },
+      "required": [
+        "loaded",
+        "status",
+        "checkedAt",
+        "expiresAt",
+        "lastSuccessAt",
+        "durationMs",
+        "errorCode",
+        "warningCodes",
+        "dimension"
+      ],
+      "title": "ClipComponent",
+      "type": "object"
+    },
+    "Components": {
+      "additionalProperties": false,
+      "properties": {
+        "clipImage": {
+          "$ref": "#/$defs/ClipComponent"
+        },
+        "clipText": {
+          "$ref": "#/$defs/ClipComponent"
+        },
+        "faiss": {
+          "$ref": "#/$defs/FaissComponent"
+        },
+        "elasticsearch": {
+          "$ref": "#/$defs/ElasticsearchComponent"
+        }
+      },
+      "required": [
+        "clipImage",
+        "clipText",
+        "faiss",
+        "elasticsearch"
+      ],
+      "title": "Components",
+      "type": "object"
+    },
+    "ElasticsearchComponent": {
+      "additionalProperties": false,
+      "properties": {
+        "loaded": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Loaded"
+        },
+        "status": {
+          "enum": [
+            "READY",
+            "DEGRADED",
+            "UNAVAILABLE",
+            "UNKNOWN"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "checkedAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Checkedat"
+        },
+        "expiresAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expiresat"
+        },
+        "lastSuccessAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Lastsuccessat"
+        },
+        "durationMs": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Durationms"
+        },
+        "errorCode": {
+          "anyOf": [
+            {
+              "enum": [
+                "NOT_CHECKED",
+                "SNAPSHOT_STALE",
+                "PROBE_BUSY",
+                "PROBE_TIMEOUT",
+                "CLOCK_SKEW",
+                "MODEL_NOT_LOADED",
+                "ENCODE_FAILED",
+                "INVALID_EMBEDDING",
+                "DIMENSION_MISMATCH",
+                "INDEX_NOT_LOADED",
+                "INDEX_SEARCH_FAILED",
+                "INVALID_INDEX_RESULT",
+                "ES_UNREACHABLE",
+                "ES_TIMEOUT",
+                "ES_AUTH_FAILED",
+                "ES_INDEX_MISSING",
+                "ES_MAPPING_INVALID",
+                "ES_QUERY_FAILED",
+                "RRF_CONFIG_INVALID"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Errorcode"
+        },
+        "warningCodes": {
+          "items": {
+            "enum": [
+              "EMPTY_INDEX",
+              "ES_REPLICA_WARNING"
+            ],
+            "type": "string"
+          },
+          "title": "Warningcodes",
+          "type": "array"
+        },
+        "indexExists": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Indexexists"
+        },
+        "readable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Readable"
+        }
+      },
+      "required": [
+        "loaded",
+        "status",
+        "checkedAt",
+        "expiresAt",
+        "lastSuccessAt",
+        "durationMs",
+        "errorCode",
+        "warningCodes",
+        "indexExists",
+        "readable"
+      ],
+      "title": "ElasticsearchComponent",
+      "type": "object"
+    },
+    "FaissComponent": {
+      "additionalProperties": false,
+      "properties": {
+        "loaded": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Loaded"
+        },
+        "status": {
+          "enum": [
+            "READY",
+            "DEGRADED",
+            "UNAVAILABLE",
+            "UNKNOWN"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "checkedAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Checkedat"
+        },
+        "expiresAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expiresat"
+        },
+        "lastSuccessAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Lastsuccessat"
+        },
+        "durationMs": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Durationms"
+        },
+        "errorCode": {
+          "anyOf": [
+            {
+              "enum": [
+                "NOT_CHECKED",
+                "SNAPSHOT_STALE",
+                "PROBE_BUSY",
+                "PROBE_TIMEOUT",
+                "CLOCK_SKEW",
+                "MODEL_NOT_LOADED",
+                "ENCODE_FAILED",
+                "INVALID_EMBEDDING",
+                "DIMENSION_MISMATCH",
+                "INDEX_NOT_LOADED",
+                "INDEX_SEARCH_FAILED",
+                "INVALID_INDEX_RESULT",
+                "ES_UNREACHABLE",
+                "ES_TIMEOUT",
+                "ES_AUTH_FAILED",
+                "ES_INDEX_MISSING",
+                "ES_MAPPING_INVALID",
+                "ES_QUERY_FAILED",
+                "RRF_CONFIG_INVALID"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Errorcode"
+        },
+        "warningCodes": {
+          "items": {
+            "enum": [
+              "EMPTY_INDEX",
+              "ES_REPLICA_WARNING"
+            ],
+            "type": "string"
+          },
+          "title": "Warningcodes",
+          "type": "array"
+        },
+        "dimension": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Dimension"
+        },
+        "vectorCount": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Vectorcount"
+        }
+      },
+      "required": [
+        "loaded",
+        "status",
+        "checkedAt",
+        "expiresAt",
+        "lastSuccessAt",
+        "durationMs",
+        "errorCode",
+        "warningCodes",
+        "dimension",
+        "vectorCount"
+      ],
+      "title": "FaissComponent",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1,
+      "title": "Schemaversion",
+      "type": "integer"
+    },
+    "generatedAt": {
+      "title": "Generatedat",
+      "type": "string"
+    },
+    "components": {
+      "$ref": "#/$defs/Components"
+    },
+    "capabilities": {
+      "$ref": "#/$defs/Capabilities"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "components",
+    "capabilities"
+  ],
+  "title": "SearchHealthSnapshot",
+  "type": "object"
+}

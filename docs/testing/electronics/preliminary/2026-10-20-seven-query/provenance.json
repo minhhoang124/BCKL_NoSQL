@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "status": "PRELIMINARY_INTERNAL_REVIEW_ONLY",
+  "analysisId": "preliminary-fully-judged-7q-20261020",
+  "computedAtUtc": "2026-10-20T12:58:07.136519+00:00",
+  "reportDate": "2026-10-20",
+  "selectedQueryIds": [
+    "TEXT-V1-001",
+    "TEXT-V1-002",
+    "TEXT-V1-004",
+    "TEXT-V1-005",
+    "TEXT-V1-006",
+    "TEXT-V1-010",
+    "TEXT-V1-011"
+  ],
+  "excludedQueryIds": [
+    "TEXT-V1-003",
+    "TEXT-V1-007",
+    "TEXT-V1-008",
+    "TEXT-V1-009",
+    "TEXT-V1-012"
+  ],
+  "selectionRule": "All86 corpus products have numeric final labels; selection is based only on label completeness, not retrieval scores.",
+  "groundTruth": {
+    "pairs": 1032,
+    "finalLabels": 975,
+    "unjudged": 57,
+    "evaluatedQueries": 7,
+    "evaluatedPairs": 602
+  },
+  "primaryRelevanceThreshold": 2,
+  "sensitivityRelevanceThreshold": 1,
+  "kValues": [
+    5,
+    10,
+    20
+  ],
+  "systems": [
+    "keyword",
+    "semantic",
+    "hybrid"
+  ],
+  "precisionDenominator": "K, even when fewer than K results or zero results are returned",
+  "recallDenominator": "All relevant products among86 products of a completely judged query",
+  "aggregation": "Unweighted macro average across the same7 completely judged queries",
+  "undefinedRecall": "null/n.a.; excluded from macro recall with valid-query count reported",
+  "judgmentsAiAssisted": true,
+  "independentDoubleAnnotation": false,
+  "prior754Approvals": "Dat reported Hien confirmation in conversation; not a new direct signature from Hien",
+  "new29Labels": "Dat-authorized AI-assisted adjudication, not Hien approval",
+  "eligibleForOfficialPublication": false,
+  "officialPublicationGateExecuted": false,
+  "officialPublicationLockChanged": false,
+  "retrievalRerun": false,
+  "runtimeCodeChanged": false,
+  "originalRetrievalRunManifest": {
+    "schemaVersion": 1,
+    "runId": "pr8-v1b-20261001T051304Z",
+    "createdAt": "2026-10-01T05:13:05.942384+00:00",
+    "environment": "macOS-26.6.2-arm64; Python 3.12.14; Elasticsearch 8.19.21; torch 2.14.0; faiss 1.12.0; sentence-transformers 5.7.0",
+    "searchCommit": "c4fb2eb9055163c3e089a45ddb6dd8102023856e",
+    "imageModel": "sentence-transformers/clip-ViT-B-32",
+    "imageModelRevision": "327ab6726d33c0e22f920c83f2ff9e4bd38ca37f",
+    "textModel": "sentence-transformers/clip-ViT-B-32-multilingual-v1",
+    "textModelRevision": "58edf8cada9e398793dca955574a48cbb7f18be2",
+    "indexSnapshotSha256": "4ED73C2EA81C4B3B93EA0EFE94F75B1C462885DA6BAB155679D709CA4BB27740",
+    "corpusSha256": "A5D00F36E85DB067DCD1EEBC1BC1E5B8CF3E44B4EDF4EE68D79F2C73E63D987B",
+    "corpusCount": 86,
+    "derivedCorpusSha256": "56DFB60CAC1F3CF1210D60B61A7B2E1C4F4718C01D18272EF5761D6E97AD5324",
+    "mappingSha256": "C705EF318320CA0A0C8765E5AD2C321A5C57763C77A908CF417BC0070B46D359",
+    "queriesSha256": "7043239F72031FC0B3AF43B20359A376CA123BCBBF6935C1F43FE2B96D94F0AB",
+    "rrfK": 60,
+    "candidateK": 100,
+    "topK": 20,
+    "systems": [
+      "hybrid",
+      "keyword",
+      "semantic"
+    ],
+    "resultArtifacts": {
+      "keyword.jsonl": "062FE0FBB2AAB311BA10695191DC755C1C60E28DB5D98388A3683643A45D42C7",
+      "semantic.jsonl": "43B48F171922167AED389422CD39FE43A052BF286CDD5CCA5B5A3CC1CDE75397",
+      "hybrid.jsonl": "4B2D7D758FFE5F4A7DCB46F8DF54D3C4F62F7D2D9852A5723EE3D2D7D4A6B71A"
+    },
+    "artifacts": {
+      "corpus": "products.jsonl",
+      "derivedCorpus": "corpus86.jsonl",
+      "mapping": "mapping.jsonl",
+      "queries": "queries.jsonl",
+      "faissIndex": "faiss-index-86.faiss",
+      "runLog": "run-log.jsonl"
+    },
+    "publicationGate": {
+      "precisionRecallComputed": false,
+      "judgmentsApplied": false
+    }
+  },
+  "sourceHashes": {
+    "ground-truth-1032-Dat-phan-xu-86-2026-10-20.xlsx": "d8823c35b6d4d1305a517993898d200b6028dfc89da4d0f28b841f2eb3a34584",
+    "final-provenance.json": "76d8dcf550ab68fc2932412bb361c978c2826ee60b7a4dd43ca6d401bc152e6f",
+    "SHA256SUMS": "913646a590e8c61900328b9c2e627747115c8d1cc9fe8e5476997fe79bccf9f2",
+    "README.md": "a2a0b206ff55a723f7af1b744cad8184b4fc2d7437cb4561595fe3e644673c88",
+    "all-results.jsonl": "88c2fed75e9970fd8a877e3cbf59ad842b7a64cf8eb2fdab335a628a6ee4262e",
+    "corpus86.jsonl": "56dfb60cac1f3cf1210d60b61a7b2e1c4f4718c01d18272ef5761d6e97ad5324",
+    "export_top20_v1b.py": "b080fbdc021136d107c08241fa2027dcc3ced8dddf81be998a8ee53942bcef9a",
+    "faiss-index-86.faiss": "4ed73c2ea81c4b3b93ea0efe94f75b1c462885da6bab155679d709ca4bb27740",
+    "hybrid.jsonl": "9a190350e7ebd4519c2c34ff51dbfbfa7f05fe1c78bd35ef1f3a892c152f0761",
+    "keyword.jsonl": "c631c47302966c289280f7bc0bd9850b1c6402afbabab2d2769441e79443170e",
+    "mapping.jsonl": "c705ef318320ca0a0c8765e5ad2c321a5c57763c77a908cf417bc0070b46d359",
+    "products.jsonl": "a5d00f36e85db067dcd1eebc1bc1e5b8cf3e44b4edf4ee68d79f2c73e63d987b",
+    "provenance.json": "652ca735bdf3c1ff78a89a7b54856c2d65d59913d92f167946d81dd6d222f04c",
+    "queries.jsonl": "15dd150fb22f3294bf922395cbe5bbadad5570d36fbbc0670e57d0bd6ecb1d03",
+    "run-log.jsonl": "7690cf7ddcd95e845caa2760017acf10c9939ac6ba247d84275215d6f1552efd",
+    "run-manifest.json": "0db09d488341b37cecef72fdf043ec97627efae6378d894d0013baf518ce71ee",
+    "runtime-evidence.json": "c5dcd722a2bf785534f9f156d46a558d3dab89a782bce62f8b8d72db92b41229",
+    "semantic.jsonl": "719a2ac6fdd513c0129831af1ca6275f2af6c0b2d00076d607011ae3b1327bae"
+  },
+  "sharedWorkbookSha256": "9f70dd26caf609207156f415838432cdf674fe0879217164cb3868431d097bcd",
+  "localValidation": {
+    "unitTests": 10,
+    "failures": 0,
+    "rawBundleHashesPassed": 15,
+    "allResultCanonicalHashesPassed": 3,
+    "allInputsUnchanged": true,
+    "independentNumeratorChecks": 126,
+    "spreadsheetFormulaMetricsChecked": 126,
+    "macroRowsChecked": 18,
+    "xlsxReadOnlyChecksPassed": true,
+    "inputChangeRecalculationPassed": true,
+    "nativeExcelInteractiveRecalculationTested": false
+  },
+  "limitations": [
+    "7/12 complete queries are not representative of all12 or an independent held-out benchmark.",
+    "Ground truth is AI-assisted and contains Dat-authorized adjudication and754 approvals reported by Dat; not independent double annotation.",
+    "57 unjudged pairs are retained and excluded at whole-query level, never converted to0.",
+    "Labels and query selection were available after retrieval; this is retrospective exploratory evaluation, not a pre-registered test.",
+    "No image-search generalization or self-match quality claim.",
+    "Original publication manifest/lock is unchanged; no official gate approval is asserted.",
+    "No latency or current-develop performance claim; retrieval was not rerun."
+  ],
+  "definitionSources": {
+    "precision": "https://github.com/usnistgov/trec_eval/blob/main/m_P.c",
+    "recall": "https://github.com/usnistgov/trec_eval/blob/main/m_recall.c"
+  }
+}

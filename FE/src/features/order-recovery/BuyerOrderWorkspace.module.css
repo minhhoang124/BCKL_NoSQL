@@ -1,0 +1,48 @@
+.workspace {
+  min-width: 0;
+}
+.workspace > button {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 10px 16px;
+  margin-block: 8px;
+  color: var(--market-ink);
+  background: var(--market-surface);
+  border: 1px solid var(--market-line);
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+.workspace > button:disabled {
+  color: #555c65;
+  background: #e4e7eb;
+  cursor: not-allowed;
+}
+.workspace > button:focus-visible {
+  outline: 2px solid var(--market-brand);
+  outline-offset: 3px;
+}
+.workspace label:has(input[type="checkbox"]) {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+}
+.workspace input[type="checkbox"] {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--market-brand, #d63b0b);
+}
+.stale {
+  border-inline-start: 4px solid #946200;
+  border-radius: 4px;
+  padding: 12px 16px;
+  color: #684500;
+  background: #fff5df;
+}
+
+.workspace { font-size: 14px; }
+.workspace > button.quietRefresh { display: block; margin-left: auto; min-height: 32px; padding: 4px 10px; border: 0; background: transparent; color: #757575; font-size: 12px; border-radius: 4px; }

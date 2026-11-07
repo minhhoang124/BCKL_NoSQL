@@ -1,0 +1,67 @@
+{
+  "applicationHead": "ba3dcbf8144afee769b297a8027c6de5b7f5ecdd",
+  "kind": "SANITIZED_EXISTING_VISUAL_EVIDENCE_NOT_NEW_TEST_RUN",
+  "masks": "Opaque grey rectangles cover account identities and recipient/address; list first1080px only; no raw trace/config/token included",
+  "files": [
+    {
+      "file": "source-login.webp",
+      "width": 1440,
+      "height": 1080,
+      "sha256": "ee89968e8d92e9a5c4be652d93dc4a3f723b1247543759929ff225cb02cdd230"
+    },
+    {
+      "file": "actual-login.webp",
+      "width": 1440,
+      "height": 1128,
+      "sha256": "d6d95156ebe920d92da3433642d09cb74e4a3c6bce119ab364c64cfaf835f4c0"
+    },
+    {
+      "file": "source-orders.webp",
+      "width": 1440,
+      "height": 1080,
+      "sha256": "351e62ef34745c22ea45fd647bc7888614f2f835140b283883b6347bab20a605"
+    },
+    {
+      "file": "actual-orders.webp",
+      "width": 1440,
+      "height": 1080,
+      "sha256": "2b78a1194eb4082d61620c3d8502cf3253126b64d3e3c8052a360d669c073e7c"
+    },
+    {
+      "file": "source-detail.webp",
+      "width": 1440,
+      "height": 1080,
+      "sha256": "7b42cfc57cab13d2b938ec4dd54c271b35f84de455427eae34c5add3f6d832c1"
+    },
+    {
+      "file": "actual-detail.webp",
+      "width": 1440,
+      "height": 1423,
+      "sha256": "b94c5a78cc1f40afe4e631d66a5cb8c7ae0f9229191ef39cf6c1dbbd623df211"
+    },
+    {
+      "file": "actual-mobile-login.webp",
+      "width": 390,
+      "height": 1335,
+      "sha256": "9f0b928759ee3c81dcd38544fb25bf23a8b45aaafc667ae09d499ba54a27c5c6"
+    },
+    {
+      "file": "compare-login.webp",
+      "width": 1440,
+      "height": 564,
+      "sha256": "3688e7a9a579f1b0882011186f220699d92f913eb571ed9c00dae4360ebd980b"
+    },
+    {
+      "file": "compare-orders.webp",
+      "width": 1440,
+      "height": 540,
+      "sha256": "53a8e49cf4f6ec6403e89793286183b97f96ec7d1a3143db3ec75a1b45042c9f"
+    },
+    {
+      "file": "compare-detail.webp",
+      "width": 1440,
+      "height": 712,
+      "sha256": "c378780818927a1c9637d2274a8411e103ef43bdc6208984a42257918675e256"
+    }
+  ]
+}

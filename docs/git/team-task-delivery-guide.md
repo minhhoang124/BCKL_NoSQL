@@ -21,7 +21,7 @@ Tài liệu này áp dụng cho cả ba thành viên. Mục tiêu là bảo đ�
 |---|---|---|
 | Hoàng | `FE/`, `BE/`, `database/` | React, NestJS, Prisma, PostgreSQL, User/Seller và tích hợp |
 | Đạt | `AI_CLIP/`, `experiments/` | CLIP, FAISS, FastAPI, Elasticsearch, RRF và đánh giá |
-| Hiền | `docs/`, phần Admin theo phân công | SRS, sơ đồ, test case, ground truth, Admin và kiểm thử |
+| Hiền | `docs/`, phần Admin và Buyer Address/Cart theo phân công | SRS, sơ đồ, test case, ground truth, Admin, CODE hai màn Buyer Address/Cart (Hoàng giao và [Hiền xác nhận 04/10](https://github.com/grumhu124/BCKL_ThuongMaiDienTu/pull/29#issuecomment-5978048696)) và kiểm thử; không gồm Buyer Checkout/Order |
 
 File dùng chung như `docker-compose.yml`, `.env.example`, API contract hoặc schema database phải được review chéo.
 

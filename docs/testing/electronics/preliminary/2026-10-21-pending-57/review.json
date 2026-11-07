@@ -1,0 +1,1835 @@
+{
+  "schemaVersion": 1,
+  "status": "AI_ASSISTED_REVIEW_NOT_FINAL_CONSENSUS",
+  "reviewedAt": "2026-10-21",
+  "sourcePullRequest": 82,
+  "sourceHead": "96a2d5c9e5b03f392158a50ecb6f1b5ef4558c82",
+  "sourceSnapshotSha256": "9f70dd26caf609207156f415838432cdf674fe0879217164cb3868431d097bcd",
+  "protocolProposalSha256": "eb9ccd85c724f3c643b6cc4b0fb65611a6d968f901e37b0e0f261f8c50380e56",
+  "pairs": 1032,
+  "previouslyAcceptedNumericLabels": 975,
+  "reviewedPendingPairs": 57,
+  "newNumericProposals": 3,
+  "remainingUnjudgedAfterProposals": 54,
+  "previousLabelsChanged": 0,
+  "hienApprovalsCreated": 0,
+  "independentAnnotation": false,
+  "officialPublicationGateChanged": false,
+  "retrievalRerun": false,
+  "metricsRecomputed": false,
+  "sources": [
+    {
+      "id": "S01",
+      "type": "official-ABO-metadata",
+      "url": "https://amazon-berkeley-objects.s3.us-east-1.amazonaws.com/listings/metadata/",
+      "localEvidenceSha256": "cfb009d98c642e474387b3422904842a7de31f6fa79fe282de1c4393682ec53d",
+      "scope": "Tên/model và metadata đúng ASIN đã trích từ shard gốc; mỗi record ghi shard, domain và ASIN. Không dùng description tái dựng làm nguồn mới."
+    },
+    {
+      "id": "S02",
+      "type": "manufacturer-manual",
+      "url": "https://images-na.ssl-images-amazon.com/images/I/919Mu1igz0S.pdf",
+      "sha256": "ccf4d9629ffa79460c34cc9b95d6e3f1d9e3ef40229e73b45975a437a0c956b7",
+      "pages": 76,
+      "identityPages": [
+        1
+      ],
+      "evidencePages": [
+        4,
+        9,
+        10,
+        12
+      ],
+      "scope": "BTV2: cover liệt kê B00JZVPJD8/B00JZVPKE6. Trang12 cảnh báo tránh mưa/ẩm. Trang10 nói về sạc USB khi ON, chưa chứng minh đường cấp nguồn vận hành độc lập."
+    },
+    {
+      "id": "S03",
+      "type": "manufacturer-manual",
+      "url": "https://images-na.ssl-images-amazon.com/images/I/81g4LKuxBaS.pdf",
+      "sha256": "89cd9f3a99ec8848cc75298f2d7230738094b4145d0ea50c8fab114bd6f3a1ec",
+      "pages": 64,
+      "identityPages": [
+        1
+      ],
+      "evidencePages": [
+        5,
+        10,
+        11,
+        13
+      ],
+      "scope": "Cover liệt kê đúng B00MJEYM5O; trang13 cảnh báo tránh mưa/ẩm, trang11 dùng power adapter. Không áp dụng cảnh báo này sang model khác."
+    },
+    {
+      "id": "S04",
+      "type": "manufacturer-manual-mirror",
+      "url": "https://device.report/manuals/amazonbasics-wireless-shower-speaker-manual",
+      "identityPages": [
+        1
+      ],
+      "evidencePages": [
+        4,
+        8,
+        10,
+        11,
+        20,
+        21
+      ],
+      "scope": "Chỉ dùng phần scan/text manual hãng bên dưới file header, không dùng phần FAQ/tóm tắt do website sinh. Manual liệt kê B07RS44LV9/B07RT6B1GN/B07RWDGGSH; xác nhận IPX4, micro-USB charging và AUX. Không thấy chỉ dẫn outdoor đủ để kết luận Q12."
+    },
+    {
+      "id": "S05",
+      "type": "candidate-not-accepted",
+      "url": "https://fccid.io/HBOR28BT/User-Manual/User-Manual-1-4697991",
+      "scope": "Tìm thấy hồ sơ R28BT US; tải PDF bị403. Chưa xác minh nội dung và quan hệ phiên bản UK/ASIN138, nên không dùng làm căn cứ gán nhãn."
+    }
+  ],
+  "rows": [
+    {
+      "queryId": "TEXT-V1-003",
+      "queryText": "tai nghe chụp tai nhẹ màu đen",
+      "productId": 58,
+      "externalId": "abo:B0050SXMNE",
+      "name": "AmazonBasics PlayStation 3 Wired USB Chat Headset (Officially Licensed by Sony)",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Ảnh là headset một bên áp tai màu đen; ABO có mâu thuẫn color.value=Red và standardized Black. Không dùng trường Red để chấm1. Chưa có bằng chứng nhẹ.",
+      "reviewFinding": "Nguồn ABO chưa xác nhận thuộc tính nhẹ theo nghĩa định tính của rubric; không đặt ngưỡng gram sau khi xem kết quả.",
+      "missingEvidence": "Cần nguồn xác nhận nhẹ hoặc tiêu chí khối lượng được chọn trước. Không suy nhẹ từ kích thước/ảnh; không tự thêm stereo.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_0.json.gz",
+          "domain": "primenow.amazon.com",
+          "asin": "B0050SXMNE",
+          "modelNumbers": [
+            "ABGS003"
+          ]
+        }
+      ],
+      "previousImageSha256": "41c455da6b0a1019a6e47eacf59ba7a36868d8af5f123b13be5d88b5c4a860f0"
+    },
+    {
+      "queryId": "TEXT-V1-003",
+      "queryText": "tai nghe chụp tai nhẹ màu đen",
+      "productId": 72,
+      "externalId": "abo:B00Q3OH45G",
+      "name": "AmazonBasics Premium Over-Ear Headphones",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/ảnh và record ABO đúng ASIN; kiểu đeo/màu phù hợp hoặc có bằng chứng liên quan. Không thấy tuyên bố nhẹ định tính được xác minh cho model này. Số gram không tự tạo ra ngưỡng nhẹ.",
+      "reviewFinding": "Nguồn ABO chưa xác nhận thuộc tính nhẹ theo nghĩa định tính của rubric; không đặt ngưỡng gram sau khi xem kết quả.",
+      "missingEvidence": "Thuộc tính nhẹ chưa đủ căn cứ để quyết định1/2 theo rubric hiện hành; cần nguồn hãng hoặc quyết định ngưỡng được công bố trước. Không mặc định thiếu thông tin=1.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_7.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B00Q3OH45G",
+          "modelNumbers": [
+            "HL-003127"
+          ]
+        }
+      ],
+      "previousImageSha256": "d62efa926c0feeef96dd6bddbc1c73b95c694ded2625dbd0b8419f539ccc1e94"
+    },
+    {
+      "queryId": "TEXT-V1-003",
+      "queryText": "tai nghe chụp tai nhẹ màu đen",
+      "productId": 73,
+      "externalId": "abo:B00Q3OHI4I",
+      "name": "AmazonBasics On-Ear Headphones",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/ảnh và record ABO đúng ASIN; kiểu đeo/màu phù hợp hoặc có bằng chứng liên quan. Không thấy tuyên bố nhẹ định tính được xác minh cho model này. Số gram không tự tạo ra ngưỡng nhẹ.",
+      "reviewFinding": "Nguồn ABO chưa xác nhận thuộc tính nhẹ theo nghĩa định tính của rubric; không đặt ngưỡng gram sau khi xem kết quả.",
+      "missingEvidence": "Thuộc tính nhẹ chưa đủ căn cứ để quyết định1/2 theo rubric hiện hành; cần nguồn hãng hoặc quyết định ngưỡng được công bố trước. Không mặc định thiếu thông tin=1.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_0.json.gz",
+          "domain": "amazon.ca",
+          "asin": "B00Q3OHI4I",
+          "modelNumbers": [
+            "HL-006334"
+          ]
+        }
+      ],
+      "previousImageSha256": "742f4535e6f04617f7ac50f6c0a97f003e580136f0edae5fbf35faa549c01816"
+    },
+    {
+      "queryId": "TEXT-V1-003",
+      "queryText": "tai nghe chụp tai nhẹ màu đen",
+      "productId": 91,
+      "externalId": "abo:B01I095OO4",
+      "name": "AmazonBasics Padded USB Headset with Noise-canceling Mic",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/ảnh và record ABO đúng ASIN; kiểu đeo/màu phù hợp hoặc có bằng chứng liên quan. Không thấy tuyên bố nhẹ định tính được xác minh cho model này. Số gram không tự tạo ra ngưỡng nhẹ.",
+      "reviewFinding": "Nguồn ABO chưa xác nhận thuộc tính nhẹ theo nghĩa định tính của rubric; không đặt ngưỡng gram sau khi xem kết quả.",
+      "missingEvidence": "Thuộc tính nhẹ chưa đủ căn cứ để quyết định1/2 theo rubric hiện hành; cần nguồn hãng hoặc quyết định ngưỡng được công bố trước. Không mặc định thiếu thông tin=1.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_a.json.gz",
+          "domain": "amazon.com.au",
+          "asin": "B01I095OO4",
+          "modelNumbers": [
+            "HP03"
+          ]
+        }
+      ],
+      "previousImageSha256": "e307ca9ace9d778def2e3e34efeee0349b67ee1fb1f1c299c26800ffbc57ce46"
+    },
+    {
+      "queryId": "TEXT-V1-003",
+      "queryText": "tai nghe chụp tai nhẹ màu đen",
+      "productId": 92,
+      "externalId": "abo:B01JAFFL4A",
+      "name": "AmazonBasics Over-Ear Wireless RF Headphones with Charging Dock",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "ABO gốc xác nhận lightweight/over-ear, nhưng không có màu nguồn. Ảnh có phần xám/nâu/đen, không đủ chắc để chốt màu tổng thể là đen hay khác đen.",
+      "reviewFinding": "Nguồn ABO xác nhận lightweight; màu đúng model vẫn chưa rõ.",
+      "missingEvidence": "Cần nguồn đúng model HS-RF02-UK xác nhận màu; không chấm1 chỉ do ánh sáng ảnh.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_2.json.gz",
+          "domain": "primenow.amazon.co.uk",
+          "asin": "B01JAFFL4A",
+          "modelNumbers": [
+            "HS-RF02-UK"
+          ]
+        }
+      ],
+      "previousImageSha256": "5b1e94b468f19aeb4ff006c97a98e125a70317135bc02daa6e6585dbcd3783e8"
+    },
+    {
+      "queryId": "TEXT-V1-003",
+      "queryText": "tai nghe chụp tai nhẹ màu đen",
+      "productId": 95,
+      "externalId": "abo:B01N3LOJWX",
+      "name": "AmazonBasics Over-Ear Headphones",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/ảnh và record ABO đúng ASIN; kiểu đeo/màu phù hợp hoặc có bằng chứng liên quan. Không thấy tuyên bố nhẹ định tính được xác minh cho model này. Số gram không tự tạo ra ngưỡng nhẹ.",
+      "reviewFinding": "Nguồn ABO chưa xác nhận thuộc tính nhẹ theo nghĩa định tính của rubric; không đặt ngưỡng gram sau khi xem kết quả.",
+      "missingEvidence": "Thuộc tính nhẹ chưa đủ căn cứ để quyết định1/2 theo rubric hiện hành; cần nguồn hãng hoặc quyết định ngưỡng được công bố trước. Không mặc định thiếu thông tin=1.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_3.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B01N3LOJWX",
+          "modelNumbers": [
+            "HS-CD04-EU"
+          ]
+        }
+      ],
+      "previousImageSha256": "a3b30c1f941d688a324ccf0fad884e4c96c25497535fdb9991073910a943e085"
+    },
+    {
+      "queryId": "TEXT-V1-003",
+      "queryText": "tai nghe chụp tai nhẹ màu đen",
+      "productId": 117,
+      "externalId": "abo:B07GFGJPNQ",
+      "name": "AmazonBasics Over-Ear Studio Monitor Headphones - Black",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/ảnh và record ABO đúng ASIN; kiểu đeo/màu phù hợp hoặc có bằng chứng liên quan. Không thấy tuyên bố nhẹ định tính được xác minh cho model này. Số gram không tự tạo ra ngưỡng nhẹ.",
+      "reviewFinding": "Nguồn ABO chưa xác nhận thuộc tính nhẹ theo nghĩa định tính của rubric; không đặt ngưỡng gram sau khi xem kết quả.",
+      "missingEvidence": "Thuộc tính nhẹ chưa đủ căn cứ để quyết định1/2 theo rubric hiện hành; cần nguồn hãng hoặc quyết định ngưỡng được công bố trước. Không mặc định thiếu thông tin=1.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_8.json.gz",
+          "domain": "amazon.sa",
+          "asin": "B07GFGJPNQ",
+          "modelNumbers": [
+            "MHP-1190-01A"
+          ]
+        }
+      ],
+      "previousImageSha256": "693a025a31408f3a6f49ff6c27ad1180bf2e8c62ccfd10ffbb17604f4024dcba"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 62,
+      "externalId": "abo:B00JZVPC08",
+      "name": "AmazonBasics Wireless Bluetooth Dual 3W Speaker with Built-in Microphone - Red",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_f.json.gz",
+          "domain": "primenow.amazon.com",
+          "asin": "B00JZVPC08",
+          "modelNumbers": [
+            "BTV1"
+          ]
+        }
+      ],
+      "previousImageSha256": "b3a8a252d826bbad3519609998f384deed531eff8a46650884ee2ae122f866a8"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 63,
+      "externalId": "abo:B00JZVPGD6",
+      "name": "AmazonBasics Wireless Bluetooth Dual 3W Speaker with Built-in Microphone - Blue",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_e.json.gz",
+          "domain": "primenow.amazon.com",
+          "asin": "B00JZVPGD6",
+          "modelNumbers": [
+            "BTV1"
+          ]
+        }
+      ],
+      "previousImageSha256": "8e8cf1195a6177c6bd2c47d386d872df6f624cf3b152eb3642f187b4708e72d6"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 64,
+      "externalId": "abo:B00JZVPJD8",
+      "name": "AmazonBasics Mini Bluetooth Speaker - Red",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "Manual đúng ASIN có AUX và sạc USB khi ON; vẫn chưa chứng minh USB cung cấp năng lượng vận hành theo rubric thay vì chỉ sạc pin.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01",
+        "S02"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_9.json.gz",
+          "domain": "amazon.com",
+          "asin": "B00JZVPJD8",
+          "modelNumbers": [
+            "BTV2"
+          ]
+        }
+      ],
+      "previousImageSha256": "92ab344e626c2081d04752b64c36cf1d38376beb0ee24e00272ab5bbf0185c7f"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 65,
+      "externalId": "abo:B00JZVPKE6",
+      "name": "AmazonBasics Mini Bluetooth Speaker - Gray",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "Manual đúng ASIN có AUX và sạc USB khi ON; vẫn chưa chứng minh USB cung cấp năng lượng vận hành theo rubric thay vì chỉ sạc pin.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01",
+        "S02"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_f.json.gz",
+          "domain": "amazon.com",
+          "asin": "B00JZVPKE6",
+          "modelNumbers": [
+            "BTV2"
+          ]
+        }
+      ],
+      "previousImageSha256": "c684f02d4609c899fa567bdad3cb8a62d6c83cf2c612d32de7533734902e93b0"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 66,
+      "externalId": "abo:B00K367Q6C",
+      "name": "AmazonBasics Wireless Bluetooth Dual 3W Speaker with Built-in Microphone",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_1.json.gz",
+          "domain": "primenow.amazon.com",
+          "asin": "B00K367Q6C",
+          "modelNumbers": [
+            "BTV1"
+          ]
+        }
+      ],
+      "previousImageSha256": "8c431c3047194505de89965de00f9a3ce2e4294b7f90c6b8417eadacc79a319a"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 67,
+      "externalId": "abo:B00LLJ55XG",
+      "name": "AmazonBasics Micro Ultra-Portable Bluetooth Speaker - White",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Record đúng ASIN có bullet về đệm lưng nên phần đó bị loại. Manual đúng BTV4 có AUX và USB charging, chưa chứng minh đường USB vận hành theo tiêu chí đang dùng. Bullet tiếng Anh về đệm lưng trong ABO bị loại vì sai ngữ cảnh.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần xác nhận USB cung cấp năng lượng khi vận hành, không chỉ sạc pin; không lấy nội dung sai ngữ cảnh.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_7.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B00LLJ55XG",
+          "modelNumbers": [
+            "BTV4"
+          ]
+        }
+      ],
+      "previousImageSha256": "1933c2b6116ab2ebed5e15cc9ea31c6a2c685639d9b72322392d4231bc3f23c5"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 68,
+      "externalId": "abo:B00LLJ58ME",
+      "name": "AmazonBasics Micro Bluetooth Speaker - Red",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_c.json.gz",
+          "domain": "amazon.com",
+          "asin": "B00LLJ58ME",
+          "modelNumbers": [
+            "BTV4"
+          ]
+        }
+      ],
+      "previousImageSha256": "3c2a08c1caa1d84dbad5fe0d812485602e5bb0ee3f0a4844394d8d1798721ca5"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 70,
+      "externalId": "abo:B00MPQP7H8",
+      "name": "AmazonBasics Micro Ultra-Portable Bluetooth Speaker",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_7.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B00MPQP7H8",
+          "modelNumbers": []
+        }
+      ],
+      "previousImageSha256": "5c9106e626c9136950a8b90169bc359e701a881e17faca369a00f201b0b21762"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 80,
+      "externalId": "abo:B016I4QMOE",
+      "name": "AmazonBasics Ultra-Portable Nano Bluetooth Speaker",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_1.json.gz",
+          "domain": "amazon.co.jp",
+          "asin": "B016I4QMOE",
+          "modelNumbers": [
+            "Haven-BK-Parent"
+          ]
+        },
+        {
+          "shard": "listings_3.json.gz",
+          "domain": "amazon.ca",
+          "asin": "B016I4QMOE",
+          "modelNumbers": [
+            "Haven-BK-Parent"
+          ]
+        }
+      ],
+      "previousImageSha256": "a7a301acbf3bc48b1af6dbfb5651ef0a2ac6225ecc8da0d518dae29710c78393"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 87,
+      "externalId": "abo:B01GF5ACUG",
+      "name": "AmazonBasics Portable Bluetooth Speaker (Black)",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_3.json.gz",
+          "domain": "primenow.amazon.co.uk",
+          "asin": "B01GF5ACUG",
+          "modelNumbers": [
+            "BSK30BK"
+          ]
+        }
+      ],
+      "previousImageSha256": "2b59dc51dc35d265a81f90da2fc5f39c49dd6a57bf3e515302933dec1f41f57e"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 127,
+      "externalId": "abo:B07PDYW6VM",
+      "name": "AmazonBasics Bluetooth stereo speaker with water resistant design, 15 W, black.",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_0.json.gz",
+          "domain": "amazon.de",
+          "asin": "B07PDYW6VM",
+          "modelNumbers": [
+            "WP926BLACK"
+          ]
+        }
+      ],
+      "previousImageSha256": "4fd11511c88d30b2e5919985dfc0dc3059ce47f979c867e16c27a1a6c90c4cbe"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 128,
+      "externalId": "abo:B07PJ67Q7Z",
+      "name": "AmazonBasics Bluetooth stereo speaker with water resistant design, 15 W, red",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_2.json.gz",
+          "domain": "amazon.de",
+          "asin": "B07PJ67Q7Z",
+          "modelNumbers": [
+            "WP926RED"
+          ]
+        }
+      ],
+      "previousImageSha256": "37ee359212e9f88ba32e079907ff7c31ae530c4175a5aabde34273e17e74e48b"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 131,
+      "externalId": "abo:B07QC8SXZ2",
+      "name": "AmazonBasics 2.1 Speakers with Subwoofer",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "ABO xác nhận model nhưng bullet/description không đủ về đầu vào/nguồn. Active, Subwoofer hoặc chữ AC trong mã model không tự chứng minh AC/USB operating power.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần manual chính hãng đúng R28BTUK/AC-2.1B và cấu hình PC/nguồn; các lần tải bổ sung chưa xác minh được. Không suy nguồn từ tên model.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_1.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B07QC8SXZ2",
+          "modelNumbers": [
+            "AC-2.1B"
+          ]
+        }
+      ],
+      "previousImageSha256": "8768cd381a594c45fa7d03e887d1b845d9897c99a5dedc5c1b291f5437761aed"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 133,
+      "externalId": "abo:B07RS44LV9",
+      "name": "AmazonBasics Wireless Shower Speaker with 5W Driver, Suction Cup, Built-in Mic - Gray",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "Manual đúng ASIN có AUX/micro-USB charging; input5V/1A và pin không đủ chứng minh vận hành được bằng USB khi không dựa vào pin.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01",
+        "S04"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_7.json.gz",
+          "domain": "amazon.com.au",
+          "asin": "B07RS44LV9",
+          "modelNumbers": [
+            "WP912GRAY"
+          ]
+        }
+      ],
+      "previousImageSha256": "9fc88a88c88e31a467054a67ea954fd6a8f9d2d8748f8f5e40554bb1dd1f42d1"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 134,
+      "externalId": "abo:B07RT6B1GN",
+      "name": "AmazonBasics Wireless Shower Speaker with 5W Driver, Suction Cup, Built-in Mic - Blue",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "Manual đúng ASIN có AUX/micro-USB charging; input5V/1A và pin không đủ chứng minh vận hành được bằng USB khi không dựa vào pin.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01",
+        "S04"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_a.json.gz",
+          "domain": "amazon.com.au",
+          "asin": "B07RT6B1GN",
+          "modelNumbers": [
+            "WP912BLUE"
+          ]
+        }
+      ],
+      "previousImageSha256": "22276bc2f3f97db4cd40c525de967861f855c3a7ded99fcb51cafb70fe40bbee"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 135,
+      "externalId": "abo:B07RWDGGSH",
+      "name": "AmazonBasics Wireless Shower Speaker with 5W Driver, Suction Cup, Built-in Mic - Black",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "Manual đúng ASIN có AUX/micro-USB charging; input5V/1A và pin không đủ chứng minh vận hành được bằng USB khi không dựa vào pin.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01",
+        "S04"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_0.json.gz",
+          "domain": "amazon.ca",
+          "asin": "B07RWDGGSH",
+          "modelNumbers": [
+            "WP912BLACK"
+          ]
+        }
+      ],
+      "previousImageSha256": "04d78b86f396d8d3d01bf6a8e4ab703874724926d020dc4cf0839ba9d8d3b1bc"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 138,
+      "externalId": "abo:B07W4CLC92",
+      "name": "AmazonBasics Bookshelf Speakers with Active Speaker - 40W, 20-20KHz",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "ABO xác nhận model nhưng bullet/description không đủ về đầu vào/nguồn. Active, Subwoofer hoặc chữ AC trong mã model không tự chứng minh AC/USB operating power.",
+      "reviewFinding": "Không dùng hồ sơ R28BT US chưa đọc được để áp cho R28BTUK. Giữ trống thay vì suy AC từ tên model.",
+      "missingEvidence": "Cần manual chính hãng đúng R28BTUK/AC-2.1B và cấu hình PC/nguồn; các lần tải bổ sung chưa xác minh được. Không suy nguồn từ tên model.",
+      "sourceRefs": [
+        "S01",
+        "S05"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_6.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B07W4CLC92",
+          "modelNumbers": [
+            "R28BTUK"
+          ]
+        }
+      ],
+      "previousImageSha256": "eddae5c57790409021a89ef4aea82de40eed17ba5c94de317c3d4cf9fbb2c251"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 139,
+      "externalId": "abo:B07W7M7464",
+      "name": "AmazonBasics Bookshelf Speakers with Passive Speaker, 50W, 50-20KHz",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên và ảnh loa bookshelf thụ động/lắp đặt. Không dùng điều kiện phải nối PC trực tiếp để chấm0. Dùng qua ampli cần phân định phạm vi và bằng chứng cấu hình, chưa đủ để chốt nhóm/nguồn.",
+      "reviewFinding": "Không tự thêm điều kiện phải cắm trực tiếp PC để chấm0. Cần rubric về ampli/hệ thống ngoài và cấu hình có bằng chứng; giữ trống.",
+      "missingEvidence": "Chưa xác minh cấu hình sử dụng với PC và nguồn theo rubric. Không tự đổi0 thành1 hoặc loại chỉ vì cần ampli.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_b.json.gz",
+          "domain": "amazon.com.au",
+          "asin": "B07W7M7464",
+          "modelNumbers": [
+            "R30PUK"
+          ]
+        }
+      ],
+      "previousImageSha256": "9610e089fbfd0e36db88b6d0e9731922a89f2761a9e6a27630e18f211583dc54"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 140,
+      "externalId": "abo:B081HD2Z5Q",
+      "name": "AmazonBasics Portable Outdoor IPX5 Waterproof Bluetooth Speaker - Red, 15W",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_a.json.gz",
+          "domain": "amazon.in",
+          "asin": "B081HD2Z5Q",
+          "modelNumbers": [
+            "WP524RED"
+          ]
+        }
+      ],
+      "previousImageSha256": "5420f22da0114d0b8332d48e8f02487e5805dfe409efad8b24c7a53922106656"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 141,
+      "externalId": "abo:B081HD9TRN",
+      "name": "AmazonBasics Portable Outdoor IPX5 Waterproof Bluetooth Speaker - Blue, 5W",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/model, ảnh và bullet gốc. Với loa pin, cổng ghi charging/USB cable không tự đồng nghĩa USB powered operating. Một số manual mô tả ON khi sạc nhưng chưa chứng minh nguồn vận hành theo ranh giới hiện tại.",
+      "reviewFinding": "ABO đúng ASIN xác nhận loa/kết nối hoặc pin, nhưng chưa đóng được yêu cầu nguồn USB vận hành. Không đồng nhất USB charging với USB powered.",
+      "missingEvidence": "Cần nguồn rõ về vận hành từ USB và khả năng dùng với PC. Không đoán nhãn2 từ cổng sạc hoặc nhãn0 từ mục đích không chuyên dụng.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_2.json.gz",
+          "domain": "amazon.ca",
+          "asin": "B081HD9TRN",
+          "modelNumbers": [
+            "WP522BLUE"
+          ]
+        }
+      ],
+      "previousImageSha256": "c8a3c5281331b33bf0c5ae57ba373f775f682624369dfa569238e3eb399cbbb1"
+    },
+    {
+      "queryId": "TEXT-V1-007",
+      "queryText": "loa máy tính dùng nguồn USB",
+      "productId": 142,
+      "externalId": "abo:B081VN5WQR",
+      "name": "AmazonBasics Round In-Ceiling / In-Wall Speakers (Pair)",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên và ảnh loa bookshelf thụ động/lắp đặt. Không dùng điều kiện phải nối PC trực tiếp để chấm0. Dùng qua ampli cần phân định phạm vi và bằng chứng cấu hình, chưa đủ để chốt nhóm/nguồn.",
+      "reviewFinding": "Không tự thêm điều kiện phải cắm trực tiếp PC để chấm0. Cần rubric về ampli/hệ thống ngoài và cấu hình có bằng chứng; giữ trống.",
+      "missingEvidence": "Chưa xác minh cấu hình sử dụng với PC và nguồn theo rubric. Không tự đổi0 thành1 hoặc loại chỉ vì cần ampli.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_2.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B081VN5WQR",
+          "modelNumbers": []
+        },
+        {
+          "shard": "listings_2.json.gz",
+          "domain": "amazon.de",
+          "asin": "B081VN5WQR",
+          "modelNumbers": []
+        }
+      ],
+      "previousImageSha256": "9a834cc953b7d43e36b1c2bbc90dd050de8ca44b388f4edb14791f0fe5dc7a11"
+    },
+    {
+      "queryId": "TEXT-V1-008",
+      "queryText": "tai nghe nhét tai có dây và micro màu đen",
+      "productId": 82,
+      "externalId": "abo:B01F2O18X6",
+      "name": "Amazon Basics In-Ear Earphones blk",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "ABO gốc tiếng Nhật đúng EB01BK xác nhận in-ear đen, jack3.5mm mạ vàng và dây125cm. Tuy nhiên không xác nhận có hoặc không micro; ảnh primary không cho thấy toàn bộ dây/đầu điều khiển.",
+      "reviewFinding": "Tên/ABO xác nhận in-ear có dây màu đen; primary image chỉ thấy earbud, không có đủ jack/control để xác minh micro. Không suy không-micro từ sự vắng mặt của từ Mic.",
+      "missingEvidence": "Cần bằng chứng micro đúng ASIN. Không dùng tên không có Mic để suy không micro; chưa chốt1/2.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_7.json.gz",
+          "domain": "amazon.co.jp",
+          "asin": "B01F2O18X6",
+          "modelNumbers": [
+            "EB01BK"
+          ]
+        }
+      ],
+      "previousImageSha256": "4f364416fc96fb6412bdc9d2feaecb9a14d238f047498feb60fb7a5f4e3415fa"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 61,
+      "externalId": "abo:B00GUTY132",
+      "name": "AmazonBasics Large Portable Bluetooth Speaker",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_2.json.gz",
+          "domain": "primenow.amazon.com",
+          "asin": "B00GUTY132",
+          "modelNumbers": [
+            "BTV3"
+          ]
+        }
+      ],
+      "previousImageSha256": "db7e74c4fa407cd500d26948b92627b76cc650429ddd95ac9ce55c6a78920609"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 62,
+      "externalId": "abo:B00JZVPC08",
+      "name": "AmazonBasics Wireless Bluetooth Dual 3W Speaker with Built-in Microphone - Red",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_f.json.gz",
+          "domain": "primenow.amazon.com",
+          "asin": "B00JZVPC08",
+          "modelNumbers": [
+            "BTV1"
+          ]
+        }
+      ],
+      "previousImageSha256": "b3a8a252d826bbad3519609998f384deed531eff8a46650884ee2ae122f866a8"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 63,
+      "externalId": "abo:B00JZVPGD6",
+      "name": "AmazonBasics Wireless Bluetooth Dual 3W Speaker with Built-in Microphone - Blue",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_e.json.gz",
+          "domain": "primenow.amazon.com",
+          "asin": "B00JZVPGD6",
+          "modelNumbers": [
+            "BTV1"
+          ]
+        }
+      ],
+      "previousImageSha256": "8e8cf1195a6177c6bd2c47d386d872df6f624cf3b152eb3642f187b4708e72d6"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 64,
+      "externalId": "abo:B00JZVPJD8",
+      "name": "AmazonBasics Mini Bluetooth Speaker - Red",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01",
+        "S02"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_9.json.gz",
+          "domain": "amazon.com",
+          "asin": "B00JZVPJD8",
+          "modelNumbers": [
+            "BTV2"
+          ]
+        }
+      ],
+      "previousImageSha256": "92ab344e626c2081d04752b64c36cf1d38376beb0ee24e00272ab5bbf0185c7f"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 65,
+      "externalId": "abo:B00JZVPKE6",
+      "name": "AmazonBasics Mini Bluetooth Speaker - Gray",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01",
+        "S02"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_f.json.gz",
+          "domain": "amazon.com",
+          "asin": "B00JZVPKE6",
+          "modelNumbers": [
+            "BTV2"
+          ]
+        }
+      ],
+      "previousImageSha256": "c684f02d4609c899fa567bdad3cb8a62d6c83cf2c612d32de7533734902e93b0"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 66,
+      "externalId": "abo:B00K367Q6C",
+      "name": "AmazonBasics Wireless Bluetooth Dual 3W Speaker with Built-in Microphone",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_1.json.gz",
+          "domain": "primenow.amazon.com",
+          "asin": "B00K367Q6C",
+          "modelNumbers": [
+            "BTV1"
+          ]
+        }
+      ],
+      "previousImageSha256": "8c431c3047194505de89965de00f9a3ce2e4294b7f90c6b8417eadacc79a319a"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 67,
+      "externalId": "abo:B00LLJ55XG",
+      "name": "AmazonBasics Micro Ultra-Portable Bluetooth Speaker - White",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc. Bullet tiếng Anh về đệm lưng trong ABO bị loại vì sai ngữ cảnh.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_7.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B00LLJ55XG",
+          "modelNumbers": [
+            "BTV4"
+          ]
+        }
+      ],
+      "previousImageSha256": "1933c2b6116ab2ebed5e15cc9ea31c6a2c685639d9b72322392d4231bc3f23c5"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 68,
+      "externalId": "abo:B00LLJ58ME",
+      "name": "AmazonBasics Micro Bluetooth Speaker - Red",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_c.json.gz",
+          "domain": "amazon.com",
+          "asin": "B00LLJ58ME",
+          "modelNumbers": [
+            "BTV4"
+          ]
+        }
+      ],
+      "previousImageSha256": "3c2a08c1caa1d84dbad5fe0d812485602e5bb0ee3f0a4844394d8d1798721ca5"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 69,
+      "externalId": "abo:B00MJEYM5O",
+      "name": "AmazonBasics Large Portable Bluetooth Speaker",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01",
+        "S03"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_c.json.gz",
+          "domain": "primenow.amazon.com",
+          "asin": "B00MJEYM5O",
+          "modelNumbers": [
+            "BTV3_2"
+          ]
+        }
+      ],
+      "previousImageSha256": "37e41331f0f738f7bf8f3367eb762887853fac7bc9a575754c5d6ca1bc603780"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 70,
+      "externalId": "abo:B00MPQP7H8",
+      "name": "AmazonBasics Micro Ultra-Portable Bluetooth Speaker",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_7.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B00MPQP7H8",
+          "modelNumbers": []
+        }
+      ],
+      "previousImageSha256": "5c9106e626c9136950a8b90169bc359e701a881e17faca369a00f201b0b21762"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 80,
+      "externalId": "abo:B016I4QMOE",
+      "name": "AmazonBasics Ultra-Portable Nano Bluetooth Speaker",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_1.json.gz",
+          "domain": "amazon.co.jp",
+          "asin": "B016I4QMOE",
+          "modelNumbers": [
+            "Haven-BK-Parent"
+          ]
+        },
+        {
+          "shard": "listings_3.json.gz",
+          "domain": "amazon.ca",
+          "asin": "B016I4QMOE",
+          "modelNumbers": [
+            "Haven-BK-Parent"
+          ]
+        }
+      ],
+      "previousImageSha256": "a7a301acbf3bc48b1af6dbfb5651ef0a2ac6225ecc8da0d518dae29710c78393"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 87,
+      "externalId": "abo:B01GF5ACUG",
+      "name": "AmazonBasics Portable Bluetooth Speaker (Black)",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_3.json.gz",
+          "domain": "primenow.amazon.co.uk",
+          "asin": "B01GF5ACUG",
+          "modelNumbers": [
+            "BSK30BK"
+          ]
+        }
+      ],
+      "previousImageSha256": "2b59dc51dc35d265a81f90da2fc5f39c49dd6a57bf3e515302933dec1f41f57e"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 105,
+      "externalId": "abo:B07CWJR6YB",
+      "name": "AmazonBasics Vintage Retro Bluetooth Speaker",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_a.json.gz",
+          "domain": "amazon.ca",
+          "asin": "B07CWJR6YB",
+          "modelNumbers": [
+            "BL5605X"
+          ]
+        }
+      ],
+      "previousImageSha256": "dc15c3ea690927991b5130d41a6e536e7ed9648f7aa29070a5e6bc4dd0d70b4a"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 127,
+      "externalId": "abo:B07PDYW6VM",
+      "name": "AmazonBasics Bluetooth stereo speaker with water resistant design, 15 W, black.",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_0.json.gz",
+          "domain": "amazon.de",
+          "asin": "B07PDYW6VM",
+          "modelNumbers": [
+            "WP926BLACK"
+          ]
+        }
+      ],
+      "previousImageSha256": "4fd11511c88d30b2e5919985dfc0dc3059ce47f979c867e16c27a1a6c90c4cbe"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 128,
+      "externalId": "abo:B07PJ67Q7Z",
+      "name": "AmazonBasics Bluetooth stereo speaker with water resistant design, 15 W, red",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_2.json.gz",
+          "domain": "amazon.de",
+          "asin": "B07PJ67Q7Z",
+          "modelNumbers": [
+            "WP926RED"
+          ]
+        }
+      ],
+      "previousImageSha256": "37ee359212e9f88ba32e079907ff7c31ae530c4175a5aabde34273e17e74e48b"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 131,
+      "externalId": "abo:B07QC8SXZ2",
+      "name": "AmazonBasics 2.1 Speakers with Subwoofer",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_1.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B07QC8SXZ2",
+          "modelNumbers": [
+            "AC-2.1B"
+          ]
+        }
+      ],
+      "previousImageSha256": "8768cd381a594c45fa7d03e887d1b845d9897c99a5dedc5c1b291f5437761aed"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 140,
+      "externalId": "abo:B081HD2Z5Q",
+      "name": "AmazonBasics Portable Outdoor IPX5 Waterproof Bluetooth Speaker - Red, 15W",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_a.json.gz",
+          "domain": "amazon.in",
+          "asin": "B081HD2Z5Q",
+          "modelNumbers": [
+            "WP524RED"
+          ]
+        }
+      ],
+      "previousImageSha256": "5420f22da0114d0b8332d48e8f02487e5805dfe409efad8b24c7a53922106656"
+    },
+    {
+      "queryId": "TEXT-V1-009",
+      "queryText": "loa tiệc không dây có đèn và cổng micro",
+      "productId": 141,
+      "externalId": "abo:B081HD9TRN",
+      "name": "AmazonBasics Portable Outdoor IPX5 Waterproof Bluetooth Speaker - Blue, 5W",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Tên/ABO xác nhận loa di động/Bluetooth/ngoài trời hoặc hệ loa2.1, nhưng chưa đủ bằng chứng công dụng tiệc/Party Chain/PA theo P9. Mic đàm thoại và đèn trạng thái không được thay MIC IN/đèn tiệc. Không tự cho0 chỉ vì thiếu mô tả tiệc.",
+      "reviewFinding": "Không thấy bằng chứng công dụng Party/PA theo rubric. Không lấy mọi loa Bluetooth làm loa tiệc; không coi micro đàm thoại là MIC IN hoặc LED trạng thái là đèn tiệc. Thiếu mô tả không đủ để gán0.",
+      "missingEvidence": "Cần bằng chứng nhóm liên quan công dụng tiệc trước khi quyết định0/1; nếu thuộc nhóm thì kiểm đèn tiệc/MIC IN. Không thay rubric bằng mọi loa phát nhạc đều liên quan.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_2.json.gz",
+          "domain": "amazon.ca",
+          "asin": "B081HD9TRN",
+          "modelNumbers": [
+            "WP522BLUE"
+          ]
+        }
+      ],
+      "previousImageSha256": "c8a3c5281331b33bf0c5ae57ba373f775f682624369dfa569238e3eb399cbbb1"
+    },
+    {
+      "queryId": "TEXT-V1-012",
+      "queryText": "loa Bluetooth ngoài trời chống nước màu đỏ 15W",
+      "productId": 64,
+      "externalId": "abo:B00JZVPJD8",
+      "name": "AmazonBasics Mini Bluetooth Speaker - Red",
+      "previousRelevance": null,
+      "proposedRelevance": 0,
+      "status": "AI_PROPOSAL",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Manual hãng đúng ASIN (cover trang1) cảnh báo tránh mưa/ẩm ở trang12. Theo ranh giới Q12 là loa outdoor kháng nước, có căn cứ loại model này khỏi nhóm; không suy từ việc thiếu IPX.",
+      "reviewFinding": "Đề xuất0 theo bằng chứng mới; không ghi Hiền đã xác nhận.",
+      "missingEvidence": "",
+      "sourceRefs": [
+        "S01",
+        "S02"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_9.json.gz",
+          "domain": "amazon.com",
+          "asin": "B00JZVPJD8",
+          "modelNumbers": [
+            "BTV2"
+          ]
+        }
+      ],
+      "previousImageSha256": "92ab344e626c2081d04752b64c36cf1d38376beb0ee24e00272ab5bbf0185c7f"
+    },
+    {
+      "queryId": "TEXT-V1-012",
+      "queryText": "loa Bluetooth ngoài trời chống nước màu đỏ 15W",
+      "productId": 65,
+      "externalId": "abo:B00JZVPKE6",
+      "name": "AmazonBasics Mini Bluetooth Speaker - Gray",
+      "previousRelevance": null,
+      "proposedRelevance": 0,
+      "status": "AI_PROPOSAL",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Manual hãng đúng ASIN (cover trang1) cảnh báo tránh mưa/ẩm ở trang12. Theo ranh giới Q12 là loa outdoor kháng nước, có căn cứ loại model này khỏi nhóm; không suy từ việc thiếu IPX.",
+      "reviewFinding": "Đề xuất0 theo bằng chứng mới; không ghi Hiền đã xác nhận.",
+      "missingEvidence": "",
+      "sourceRefs": [
+        "S01",
+        "S02"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_f.json.gz",
+          "domain": "amazon.com",
+          "asin": "B00JZVPKE6",
+          "modelNumbers": [
+            "BTV2"
+          ]
+        }
+      ],
+      "previousImageSha256": "c684f02d4609c899fa567bdad3cb8a62d6c83cf2c612d32de7533734902e93b0"
+    },
+    {
+      "queryId": "TEXT-V1-012",
+      "queryText": "loa Bluetooth ngoài trời chống nước màu đỏ 15W",
+      "productId": 69,
+      "externalId": "abo:B00MJEYM5O",
+      "name": "AmazonBasics Large Portable Bluetooth Speaker",
+      "previousRelevance": null,
+      "proposedRelevance": 0,
+      "status": "AI_PROPOSAL",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Manual hãng đúng ASIN (cover trang1) cảnh báo tránh mưa/ẩm ở trang13. Theo ranh giới Q12 là loa outdoor kháng nước, có căn cứ loại model này khỏi nhóm; không suy từ việc thiếu IPX.",
+      "reviewFinding": "Đề xuất0 theo bằng chứng mới; không ghi Hiền đã xác nhận.",
+      "missingEvidence": "",
+      "sourceRefs": [
+        "S01",
+        "S03"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_c.json.gz",
+          "domain": "primenow.amazon.com",
+          "asin": "B00MJEYM5O",
+          "modelNumbers": [
+            "BTV3_2"
+          ]
+        }
+      ],
+      "previousImageSha256": "37e41331f0f738f7bf8f3367eb762887853fac7bc9a575754c5d6ca1bc603780"
+    },
+    {
+      "queryId": "TEXT-V1-012",
+      "queryText": "loa Bluetooth ngoài trời chống nước màu đỏ 15W",
+      "productId": 70,
+      "externalId": "abo:B00MPQP7H8",
+      "name": "AmazonBasics Micro Ultra-Portable Bluetooth Speaker",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/ảnh/model và bullet gốc, nhưng chưa đủ bằng chứng outdoor kháng nước hoặc điều kiện sử dụng trái yêu cầu của đúng model. Không chuyển nguồn của model khác sang sản phẩm này.",
+      "reviewFinding": "Không có bằng chứng mới đủ để thay trạng thái unjudged.",
+      "missingEvidence": "Cần manual/nguồn hãng đúng model về outdoor và kháng nước; không suy từ tính di động, hình dáng, màu hoặc thiếu IPX.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_7.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B00MPQP7H8",
+          "modelNumbers": []
+        }
+      ],
+      "previousImageSha256": "5c9106e626c9136950a8b90169bc359e701a881e17faca369a00f201b0b21762"
+    },
+    {
+      "queryId": "TEXT-V1-012",
+      "queryText": "loa Bluetooth ngoài trời chống nước màu đỏ 15W",
+      "productId": 80,
+      "externalId": "abo:B016I4QMOE",
+      "name": "AmazonBasics Ultra-Portable Nano Bluetooth Speaker",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/ảnh/model và bullet gốc, nhưng chưa đủ bằng chứng outdoor kháng nước hoặc điều kiện sử dụng trái yêu cầu của đúng model. Không chuyển nguồn của model khác sang sản phẩm này.",
+      "reviewFinding": "Không có bằng chứng mới đủ để thay trạng thái unjudged.",
+      "missingEvidence": "Cần manual/nguồn hãng đúng model về outdoor và kháng nước; không suy từ tính di động, hình dáng, màu hoặc thiếu IPX.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_1.json.gz",
+          "domain": "amazon.co.jp",
+          "asin": "B016I4QMOE",
+          "modelNumbers": [
+            "Haven-BK-Parent"
+          ]
+        },
+        {
+          "shard": "listings_3.json.gz",
+          "domain": "amazon.ca",
+          "asin": "B016I4QMOE",
+          "modelNumbers": [
+            "Haven-BK-Parent"
+          ]
+        }
+      ],
+      "previousImageSha256": "a7a301acbf3bc48b1af6dbfb5651ef0a2ac6225ecc8da0d518dae29710c78393"
+    },
+    {
+      "queryId": "TEXT-V1-012",
+      "queryText": "loa Bluetooth ngoài trời chống nước màu đỏ 15W",
+      "productId": 87,
+      "externalId": "abo:B01GF5ACUG",
+      "name": "AmazonBasics Portable Bluetooth Speaker (Black)",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/ảnh/model và bullet gốc, nhưng chưa đủ bằng chứng outdoor kháng nước hoặc điều kiện sử dụng trái yêu cầu của đúng model. Không chuyển nguồn của model khác sang sản phẩm này.",
+      "reviewFinding": "Không có bằng chứng mới đủ để thay trạng thái unjudged.",
+      "missingEvidence": "Cần manual/nguồn hãng đúng model về outdoor và kháng nước; không suy từ tính di động, hình dáng, màu hoặc thiếu IPX.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_3.json.gz",
+          "domain": "primenow.amazon.co.uk",
+          "asin": "B01GF5ACUG",
+          "modelNumbers": [
+            "BSK30BK"
+          ]
+        }
+      ],
+      "previousImageSha256": "2b59dc51dc35d265a81f90da2fc5f39c49dd6a57bf3e515302933dec1f41f57e"
+    },
+    {
+      "queryId": "TEXT-V1-012",
+      "queryText": "loa Bluetooth ngoài trời chống nước màu đỏ 15W",
+      "productId": 131,
+      "externalId": "abo:B07QC8SXZ2",
+      "name": "AmazonBasics 2.1 Speakers with Subwoofer",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "Đã đối chiếu tên/ảnh/model và bullet gốc, nhưng chưa đủ bằng chứng outdoor kháng nước hoặc điều kiện sử dụng trái yêu cầu của đúng model. Không chuyển nguồn của model khác sang sản phẩm này.",
+      "reviewFinding": "Không có bằng chứng mới đủ để thay trạng thái unjudged.",
+      "missingEvidence": "Cần manual/nguồn hãng đúng model về outdoor và kháng nước; không suy từ tính di động, hình dáng, màu hoặc thiếu IPX.",
+      "sourceRefs": [
+        "S01"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_1.json.gz",
+          "domain": "amazon.co.uk",
+          "asin": "B07QC8SXZ2",
+          "modelNumbers": [
+            "AC-2.1B"
+          ]
+        }
+      ],
+      "previousImageSha256": "8768cd381a594c45fa7d03e887d1b845d9897c99a5dedc5c1b291f5437761aed"
+    },
+    {
+      "queryId": "TEXT-V1-012",
+      "queryText": "loa Bluetooth ngoài trời chống nước màu đỏ 15W",
+      "productId": 133,
+      "externalId": "abo:B07RS44LV9",
+      "name": "AmazonBasics Wireless Shower Speaker with 5W Driver, Suction Cup, Built-in Mic - Gray",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "ABO gốc xác nhận Bluetooth, kháng nước cho shower/bath và5W; màu khác đỏ. Vẫn chưa có nguồn xác nhận outdoor. Sai màu/công suất không thay bằng chứng về nhóm outdoor.",
+      "reviewFinding": "Manual đúng ASIN xác nhận IPX4 và sử dụng ở phòng tắm, nhưng không xác nhận nhóm outdoor. Không tự đổi sai màu/5W thành nhãn1 khi nhóm công dụng còn chưa xác minh.",
+      "missingEvidence": "Cần manual/nguồn hãng đúng model về outdoor và kháng nước; không suy từ tính di động, hình dáng, màu hoặc thiếu IPX.",
+      "sourceRefs": [
+        "S01",
+        "S04"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_7.json.gz",
+          "domain": "amazon.com.au",
+          "asin": "B07RS44LV9",
+          "modelNumbers": [
+            "WP912GRAY"
+          ]
+        }
+      ],
+      "previousImageSha256": "9fc88a88c88e31a467054a67ea954fd6a8f9d2d8748f8f5e40554bb1dd1f42d1"
+    },
+    {
+      "queryId": "TEXT-V1-012",
+      "queryText": "loa Bluetooth ngoài trời chống nước màu đỏ 15W",
+      "productId": 134,
+      "externalId": "abo:B07RT6B1GN",
+      "name": "AmazonBasics Wireless Shower Speaker with 5W Driver, Suction Cup, Built-in Mic - Blue",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "ABO gốc xác nhận Bluetooth, kháng nước cho shower/bath và5W; màu khác đỏ. Vẫn chưa có nguồn xác nhận outdoor. Sai màu/công suất không thay bằng chứng về nhóm outdoor.",
+      "reviewFinding": "Manual đúng ASIN xác nhận IPX4 và sử dụng ở phòng tắm, nhưng không xác nhận nhóm outdoor. Không tự đổi sai màu/5W thành nhãn1 khi nhóm công dụng còn chưa xác minh.",
+      "missingEvidence": "Cần manual/nguồn hãng đúng model về outdoor và kháng nước; không suy từ tính di động, hình dáng, màu hoặc thiếu IPX.",
+      "sourceRefs": [
+        "S01",
+        "S04"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_a.json.gz",
+          "domain": "amazon.com.au",
+          "asin": "B07RT6B1GN",
+          "modelNumbers": [
+            "WP912BLUE"
+          ]
+        }
+      ],
+      "previousImageSha256": "22276bc2f3f97db4cd40c525de967861f855c3a7ded99fcb51cafb70fe40bbee"
+    },
+    {
+      "queryId": "TEXT-V1-012",
+      "queryText": "loa Bluetooth ngoài trời chống nước màu đỏ 15W",
+      "productId": 135,
+      "externalId": "abo:B07RWDGGSH",
+      "name": "AmazonBasics Wireless Shower Speaker with 5W Driver, Suction Cup, Built-in Mic - Black",
+      "previousRelevance": null,
+      "proposedRelevance": null,
+      "status": "UNJUDGED",
+      "method": "AI-assisted evidence review",
+      "humanFinalConfirmation": false,
+      "hienConfirmed": false,
+      "evidence": "ABO gốc xác nhận Bluetooth, kháng nước cho shower/bath và5W; màu khác đỏ. Vẫn chưa có nguồn xác nhận outdoor. Sai màu/công suất không thay bằng chứng về nhóm outdoor.",
+      "reviewFinding": "Manual đúng ASIN xác nhận IPX4 và sử dụng ở phòng tắm, nhưng không xác nhận nhóm outdoor. Không tự đổi sai màu/5W thành nhãn1 khi nhóm công dụng còn chưa xác minh.",
+      "missingEvidence": "Cần manual/nguồn hãng đúng model về outdoor và kháng nước; không suy từ tính di động, hình dáng, màu hoặc thiếu IPX.",
+      "sourceRefs": [
+        "S01",
+        "S04"
+      ],
+      "catalogIdentity": [
+        {
+          "shard": "listings_0.json.gz",
+          "domain": "amazon.ca",
+          "asin": "B07RWDGGSH",
+          "modelNumbers": [
+            "WP912BLACK"
+          ]
+        }
+      ],
+      "previousImageSha256": "04d78b86f396d8d3d01bf6a8e4ab703874724926d020dc4cf0839ba9d8d3b1bc"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "productId": 125,
+  "version": 4,
+  "name": "Wireless Bluetooth Headphones",
+  "description": "Over-ear wireless headphones",
+  "categoryId": 12,
+  "categoryName": "Headphones",
+  "categoryPathIds": [1, 5, 12],
+  "brandId": 8,
+  "brandName": "Sony",
+  "imageUrls": ["http://backend:3001/uploads/products/125/1.jpg"],
+  "minPrice": "1290000.00",
+  "maxPrice": "1590000.00",
+  "inStock": true,
+  "attributes": {
+    "color": ["Black"],
+    "connectivity": ["Bluetooth"]
+  }
+}

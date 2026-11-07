@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: bckl_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-klcn_ecommerce}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-klcn_ecommerce}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Application containers are opt-in so `docker compose up -d postgres` keeps working:
+  #   docker compose --profile app up -d --build
+  # Required in the shell or a local .env (never commit values): JWT_ACCESS_SECRET, JWT_REFRESH_SECRET.
+  # Search (Elasticsearch) and the AI image service are not part of this stack.
+  backend:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: BE/Dockerfile
+    image: bckl-backend:local
+    container_name: bckl_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-klcn_ecommerce}?schema=public
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+      BACKEND_PORT: "3001"
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3001}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-}   # required; the entrypoint refuses to start without it
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
+      SEARCH_SYNC_ENABLED: ${SEARCH_SYNC_ENABLED:-false}
+      SEARCH_RECONCILIATION_ENABLED: ${SEARCH_RECONCILIATION_ENABLED:-false}
+      PRODUCT_IMAGE_REPAIR_ENABLED: ${PRODUCT_IMAGE_REPAIR_ENABLED:-false}
+      ORDER_AUTO_COMPLETE_ENABLED: ${ORDER_AUTO_COMPLETE_ENABLED:-false}
+      SELLER_ONBOARDING_ENABLED: ${SELLER_ONBOARDING_ENABLED:-true}
+      VNPAY_SANDBOX_ENABLED: ${VNPAY_SANDBOX_ENABLED:-false}
+    ports:
+      - "${BACKEND_HOST_PORT:-3001}:3001"
+    volumes:
+      - uploads:/app/uploads
+
+  frontend:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: FE/Dockerfile
+      args:
+        # The browser calls the API directly, so this is the address seen from the browser.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
+        VITE_SELLER_ONBOARDING_ENABLED: ${VITE_SELLER_ONBOARDING_ENABLED:-true}
+        VITE_VNPAY_SANDBOX_ENABLED: ${VITE_VNPAY_SANDBOX_ENABLED:-false}
+        VITE_IMAGE_SEARCH_ENABLED: ${VITE_IMAGE_SEARCH_ENABLED:-false}
+    image: bckl-web:local
+    container_name: bckl_web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${WEB_HOST_PORT:-8080}:80"
+
+volumes:
+  pgdata:
+    name: bckl_pgdata
+  uploads:
+    name: bckl_uploads

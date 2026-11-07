@@ -1,0 +1,32 @@
+.layout {
+  /* Scope legacy aliases here so existing pages do not inherit white headings
+     from the OS dark preference onto the selected light storefront. */
+  --text: var(--market-muted);
+  --text-h: var(--market-ink);
+  --bg: var(--market-surface);
+  --border: var(--market-line);
+  --code-bg: var(--market-soft);
+  --accent: var(--market-brand);
+  --heading: var(--market-font);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--market-bg);
+  color: var(--market-ink);
+  font: 400 16px/1.5 var(--market-font);
+  letter-spacing: normal;
+  color-scheme: light;
+}
+
+.main {
+  flex: 1;
+  padding: 32px 48px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .main { padding: 24px 16px; }
+}

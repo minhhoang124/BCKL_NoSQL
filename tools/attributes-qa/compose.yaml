@@ -1,0 +1,22 @@
+# Dedicated opt-in QA only. Never use the root/demo compose for this handoff.
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '127.0.0.1:5549:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${ATTRIBUTES_QA_BOOTSTRAP_PASSWORD:?Generate a private QA bootstrap password}
+      QA_MIGRATOR_PASSWORD: ${ATTRIBUTES_QA_MIGRATOR_PASSWORD:?Generate a separate private QA migrator password}
+    volumes:
+      - attributes-qa-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+volumes:
+  attributes-qa-data:

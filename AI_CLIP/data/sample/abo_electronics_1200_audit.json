@@ -1,0 +1,35 @@
+{
+  "source": "Amazon Berkeley Objects (ABO)",
+  "license": "CC BY 4.0",
+  "scannedListings": 147702,
+  "availableImages": 398212,
+  "eligibleByCategory": {
+    "audio": 168,
+    "camera": 68,
+    "computer": 306,
+    "mobile_accessory": 64681,
+    "network_security": 38,
+    "office_display": 102,
+    "power_adapter": 283
+  },
+  "selectedByCategory": {
+    "audio": 157,
+    "camera": 66,
+    "computer": 289,
+    "mobile_accessory": 283,
+    "network_security": 37,
+    "office_display": 100,
+    "power_adapter": 268
+  },
+  "selectedTotal": 1200,
+  "requestedTarget": 1200,
+  "rejected": {
+    "not_electronics": 80322,
+    "no_english_name": 1163,
+    "image_missing": 32,
+    "duplicate_main_image": 512,
+    "duplicate_external_id": 27
+  },
+  "seed": 42,
+  "note": "productId là số tạm khi prototype; externalId là item_id gốc của ABO."
+}

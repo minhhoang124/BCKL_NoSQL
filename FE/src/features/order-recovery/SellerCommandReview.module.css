@@ -1,0 +1,11 @@
+.panel { color-scheme: light; color: #20242b; background: #fff; border: 1px solid #e3e6e9; border-radius: 6px; padding: 24px; font: 400 16px/1.5 var(--market-font, system-ui, sans-serif); overflow-wrap: anywhere; }
+.panel h2 { color: #20242b; font: 600 20px/1.4 var(--market-font, system-ui, sans-serif); margin: 16px 0; }
+.panel p { margin: 12px 0; }
+.preparation { color: #69717c; font-size: 13px; }
+.confirmation { display: flex; align-items: flex-start; gap: 12px; margin: 24px 0; }
+.confirmation input { accent-color: var(--market-brand, #d63b0b); min-width: 20px; height: 20px; margin: 2px 0 0; }
+.panel button { min-height: 44px; padding: 12px 20px; margin: 8px 12px 8px 0; color: #fff; background: var(--market-brand, #d63b0b); border: 1px solid var(--market-brand, #d63b0b); border-radius: 6px; font-family: inherit; font-size: 14px; font-weight: 600; line-height: 1.5; cursor: pointer; }
+.panel .secondary { color: #20242b; background: #fff; border-color: #e3e6e9; }
+.panel button:disabled { color: #555c65; background: #e4e7eb; border-color: #e4e7eb; cursor: not-allowed; }
+.panel :focus-visible { outline: 2px solid var(--market-brand, #d63b0b); outline-offset: 3px; }
+@media (max-width: 600px) { .panel { padding: 16px; } .panel button { width: 100%; margin-right: 0; } }

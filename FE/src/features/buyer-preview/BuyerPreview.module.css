@@ -1,0 +1,238 @@
+.shell {
+  min-height: 100vh;
+  background: #f6f6f6;
+  color: #242424;
+  font:
+    16px/1.5 system-ui,
+    sans-serif;
+  color-scheme: light;
+  overflow-wrap: anywhere;
+}
+.header {
+  padding: 18px max(20px, calc((100vw - 1180px) / 2));
+  background: white;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  border-bottom: 1px solid #e6e6e6;
+}
+.header > :last-child {
+  margin-left: auto;
+}
+.logo {
+  color: #cf360c !important;
+  font-size: 30px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.main {
+  max-width: 1180px;
+  margin: auto;
+  padding: 24px 20px 48px;
+}
+.notice {
+  padding: 14px 18px;
+  background: #fff3df;
+  border: 1px solid #b77a23;
+  border-radius: 5px;
+  color: #62420e;
+}
+.notice p {
+  margin-top: 5px;
+}
+.tabs {
+  display: flex;
+  gap: 24px;
+  padding: 20px 0;
+  border-bottom: 1px solid #ddd;
+  flex-wrap: wrap;
+}
+.tabs a[aria-current="page"] {
+  font-weight: 700;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+}
+.shell a {
+  color: #a62e0b;
+}
+.shell button,
+.shell select {
+  font: inherit;
+  padding: 9px 14px;
+  border: 1px solid #b7b7b7;
+  border-radius: 5px;
+  background: white;
+  color: #252525;
+}
+.shell button {
+  cursor: pointer;
+  margin-top: 12px;
+}
+.shell button:disabled {
+  cursor: not-allowed;
+  background: #e9e9e9;
+  color: #69717c;
+}
+.shell button:focus-visible,
+.shell a:focus-visible,
+.shell select:focus-visible {
+  outline: 3px solid #145ba7;
+  outline-offset: 3px;
+}
+.heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+.shell h1 {
+  font-size: 28px;
+  margin: 0;
+  letter-spacing: normal;
+  color: #242424;
+  font-weight: 650;
+}
+.shell h2 {
+  font-size: 19px;
+  color: #242424;
+  font-weight: 650;
+  margin: 0 0 15px;
+}
+.scenario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: start;
+}
+.stack {
+  display: grid;
+  gap: 18px;
+}
+.card {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  padding: 24px;
+  min-width: 0;
+}
+.line {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 15px 0;
+  border-top: 1px solid #eee;
+}
+.thumbnail {
+  background: #f0f0f0;
+  color: #666;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  height: 64px;
+  font-size: 13px;
+}
+.muted {
+  color: #69717c;
+  font-size: 14px;
+  margin-top: 12px !important;
+}
+.summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.summary dd {
+  margin: 0;
+  text-align: right;
+}
+.primary {
+  width: 100%;
+  background: var(--market-brand) !important;
+  border-color: var(--market-brand) !important;
+  color: white !important;
+}
+.primary:disabled {
+  background: #e9e9e9 !important;
+  border-color: #b7b7b7 !important;
+  color: #69717c !important;
+}
+.warning {
+  padding: 12px;
+  background: #fff5ee;
+  border-left: 3px solid var(--market-brand);
+  margin: 12px 0 !important;
+}
+.receipt {
+  padding: 18px 0;
+  border-bottom: 1px solid #eee;
+}
+.actionLink {
+  display: inline-block;
+  margin-top: 16px;
+}
+.orderHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.badge {
+  background: var(--market-soft);
+  color: #98300c;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.timeline {
+  padding-left: 20px;
+}
+.timeline li {
+  margin-bottom: 20px;
+  padding-left: 8px;
+}
+.timeline li p {
+  font-size: 14px;
+  color: #666;
+}
+.footer {
+  background: white;
+  border-top: 1px solid #ddd;
+  padding: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #69717c;
+}
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .header span {
+    width: 100%;
+    order: 3;
+  }
+  .line {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+  .line > strong {
+    grid-column: 2;
+  }
+  .card {
+    padding: 18px;
+  }
+}

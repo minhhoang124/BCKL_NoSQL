@@ -1,0 +1,12 @@
+{
+  "dataset": "ABO Electronics Subset",
+  "count": 1200,
+  "dimension": 512,
+  "faissIndex": "IndexIDMap2(IndexFlatIP)",
+  "imageTopK": 10,
+  "imageResponseTimeMs": 55.82,
+  "textQuery": "tai nghe không dây màu đen",
+  "textResponseTimeMs": 168.74,
+  "encodeSeconds": 5.96,
+  "colabRunDate": "2026-09-05"
+}

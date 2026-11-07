@@ -1,0 +1,45 @@
+{
+  "applicationHead": "f2300e20b94dabee9b17c2b96950bb3bb348a302",
+  "migrations": 22,
+  "browser": "installed Chrome headless, isolated context",
+  "results": [
+    {
+      "case": "elapsed_client_timeout_with_controlled_tcp_response_delay",
+      "result": "PASS",
+      "elapsedMs": 15212,
+      "applicationTimeoutMs": 15000,
+      "proxyResponseDelayMs": 22000,
+      "upstreamStatus": 200,
+      "upstreamRequestCount": 1,
+      "definitionId": 6,
+      "initialRevision": 12,
+      "committedRevision": 13,
+      "recoveredRevision": 14,
+      "draftRetained": true,
+      "writesLocked": true,
+      "faultInjection": "Real loopback HTTP proxy buffers actual Backend success; client deadline expires. No artificial HTTP failure status."
+    },
+    {
+      "case": "referenced_definition_disable_restore_preserves_values_and_orders",
+      "result": "PASS",
+      "definitionId": 1,
+      "referencedProducts": 2,
+      "initialRevision": 3,
+      "disabledRevision": 4,
+      "restoredRevision": 5,
+      "finalActive": true,
+      "slugChangeRejected": "ATTRIBUTE_SLUG_IN_USE",
+      "snapshotsEqualBeforeDisableAfterDisableAfterRestore": true,
+      "fingerprintMethod": "MD5 of ordered full-table JSON, equality comparison only",
+      "tables": {
+        "product_attribute_values": { "count": 8, "hash": "3a607ea7a619c4d1a98c98d56f6a77aa" },
+        "orders": { "count": 1, "hash": "92003907e6d00f4ed98c0676e88fd544" },
+        "order_items": { "count": 1, "hash": "dbec7626de9d2781cae0e79704a9c940" },
+        "payments": { "count": 1, "hash": "b417055833e9fcf9202f63cccad6c885" },
+        "order_status_history": { "count": 1, "hash": "743272d23f2fb43a9bba8f1f11af2408" }
+      },
+      "searchWorkersEnabled": false
+    }
+  ],
+  "limits": ["Search propagation NOT_RUN", "full pagination NOT_RUN", "physical mobile NOT_RUN", "referenced option policy combinations not covered"]
+}

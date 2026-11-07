@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 2,
+  "status": "PREPARED_NOT_METRIC_READY",
+  "preparedAt": "2026-10-01",
+  "evaluationScope": "FULL_LOCKED_CORPUS",
+  "hashing": {
+    "raw-sha256": "SHA-256 of delivered bytes; line endings are significant. Used only for external corpus/mapping handoffs.",
+    "canonical-jsonl-v1": "Parse each non-empty JSONL object, serialize UTF-8 with sorted keys, compact separators and one LF; independent of checkout LF/CRLF."
+  },
+  "corpus": {
+    "name": "abo-electronics-v1b-20260918",
+    "count": 86,
+    "hashAlgorithm": "raw-sha256",
+    "sha256": "A5D00F36E85DB067DCD1EEBC1BC1E5B8CF3E44B4EDF4EE68D79F2C73E63D987B",
+    "mappingSha256Expected": "C705EF318320CA0A0C8765E5AD2C321A5C57763C77A908CF417BC0070B46D359",
+    "mappingHashAlgorithm": "raw-sha256",
+    "mappingFileCommitted": false
+  },
+  "search": {
+    "pullRequest": 8,
+    "commit": "c4fb2eb9055163c3e089a45ddb6dd8102023856e",
+    "elasticsearchVersion": "8.19.21",
+    "imageModel": "sentence-transformers/clip-ViT-B-32",
+    "imageModelRevision": "327ab6726d33c0e22f920c83f2ff9e4bd38ca37f",
+    "textModel": "sentence-transformers/clip-ViT-B-32-multilingual-v1",
+    "textModelRevision": "58edf8cada9e398793dca955574a48cbb7f18be2",
+    "vectorDimension": 512,
+    "indexSnapshotSha256": "4ED73C2EA81C4B3B93EA0EFE94F75B1C462885DA6BAB155679D709CA4BB27740",
+    "rrfK": 60,
+    "systems": ["keyword", "semantic", "hybrid"],
+    "topK": 20,
+    "metricKValues": [5, 10, 20],
+    "relevanceThreshold": 2,
+    "candidateK": 100
+  },
+  "queryArtifacts": {
+    "textQueries": {
+      "path": "docs/testing/electronics/text-queries-import-v1.jsonl",
+      "count": 12,
+      "hashAlgorithm": "canonical-jsonl-v1",
+      "sha256": "7043239F72031FC0B3AF43B20359A376CA123BCBBF6935C1F43FE2B96D94F0AB",
+      "queryIds": [
+        "TEXT-V1-001", "TEXT-V1-002", "TEXT-V1-003", "TEXT-V1-004",
+        "TEXT-V1-005", "TEXT-V1-006", "TEXT-V1-007", "TEXT-V1-008",
+        "TEXT-V1-009", "TEXT-V1-010", "TEXT-V1-011", "TEXT-V1-012"
+      ],
+      "anchorsInCorpus": 12,
+      "metricReady": false,
+      "reason": "Every query must be judged against all 86 locked corpus products."
+    },
+    "independentImageQueries": {
+      "path": "docs/testing/electronics/independent-image-queries.jsonl",
+      "count": 11,
+      "hashAlgorithm": "canonical-jsonl-v1",
+      "sha256": "F721AC0F120729BE34CA62DB2C89213CE77497A9088A019B9286DD9775E99477",
+      "anchorsInCorpus": 0,
+      "metricReady": false,
+      "reason": "All 11 anchors are outside the locked 86-product corpus."
+    }
+  },
+  "labelArtifacts": {
+    "textConsensus": {
+      "path": "docs/testing/electronics/text-product-labels-consensus-v1.jsonl",
+      "count": 12,
+      "hashAlgorithm": "canonical-jsonl-v1",
+      "sha256": "CD346284A1992325559824B934DFA645FDEC88477B3FB87E721B95124349628D"
+    },
+    "exactImageConsensus": {
+      "path": "docs/testing/electronics/exact-product-labels-consensus-v1.jsonl",
+      "hashAlgorithm": "canonical-jsonl-v1",
+      "sha256": "ABCB2696246AF27D8CB86E00AF5E1C140DDBFF50552B13168F0404B129D5866F"
+    },
+    "similarImageConsensus": {
+      "path": "docs/testing/electronics/similar-product-labels-consensus-v1.jsonl",
+      "hashAlgorithm": "canonical-jsonl-v1",
+      "sha256": "47BAF68D92D0C4864C856ED22E0707F66C21DED3E6DBA1182D78836C877B0D1B"
+    }
+  },
+  "publicationGate": {
+    "precisionRecallAllowed": false,
+    "missing": [
+      "Independent consensus judgments for all 12 x 86 query-product pairs"
+    ]
+  }
+}

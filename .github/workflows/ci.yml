@@ -6,11 +6,83 @@ on:
   push:
     branches: [main, develop]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   repository-checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: klcn_ecommerce
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/klcn_ecommerce?schema=public
+      BACKEND_PORT: 3001
+      FRONTEND_URL: http://localhost:5173
+      VITE_API_URL: http://localhost:3001
+      JWT_ACCESS_SECRET: ci-access-secret-change-only-for-tests
+      JWT_REFRESH_SECRET: ci-refresh-secret-change-only-for-tests
+      JWT_ACCESS_TTL_SECONDS: 900
+      JWT_REFRESH_TTL_SECONDS: 604800
+      JWT_ISSUER: klcn-ecommerce-api
+      JWT_AUDIENCE: klcn-ecommerce-web
+      AI_SERVICE_PORT: 8000
+      AI_SERVICE_URL: http://localhost:8000
+      ELASTICSEARCH_URL: http://localhost:9200
+
+    services:
+      backend-e2e-postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: bckl_order_resolution_test_attributes_20261019
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 127.0.0.1:5549:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d bckl_order_resolution_test_attributes_20261019"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: klcn_ecommerce
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d klcn_ecommerce"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
       - name: Check required repository files
         shell: bash
         run: |
@@ -19,3 +91,120 @@ jobs:
           test -f .env.example
           test -f docs/api/ai-service-contract.md
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check whitespace
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        shell: bash
+        run: |
+          if [ -n "$BASE_SHA" ]; then
+            git diff --check "$BASE_SHA...HEAD"
+          else
+            git diff --check "HEAD^...HEAD"
+          fi
+
+      - name: Validate Docker Compose
+        run: docker compose config --quiet
+
+      - name: Validate Prisma schema
+        run: pnpm prisma:validate
+
+      - name: Apply database migrations
+        run: pnpm --dir BE exec prisma migrate deploy
+
+      - name: Seed test database
+        run: pnpm prisma:seed
+
+      - name: Lint workspaces
+        run: pnpm lint
+
+      - name: Typecheck Backend source, tests and Prisma config
+        run: pnpm --dir BE typecheck
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Check Address Cart QA safety guards
+        run: pnpm --dir BE qa:address-cart:guards
+      - name: Check Aftersales QA safety guards
+        run: pnpm --dir BE qa:aftersales:guards
+      - name: Set up Python for evaluation tools
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run phase-two evaluation tool tests
+        run: python scripts/dataset/tests/test_evaluation_v2.py
+
+      - name: Build workspaces
+        run: pnpm build
+
+      - name: Prepare isolated Backend E2E database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5549/bckl_order_resolution_test_attributes_20261019?schema=public
+        run: |
+          pnpm --dir BE exec prisma migrate deploy
+          pnpm prisma:seed
+
+      - name: Run Backend E2E tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5549/bckl_order_resolution_test_attributes_20261019?schema=public
+        run: pnpm --dir BE test:e2e
+
+  evaluation-package-portability:
+    name: Evaluation bytes - ${{ matrix.os }} - autocrlf=${{ matrix.autocrlf }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        autocrlf: ['false', 'true']
+    steps:
+      - name: Configure Git checkout newline mode
+        shell: bash
+        run: git config --global core.autocrlf '${{ matrix.autocrlf }}'
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify all preliminary packages and captured canonical bytes
+        run: python docs/testing/electronics/preliminary/2026-10-21-dat-decision/test_portability.py
+
+  ai-python-checks:
+    name: AI Service - Ruff and Pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HF_HUB_OFFLINE: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install AI Service dependencies
+        working-directory: AI_CLIP
+        run: |
+          python -m pip install --upgrade pip
+          # Hosted CI has no GPU. Avoid multi-GB CUDA wheels/cache exhausting disk.
+          python -m pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --no-cache-dir -r requirements.txt
+          python -c "import torch; assert torch.version.cuda is None, 'CI requires the CPU-only PyTorch build'"
+
+      - name: Run Ruff
+        working-directory: AI_CLIP
+        run: python -m ruff check app tests
+
+      - name: Run Pytest
+        working-directory: AI_CLIP
+        run: python -m pytest -q
