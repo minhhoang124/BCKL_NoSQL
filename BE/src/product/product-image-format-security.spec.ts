@@ -88,7 +88,7 @@ describe('Product image decoder boundary', () => {
         originalname: `valid.${format}`,
       });
       expect(receipt.url).toMatch(
-        new RegExp(`\\.${format === 'jpeg' ? 'jpg' : format}$`),
+        new RegExp(`\\.${format === 'jpeg' ? 'jpg' : 'png'}$`),
       );
       await storage.publish(receipt);
       expect(await storage.isPublished(receipt.url)).toBe(true);

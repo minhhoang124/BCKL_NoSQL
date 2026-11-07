@@ -9,6 +9,12 @@ import {
   validateQueryFile,
 } from "../services/imageSearchApi";
 import type { SearchResponse } from "../types/marketplace";
+import {
+  DEFAULT_SEARCH_TOP_K,
+  SEARCH_TOP_K_OPTIONS,
+  parseSearchTopK,
+  type SearchTopK,
+} from "../services/searchTopK";
 import { SearchResultCard } from "../services/searchTelemetry";
 import { prepareSearchTelemetry } from "../services/searchAnalyticsClient";
 import styles from "./ImageSearchPage.module.css";
@@ -33,6 +39,7 @@ function ImageQuery() {
   const [result, setResult] = useState<SearchResponse | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [topK, setTopK] = useState<SearchTopK>(DEFAULT_SEARCH_TOP_K);
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const [now, setNow] = useState(Date.now);
   const remaining = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
@@ -116,7 +123,7 @@ function ImageQuery() {
     try {
       await prepareSearchTelemetry();
       if(cancel.signal.aborted) return;
-      const response = await searchImage(selection.file, cancel.signal);
+      const response = await searchImage(selection.file, cancel.signal, topK);
       if (resources.current.mounted && request === resources.current.generation)
         setResult(response);
     } catch (reason) {
@@ -145,10 +152,6 @@ function ImageQuery() {
       <header>
         <Link to="/">← Tìm bằng từ khóa</Link>
         <h1>Tìm sản phẩm bằng ảnh</h1>
-        <p>
-          Chọn ảnh để tìm sản phẩm tương tự. Giá và trạng thái bán được đối
-          chiếu lại từ dữ liệu hiện tại.
-        </p>
       </header>
       <form className={styles.panel} onSubmit={(event) => void submit(event)}>
         <label htmlFor="image-query">Ảnh JPEG hoặc PNG, tối đa 5 MiB</label>
@@ -193,11 +196,20 @@ function ImageQuery() {
             }}
           />
         )}
-        <p className={styles.hint}>
-          Ảnh được gửi tới Backend và dịch vụ AI nội bộ để truy vấn, không được
-          thêm thành ảnh sản phẩm. Chưa hỗ trợ kết hợp bộ lọc của tìm kiếm từ
-          khóa.
-        </p>
+        <label htmlFor="image-top-k">Số kết quả</label>
+        <select
+          id="image-top-k"
+          className={styles.topK}
+          value={topK}
+          disabled={pending}
+          onChange={(event) => setTopK(parseSearchTopK(event.target.value))}
+        >
+          {SEARCH_TOP_K_OPTIONS.map((value) => (
+            <option key={value} value={value}>
+              {value} sản phẩm
+            </option>
+          ))}
+        </select>
         <div className={styles.actions}>
           <button
             type="submit"
@@ -244,11 +256,6 @@ function ImageQuery() {
       {result && (
         <section aria-label="Kết quả tìm ảnh">
           <h2>{result.items.length} sản phẩm tìm thấy</h2>
-          <p className={styles.hint}>
-            AI xử lý {Math.round(result.responseTimeMs)} ms; không phải tổng
-            thời gian tải lên. Điểm xếp hạng không phải tỷ lệ phần trăm giống
-            nhau.
-          </p>
           {result.items.length === 0 ? (
             <p>Không có kết quả phù hợp. Bạn có thể chọn ảnh khác.</p>
           ) : (

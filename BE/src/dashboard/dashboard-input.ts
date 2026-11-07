@@ -48,6 +48,60 @@ export function parseDashboardQuery(url: string, quality = false) {
     beforeId: quality ? number('beforeId') : undefined,
   };
 }
+export type TransactionKind = 'P' | 'R';
+export type TransactionCursor = { at: Date; kind: TransactionKind; id: bigint };
+export type TransactionRange = ReturnType<typeof parseTransactionQuery>;
+/**
+ * Query for the per-store payment/refund history. `cursor` is the opaque value
+ * returned as `nextCursor` (`<epochMs>_<P|R><id>`); `storeId` is Admin-only.
+ */
+export function parseTransactionQuery(url: string, admin: boolean) {
+  const values = new URL(url, 'http://localhost').searchParams,
+    seen = new Set<string>();
+  const allowed = ['from', 'to', 'limit', 'cursor', ...(admin ? ['storeId'] : [])];
+  for (const [key] of values) {
+    if (!allowed.includes(key) || seen.has(key))
+      throw new BadRequestException({ code: 'DASHBOARD_INVALID_QUERY' });
+    seen.add(key);
+  }
+  let range: ReturnType<typeof dashboardRange>;
+  try {
+    range = dashboardRange(values.get('from') ?? '', values.get('to') ?? '');
+  } catch {
+    throw new BadRequestException({ code: 'DASHBOARD_INVALID_RANGE' });
+  }
+  const positive = (key: string, max: number) => {
+    const value = values.get(key);
+    if (value === null) return undefined;
+    const parsed = Number(value);
+    if (!/^[1-9][0-9]*$/.test(value) || !Number.isSafeInteger(parsed) || parsed > max)
+      throw new BadRequestException({ code: 'DASHBOARD_INVALID_QUERY' });
+    return parsed;
+  };
+  const rawCursor = values.get('cursor');
+  let cursor: TransactionCursor | undefined;
+  if (rawCursor !== null) {
+    const match = /^([1-9][0-9]{0,14})_([PR])([1-9][0-9]{0,18})$/.exec(rawCursor);
+    const at = match ? new Date(Number(match[1])) : null;
+    if (!match || !at || !Number.isFinite(at.getTime()))
+      throw new BadRequestException({ code: 'DASHBOARD_INVALID_QUERY' });
+    const id = BigInt(match[3]!);
+    if (id > 9223372036854775807n)
+      throw new BadRequestException({ code: 'DASHBOARD_INVALID_QUERY' });
+    cursor = { at, kind: match[2] as TransactionKind, id };
+  }
+  return {
+    ...range,
+    localFrom: values.get('from')!,
+    localTo: values.get('to')!,
+    limit: positive('limit', 50) ?? 20,
+    storeId: admin ? positive('storeId', 2147483647) : undefined,
+    cursor,
+  };
+}
+export function transactionCursor(at: Date, kind: TransactionKind, id: string) {
+  return `${at.getTime()}_${kind}${id}`;
+}
 export function countNumber(value: string | number | bigint): number {
   const text = String(value);
   if (

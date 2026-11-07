@@ -64,15 +64,33 @@ export class ProductImageStorageService {
       throw new BadRequestException('Ảnh không được vượt quá 5 MB');
     }
 
-    const extension = await this.validateAndDetectExtension(file.buffer);
-    const hash = createHash('sha256').update(file.buffer).digest('hex');
+    const detectedExtension = await this.validateAndDetectExtension(file.buffer);
+    let storedBuffer = file.buffer;
+    if (detectedExtension === 'webp') {
+      // Indexing accepts JPEG/PNG. Validate the original WebP first, then store
+      // lossless PNG bytes (including alpha), never a renamed WebP payload.
+      try {
+        storedBuffer = await sharp(file.buffer, {
+          failOn: 'error',
+          limitInputPixels: 25_000_000,
+          sequentialRead: true,
+        }).png().toBuffer();
+      } catch {
+        throw new BadRequestException('Không thể chuẩn hóa ảnh WebP hợp lệ.');
+      }
+      if (storedBuffer.length > 5 * 1024 * 1024) {
+        throw new BadRequestException('Ảnh sau chuẩn hóa không được vượt quá 5 MB');
+      }
+    }
+    const extension = detectedExtension === 'webp' ? 'png' : detectedExtension;
+    const hash = createHash('sha256').update(storedBuffer).digest('hex');
     const directory = path.join(this.uploadRoot, 'products', String(productId));
     await mkdir(directory, { recursive: true });
     const absolutePath = path.join(directory, `${hash}.${extension}`);
     const stagingDirectory = path.join(this.uploadRoot, '.staging');
     await mkdir(stagingDirectory, { recursive: true });
     const stagedPath = path.join(stagingDirectory, randomUUID());
-    await writeFile(stagedPath, file.buffer, { flag: 'wx' });
+    await writeFile(stagedPath, storedBuffer, { flag: 'wx' });
 
     const baseUrl = (
       process.env.BACKEND_PUBLIC_URL ??

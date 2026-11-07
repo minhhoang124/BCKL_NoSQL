@@ -23,12 +23,17 @@ import { CartPage } from '../pages/CartPage';
 import { AddressBookPage } from '../pages/AddressBookPage';
 import { CheckoutPage } from '../features/order-flow/CheckoutPage';
 import { OrderReadPage } from '../features/order-readiness/OrderReadPages';
+import { SellerClosePage } from '../features/order-recovery/SellerClosePage';
 import { ChatPage } from '../features/chat/ChatPage';
 import { AftersalesPage } from '../features/aftersales/AftersalesPage';
 import { StoreApplicationPage } from '../features/seller-onboarding/StoreApplicationPage';
 import { ReviewPage } from '../features/product-reviews/ReviewPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
 import { ForgotPasswordPage, EmailConfirmationPage } from '../features/auth-email/EmailRecoveryPages';
+import { ChangePasswordPage } from '../pages/ChangePasswordPage';
+import { passwordChangeMode } from '../services/passwordChangeEmailApi';
+import { AccountLayout } from '../components/AccountLayout/AccountLayout';
+import { SellerLayout } from '../components/SellerLayout/SellerLayout';
 
 export function AppRouter() {
   return (
@@ -72,43 +77,34 @@ export function AppRouter() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<EmailConfirmationPage reset />} />
           <Route path="/verify-email" element={<EmailConfirmationPage />} />
+          {passwordChangeMode() === 'EMAIL' && <Route path="/account/change-password" element={<ChangePasswordPage />} />}
         </>}
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/stores/:storeId" element={<PublicStorePage />} />
 
-        {/* Protected Routes - Any logged in user */}
-        <Route
-          path="/account"
-          element={
-            <ProtectedRoute>
-              <AccountPage />
-            </ProtectedRoute>
-          }
-        />
-
         <Route path="/cart" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><CartPage /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><CheckoutPage /></ProtectedRoute>} />
 
-        {/* Protected Routes - Buyer addresses */}
-        <Route
-          path="/account/addresses"
-          element={
-            <ProtectedRoute buyerAccess allowedRoles={['USER']}>
-              <AddressBookPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Account pages share one sidebar layout */}
+        <Route element={<AccountLayout />}>
+          <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+          <Route path="/account/addresses" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><AddressBookPage /></ProtectedRoute>} />
+          <Route path="/account/orders" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><OrderReadPage scope="buyer" /></ProtectedRoute>} />
+          <Route path="/account/orders/:orderId" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><OrderReadPage scope="buyer" detail /></ProtectedRoute>} />
+          <Route path="/account/aftersales" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><AftersalesPage scope="BUYER" /></ProtectedRoute>} />
+          <Route path="/account/store-application" element={<ProtectedRoute allowedRoles={['USER','SELLER']}><StoreApplicationPage /></ProtectedRoute>} />
+          <Route path="/account/reviews" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><ReviewPage scope="BUYER" /></ProtectedRoute>} />
+          <Route path="/account/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+        </Route>
 
-        <Route path="/account/orders" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><OrderReadPage scope="buyer" /></ProtectedRoute>} />
-        <Route path="/account/aftersales" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><AftersalesPage scope="BUYER" /></ProtectedRoute>} />
-        <Route path="/account/store-application" element={<ProtectedRoute allowedRoles={['USER','SELLER']}><StoreApplicationPage /></ProtectedRoute>} />
-        <Route path="/account/reviews" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><ReviewPage scope="BUYER" /></ProtectedRoute>} />
-        <Route path="/account/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-        <Route path="/seller/reviews" element={<ProtectedRoute allowedRoles={['SELLER']}><ReviewPage scope="SELLER" /></ProtectedRoute>} />
-        <Route path="/seller/aftersales" element={<ProtectedRoute allowedRoles={['SELLER']}><AftersalesPage scope="SELLER" /></ProtectedRoute>} />
-        <Route path="/account/orders/:orderId" element={<ProtectedRoute buyerAccess allowedRoles={['USER']}><OrderReadPage scope="buyer" detail /></ProtectedRoute>} />
-        <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" /></ProtectedRoute>} />
-        <Route path="/seller/orders/:orderId" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" detail /></ProtectedRoute>} />
+        {/* Seller sub-pages share the Seller Centre sidebar */}
+        <Route element={<SellerLayout />}>
+          <Route path="/seller/reviews" element={<ProtectedRoute allowedRoles={['SELLER']}><ReviewPage scope="SELLER" /></ProtectedRoute>} />
+          <Route path="/seller/aftersales" element={<ProtectedRoute allowedRoles={['SELLER']}><AftersalesPage scope="SELLER" /></ProtectedRoute>} />
+          <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" /></ProtectedRoute>} />
+          <Route path="/seller/orders/:orderId/close" element={<ProtectedRoute allowedRoles={['SELLER']}><SellerClosePage /></ProtectedRoute>} />
+          <Route path="/seller/orders/:orderId" element={<ProtectedRoute allowedRoles={['SELLER']}><OrderReadPage scope="seller" detail /></ProtectedRoute>} />
+        </Route>
 
         {/* Protected Routes - Seller only */}
         <Route

@@ -225,7 +225,9 @@ describe('Buyer Cart UI', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Số lượng không hợp lệ');
     expect(within(row).getByRole('spinbutton')).toHaveValue(3);
     expect(within(row).getByRole('button', { name: 'Cập nhật' })).toBeEnabled();
-    expect(within(screen.getByRole('complementary')).getAllByText('2.580.000 ₫')).toHaveLength(2);
+    // Totals come only from the saved quantity (2 × 1.290.000), never from the unsaved draft (3).
+    expect(within(screen.getByRole('complementary')).getByText('2.580.000 ₫')).toBeInTheDocument();
+    expect(within(screen.getByRole('complementary')).queryByText('3.870.000 ₫')).not.toBeInTheDocument();
   });
 
   it.each([401, 403, 404, 409, 429, 500, 503])('invalidates stale summary after HTTP %s write failure', async (status) => {
@@ -274,7 +276,7 @@ describe('Buyer Cart UI', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tải lại giỏ hàng' }));
     await screen.findByText(/Giá của 1 dòng đã thay đổi/);
     expect(screen.getByRole('checkbox', { name: 'Chọn biến thể 125' })).not.toBeChecked();
-    expect(within(screen.getByRole('complementary')).getByText('0 dòng')).toBeInTheDocument();
+    expect(within(screen.getByRole('complementary')).getByText('0 dòng · 0 sản phẩm')).toBeInTheDocument();
   });
 
   it('focuses/traps the deletion dialog, Escape cancels, and blocks double delete', async () => {
@@ -332,5 +334,33 @@ describe('Buyer Cart UI', () => {
     await act(async () => pending.resolve(cart));
     expect(screen.queryByText('Tai nghe mẫu')).not.toBeInTheDocument();
     expect(screen.queryByText('Đã cập nhật giỏ hàng.')).not.toBeInTheDocument();
+  });
+  it('BUY-06: increments and decrements quantity via stepper buttons', async () => {
+    api.put.mockResolvedValueOnce({ ...cart, totalQuantity: 3 });
+    render(page());
+    await screen.findByText('Tai nghe mẫu');
+    const plusBtn = screen.getByRole('button', { name: 'Tăng số lượng biến thể 125' });
+    fireEvent.click(plusBtn);
+    expect(api.put).toHaveBeenCalledWith(125, 3);
+  });
+  it('renders lineTotal per item when returned in Cart projection (BE-UX-01)', async () => {
+    api.list.mockResolvedValueOnce({
+      ...cart,
+      groups: [
+        {
+          ...cart.groups[0],
+          items: [
+            {
+              ...cart.groups[0].items[0],
+              lineTotal: '2580000.00',
+            },
+          ],
+        },
+      ],
+    });
+    render(page());
+    // The "Số tiền" column cell shows the server line total (the column header carries the label).
+    const row = (await screen.findByText('Tai nghe mẫu')).closest('div')?.parentElement as HTMLElement;
+    expect(within(row).getByText('2.580.000 ₫')).toBeInTheDocument();
   });
 });

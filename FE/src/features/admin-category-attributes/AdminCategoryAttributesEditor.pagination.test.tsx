@@ -67,7 +67,7 @@ describe('Attributes editor pagination',()=>{
   it('rejects a first option page whose parent revision differs from detail',async()=>{
     const api=reader();vi.mocked(api.options).mockResolvedValue({items:options,nextCursor:null,definitionRevision:5});
     render(<AdminCategoryAttributesEditor categoryId={3} reader={api}/>);fireEvent.click(await screen.findByRole('button',{name:/Màu sắc · v4/}));
-    await screen.findByText(/ATTRIBUTE_REVISION_CONFLICT/);expect(screen.queryByRole('heading',{name:'Sửa Màu sắc'})).not.toBeInTheDocument();
+    await screen.findByText(/Thuộc tính đã đổi phiên bản/);expect(screen.queryByRole('heading',{name:'Sửa Màu sắc'})).not.toBeInTheDocument();
     expect(screen.queryByRole('button',{name:'Option 1 · Tắt'})).not.toBeInTheDocument();
   });
   it('deduplicates a newly created definition also returned in a later page',async()=>{

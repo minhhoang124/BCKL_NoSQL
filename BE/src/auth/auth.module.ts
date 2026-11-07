@@ -31,6 +31,8 @@ import {
   PhoneOtpSandboxDelivery,
 } from './phone-otp.service.js';
 import { AuthSessionRate, AuthSessionRateGuard } from './auth-session-rate.js';
+import { PasswordChangeEmailController } from './password-change-email.controller.js';
+import { PasswordChangeEmailService } from './password-change-email.service.js';
 
 @Module({
   imports: [
@@ -45,6 +47,7 @@ import { AuthSessionRate, AuthSessionRateGuard } from './auth-session-rate.js';
     AuthEmailRecoveryController,
     GoogleOAuthController,
     PhoneOtpController,
+    PasswordChangeEmailController,
   ],
   providers: [
     AuthSessionRate,
@@ -66,6 +69,7 @@ import { AuthSessionRate, AuthSessionRateGuard } from './auth-session-rate.js';
     AccountSettingsService,
     AccountSettingsGuard,
     AccountStatusRecoveryService,
+    PasswordChangeEmailService,
   ],
   exports: [AuthService, JwtAuthGuard, RolesGuard],
 })

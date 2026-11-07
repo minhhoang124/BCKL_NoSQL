@@ -28,6 +28,18 @@ export interface OrderPayment {
   currency: 'VND';
   paidAt: string | null;
 }
+export interface OrderItemPreview {
+  orderItemId: number;
+  productId: number;
+  variantId: number;
+  productName: string;
+  options: string[] | null;
+  quantity: number;
+  unitPrice: string;
+  lineTotal: string;
+  imageUrl: string | null;
+}
+
 export interface OrderSummary {
   id: number;
   orderNumber: string;
@@ -37,6 +49,10 @@ export interface OrderSummary {
   payment: OrderPayment | null;
   createdAt: string;
   updatedAt: string;
+  itemPreview?: OrderItemPreview[];
+  itemCount?: number;
+  totalQuantity?: number;
+  hasMoreItems?: boolean;
 }
 export interface OrderList {
   items: OrderSummary[];
@@ -68,6 +84,7 @@ export interface OrderDetail extends OrderSummary {
     unitPrice: string;
     quantity: number;
     lineTotal: string;
+    imageUrl?: string | null;
   }[];
   subtotal: string;
   shippingFee: string;

@@ -12,7 +12,7 @@
 .panel p { margin: 12px 0; }
 .preparation, .hint { color: #59616c; font-size: 13px; }
 .panel label { display: block; margin: 16px 0 8px; }
-.panel select, .panel textarea {
+.panel select, .panel textarea, .panel input[type="text"] {
   display: block;
   box-sizing: border-box;
   width: 100%;
@@ -45,3 +45,10 @@
   .panel { padding: 16px; }
   .panel button { width: 100%; margin-right: 0; }
 }
+
+.panel { border-color: #e8e8e8; border-radius: 4px; font-size: 14px; }
+.panel button { border-radius: 4px; }
+.panel button.secondary { background: #fff; color: #555; border-color: #d8d8d8; }
+
+/* Confirmation controls stay secondary, including cancellation. */
+.panel[aria-labelledby] > button { background: #fff; color: #555; border-color: #d8d8d8; }

@@ -3,6 +3,8 @@ import { isEmail } from 'class-validator';
 import { createHash } from 'node:crypto';
 import { bcryptPassword } from './password-policy.js';
 export type EmailPurpose = 'VERIFY_EMAIL' | 'RESET_PASSWORD';
+/** Delivery-only union; recovery flows stay restricted to EmailPurpose. */
+export type MailPurpose = EmailPurpose | 'CHANGE_PASSWORD';
 export const invalidEmailToken = () =>
   new BadRequestException({
     code: 'EMAIL_TOKEN_INVALID',

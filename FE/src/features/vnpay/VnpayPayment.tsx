@@ -3,7 +3,15 @@ import { useAuth } from "../../contexts/useAuth";
 import { getAuthSessionVersion } from "../../services/apiClient";
 import { vnpayClient, type VnpayStatus } from "./paymentClient";
 import styles from "../phone-otp/PhoneOtp.module.css";
-function Inner({ orderId, amount }: { orderId: number; amount: string }) {
+type VnpayProps = {
+  orderId: number;
+  amount: string;
+  /** Payment status the parent order view currently shows. */
+  knownPaymentStatus?: string;
+  /** Called once when the gateway reports PAID but the parent still shows another status. */
+  onPaymentChanged?: () => void;
+};
+function Inner({ orderId, amount, knownPaymentStatus, onPaymentChanged }: VnpayProps) {
   const epoch = getAuthSessionVersion(),
     api = useMemo(() => vnpayClient(orderId, amount), [orderId, amount]);
   const [data, setData] = useState<VnpayStatus | null>(null),
@@ -31,7 +39,12 @@ function Inner({ orderId, amount }: { orderId: number; amount: string }) {
     flight.current = c;
     try {
       const fresh = await (start ? api.start(c.signal) : api.read(c.signal));
-      if (current(n)) setData(fresh);
+      if (current(n)) {
+        setData(fresh);
+        // Keep the order card (payment status, cancel button) in sync with a confirmed IPN.
+        if (fresh.paymentStatus === "PAID" && knownPaymentStatus !== undefined && knownPaymentStatus !== "PAID")
+          onPaymentChanged?.();
+      }
     } catch {
       if (current(n))
         setError(
@@ -139,7 +152,7 @@ function Inner({ orderId, amount }: { orderId: number; amount: string }) {
     </section>
   );
 }
-export function VnpayPayment(props: { orderId: number; amount: string }) {
+export function VnpayPayment(props: VnpayProps) {
   const { user, loading } = useAuth();
   return !loading &&
     user &&

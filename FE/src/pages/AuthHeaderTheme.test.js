@@ -12,10 +12,16 @@ function lum(hex) {
   return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
 }
 describe('Auth/Header explicit light surfaces under either system preference', () => {
-  it.each([[auth, '.container'], [header, '.header']])('pins surface/control scheme', (css, selector) => {
-    expect(rule(css, selector)).toContain('color-scheme: light;');
-    expect(rule(css, selector)).toContain('color: #20242b;');
-    expect(rule(css, selector)).toContain('background-color: #fff;');
+  it('pins the auth surface/control scheme', () => {
+    expect(rule(auth, '.container')).toContain('color-scheme: light;');
+    expect(rule(auth, '.container')).toContain('color: #20242b;');
+    expect(rule(auth, '.container')).toContain('background-color: #fff;');
+  });
+  // Header is a solid brand bar (white on #d63b0b, contrast pair checked below).
+  it('pins the header bar colors explicitly', () => {
+    expect(rule(header, '.header')).toContain('color-scheme: light;');
+    expect(rule(header, '.header')).toContain('color: #fff;');
+    expect(rule(header, '.header')).toContain('background-color: var(--market-brand);');
   });
   it('does not inherit near-white global dark h1 color', () => expect(rule(auth, '.title')).toContain('color: #20242b;'));
   it.each([[auth, '.form input, .form select'], [header, '.search input']])('sets foreground and background of native inputs', (css, selector) => {
@@ -31,7 +37,7 @@ describe('Auth/Header explicit light surfaces under either system preference', (
   });
   it('keeps an explicit focus indicator', () => {
     expect(rule(auth, '.form input:focus, .form select:focus')).toContain('outline: 2px solid var(--market-brand);');
-    expect(rule(header, '.header :focus-visible')).toContain('outline: 2px solid var(--market-brand);');
+    expect(rule(header, '.header :focus-visible')).toContain('outline: 2px solid #fff;');
   });
   it('uses the selected orange token for primary controls, not previous blue', () => {
     const tokens = readFileSync(new URL('../styles/marketplace.css', import.meta.url), 'utf8');

@@ -91,6 +91,7 @@ export function qualityFixture(q: Query, scope: Scope = "ADMIN", page = 1) {
       : [80]
     ).map((orderId) => ({
       orderId,
+      orderNumber: `ORD-${orderId}`,
       storeId: 7,
       issues: ["REFUND_PROJECTION_INVALID"],
     })),

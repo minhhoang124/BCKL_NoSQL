@@ -10,6 +10,7 @@ import { compare, hash } from 'bcryptjs';
 import { PrismaService } from '../prisma.service.js';
 import { publicUserSelect } from './auth.service.js';
 import type { AuthenticatedUser } from './auth.types.js';
+import { passwordChangeMode } from './password-change-email.input.js';
 
 @Injectable()
 export class AccountSettingsService {
@@ -61,6 +62,12 @@ export class AccountSettingsService {
     actor: AuthenticatedUser,
     input: { currentPassword: string; newPassword: string },
   ) {
+    // EMAIL mode: the emailed, browser-bound flow is mandatory; no bypass.
+    if (passwordChangeMode() === 'EMAIL')
+      throw new ConflictException({
+        code: 'PASSWORD_CHANGE_EMAIL_REQUIRED',
+        message: 'Hãy đổi mật khẩu qua liên kết xác nhận gửi tới email.',
+      });
     const snapshot = await this.prisma.user.findUnique({
       where: { id: actor.userId },
     });

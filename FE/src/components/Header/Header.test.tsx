@@ -53,7 +53,7 @@ describe('Header logout', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Đăng xuất' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Máy chủ chưa thể đăng xuất');
-    expect(screen.getByText(/Tài khoản \(Demo User\)/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Tài khoản (Demo User)' })).toHaveAttribute('href', '/account');
     expect(navigateMock).not.toHaveBeenCalled();
   });
 

@@ -8,6 +8,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -338,5 +339,72 @@ describe('Admin product moderation', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(
       'Đã yêu cầu chỉnh sửa sản phẩm.',
     );
+  });
+});
+
+describe('AdminDashboardPage notification bell', () => {
+  function mockProduct45() {
+    vi.mocked(fetchApi).mockImplementation((path) => {
+      if (String(path).includes('45')) return Promise.resolve(productDetail);
+      return Promise.reject(new ApiError('Not found', 404));
+    });
+  }
+
+  function renderAdminRoutes(path = '/admin/products/45') {
+    return render(
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/admin/*" element={<AdminDashboardPage />} />
+          <Route path="/account/notifications" element={<h1>Trang thông báo</h1>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+  }
+
+  it('disables the notification bell when VITE_NOTIFICATIONS_ENABLED is not true', async () => {
+    vi.stubEnv('VITE_NOTIFICATIONS_ENABLED', 'false');
+    try {
+      mockProduct45();
+      renderAdminRoutes();
+      const bell = await screen.findByRole('button', { name: 'Thông báo' });
+      expect(bell).toBeDisabled();
+      expect(bell).toHaveAttribute('title', 'Thông báo hiện chưa khả dụng');
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('enables the notification bell and navigates to /account/notifications when VITE_NOTIFICATIONS_ENABLED is true', async () => {
+    vi.stubEnv('VITE_NOTIFICATIONS_ENABLED', 'true');
+    try {
+      mockProduct45();
+      renderAdminRoutes();
+      const bell = await screen.findByRole('button', { name: 'Thông báo' });
+      expect(bell).not.toBeDisabled();
+      expect(bell).toHaveAttribute('title', 'Thông báo');
+      fireEvent.click(bell);
+      expect(await screen.findByRole('heading', { name: 'Trang thông báo' })).toBeInTheDocument();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+  it('toggles user menu on avatar click without signing out, and exposes an explicit sign out button', async () => {
+    mockProduct45();
+    renderAdminRoutes();
+    const avatar = await screen.findByRole('button', { name: /Menu tài khoản/i });
+    expect(avatar).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('menu', { name: 'Menu tài khoản quản trị' })).not.toBeInTheDocument();
+
+    fireEvent.click(avatar);
+    expect(avatar).toHaveAttribute('aria-expanded', 'true');
+    const menu = await screen.findByRole('menu', { name: 'Menu tài khoản quản trị' });
+    expect(menu).toBeInTheDocument();
+    expect(within(menu).getByText(/Quản trị viên/i)).toBeInTheDocument();
+    expect(within(menu).getByRole('menuitem', { name: /Hồ sơ cá nhân & Bảo mật/i })).toBeInTheDocument();
+    expect(within(menu).getByRole('menuitem', { name: /Đăng xuất/i })).toBeInTheDocument();
+
+    // Escape closes the menu
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('menu', { name: 'Menu tài khoản quản trị' })).not.toBeInTheDocument();
   });
 });

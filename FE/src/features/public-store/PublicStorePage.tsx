@@ -61,8 +61,10 @@ function Storefront({ storeId }: { storeId: number }) {
     };
   }, [load]);
   return (
-    <section className={styles.page} aria-label="Cửa hàng công khai">
-      <Link to="/">Trang chủ</Link>
+    <section className={`${styles.page} ${styles.buyerSurface}`} aria-label="Cửa hàng công khai">
+      <nav aria-label="Đường dẫn" className={storeStyles.crumbs}>
+        <Link to="/">Trang chủ</Link> <span aria-hidden="true">›</span> Cửa hàng
+      </nav>
       {busy && <p role="status">Đang tải cửa hàng…</p>}
       {error && (
         <div role="alert" className={styles.error}>
@@ -75,11 +77,17 @@ function Storefront({ storeId }: { storeId: number }) {
       {data && (
         <>
           <header className={`${styles.panel} ${storeStyles.profile}`}>
-            <span className={styles.badge}>Cửa hàng</span>
-            <h1>{data.store.name}</h1>
-            <p>{data.store.description || "Cửa hàng chưa thêm giới thiệu."}</p>
+            <span className={storeStyles.avatar} aria-hidden="true">
+              {data.store.name.trim().slice(0, 1).toUpperCase()}
+            </span>
+            <div className={storeStyles.info}>
+              <h1>{data.store.name}</h1>
+              {data.store.description && <p>{data.store.description}</p>}
+            </div>
             {import.meta.env.VITE_CHAT_ENABLED === "true" && (
-              <Link to={`/messages?storeId=${storeId}`}>Chat với cửa hàng</Link>
+              <Link className={storeStyles.chat} to={`/messages?storeId=${storeId}`}>
+                Chat với cửa hàng
+              </Link>
             )}
           </header>
           <h2>Sản phẩm của cửa hàng</h2>

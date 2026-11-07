@@ -99,6 +99,7 @@ export class OrderDeliveryController {
       command,
       req.headers['idempotency-key'],
       body,
+      user.credentialVersion ?? 0,
     );
   }
   @Post(':orderId/ship')

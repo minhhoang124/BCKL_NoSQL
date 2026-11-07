@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -22,8 +22,10 @@ const db = new URL(process.env.DATABASE_URL ?? "");
 assert.equal(db.protocol, "postgresql:");
 assert.equal(db.hostname, "127.0.0.1");
 assert.equal(db.port, "5549");
+// Fresh single-use QA database from machine-local/qa-scripts/run-fe-orange-buyer.mjs (DML-only role).
+const freshQa = /^\/bckl_order_resolution_test_drivers_20261031_\d{13}$/.test(db.pathname);
 const integratedQa =
-  db.pathname === "/bckl_order_resolution_test_hardening_20261029" &&
+  (db.pathname === "/bckl_order_resolution_test_hardening_20261029" || freshQa) &&
   db.username === "bckl_local_app";
 assert(
   integratedQa ||
@@ -101,7 +103,10 @@ try {
   }
   if (integratedQa) {
     const [migrations] = await prisma.$queryRaw`SELECT count(*)::int AS n FROM _prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;
-    assert.equal(migrations.n, 39);
+    const expected = freshQa
+      ? (await readdir(path.join(root, "BE/prisma/migrations"), { withFileTypes: true })).filter((e) => e.isDirectory()).length
+      : 39;
+    assert.equal(migrations.n, expected);
   }
   process.env.VITE_API_URL = api;
   if (values["integrated-aftersales"]) { process.env.VITE_AFTERSALES_ENABLED="true";  }
@@ -280,13 +285,14 @@ try {
       .uncheck();
     await page.getByRole("link", { name: "Tiếp tục thanh toán" }).click();
     await page.getByRole("heading", { name: "Xác nhận mua hàng" }).waitFor();
-    const preview = page.getByRole("button", { name: "Kiểm tra giá và kho" });
-    await preview.waitFor();
+    // The price/stock check runs automatically; wait until it enables "Đặt hàng COD".
+    const placeAuto = page.getByRole("button", { name: "Đặt hàng COD" });
+    await placeAuto.waitFor();
     await page.waitForFunction(
       () =>
-        ![...document.querySelectorAll("button")].find(
-          (b) => b.textContent === "Kiểm tra giá và kho",
-        )?.disabled,
+        [...document.querySelectorAll("button")].find(
+          (b) => b.textContent === "Đặt hàng COD",
+        )?.disabled === false,
     );
     const screens = [await shot("01-checkout")];
     const measurements = await page
@@ -316,12 +322,12 @@ try {
       `${name} horizontal overflow ${JSON.stringify(measurements)}`,
     );
     await page.keyboard.press("Tab"); // Enter keyboard modality before checking :focus-visible.
-    await preview.focus();
+    await placeAuto.focus();
     assert.equal(
-      await preview.evaluate((e) => getComputedStyle(e).outlineStyle),
+      await placeAuto.evaluate((e) => getComputedStyle(e).outlineStyle),
       "solid",
     );
-    await preview.press("Enter");
+    // Do not press: the scenario below must be installed before the first submit.
     const place = page.getByRole("button", {
       name: "Đặt hàng COD",
       exact: true,
@@ -357,8 +363,13 @@ try {
         data: { price: "10000.00", stock: 5 },
       });
       await page.getByRole("button", { name: "Tải lại giỏ và giá" }).click();
-      await preview.click();
-      await place.waitFor();
+      // Reload triggers a fresh automatic price/stock check; wait for it to enable ordering.
+      await page.waitForFunction(
+        () =>
+          [...document.querySelectorAll("button")].find(
+            (b) => b.textContent === "Đặt hàng COD",
+          )?.disabled === false,
+      );
     }
     const posts = [];
     if (scenario === "lost-response") {
@@ -790,7 +801,7 @@ try {
       await page
         .getByText("Giỏ chưa có mặt hàng mua được.", { exact: true })
         .waitFor();
-      assert(await preview.isDisabled());
+      assert(await placeAuto.isDisabled());
       screens.push(await shot("05-empty"));
       let release;
       const held = new Promise((resolve) => {
@@ -820,7 +831,7 @@ try {
         await page.getByText(/Chưa có địa chỉ nhận hàng/).count(),
         0,
       );
-      assert.equal(await preview.count(), 0);
+      assert.equal(await placeAuto.count(), 0);
       screens.push(await shot("07-network-error"));
       await page.unroute(api + "/cart");
       await page.getByRole("button", { name: "Tải lại", exact: true }).click();

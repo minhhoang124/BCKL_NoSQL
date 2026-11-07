@@ -244,12 +244,16 @@ describe('Buyer/Seller Order lists (real PostgreSQL, read-only fixtures)', () =>
     const row = response.body.items[0];
     expect(Object.keys(row).sort()).toEqual([
       'createdAt',
+      'hasMoreItems',
       'id',
+      'itemCount',
+      'itemPreview',
       'orderNumber',
       'payment',
       'status',
       'store',
       'total',
+      'totalQuantity',
       'updatedAt',
     ]);
     expect(Object.keys(row.store).sort()).toEqual(['id', 'name']);
@@ -412,6 +416,136 @@ describe('Buyer/Seller Order lists (real PostgreSQL, read-only fixtures)', () =>
       message: 'Không thể đọc đơn hàng.',
     });
     expect(response.headers['cache-control']).toBe('no-store');
+  });
+  it('previews at most 3 snapshot lines per order, scoped by endpoint, with current-only images', async () => {
+    const category = await prisma.category.create({
+      data: { name: `${marker}-cat`, slug: `${marker}-cat` },
+    });
+    const product = await prisma.product.create({
+      data: {
+        storeId,
+        categoryId: category.id,
+        name: 'Current catalog name',
+        sellerStatus: 'ACTIVE',
+        moderationStatus: 'APPROVED',
+        images: {
+          create: { url: '/uploads/list-preview.jpg', isPrimary: true },
+        },
+      },
+    });
+    const variant = await prisma.productVariant.create({
+      data: {
+        productId: product.id,
+        storeId,
+        skuCode: `${marker}-sku`,
+        price: '10000',
+        stock: 5,
+        optionSignature: 'default',
+      },
+    });
+    const record = await order(buyer.id, storeId, 'CONFIRMED');
+    const names = ['Line A', 'Line B', 'Line C', 'Line D'];
+    try {
+      for (const [index, name] of names.entries())
+        await prisma.orderItem.create({
+          data: {
+            orderId: record.id,
+            storeId,
+            productId: product.id,
+            variantId: variant.id,
+            productNameSnapshot: name,
+            skuSnapshot: 'Purchased SKU',
+            optionSnapshot: ['Black'],
+            unitPrice: '2000.00',
+            quantity: index + 1,
+            lineTotal: String(2000 * (index + 1)),
+          },
+        });
+      await prisma.product.update({
+        where: { id: product.id },
+        data: { name: 'Renamed after purchase' },
+      });
+      await prisma.productVariant.update({
+        where: { id: variant.id },
+        data: { price: '1' },
+      });
+      const find = (body: { items: { id: number }[] }) =>
+        body.items.find((row) => row.id === record.id) as unknown as {
+          itemPreview: Record<string, unknown>[];
+          itemCount: number;
+          totalQuantity: number;
+          hasMoreItems: boolean;
+        };
+      const buyerRow = find((await get().expect(200)).body);
+      expect(buyerRow.itemCount).toBe(4);
+      expect(buyerRow.totalQuantity).toBe(10);
+      expect(buyerRow.hasMoreItems).toBe(true);
+      expect(buyerRow.itemPreview.map((line) => line.productName)).toEqual([
+        'Line A',
+        'Line B',
+        'Line C',
+      ]);
+      expect(buyerRow.itemPreview[1]).toEqual({
+        orderItemId: expect.any(Number),
+        productId: product.id,
+        variantId: variant.id,
+        productName: 'Line B',
+        options: ['Black'],
+        quantity: 2,
+        unitPrice: '2000.00',
+        lineTotal: '4000.00',
+        imageUrl: '/uploads/list-preview.jpg',
+      });
+      const sellerRow = find(
+        (await get('/seller/orders', seller.token).expect(200)).body,
+      );
+      expect(sellerRow.itemPreview).toEqual(buyerRow.itemPreview);
+      // Other Store / other Buyer never see the order or its lines.
+      expect(
+        find((await get('/seller/orders', seller2.token).expect(200)).body),
+      ).toBeUndefined();
+      expect(
+        find((await get('/orders', buyer2.token).expect(200)).body),
+      ).toBeUndefined();
+      // Hidden Product: Buyer scope gets null image, owner Seller keeps it.
+      await prisma.product.update({
+        where: { id: product.id },
+        data: { sellerStatus: 'HIDDEN' },
+      });
+      expect(
+        find((await get().expect(200)).body).itemPreview.map(
+          (line) => line.imageUrl,
+        ),
+      ).toEqual([null, null, null]);
+      expect(
+        find(
+          (await get('/seller/orders', seller.token).expect(200)).body,
+        ).itemPreview[0]!.imageUrl,
+      ).toBe('/uploads/list-preview.jpg');
+      expect(
+        await prisma.orderItem.findMany({
+          where: { orderId: record.id },
+          orderBy: { id: 'asc' },
+          select: { productNameSnapshot: true, unitPrice: true },
+        }),
+      ).toEqual(
+        names.map((name) => ({
+          productNameSnapshot: name,
+          unitPrice: expect.anything(),
+        })),
+      );
+    } finally {
+      await prisma.orderItem.deleteMany({ where: { orderId: record.id } });
+      await prisma.searchOutbox.deleteMany({ where: { productId: product.id } });
+      await prisma.productVariant.deleteMany({
+        where: { productId: product.id },
+      });
+      await prisma.productImage.deleteMany({
+        where: { productId: product.id },
+      });
+      await prisma.product.deleteMany({ where: { id: product.id } });
+      await prisma.category.deleteMany({ where: { id: category.id } });
+    }
   });
   it('performs no mutation after repeated GETs', async () => {
     const before = await prisma.order.findMany({

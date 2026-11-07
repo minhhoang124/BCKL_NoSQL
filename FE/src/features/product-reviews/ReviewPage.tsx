@@ -389,12 +389,7 @@ function Workspace({
       aria-busy={busy}
     >
       <header>
-        <p className={styles.eyebrow}>ĐÁNH GIÁ SAU GIAO DỊCH</p>
         <h1>{labels[scope]}</h1>
-        <p>
-          Đánh giá dựa trên mặt hàng trong đơn đã hoàn tất. Hoàn tiền không tự
-          xóa nhận xét.
-        </p>
       </header>
       <div className={styles.toolbar}>
         <button disabled={busy} onClick={() => void load()}>
@@ -460,8 +455,7 @@ function Workspace({
       )}
       {!enabled && (
         <p className={styles.notice}>
-          Chưa bật thao tác đánh giá trên Web. Mã đang chờ vẫn có thể được đối
-          chiếu khi Backend sẵn sàng.
+          Tạm thời chưa thể gửi đánh giá mới. Bạn vẫn có thể kiểm tra yêu cầu đang chờ.
         </p>
       )}
       {scope === "BUYER" && !initialItem && !pending && (

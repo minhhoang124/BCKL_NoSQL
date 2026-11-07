@@ -1,0 +1,26 @@
+# Build context is the repository root (pnpm workspace + lockfile).
+# Keep secrets, local data and heavy folders out of every image.
+**/node_modules
+**/dist
+**/.vite
+**/coverage
+**/*.tsbuildinfo
+.git
+.github
+.env
+.env.*
+!.env.example
+**/*.private.json
+uploads
+datasets
+database
+AI_CLIP
+docs
+tools
+scripts
+BE/test
+BE/uploads
+FE/qa
+FE/*.html
+!FE/index.html
+**/*.log

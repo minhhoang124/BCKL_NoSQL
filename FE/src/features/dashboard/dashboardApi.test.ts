@@ -115,6 +115,18 @@ describe("Dashboard exact financial boundary", () => {
     body.nextBeforeId = 82;
     expect(() => parseQuality(body, "SELLER", q)).toThrow();
   });
+  it("accepts a missing orderNumber from an older API but refuses malformed ones", () => {
+    const body = qualityFixture(q, "SELLER");
+    expect(parseQuality(body, "SELLER", q, undefined, 7).items[0]!.orderNumber).toBe("ORD-100");
+    const legacy = qualityFixture(q, "SELLER") as { items: Record<string, unknown>[] };
+    for (const item of legacy.items) delete item.orderNumber;
+    expect(parseQuality(legacy, "SELLER", q, undefined, 7).items[0]!.orderNumber).toBeNull();
+    for (const bad of ["", "   ", "x".repeat(65), 12, null]) {
+      const broken = qualityFixture(q, "SELLER") as { items: Record<string, unknown>[] };
+      broken.items[0]!.orderNumber = bad;
+      expect(() => parseQuality(broken, "SELLER", q, undefined, 7)).toThrow();
+    }
+  });
   it("sends only bounded GET requests and never sends bucket to quality route", async () => {
     const requester = vi
       .fn()

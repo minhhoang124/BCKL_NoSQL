@@ -1,14 +1,99 @@
-/* Source: deliverables/ui-orange-v1/00-foundations. Light storefront is
-   intentional under either OS theme; a dark storefront is not designed yet. */
+/* Source: deliverables/ui-orange-v1 (design-data.json colors), owner-selected
+   orange–white storefront. Orange marks the primary action and prices only;
+   surfaces stay neutral. Light storefront is intentional under either OS theme.
+   Legacy token names (--holiday-*, --admin-dark-*) are kept as aliases so
+   existing components follow the new palette without per-file rewrites. */
 :root {
+  /* Orange–white palette (ui-orange-v1) */
+  --orange-brand: #d63b0b;
+  --orange-brand-hover: #b5330a;
+  --orange-soft: #fff2ec;
+  --orange-soft-border: #f6cdbb;
+  --orange-ink: #20242b;
+  --orange-muted: #69717c;
+  --orange-line: #e3e6e9;
+  --orange-bg: #f6f7f8;
+  --orange-green: #23734a;
+  --orange-green-bg: #eaf5ef;
+  --orange-amber: #8d5b0d;
+  --orange-amber-bg: #fff5df;
+  --orange-red: #b42318;
+  --orange-red-bg: #fff0ed;
+  --orange-blue: #245e9a;
+
+  /* Legacy aliases (decorative seasonal layer now uses the same palette) */
+  --holiday-primary: var(--orange-brand);
+  --holiday-primary-hover: var(--orange-brand-hover);
+  --holiday-primary-light: var(--orange-soft);
+  --holiday-primary-border: var(--orange-soft-border);
+  --holiday-secondary: var(--orange-green);
+  --holiday-secondary-hover: #1b5c3b;
+  --holiday-secondary-light: var(--orange-green-bg);
+  --holiday-secondary-border: #c9e6d5;
+  --holiday-gold: var(--orange-amber);
+  --holiday-gold-light: var(--orange-amber-bg);
+  --holiday-gold-border: #f0d9a8;
+
+  /* Surfaces */
+  --bg-canvas: var(--orange-bg);
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
+
+  /* Ink & typography */
+  --text-main: var(--orange-ink);
+  --text-body: var(--orange-ink);
+  --text-muted: var(--orange-muted);
+  --text-subtle: #8a919b;
+
+  /* Dividers & focus */
+  --border-subtle: var(--orange-line);
+  --border-strong: #cfd4d9;
+  --border-focus: var(--orange-brand);
+
+  /* Admin uses the same light surfaces as the storefront (white sidebar). */
+  --admin-dark-bg: #ffffff;
+  --admin-dark-surface: var(--orange-soft);
+  --admin-dark-muted: var(--orange-muted);
+  --admin-dark-border: var(--orange-line);
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px 0 rgba(32, 36, 43, 0.05);
+  --shadow-card-hover: 0 8px 18px -6px rgba(32, 36, 43, 0.14);
+  --shadow-dropdown: 0 12px 28px -6px rgba(32, 36, 43, 0.16), 0 8px 10px -6px rgba(32, 36, 43, 0.08);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Core marketplace tokens (static theme contract) */
   --market-brand: #d63b0b;
-  --market-brand-hover: #b83209;
-  --market-soft: #fff2ec;
+  --market-brand-hover: var(--orange-brand-hover);
+  --market-soft: var(--orange-soft);
+  --market-soft-border: var(--orange-soft-border);
+  --market-pine: var(--orange-green);
+  --market-pine-hover: #1b5c3b;
+  --market-pine-soft: var(--orange-green-bg);
+  --market-pine-border: #c9e6d5;
+  --market-gold: var(--orange-amber);
+  --market-gold-soft: var(--orange-amber-bg);
   --market-ink: #20242b;
+  --market-ink-strong: #20242b;
+  --market-body: #20242b;
   --market-muted: #69717c;
+  --market-subtle: #8a919b;
   --market-line: #e3e6e9;
+  --market-line-strong: #cfd4d9;
   --market-bg: #f6f7f8;
   --market-surface: #ffffff;
+  --market-success: var(--orange-green);
+  --market-success-soft: var(--orange-green-bg);
+  --market-warning: var(--orange-amber);
+  --market-warning-soft: var(--orange-amber-bg);
+  --market-danger: var(--orange-red);
+  --market-danger-soft: var(--orange-red-bg);
+  --market-info: var(--orange-blue);
   --market-radius: 6px;
   --market-space-1: 8px;
   --market-space-2: 16px;
@@ -23,12 +108,65 @@
   padding: 12px 20px;
   border: 1px solid var(--market-brand);
   border-radius: var(--market-radius);
-  color: white;
+  color: #ffffff;
   background: var(--market-brand);
   font: 600 14px/1.5 var(--market-font);
   cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
 }
-.market-button:hover:not(:disabled) { background: var(--market-brand-hover); }
-.market-button:disabled { background: #e4e7eb; border-color: #e4e7eb; color: #555c65; cursor: not-allowed; }
-.market-button:focus-visible { outline: 2px solid var(--market-brand); outline-offset: 3px; }
-.market-card { background: var(--market-surface); border: 1px solid var(--market-line); border-radius: var(--market-radius); padding: 24px; }
+.market-button:hover:not(:disabled) {
+  background: var(--market-brand-hover);
+  border-color: var(--market-brand-hover);
+  box-shadow: 0 4px 12px rgba(214, 59, 11, 0.22);
+}
+.market-button:disabled {
+  background: #e4e7eb;
+  border-color: #e4e7eb;
+  color: #555c65;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.market-button:focus-visible {
+  outline: 2px solid var(--market-brand);
+  outline-offset: 3px;
+}
+
+.market-button-secondary {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid var(--market-line-strong);
+  border-radius: var(--market-radius);
+  color: var(--market-ink-strong);
+  background: var(--market-surface);
+  font: 600 14px/1.5 var(--market-font);
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+.market-button-secondary:hover:not(:disabled) {
+  background: var(--market-bg);
+  border-color: var(--market-brand);
+  color: var(--market-brand);
+}
+
+.market-button-pine {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid var(--market-pine);
+  border-radius: var(--market-radius);
+  color: #ffffff;
+  background: var(--market-pine);
+  font: 600 14px/1.5 var(--market-font);
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+.market-button-pine:hover:not(:disabled) {
+  background: var(--market-pine-hover);
+}
+
+.market-card {
+  background: var(--market-surface);
+  border: 1px solid var(--market-line);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+}

@@ -17,7 +17,7 @@ function setup(request: AccountRequester) { const api = createAccountReadApi(req
 afterEach(() => { cleanup(); setAccessToken(null); vi.restoreAllMocks(); });
 describe('Accounts read screen', () => {
   it('keeps missing API distinct from successful empty, disables filters', () => {
-    render(view()); expect(screen.getByText('Chưa kết nối API Accounts')).toBeVisible(); expect(screen.getByRole('searchbox')).toBeDisabled();
+    render(view()); expect(screen.getByText('Chưa thể tải tài khoản')).toBeVisible(); expect(screen.getByRole('searchbox')).toBeDisabled();
     expect(screen.queryByText('Không có tài khoản phù hợp')).not.toBeInTheDocument();
   });
   it('does not request for non-Admin', () => {
@@ -33,9 +33,9 @@ describe('Accounts read screen', () => {
     render(<AuthContext.Provider value={{ user: { id: 99, email: 'admin@example.test', fullName: 'QA', role: 'ADMIN', isActive: true }, loading: false, login: vi.fn(), logout: vi.fn(), refresh: vi.fn() }}>
       <AdminAccountsReader api={createAccountReadApi(request)} pageSize={50} />
     </AuthContext.Provider>);
-    expect(await screen.findByText('Store #11 · Đã đóng')).toBeVisible();
-    expect(screen.getByText('Store #10 · Hoạt động')).toBeVisible();
-    expect(screen.getByText('Chưa có Store')).toBeVisible();
+    expect(await screen.findByText('Mã cửa hàng #11 · Đã đóng')).toBeVisible();
+    expect(screen.getByText('Mã cửa hàng #10 · Hoạt động')).toBeVisible();
+    expect(screen.getByText('Chưa có cửa hàng')).toBeVisible();
     expect(screen.getByText('account2@example.test').closest('tr')).toHaveTextContent('Đang hoạt động');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /khóa|mở/i })).not.toBeInTheDocument();
@@ -45,7 +45,7 @@ describe('Accounts read screen', () => {
     setup(request); fireEvent.click(await screen.findByRole('button', { name: 'Tải thêm tài khoản' }));
     await screen.findByText('account2@example.test'); expect(screen.getAllByText('Quản trị viên').length).toBeGreaterThan(0); expect(screen.getAllByText('Chưa có tên hiển thị', { selector: 'strong' })).toHaveLength(2);
     expect(screen.queryByRole('button', { name: /khóa|mở/i })).not.toBeInTheDocument();
-    expect(screen.getAllByText('Chưa có Store')).toHaveLength(2); expect(screen.queryByRole('button', { name: 'Tải thêm tài khoản' })).not.toBeInTheDocument();
+    expect(screen.getAllByText('Chưa có cửa hàng')).toHaveLength(2); expect(screen.queryByRole('button', { name: 'Tải thêm tài khoản' })).not.toBeInTheDocument();
   });
   it('submits q/role/inactive to Backend and resets the cursor, not a client-side page filter', async () => {
     const request = vi.fn(async (path: string) => path.includes('isActive=false') ? { items: [], nextCursor: null } : { items: [row()], nextCursor: 1 });

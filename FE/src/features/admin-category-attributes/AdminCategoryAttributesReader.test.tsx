@@ -20,7 +20,7 @@ function view(request?: ReadRequester, role: 'ADMIN' | 'USER' = 'ADMIN', categor
 afterEach(() => { cleanup(); setAccessToken(null); vi.restoreAllMocks(); });
 describe('Attributes read-only screen', () => {
   it('defaults unconnected, not successful empty', () => {
-    render(view()); expect(screen.getByText(/Chưa kết nối API đọc/)).toBeInTheDocument(); expect(screen.queryByText(/Không có thuộc tính phù hợp/)).not.toBeInTheDocument();
+    render(view()); expect(screen.getByText(/Tạm thời không tải được thuộc tính ngành hàng/)).toBeInTheDocument(); expect(screen.queryByText(/Không có thuộc tính phù hợp/)).not.toBeInTheDocument();
   });
   it('does not request for non-Admin', () => {
     const request = vi.fn(); render(view(request, 'USER')); expect(request).not.toHaveBeenCalled(); expect(screen.getByRole('alert')).toHaveTextContent('Cần tài khoản Admin');

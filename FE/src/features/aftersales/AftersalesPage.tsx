@@ -476,12 +476,9 @@ function Workspace({
     <section className={styles.page} aria-label="Hậu mãi">
       <header>
         <h1>Hỗ trợ sau mua hàng</h1>
-        <p>
-          Yêu cầu hoàn tiền hoặc trả hàng; người bán xử lý và Admin giải quyết
-          bất đồng.
-        </p>
         <nav>
           <Link
+            className={styles.back}
             to={
               scope === "ADMIN"
                 ? "/admin"
@@ -490,7 +487,7 @@ function Workspace({
                   : "/account/orders"
             }
           >
-            Về{" "}
+            ‹ Về{" "}
             {scope === "ADMIN"
               ? "quản trị"
               : scope === "SELLER"
@@ -646,10 +643,6 @@ function Workspace({
                       }}
                     />
                   </label>
-                  <p>
-                    Hệ thống kiểm thời hạn và tiền theo đơn đã lưu; không nhập
-                    số tiền hoàn từ trình duyệt.
-                  </p>
                   <label className={styles.check}>
                     <input
                       type="checkbox"
@@ -692,18 +685,18 @@ function Workspace({
           {!listBusy && !listError && rows.length === 0 && (
             <p>Chưa có yêu cầu hậu mãi.</p>
           )}
-          <ul>
+          <ul className={styles.requestList}>
             {rows.map((row) => (
-              <li key={row.id}>
+              <li key={row.id} className={row.id === selectedId ? styles.selectedRow : undefined}>
                 <b>
                   Yêu cầu #{row.id} · {row.context.productName}
                 </b>
                 <p>
-                  Đơn #{row.context.orderId} · {row.context.storeName} ·{" "}
-                  {amount(row.context.lineTotal)}
+                  Mã đơn nội bộ #{row.context.orderId} · {row.context.storeName} ·{" "}
+                  <strong className={styles.money}>{amount(row.context.lineTotal)}</strong>
                 </p>
                 <p>
-                  {labels[row.state]} · {labels[row.kind]}
+                  <span className={styles.statePill}>{labels[row.state]}</span> {labels[row.kind]}
                 </p>
                 <button
                   disabled={busy || blocked}
@@ -741,12 +734,14 @@ function Workspace({
                 Yêu cầu #{detail.request.id} · {detail.context.productName}
               </h3>
               <p>
-                Đơn #{detail.context.orderId} · {detail.context.quantity} món ·{" "}
-                {amount(detail.context.lineTotal)}
+                Mã đơn nội bộ #{detail.context.orderId} · {detail.context.storeName} ·{" "}
+                {detail.context.quantity} món
+              </p>
+              <p className={styles.amountLine}>
+                Giá trị dòng hàng <strong className={styles.money}>{amount(detail.context.lineTotal)}</strong>
               </p>
               <p>
-                {labels[detail.request.state]} · phiên bản{" "}
-                {detail.request.revision}
+                <span className={styles.statePill}>{labels[detail.request.state]}</span>
               </p>
               <p>
                 {reasonLabels[detail.request.reasonCode] ??
@@ -837,7 +832,7 @@ function Workspace({
                     Tôi xác nhận quyết định này theo yêu cầu và hàng thực tế đã
                     kiểm tra.
                   </label>
-                  <button disabled={locked || confirmedAction !== decision}>
+                  <button className={styles.primary} disabled={locked || confirmedAction !== decision}>
                     Xác nhận {labels[decision].toLowerCase()}
                   </button>
                   <button
@@ -853,7 +848,7 @@ function Workspace({
               <ol>
                 {detail.history.map((h) => (
                   <li key={h.id}>
-                    <b>{labels[h.toState]}</b> · người thực hiện #{h.actorId} ·{" "}
+                    <b>{labels[h.toState]}</b> · tài khoản #{h.actorId} ·{" "}
                     {time(h.createdAt)}
                     <p>{h.reason}</p>
                   </li>

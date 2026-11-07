@@ -65,9 +65,9 @@ describe.skipIf(!enabled)('Address → Cart → Checkout: real HTTP/PostgreSQL',
     await http('/me/addresses', f.session.accessToken, 'POST', { recipientName: 'QA recipient', phone: '0901234567', province: 'QA province', ward: 'QA ward', addressLine: 'QA address', isDefault: true });
     await http(`/cart/items/${f.variant.id}`, f.session.accessToken, 'PUT', { quantity: 2 });
     show(f, `/checkout?variantId=${f.variant.id}`);
-    const preview = await screen.findByRole('button', { name: 'Kiểm tra giá và kho' });
-    await waitFor(() => expect(preview).toBeEnabled()); fireEvent.click(preview);
-    return screen.findByRole('button', { name: 'Đặt hàng COD' });
+    const place = await screen.findByRole('button', { name: 'Đặt hàng COD' });
+    await waitFor(() => expect(place).toBeEnabled());
+    return place;
   }
   async function assertCommitted(f) {
     const orders = await prisma.order.findMany({ where: { buyerId: f.session.user.id }, include: { items: true, payment: true } });
@@ -97,9 +97,9 @@ describe.skipIf(!enabled)('Address → Cart → Checkout: real HTTP/PostgreSQL',
     const other = screen.getByLabelText(`Chọn biến thể ${unselected.id}`);
     if (other.checked) fireEvent.click(other);
     fireEvent.click(screen.getByRole('link', { name: 'Tiếp tục thanh toán' }));
-    const preview = await screen.findByRole('button', { name: 'Kiểm tra giá và kho' });
-    await waitFor(() => expect(preview).toBeEnabled()); fireEvent.click(preview);
-    fireEvent.click(await screen.findByRole('button', { name: 'Đặt hàng COD' }));
+    const place = await screen.findByRole('button', { name: 'Đặt hàng COD' });
+    await waitFor(() => expect(place).toBeEnabled());
+    fireEvent.click(place);
     await screen.findByText('Đã ghi nhận đặt hàng COD');
     const order = await assertCommitted(f);
     expect(order.addressLineSnapshot).toBe('QA snapshot address');

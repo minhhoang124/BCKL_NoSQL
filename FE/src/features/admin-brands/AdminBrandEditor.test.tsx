@@ -46,7 +46,7 @@ describe('Admin Brand edit module', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Xác nhận lưu' }));
     await waitFor(() => expect(api.update).toHaveBeenCalledTimes(1));
     expect(api.update).toHaveBeenCalledWith(5, { name: 'Brand New' }, expect.any(AbortSignal));
-    expect(await screen.findByText(/Đã lưu thương hiệu/)).toHaveTextContent('chưa xác nhận index đã đồng bộ');
+    expect(await screen.findByText(/Đã lưu thương hiệu/)).toHaveTextContent('Thay đổi có thể chưa xuất hiện ngay trong kết quả tìm kiếm.');
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
   it('rejects blank name, invalid slug and unchanged forms before writing', async () => {

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { assertCurrentWriteEpoch } from '../auth/write-epoch.js';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma.service.js';
@@ -76,7 +77,7 @@ export class OrderCommandResolutionService {
         'Order resolution requires lock <= statement <= transaction and bounded deadline',
       );
   }
-  async resolve(actorId: number, orderId: number, key: unknown, body: unknown) {
+  async resolve(actorId: number, orderId: number, key: unknown, body: unknown, expectedCredentialVersion?: number) {
     const command = parseResolutionCommand(body);
     // The key/hash belongs to ORIGINAL execution, not this resolver request body.
     const input = prepareOrderCommand({
@@ -100,9 +101,10 @@ export class OrderCommandResolutionService {
             await tx.$queryRaw`SELECT id FROM users WHERE id=${actorId} FOR UPDATE`;
             const actor = await tx.user.findUnique({
               where: { id: actorId },
-              select: { isActive: true, role: true },
+              select: { isActive: true, role: true, credentialVersion: true },
             });
             if (!actor?.isActive) throw orderCommandError(401, 'UNAUTHORIZED');
+            assertCurrentWriteEpoch(actor, expectedCredentialVersion);
             if (actor.role !== Role.SELLER)
               throw orderCommandError(403, 'FORBIDDEN');
             const ref = await tx.order.findFirst({

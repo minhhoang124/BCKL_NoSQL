@@ -44,15 +44,16 @@ export function RegisterPage() {
     <AuthLayout>
       <div className={styles.container}>
         <h1 className={styles.title}>Đăng ký</h1>
+        <p className={styles.subtitle}>Tạo tài khoản để mua sắm, trò chuyện với cửa hàng và theo dõi đơn hàng.</p>
         {error && <ErrorMessage message={error} />}
         <form className={styles.form} onSubmit={submit}>
           <label>
             Họ và tên
-            <input name="fullName" minLength={2} maxLength={100} required />
+            <input name="fullName" minLength={2} maxLength={100} placeholder="Nhập họ và tên đầy đủ..." required />
           </label>
           <label>
             Email
-            <input name="email" type="email" autoComplete="email" required />
+            <input name="email" type="email" autoComplete="email" placeholder="Nhập địa chỉ email của bạn..." required />
           </label>
           <label>
             Mật khẩu
@@ -62,6 +63,7 @@ export function RegisterPage() {
               minLength={8}
               maxLength={72}
               autoComplete="new-password"
+              placeholder="Tạo mật khẩu (tối thiểu 8 ký tự)..."
               required
             />
           </label>

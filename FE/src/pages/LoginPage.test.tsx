@@ -45,3 +45,74 @@ it('permits a deliberate retry after failure without automatically replaying log
   mocks.fetch.mockResolvedValueOnce({ accessToken: 'synthetic', user: { id: 1 } });
   await act(async () => fireEvent.submit(form())); expect(mocks.login).toHaveBeenCalledTimes(1);
 });
+
+it('returns to internal pathname, query, and hash from location.state.from after login', async () => {
+  const { Route, Routes, useLocation } = await import('react-router-dom');
+  function LocationDisplay() {
+    const loc = useLocation();
+    return <div data-testid="landed">{loc.pathname + loc.search + loc.hash}</div>;
+  }
+  mocks.fetch.mockResolvedValueOnce({ accessToken: 'synthetic', user: { id: 1 } });
+  render(
+    <StrictMode>
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/login',
+            state: {
+              from: {
+                pathname: '/messages',
+                search: '?storeId=15',
+                hash: '#thread',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/messages" element={<LocationDisplay />} />
+        </Routes>
+      </MemoryRouter>
+    </StrictMode>,
+  );
+  await act(async () => {
+    fireEvent.submit(form());
+  });
+  expect(screen.getByTestId('landed')).toHaveTextContent('/messages?storeId=15#thread');
+});
+
+it('falls back to / when location.state.from targets an unsafe or auth-loop path', async () => {
+  const { Route, Routes, useLocation } = await import('react-router-dom');
+  function LocationDisplay() {
+    const loc = useLocation();
+    return <div data-testid="landed">{loc.pathname + loc.search + loc.hash}</div>;
+  }
+  mocks.fetch.mockResolvedValueOnce({ accessToken: 'synthetic', user: { id: 1 } });
+  render(
+    <StrictMode>
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/login',
+            state: {
+              from: {
+                pathname: '/login/',
+                search: '?storeId=15',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<LocationDisplay />} />
+        </Routes>
+      </MemoryRouter>
+    </StrictMode>,
+  );
+  await act(async () => {
+    fireEvent.submit(form());
+  });
+  expect(screen.getByTestId('landed')).toHaveTextContent('/');
+});

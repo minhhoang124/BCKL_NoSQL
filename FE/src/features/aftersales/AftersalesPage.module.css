@@ -1,7 +1,8 @@
 .page {
-  max-width: 1240px;
-  margin: 1.5rem auto;
-  padding: 1rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
   display: grid;
   gap: 1rem;
   color: #17213a;
@@ -9,10 +10,12 @@
 }
 .page h1 {
   margin: 0 0 0.5rem;
-  font-size: 1.8rem;
+  font-size: 18px;
+  font-weight: 600;
 }
 .page h2 {
-  font-size: 1.2rem;
+  font-size: 16px;
+  font-weight: 600;
 }
 .page p {
   line-height: 1.6;
@@ -26,7 +29,7 @@
 .panel {
   background: #fff;
   border: 1px solid #d1d9e5;
-  border-radius: 0.8rem;
+  border-radius: 4px;
   padding: 1rem;
   min-width: 0;
 }
@@ -45,7 +48,7 @@
 .page button {
   font: inherit;
   border: 1px solid #c2ccdc;
-  border-radius: 0.5rem;
+  border-radius: 4px;
   padding: 0.65rem 0.8rem;
   background: #fff;
   color: inherit;
@@ -77,7 +80,7 @@
   flex-shrink: 0;
 }
 .page :focus-visible {
-  outline: 3px solid #6790e5;
+  outline: 2px solid var(--market-brand);
   outline-offset: 2px;
 }
 .page li {
@@ -96,13 +99,13 @@
   background: #fff1f3;
   border: 1px solid #cf7784;
   padding: 0.8rem;
-  border-radius: 0.5rem;
+  border-radius: 4px;
 }
 .success {
   color: #19513d;
   background: #edf9f2;
   padding: 0.8rem;
-  border-radius: 0.5rem;
+  border-radius: 4px;
 }
 .actions {
   display: flex;
@@ -113,17 +116,97 @@
   margin: 1rem 0;
   padding: 1rem;
   border: 2px solid #ae8836;
-  border-radius: 0.6rem;
+  border-radius: 4px;
 }
 @media (max-width: 720px) {
   .columns {
     grid-template-columns: minmax(0, 1fr);
   }
   .page {
-    margin: 0.5rem 0;
-    padding: 0.5rem;
+    margin: 0;
+    padding: 0;
   }
   .page h1 {
-    font-size: 1.4rem;
+    font-size: 18px;
   }
 }
+
+/* ui-orange-v1 / 31: neutral cards, one orange primary, state pill. */
+.page {
+  color: var(--market-ink);
+}
+.panel {
+  border-color: var(--market-line);
+  border-radius: 4px;
+  padding: 16px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+.page :focus-visible {
+  outline-color: var(--market-brand);
+}
+.back {
+  color: var(--market-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+.back:hover {
+  color: var(--market-brand);
+}
+.page .requestList {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.page .requestList li {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--market-line);
+  border-radius: 4px;
+}
+.page .requestList li p {
+  margin: 0.25rem 0;
+}
+.page .requestList li.selectedRow {
+  border-color: var(--market-brand);
+  background: var(--market-soft);
+}
+.statePill {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: #fff4dc;
+  color: #8a5a00;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.money {
+  color: var(--market-brand);
+  white-space: nowrap;
+}
+.amountLine .money {
+  font-size: 1.35rem;
+  margin-left: 0.4rem;
+}
+.confirmation {
+  border: 1px solid var(--market-line);
+  background: #fffaf7;
+}
+.page button.primary {
+  border-color: var(--market-brand);
+  background: var(--market-brand);
+  color: #ffffff;
+}
+.page button.primary:hover:not(:disabled) {
+  background: var(--market-brand-hover);
+}
+
+.page h3 { font-size: 16px; font-weight: 600; }
+.page a { color: var(--market-brand); }
+.page button:hover:not(:disabled) { border-color: var(--market-brand); }
+.page header p { color: #69717c; }
+
+.page h1 { font-size: 18px; font-weight: 600; }
+.page h2 { font-size: 16px; font-weight: 600; }

@@ -30,6 +30,23 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe("public image API trust boundary", () => {
+  it.each([3, 5, 10] as const)("sends topK %i and rejects more items or ranks than requested", async (topK) => {
+    const items = Array.from({ length: topK + 1 }, (_, i) => ({ ...response.items[0], productId: i + 1, rank: i + 1, product: { ...p, id: i + 1 } }));
+    expect(() => parseImageSearchResults({ ...response, items }, topK)).toThrow();
+    expect(() => parseImageSearchResults({ ...response, items: [{ ...items[0], rank: topK + 1 }] }, topK)).toThrow();
+    expect(parseImageSearchResults({ ...response, items: items.slice(0, topK) }, topK).items).toHaveLength(topK);
+    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ...response, items: [] }), { headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetcher);
+    await searchImage(new File(["png"], "q.png", { type: "image/png" }), new AbortController().signal, topK);
+    expect(fetcher.mock.calls[0][1].body.get("topK")).toBe(String(topK));
+    expect(fetcher.mock.calls[0][1].body.get("candidateK")).toBe("100");
+  });
+  it("rejects a top-K level outside 3/5/10 before HTTP", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    await expect(searchImage(new File(["png"], "q.png", { type: "image/png" }), new AbortController().signal, 24 as never)).rejects.toThrow("Số kết quả không hợp lệ.");
+    expect(fetcher).not.toHaveBeenCalled();
+  });
   it("accepts canonical hydrated products, keeps rank gaps/negative cosine, projects display fields", () => {
     const value = structuredClone(response);
     const extra = { ...value.items[0].product, passwordHash: "must-not-copy" };
@@ -112,7 +129,7 @@ describe("public image API trust boundary", () => {
     expect(options.headers).toBeUndefined();
     expect(options.redirect).toBe("error");
     expect(options.body.get("image").name).toBe("query.png");
-    expect(options.body.get("topK")).toBe("24");
+    expect(options.body.get("topK")).toBe("10");
     expect(options.body.get("candidateK")).toBe("100");
     expect(fetcher).toHaveBeenCalledOnce();
   });

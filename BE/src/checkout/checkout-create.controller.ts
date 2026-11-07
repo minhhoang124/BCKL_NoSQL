@@ -97,6 +97,7 @@ export class CheckoutCreateController {
       user.userId,
       checkoutHeaderKey(request),
       input,
+      user.credentialVersion ?? 0,
     );
     response.status(result.replayed ? 200 : 201);
     return result;

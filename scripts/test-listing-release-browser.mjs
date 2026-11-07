@@ -157,6 +157,8 @@ try {
   }
   const s = await page(seller.email, "/seller");
   await s.getByRole("button", { name: /^Sản phẩm \(/ }).click();
+  // Product list and the add/edit form are separate screens.
+  await s.getByRole("button", { name: "+ Thêm sản phẩm mới", exact: true }).click();
   const form = s.getByRole("form", { name: "Sản phẩm" });
   await form.getByLabel("Tên", { exact: true }).fill(marker);
   await form
@@ -449,9 +451,6 @@ try {
       .check();
     await b
       .getByRole("link", { name: "Tiếp tục thanh toán", exact: true })
-      .click();
-    await b
-      .getByRole("button", { name: "Kiểm tra giá và kho", exact: true })
       .click();
     const checkout = b.waitForResponse(
       (r) => r.url() === api + "/checkouts" && r.request().method() === "POST",

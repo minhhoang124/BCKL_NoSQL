@@ -4,6 +4,7 @@ import { OrderActorType, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma.service.js';
 import type { OrderDetailResponseDto } from './order-detail.dto.js';
 import { orderError } from './order-list.http.js';
+import { loadOrderItemImages } from './order-item-image.js';
 
 export function parseOrderDetailInput(id: unknown, query: unknown): number {
   if (
@@ -156,6 +157,13 @@ export class OrderDetailService {
         });
         if (!row)
           throw orderError(404, 'ORDER_NOT_FOUND', 'Không tìm thấy đơn hàng.');
+        // Policy follows the endpoint scope, not the account role.
+        const images = await loadOrderItemImages(
+          tx,
+          row.items.map((item) => item.productId),
+          role === Role.USER ? 'BUYER' : 'SELLER',
+          actorId,
+        );
         // Unknown legacy actor types remain unknown. Never derive a historical
         // role from today's User profile. Buyer only sees their own known ID.
         const visibleActorId = (
@@ -206,6 +214,7 @@ export class OrderDetailService {
             unitPrice: item.unitPrice.toFixed(2),
             quantity: item.quantity,
             lineTotal: item.lineTotal.toFixed(2),
+            imageUrl: images.get(item.productId) ?? null,
           })),
           subtotal: row.subtotal.toFixed(2),
           shippingFee: row.shippingFee.toFixed(2),

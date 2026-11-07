@@ -175,7 +175,6 @@ function ChatSession({
   return (
     <main className={styles.page}>
       <h1>Tin nhắn</h1>
-      <p>Trao đổi riêng với cửa hàng bằng tin nhắn và thẻ tham chiếu.</p>
       {error && <p role="alert">{error}</p>}
       {(validStore || validOrder) && (
         <button disabled={busy} onClick={() => void open()}>
@@ -186,7 +185,9 @@ function ChatSession({
       )}
       <div className={styles.columns}>
         <aside aria-label="Danh sách hội thoại">
-          <button onClick={() => void load()}>Tải lại hội thoại</button>
+          <div className={styles.actionsQuiet}>
+            <button onClick={() => void load()}>Tải lại hội thoại</button>
+          </div>
           {inboxPhase === "loading" && <p>Đang tải hội thoại…</p>}
           {inboxPhase === "ready" && !items.length && <p>Chưa có hội thoại.</p>}
           {items.map((item) => (
@@ -220,6 +221,7 @@ function ChatSession({
             actorId={actorId}
             id={id}
             session={session}
+            title={conversationTitle(items.find((item) => item.id === id))}
             productId={
               /^[1-9]\d*$/.test(query.get("productId") ?? "") &&
               Number(query.get("productId")) <= 2147483647
@@ -240,13 +242,23 @@ function ChatSession({
     </main>
   );
 }
-function ChatThread({
+/** Display name for a conversation; falls back to the id when the inbox row is not loaded. */
+export function conversationTitle(item?: InboxItem) {
+  if (!item) return undefined;
+  return item.context === "BUYER"
+    ? item.store.name
+    : item.buyer.fullName || `Khách #${item.buyer.id}`;
+}
+/** One thread = one realtime socket. Shared by the Messages page and the mini widget. */
+export function ChatThread({
   actorId,
   id,
   session,
   onChange,
   productId,
   orderId,
+  title,
+  compact = false,
 }: {
   actorId: number;
   id: number;
@@ -254,6 +266,8 @@ function ChatThread({
   onChange: () => void;
   productId?: number;
   orderId?: number;
+  title?: string;
+  compact?: boolean;
 }) {
   const [initialPending] = useState(() => {
     try {
@@ -380,10 +394,10 @@ function ChatThread({
       if (valid()) onChangeRef.current();
     });
     client.on("disconnect", () => {
-      if (valid()) setStatus("Mất kết nối realtime; đang tải bù qua API.");
+      if (valid()) setStatus("Kết nối bị gián đoạn. Đang tải lại tin nhắn…");
     });
     client.on("connect_error", () => {
-      if (valid()) setStatus("Realtime chưa kết nối; lịch sử vẫn tải qua API.");
+      if (valid()) setStatus("Tin nhắn mới có thể cập nhật chậm. Bạn vẫn có thể xem lịch sử trò chuyện.");
     });
     client.connect();
     queueMicrotask(() => {
@@ -519,12 +533,21 @@ function ChatThread({
     }
   };
   return (
-    <section aria-label={`Hội thoại ${id}`} className={styles.thread}>
-      <h2>Hội thoại #{id}</h2>
-      <p role="status">{status}</p>
-      <div className={styles.actions}>
+    <section
+      aria-label={`Hội thoại ${id}`}
+      className={compact ? `${styles.thread} ${styles.compactThread}` : styles.thread}
+    >
+      {compact ? null : <h2>{title ?? `Hội thoại #${id}`}</h2>}
+      <p role="status" className={styles.connection}>{status}</p>
+      <div className={`${styles.actions} ${styles.actionsQuiet}`}>
         <button onClick={() => void reconnect()}>Kết nối lại</button>
         <button onClick={() => void sync()}>Tải lại tin nhắn</button>
+        <button
+          disabled={!messages.length || readBusy}
+          onClick={() => void markRead()}
+        >
+          Đánh dấu đã đọc các tin đã hiển thị
+        </button>
       </div>
       {error && <p role="alert">{error}</p>}
       {before !== null && (
@@ -564,12 +587,6 @@ function ChatThread({
           </li>
         ))}
       </ol>
-      <button
-        disabled={!messages.length || readBusy}
-        onClick={() => void markRead()}
-      >
-        Đánh dấu đã đọc các tin đã hiển thị
-      </button>
       {pending && (
         <p role="status">
           Có tin chưa rõ kết quả.{" "}
@@ -652,10 +669,12 @@ function ChatThread({
           {busy ? "Đang gửi…" : pending ? "Gửi lại cùng mã" : "Gửi tin nhắn"}
         </button>
       </form>
-      <small>
-        Mã và nội dung tin đang chờ chỉ giữ trong phiên tab này để tránh gửi
-        trùng; không lưu token. Đóng tab có thể mất tin chưa xác nhận.
-      </small>
+      {!compact && (
+        <small>
+          Tin chưa gửi xong chỉ được giữ trong tab này để tránh gửi trùng. Đóng
+          tab có thể mất tin chưa xác nhận.
+        </small>
+      )}
     </section>
   );
 }

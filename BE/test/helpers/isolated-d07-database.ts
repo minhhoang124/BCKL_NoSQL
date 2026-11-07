@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { access } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { isFinalDayQaTarget } from './final-day-qa-target.js';
 
 /** Fresh queue scope, not deletion/backdating/filtering of a shared queue. */
 export async function isolatedD07Database(source: string) {
@@ -10,7 +11,7 @@ export async function isolatedD07Database(source: string) {
   const hardening =
     url.hostname === '127.0.0.1' &&
     url.port === '5549' &&
-    url.pathname === '/bckl_order_resolution_test_hardening_20261029' &&
+    (url.pathname === '/bckl_order_resolution_test_hardening_20261029' || isFinalDayQaTarget(url)) &&
     url.username === 'bckl_local_migrator';
   const local =
     hardening ||

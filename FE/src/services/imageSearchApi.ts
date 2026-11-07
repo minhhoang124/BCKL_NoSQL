@@ -1,10 +1,15 @@
 import { analyticsToken } from "./searchAnalyticsClient";
 import { API_URL, ApiError } from "./apiClient";
 import type { Product, SearchResponse } from "../types/marketplace";
+import {
+  DEFAULT_SEARCH_TOP_K,
+  SEARCH_CANDIDATE_K,
+  isSearchTopK,
+  type SearchTopK,
+} from "./searchTopK";
 
 export const IMAGE_QUERY_MAX_BYTES = 5 * 1024 * 1024;
 const MAX_RESULT_BYTES = 2 * 1024 * 1024;
-const TOP_K = 24;
 
 export class ImageSearchError extends ApiError {
   public readonly retryAfterSeconds: number;
@@ -126,12 +131,15 @@ function product(raw: unknown, expectedId: number): Product {
   };
 }
 
-export function parseImageSearchResults(raw: unknown): SearchResponse {
+export function parseImageSearchResults(
+  raw: unknown,
+  topK: SearchTopK = DEFAULT_SEARCH_TOP_K,
+): SearchResponse {
   const response = record(raw);
   if (
     Object.keys(response).some(k=>!["items","responseTimeMs","analytics"].includes(k)) ||
     !Array.isArray(response.items) ||
-    response.items.length > TOP_K ||
+    response.items.length > topK ||
     typeof response.responseTimeMs !== "number" ||
     !Number.isFinite(response.responseTimeMs) ||
     response.responseTimeMs < 0
@@ -149,7 +157,7 @@ export function parseImageSearchResults(raw: unknown): SearchResponse {
       if (
         Object.keys(item).length !== 4 ||
         rank <= previousRank ||
-        rank > TOP_K ||
+        rank > topK ||
         seen.has(productId) ||
         typeof item.score !== "number" ||
         !Number.isFinite(item.score)
@@ -170,7 +178,10 @@ export function parseImageSearchResults(raw: unknown): SearchResponse {
 export async function searchImage(
   file: File,
   cancel: AbortSignal,
+  topK: SearchTopK = DEFAULT_SEARCH_TOP_K,
 ): Promise<SearchResponse> {
+  if (!isSearchTopK(topK))
+    throw new ImageSearchError("Số kết quả không hợp lệ.");
   validateQueryFile(file);
   const form = new FormData();
   form.set(
@@ -178,8 +189,8 @@ export async function searchImage(
     file,
     file.type === "image/jpeg" ? "query.jpeg" : "query.png",
   );
-  form.set("topK", String(TOP_K));
-  form.set("candidateK", "100");
+  form.set("topK", String(topK));
+  form.set("candidateK", String(SEARCH_CANDIDATE_K));
   const deadline = AbortSignal.timeout(50000);
   const signal = AbortSignal.any([cancel, deadline]);
   try {
@@ -238,6 +249,7 @@ export async function searchImage(
       }
       return parseImageSearchResults(
         JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+        topK,
       );
     } finally {
       await reader.cancel().catch(() => undefined);

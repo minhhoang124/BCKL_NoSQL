@@ -1,0 +1,227 @@
+/* Mini chat: bottom-right on desktop, bottom sheet on mobile. Neutral surfaces;
+   orange only for the toggle (primary entry point) and unread badges. */
+.root {
+  position: fixed;
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  font: 400 14px/1.45 var(--market-font);
+  color: var(--market-ink);
+}
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--market-brand);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+.toggle:hover {
+  background: var(--market-brand-hover);
+}
+.toggle:focus-visible,
+.iconButton:focus-visible,
+.item:focus-visible,
+.headLink:focus-visible {
+  outline: 2px solid var(--market-brand);
+  outline-offset: 2px;
+}
+.toggleBadge {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #ffffff;
+  color: var(--market-brand);
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 360px;
+  height: min(540px, calc(100vh - 120px));
+  background: #ffffff;
+  border: 1px solid var(--market-line);
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--market-line);
+}
+.title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+}
+.headLink {
+  color: var(--market-brand);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.iconButton {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--market-line);
+  border-radius: 4px;
+  background: #ffffff;
+  color: var(--market-ink);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.note {
+  margin: 12px;
+  color: #69717c;
+}
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--market-brand);
+  font-weight: 600;
+  cursor: pointer;
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--market-line);
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+.item:hover {
+  background: var(--market-bg);
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--market-soft);
+  color: var(--market-brand);
+  font-weight: 700;
+}
+.itemText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.itemText strong,
+.itemText span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.itemText span {
+  color: #69717c;
+  font-size: 13px;
+}
+.badge {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--market-brand);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+@media (max-width: 600px) {
+  .root {
+    right: 12px;
+    left: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
+  }
+  .root > * {
+    pointer-events: auto;
+  }
+  .panel {
+    width: 100%;
+    height: min(70vh, 560px);
+  }
+  .toggle {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+}
+/* Controls of the embedded thread (outside the Messages page scope). */
+.body form {
+  display: grid;
+  gap: 8px;
+}
+.body label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.body textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--market-line);
+  border-radius: 4px;
+  font: inherit;
+  resize: vertical;
+}
+.body textarea:focus-visible {
+  outline: 2px solid var(--market-brand);
+  outline-offset: 0;
+}
+.body section button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--market-line-strong);
+  border-radius: 4px;
+  background: #ffffff;
+  color: var(--market-ink);
+  font: 600 13px/1.3 var(--market-font);
+  cursor: pointer;
+}
+.body section button[type="submit"] {
+  border-color: var(--market-brand);
+  background: var(--market-brand);
+  color: #ffffff;
+}
+.body section button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.toggle { border: 1px solid var(--market-brand); background: #fff; color: var(--market-brand); }
+.toggle:hover { background: #fff5f0; }

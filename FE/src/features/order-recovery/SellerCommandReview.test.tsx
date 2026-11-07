@@ -17,7 +17,7 @@ afterEach(() => { cleanup(); expect(transport).not.toHaveBeenCalled(); vi.unstub
 describe('Seller confirmation/status view — not connected to Order routes', () => {
   it('defaults to disabled without a dispatcher and carries the preparation label', () => {
     render(<SellerCommandReview {...base} />);
-    expect(screen.getByText(/BẢN CHUẨN BỊ/)).toBeVisible();
+    expect(screen.getByText(/Thao tác đơn hàng hiện chưa khả dụng/)).toBeVisible();
     expect(screen.getByRole('button', { name: 'Xác nhận thao tác' })).toBeDisabled();
     expect(screen.getByRole('checkbox')).toBeDisabled();
   });

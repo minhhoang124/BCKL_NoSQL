@@ -93,8 +93,8 @@ function Content({
         {integrated
           ? "Đối chiếu kết quả đã lưu trên hệ thống, không tự thực hiện lại lệnh cũ."
           : connected
-            ? "KIỂM THỬ QA — đối chiếu qua Backend."
-            : "BẢN CHUẨN BỊ — chưa nối giao dịch trên Web."}
+            ? "Kiểm tra kết quả của yêu cầu đang chờ trước khi tiếp tục."
+            : "Tạm thời chưa thể kiểm tra yêu cầu. Vui lòng thử lại sau."}
       </p>
       <h2 id={id}>Đối chiếu yêu cầu đang chờ</h2>
       <p>

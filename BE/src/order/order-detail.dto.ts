@@ -30,6 +30,13 @@ class OrderDetailItemDto {
   @ApiProperty({ example: '10000.00' }) unitPrice!: string;
   @ApiProperty() quantity!: number;
   @ApiProperty({ example: '20000.00' }) lineTotal!: string;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description:
+      'Current illustrative image of the Product, not a purchase snapshot; null when unavailable.',
+  })
+  imageUrl!: string | null;
 }
 class OrderDetailPaymentDto {
   @ApiProperty({ enum: PaymentProvider }) provider!: PaymentProvider;

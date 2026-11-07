@@ -86,6 +86,7 @@ describe('Chat realtime: actual sockets + HTTP + PostgreSQL', () => {
   beforeAll(async () => {
     const target = new URL(process.env.DATABASE_URL!);
     if (
+      !isFinalDayQaTarget(target) &&
       process.env.GITHUB_ACTIONS !== 'true' &&
       (target.hostname !== '127.0.0.1' ||
         target.port !== '5549' ||
@@ -401,3 +402,4 @@ describe('Chat realtime: actual sockets + HTTP + PostgreSQL', () => {
     expect(enqueued).toBe(0);
   });
 });
+import { isFinalDayQaTarget } from './helpers/final-day-qa-target.js';

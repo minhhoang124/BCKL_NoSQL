@@ -226,6 +226,8 @@ export class CartService {
       );
       if (selected) {
         item.currentUnitPrice = selected.price.toFixed(2);
+        // Decimal arithmetic only; current price, not an order snapshot.
+        item.lineTotal = selected.price.mul(row.quantity).toFixed(2);
         item.stock = selected.stock;
         item.optionValues = product.optionGroups.map((optionGroup) => {
           const link = selected.optionValueLinks.find(

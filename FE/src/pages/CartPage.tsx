@@ -5,7 +5,6 @@ import { useAuth } from '../contexts/useAuth';
 import { ApiError } from '../services/apiClient';
 import { cartApi } from '../services/cartApi';
 import { mediaUrl } from '../services/marketplaceApi';
-import type { User } from '../types/auth';
 import type { CartItem, CartResponse, CartUnavailableReason } from '../types/cart';
 import { formatCartMoney, parseCartMoney } from '../utils/cartMoney';
 import styles from './CartPage.module.css';
@@ -87,10 +86,10 @@ export function CartPage() {
   if (!user) return <p role="alert">Vui lòng đăng nhập để xem giỏ hàng.</p>;
   if (!hasBuyerAccess(user))
     return <p role="alert">Chỉ tài khoản người mua đang hoạt động được quản lý giỏ hàng.</p>;
-  return <CartContent key={user.id} user={user} />;
+  return <CartContent key={user.id} />;
 }
 
-function CartContent({ user }: { user: User }) {
+function CartContent() {
   const [cart, setCart] = useState<CartResponse | null>(null);
   const [drafts, setDrafts] = useState<Record<number, string>>({});
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -239,90 +238,105 @@ function CartContent({ user }: { user: User }) {
       label: privateItem ? `Mã phân loại #${item.variantId}` : item.productName ?? `Mã phân loại #${item.variantId}` });
   };
 
+  const stepTo = (item: CartItem, nextQty: number) => {
+    setDrafts((prev) => ({ ...prev, [item.variantId]: String(nextQty) }));
+    void run(() => cartApi.put(item.variantId, nextQty), 'Đã cập nhật giỏ hàng.', item.variantId);
+  };
+
   return <main className={styles.page}>
     <div inert={deleting ? true : undefined}>
     <header className={styles.heading}>
-      <div><span className={styles.eyebrow}>Tài khoản của {user.fullName || user.email}</span><h1>Giỏ hàng</h1>
-        <p>Giá và tồn kho được cập nhật từ hệ thống; thêm giỏ không giữ hàng.</p></div>
-      <button type="button" disabled={loading || busy} onClick={() => { setNotice(''); void load(); }}>Tải lại giỏ hàng</button>
+      <h1>Giỏ hàng</h1>
+      <button type="button" className={styles.reload} disabled={loading || busy} onClick={() => { setNotice(''); void load(); }}>Tải lại giỏ hàng</button>
     </header>
     {notice && <p className={styles.notice} role="status">{notice}</p>}
     {error && <p className={styles.error} role="alert">{error}</p>}
     {authError && <p><Link to="/login">Đăng nhập lại</Link></p>}
     {visibleSummary && priceNotice && <p className={styles.warning} role="status">{priceNotice}</p>}
     {visibleSummary && dirtyCount > 0 && <p className={styles.warning} role="status">Có {dirtyCount} dòng sửa số lượng chưa lưu. Tạm tính vẫn dùng số lượng đã lưu.</p>}
-    <div className={styles.layout}>
-      <div className={styles.groups} aria-busy={loading}>
-        {loading ? <p className={styles.empty} role="status">Đang tải giỏ hàng...</p> : !ready ?
-          <p className={styles.empty}>Tải lại giỏ hàng để kiểm tra trạng thái và tiếp tục.</p> : !cart?.lineCount ?
-            <div className={styles.empty}><h2>Giỏ hàng đang trống</h2><p>Hãy chọn sản phẩm để bắt đầu mua sắm.</p><Link to="/">Xem sản phẩm</Link></div> : <>
-              <div className={styles.selectionBar}>
-                <label><SelectionCheckbox label="Chọn tất cả hàng mua được" disabled={disabled || !available.length}
-                  checked={available.length > 0 && selectedItems.length === available.length}
-                  mixed={selectedItems.length > 0 && selectedItems.length < available.length}
-                  onChange={(checked) => toggleGroup(available.map((item) => item.variantId), checked)} /> Chọn tất cả hàng mua được</label>
-                <small>{available.length} dòng có thể mua</small>
-              </div>
-              {cart.groups.map((group) => {
-                const ids = group.items.filter((item) => item.available).map((item) => item.variantId);
-                return <section className={styles.group} key={group.store.id} aria-label={`Cửa hàng ${group.store.name}`}>
-                  <div className={styles.groupHead}>
-                    <label><SelectionCheckbox label={`Chọn cửa hàng ${group.store.name}`} disabled={disabled || ids.length === 0}
-                      checked={ids.length > 0 && ids.every((id) => selected.has(id))}
-                      mixed={ids.some((id) => selected.has(id)) && !ids.every((id) => selected.has(id))}
-                      onChange={(checked) => toggleGroup(ids, checked)} /> Chọn cửa hàng {group.store.name}</label>
-                    <small>Tạm tính hàng còn mua được: {moneyLabel(group.purchasableSubtotal)}</small>
-                  </div>
-                  {group.items.map((item) => <div className={styles.item} key={item.variantId}>
+    <div className={styles.groups} aria-busy={loading}>
+      {loading ? <p className={styles.empty} role="status">Đang tải giỏ hàng...</p> : !ready ?
+        <p className={styles.empty}>Tải lại giỏ hàng để kiểm tra trạng thái và tiếp tục.</p> : !cart?.lineCount ?
+          <div className={styles.empty}><h2>Giỏ hàng đang trống</h2><p>Hãy chọn sản phẩm để bắt đầu mua sắm.</p><Link to="/">Xem sản phẩm</Link></div> : <>
+            <div className={styles.tableHead}>
+              <label className={styles.colProduct}><SelectionCheckbox label="Chọn tất cả hàng mua được" disabled={disabled || !available.length}
+                checked={available.length > 0 && selectedItems.length === available.length}
+                mixed={selectedItems.length > 0 && selectedItems.length < available.length}
+                onChange={(checked) => toggleGroup(available.map((item) => item.variantId), checked)} /> Sản phẩm</label>
+              <span aria-hidden="true">Đơn giá</span>
+              <span aria-hidden="true">Số lượng</span>
+              <span aria-hidden="true">Số tiền</span>
+              <span aria-hidden="true">Thao tác</span>
+            </div>
+            {cart.groups.map((group) => {
+              const ids = group.items.filter((item) => item.available).map((item) => item.variantId);
+              return <section className={styles.group} key={group.store.id} aria-label={`Cửa hàng ${group.store.name}`}>
+                <div className={styles.groupHead}>
+                  <label><SelectionCheckbox label={`Chọn cửa hàng ${group.store.name}`} disabled={disabled || ids.length === 0}
+                    checked={ids.length > 0 && ids.every((id) => selected.has(id))}
+                    mixed={ids.some((id) => selected.has(id)) && !ids.every((id) => selected.has(id))}
+                    onChange={(checked) => toggleGroup(ids, checked)} /> {group.store.name}</label>
+                </div>
+                {group.items.map((item) => {
+                  const showDetails = item.unavailableReason !== 'VARIANT_UNAVAILABLE';
+                  const qty = Number(drafts[item.variantId] ?? item.quantity);
+                  return <div className={styles.item} key={item.variantId}>
                     <input type="checkbox" aria-label={`Chọn biến thể ${item.variantId}`} disabled={disabled || !item.available}
                       checked={item.available && selected.has(item.variantId)} onChange={(event) => toggle(item.variantId, event.target.checked)} />
-                    {item.imageUrl && <img className={styles.image} src={mediaUrl(item.imageUrl)} alt="" />}
+                    {item.imageUrl ? <img className={styles.image} src={mediaUrl(item.imageUrl)} alt="" /> : <span className={styles.image} aria-hidden="true" />}
                     <div className={styles.itemBody}>
                       {item.productId && item.productName ? <Link to={`/products/${item.productId}`}>{item.productName}</Link> : <strong>Sản phẩm không còn khả dụng</strong>}
-                      {item.unavailableReason !== 'VARIANT_UNAVAILABLE' && <>
-                        {!!item.optionValues?.length && <small>Phân loại: {item.optionValues.join(' / ')}</small>}
-                        {item.currentUnitPrice && <strong>{moneyLabel(item.currentUnitPrice)}</strong>}
-                        {item.stock !== undefined && <small>Tồn kho hiện tại: {item.stock}</small>}
-                      </>}
+                      {showDetails && !!item.optionValues?.length && <small>Phân loại: {item.optionValues.join(' / ')}</small>}
+                      {showDetails && item.stock !== undefined && item.available && <small>Còn {item.stock} sản phẩm</small>}
                       {!item.available && <p className={styles.unavailable}>{unavailableLabel[item.unavailableReason ?? 'VARIANT_UNAVAILABLE']}</p>}
-                      <div className={styles.actions}>
-                        <label>Số lượng <input type="number" aria-label={`Số lượng biến thể ${item.variantId}`} min={1} max={99} step={1} inputMode="numeric"
-                          value={drafts[item.variantId] ?? ''} disabled={disabled || !canEditQuantity(item)}
-                          onChange={(event) => setDrafts((previous) => ({ ...previous, [item.variantId]: event.target.value }))} /></label>
-                        <button type="button" disabled={disabled || !canEditQuantity(item) || drafts[item.variantId] === String(item.quantity)} onClick={() => updateQuantity(item)}>Cập nhật</button>
-                        {drafts[item.variantId] !== String(item.quantity) && <button type="button" disabled={disabled}
-                          onClick={() => setDrafts((previous) => ({ ...previous, [item.variantId]: String(item.quantity) }))}>Hủy sửa</button>}
-                        <button type="button" className={styles.remove} disabled={disabled} onClick={() => openDelete(item)}>Xóa</button>
-                      </div>
                     </div>
-                  </div>)}
-                </section>;
-              })}
-              {cart.unavailableItems.length > 0 && <section className={styles.group} aria-label="Sản phẩm không còn công khai">
-                <h2>Sản phẩm không còn khả dụng</h2>
-                {cart.unavailableItems.map((item) => <div className={styles.privateItem} key={item.variantId}>
-                  <div><strong>Sản phẩm không còn được bán</strong><small>Mã phân loại #{item.variantId} · Số lượng {item.quantity}</small></div>
-                  <button type="button" className={styles.remove} disabled={disabled} onClick={() => openDelete(item, true)}>Xóa</button>
-                </div>)}
-              </section>}
-            </>}
-      </div>
-      <aside className={styles.summary} aria-label="Tóm tắt giỏ hàng">
-        <h2>Tóm tắt</h2>
-        <p>Dòng trong giỏ <strong>{visibleSummary ? cart?.lineCount : '—'}</strong></p>
-        <p>Tổng số lượng <strong>{visibleSummary ? cart?.totalQuantity : '—'}</strong></p>
-        <p>Hàng còn mua được <strong>{visibleSummary && cart ? moneyLabel(cart.purchasableSubtotal) : '—'}</strong></p>
-        <hr />
-        <p>Đã chọn <strong>{visibleSummary ? `${selectedItems.length} dòng` : '—'}</strong></p>
-        <p>Số lượng đã chọn <strong>{visibleSummary ? selectedItems.reduce((sum, item) => sum + item.quantity, 0) : '—'}</strong></p>
-        <p className={styles.total}>Tạm tính đã chọn <strong>{!visibleSummary ? '—' : selectedCents === null ? 'Không xác định' : formatCartMoney(selectedCents)}</strong></p>
-        <small>Tổng thanh toán sẽ được Backend kiểm tra lại giá và tồn kho ở bước đặt hàng.</small>
-        {canCheckout ? <Link className={styles.checkout} to={`/checkout?${checkoutQuery.toString()}`}>Tiếp tục thanh toán</Link>
-          : <button className={styles.checkout} type="button" disabled>Tiếp tục thanh toán</button>}
+                    <div className={styles.unitPrice}>{showDetails && item.currentUnitPrice ? moneyLabel(item.currentUnitPrice) : '—'}</div>
+                    <div className={styles.quantityCell}>
+                      <div className={styles.stepperWrapper}>
+                        <button type="button" className={styles.stepperBtn} aria-label={`Giảm số lượng biến thể ${item.variantId}`}
+                          disabled={disabled || !canEditQuantity(item) || qty <= 1}
+                          onClick={() => { if (qty > 1) stepTo(item, qty - 1); }}>−</button>
+                        <input type="number" aria-label={`Số lượng biến thể ${item.variantId}`} min={1} max={99} step={1} inputMode="numeric"
+                          value={drafts[item.variantId] ?? ''} disabled={disabled || !canEditQuantity(item)}
+                          onChange={(event) => setDrafts((previous) => ({ ...previous, [item.variantId]: event.target.value }))}
+                          className={styles.stepperInput} />
+                        <button type="button" className={styles.stepperBtn} aria-label={`Tăng số lượng biến thể ${item.variantId}`}
+                          disabled={disabled || !canEditQuantity(item) || qty >= 99}
+                          onClick={() => { if (qty < 99) stepTo(item, qty + 1); }}>+</button>
+                      </div>
+                      {drafts[item.variantId] !== String(item.quantity) && <div className={styles.draftActions}>
+                        <button type="button" disabled={disabled || !canEditQuantity(item)} onClick={() => updateQuantity(item)}>Cập nhật</button>
+                        <button type="button" disabled={disabled} onClick={() => setDrafts((previous) => ({ ...previous, [item.variantId]: String(item.quantity) }))}>Hủy sửa</button>
+                      </div>}
+                    </div>
+                    <div className={styles.lineTotal}>{showDetails && item.lineTotal ? moneyLabel(item.lineTotal) : '—'}</div>
+                    <div className={styles.rowActions}>
+                      <button type="button" className={styles.remove} disabled={disabled} onClick={() => openDelete(item)}>Xóa</button>
+                    </div>
+                  </div>;
+                })}
+              </section>;
+            })}
+            {cart.unavailableItems.length > 0 && <section className={styles.group} aria-label="Sản phẩm không còn công khai">
+              <h2 className={styles.groupHead}>Sản phẩm không còn khả dụng</h2>
+              {cart.unavailableItems.map((item) => <div className={styles.privateItem} key={item.variantId}>
+                <div><strong>Sản phẩm không còn được bán</strong><small>Mã phân loại #{item.variantId} · Số lượng {item.quantity}</small></div>
+                <button type="button" className={styles.remove} disabled={disabled} onClick={() => openDelete(item, true)}>Xóa</button>
+              </div>)}
+            </section>}
+          </>}
+    </div>
+    <aside className={styles.summary} aria-label="Tóm tắt giỏ hàng">
+      <div className={styles.summaryInfo}>
+        <span>Đã chọn <strong>{visibleSummary ? `${selectedItems.length} dòng · ${selectedItems.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm` : '—'}</strong></span>
+        <small>Phí vận chuyển tính ở bước thanh toán</small>
         {visibleSummary && selectedItems.length > 50 && <p role="alert">Chỉ chọn tối đa 50 dòng để thanh toán.</p>}
         {visibleSummary && dirtyCount > 0 && <small>Lưu hoặc hủy sửa số lượng trước khi tiếp tục thanh toán.</small>}
-      </aside>
-    </div>
+      </div>
+      <p className={styles.total}>Tạm tính đã chọn <strong>{!visibleSummary ? '—' : selectedCents === null ? 'Không xác định' : formatCartMoney(selectedCents)}</strong></p>
+      {canCheckout ? <Link className={styles.checkout} to={`/checkout?${checkoutQuery.toString()}`}>Tiếp tục thanh toán</Link>
+        : <button className={styles.checkout} type="button" disabled>Tiếp tục thanh toán</button>}
+    </aside>
     </div>
     {deleting && <DeleteCartDialog item={deleting} busy={busy} returnFocus={deleteTrigger} onCancel={() => setDeleting(null)}
       onConfirm={() => void run(() => cartApi.remove(deleting.variantId), 'Đã xóa dòng khỏi giỏ hàng.')} />}

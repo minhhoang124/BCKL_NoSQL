@@ -81,7 +81,7 @@ describe('Brand editor integrated in the real Admin Catalog', () => {
     expect(writes()[0][1]).toMatchObject({ method: 'PATCH', retryOnUnauthorized: false });
     expect(brands[0]).toEqual({ ...originalBrands[0], name: 'Renamed Brand' });
     expect(screen.getAllByText('Renamed Brand')).toHaveLength(2);
-    expect(editor.getByRole('status')).toHaveTextContent('chưa xác nhận index đã đồng bộ');
+    expect(editor.getByRole('status')).toHaveTextContent('Thay đổi có thể chưa xuất hiện ngay trong kết quả tìm kiếm.');
   });
   it('shares the write lock with legacy create/toggle, tabs and refresh during confirmation and pending PATCH', async () => {
     let finish!: (value: unknown) => void;

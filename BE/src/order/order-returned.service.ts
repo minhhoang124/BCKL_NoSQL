@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { assertCurrentWriteEpoch } from '../auth/write-epoch.js';
 import { assertOrderCommandNotClosed } from './order-command-fence.js';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, Role } from '@prisma/client';
@@ -67,6 +68,7 @@ export class OrderReturnedService {
     orderId: number,
     key: unknown,
     body: unknown,
+    expectedCredentialVersion?: number,
   ) {
     const input = prepareReturnedCommand(
       actorId,
@@ -89,9 +91,10 @@ export class OrderReturnedService {
             await tx.$queryRaw`SELECT id FROM users WHERE id = ${actorId} FOR UPDATE`;
             const actor = await tx.user.findUnique({
               where: { id: actorId },
-              select: { isActive: true, role: true },
+              select: { isActive: true, role: true, credentialVersion: true },
             });
             if (!actor?.isActive) throw orderCommandError(401, 'UNAUTHORIZED');
+            assertCurrentWriteEpoch(actor, expectedCredentialVersion);
             if (
               actor.role !== (actorType === 'ADMIN' ? Role.ADMIN : Role.SELLER)
             )

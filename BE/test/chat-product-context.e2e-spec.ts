@@ -58,6 +58,7 @@ describe('Product context: real HTTP/PostgreSQL, no snapshot of private Product'
   beforeAll(async () => {
     const url = new URL(process.env.DATABASE_URL!);
     if (
+      !isFinalDayQaTarget(url) &&
       process.env.GITHUB_ACTIONS !== 'true' &&
       (url.hostname !== '127.0.0.1' ||
         url.port !== '5549' ||
@@ -288,3 +289,4 @@ describe('Product context: real HTTP/PostgreSQL, no snapshot of private Product'
     ).rejects.toThrow();
   });
 });
+import { isFinalDayQaTarget } from './helpers/final-day-qa-target.js';

@@ -42,6 +42,7 @@ describe('Aftersales HTTP/PostgreSQL runtime and command fences', () => {
     process.env.AFTERSALE_REQUEST_WINDOW_DAYS = '7';
     const url = new URL(process.env.DATABASE_URL ?? '');
     if (
+      !isFinalDayQaTarget(url) &&
       !(
         url.hostname === '127.0.0.1' &&
         url.port === '5549' &&
@@ -957,3 +958,4 @@ describe('Aftersales HTTP/PostgreSQL runtime and command fences', () => {
     expect(await snapshot(f)).toEqual(before);
   });
 });
+import { isFinalDayQaTarget } from './helpers/final-day-qa-target.js';

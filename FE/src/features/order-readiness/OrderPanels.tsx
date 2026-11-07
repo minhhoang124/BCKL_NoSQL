@@ -15,14 +15,40 @@ import {
 } from "./orderPolicy";
 import styles from "./OrderPanels.module.css";
 
+const PROVIDER_LABEL: Record<string, string> = {
+  COD: "Thanh toán khi nhận hàng",
+  VNPAY: "VNPay (sandbox)",
+  MOMO: "MoMo",
+};
+const PAYMENT_STATUS_LABEL: Record<string, string> = {
+  UNPAID: "Chưa thanh toán",
+  PENDING: "Đang chờ thanh toán",
+  PAID: "Đã thanh toán",
+  FAILED: "Thanh toán thất bại",
+  CANCELLED: "Đã hủy",
+  EXPIRED: "Hết hạn thanh toán",
+  REFUND_PENDING: "Đang hoàn tiền (mô phỏng)",
+  REFUNDED: "Đã hoàn tiền (mô phỏng)",
+  REVIEW_REQUIRED: "Cần đối chiếu",
+};
+const ACTOR_LABEL: Record<string, string> = {
+  BUYER: "Người mua",
+  SELLER: "Người bán",
+  ADMIN: "Quản trị viên",
+  SYSTEM: "Hệ thống",
+};
+/** Shopper-facing payment text; unknown values are shown as-is, never guessed. */
+export function paymentText(provider: string, status: string) {
+  return `${PROVIDER_LABEL[provider] ?? provider} · ${PAYMENT_STATUS_LABEL[status] ?? status}`;
+}
+
 type Source = "fixture" | "api";
 type ActionHandler = (action: PreparationCommand) => void | Promise<void>;
 function Evidence({ source }: { source: Source }) {
+  if (source !== "fixture") return null;
   return (
     <p className={styles.notice}>
-      {source === "fixture"
-        ? "DỮ LIỆU MẪU — chưa tích hợp giao dịch thật."
-        : "Dữ liệu đọc từ API — chưa nghiệm thu toàn luồng Order Web."}
+      DỮ LIỆU MẪU — chưa tích hợp giao dịch thật.
     </p>
   );
 }
@@ -67,7 +93,7 @@ export function OrderListPanel({
 }) {
   return (
     <section
-      className={styles.panel}
+      className={`${styles.panel} ${scope === "buyer" ? styles.buyerPanel : ""}`}
       aria-label={scope === "buyer" ? "Đơn mua" : "Đơn của Store"}
       aria-busy={state.status === "loading"}
     >
@@ -83,19 +109,64 @@ export function OrderListPanel({
           <ul className={styles.list}>
             {state.data.items.map((order) => (
               <li key={order.id} className={styles.card}>
-                <h2>{order.orderNumber}</h2>
-                <p className={styles.status}>
-                  {order.store.name} · {orderStatusLabels[order.status]}
-                </p>
-                <p className={styles.total}>
-                  {orderMoney(order.total)} ·{" "}
+                <header className={styles.orderHeader}>
+                  <strong>{order.store.name}</strong>
+                  <span className={styles.status}>{orderStatusLabels[order.status]}</span>
+                </header>
+                <h2 className={styles.orderCode} title={order.orderNumber}>{order.orderNumber}</h2>
+                {order.itemPreview && order.itemPreview.length > 0 && (
+                  <div className={styles.previewItemList}>
+                    {order.itemPreview.map((item) => (
+                      <div key={item.orderItemId} className={styles.previewItemRow}>
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt=""
+                            className={styles.previewItemImg}
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className={styles.previewItemPlaceholder} aria-hidden="true" />
+                        )}
+                        <div className={styles.previewItemInfo}>
+                          <h4 className={styles.previewItemTitle}>{item.productName}</h4>
+                          {item.options && item.options.length > 0 && (
+                            <p className={styles.previewItemVariant}>
+                              Phân loại: {item.options.join(' / ')}
+                            </p>
+                          )}
+                          <p className={styles.previewItemQty}>x{item.quantity}</p>
+                        </div>
+                        <div className={styles.previewItemPrice}>
+                          {orderMoney(item.lineTotal)}
+                        </div>
+                      </div>
+                    ))}
+                    {order.hasMoreItems && (
+                      <p className={styles.hasMoreNote}>
+                        và {(order.itemCount ?? 0) - order.itemPreview.length} sản phẩm khác...
+                      </p>
+                    )}
+                  </div>
+                )}
+                <footer className={styles.orderFooter}>
+                <p className={styles.paymentMeta}>
                   {order.payment
-                    ? `${order.payment.provider} — ${order.payment.status}`
+                    ? paymentText(order.payment.provider, order.payment.status)
                     : "Chưa có dữ liệu thanh toán"}
                 </p>
-                <button type="button" onClick={() => onSelect(order.id)}>
-                  Xem chi tiết {order.orderNumber}
+                <p className={styles.orderTotal}>Thành tiền: <strong className={styles.total}>{orderMoney(order.total)}</strong></p>
+                <button
+                  type="button"
+                  className={styles.detailButton}
+                  aria-label={`Xem chi tiết ${order.orderNumber}`}
+                  onClick={() => onSelect(order.id)}
+                >
+                  Xem chi tiết
                 </button>
+                </footer>
               </li>
             ))}
           </ul>
@@ -161,6 +232,7 @@ function Actions({
         <div key={action.id}>
           <button
             type="button"
+            className={action.id === "cancel" ? styles.cancelButton : undefined}
             disabled={!action.enabled || !onAction}
             onClick={() => {
               if (!action.enabled || !onAction || latch.current === readKey)
@@ -195,14 +267,14 @@ function Actions({
           </button>
           <p className={styles.hint}>
             {action.reason ??
-              (!onAction ? "Panel chuẩn bị; chưa nối API thao tác." : "")}
+              (!onAction ? "Thao tác hiện chưa khả dụng." : "")}
           </p>
         </div>
       ))}
       {actions.length === 0 && (
         <p>
-          Không có thao tác phù hợp ở trạng thái này. Seller không tự xác nhận
-          giao thành công.
+          Không có thao tác phù hợp ở trạng thái này. Trạng thái giao hàng do
+          sàn cập nhật ở khâu vận chuyển.
         </p>
       )}
     </section>
@@ -235,8 +307,8 @@ export function OrderDetailPanel({
   const order = state.data,
     address = order.shippingAddress;
   return (
-    <section className={styles.panel} aria-label="Chi tiết đơn hàng">
-      <h1>{order.orderNumber}</h1>
+    <section className={`${styles.panel} ${context.scope === "buyer" ? styles.buyerPanel : ""}`} aria-label="Chi tiết đơn hàng">
+      <h1 className={styles.orderCode} title={order.orderNumber}>{order.orderNumber}</h1>
       <Evidence source={source} />
       <p className={styles.status}>
         {orderStatusLabels[order.status]} · {order.store.name}
@@ -246,13 +318,14 @@ export function OrderDetailPanel({
         <ol className={styles.timeline}>
           {order.timeline.map((event, index) => (
             <li key={`${event.createdAt}:${index}`}>
+              <span className={styles.stepNumber} aria-hidden="true">{index + 1}</span>
               <strong>{orderStatusLabels[event.toStatus]}</strong>
               <p>
                 <time dateTime={event.createdAt}>
                   {new Date(event.createdAt).toLocaleString("vi-VN")}
                 </time>
               </p>
-              <p>{event.actorType ?? "Chưa rõ người thực hiện"}</p>
+              <p>{event.actorType ? (ACTOR_LABEL[event.actorType] ?? event.actorType) : "Chưa rõ người thực hiện"}</p>
               {event.reasonText && <p>{event.reasonText}</p>}
               {event.deliveryAttempt !== null && (
                 <p>
@@ -292,38 +365,59 @@ export function OrderDetailPanel({
           <h2>Thanh toán</h2>
           <p>
             {order.payment
-              ? `Thanh toán ${order.payment.provider}: ${order.payment.status}`
-              : "Chưa có dữ liệu thanh toán — không tự suy đoán COD."}
+              ? paymentText(order.payment.provider, order.payment.status)
+              : "Chưa có dữ liệu thanh toán"}
           </p>
-          <p>Số tiền đã lưu: {orderMoney(order.total)}</p>
+          <p>Số tiền: {orderMoney(order.total)}</p>
         </section>
       </div>
       <section className={styles.card} aria-label="Sản phẩm trong đơn">
         <h2>Sản phẩm trong đơn</h2>
         <div className={styles.itemsGrid}>
-          <ul className={styles.list}>
+          <div className={styles.orderItemsTableWrap}>
+          <table className={styles.orderItemsTable}>
+            <thead><tr><th scope="col">Sản phẩm</th><th scope="col">Đơn giá</th><th scope="col">Số lượng</th><th scope="col">Thành tiền</th></tr></thead>
+            <tbody>
             {order.items.map((item) => (
-              <li key={item.id}>
-                <h3>{item.productName}</h3>
+              <tr key={item.id}>
+                <td>
+                <div className={styles.orderDetailItemHead}>
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt=""
+                      className={styles.orderDetailItemImg}
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className={styles.previewItemPlaceholder} aria-hidden="true" />
+                  )}
+                  <div className={styles.orderDetailItemContent}>
+                    <h3>{item.productName}</h3>
                 <p>
-                  SKU {item.sku} · {item.options.join(" / ")} · Số lượng{" "}
-                  {item.quantity}
+                  SKU {item.sku} · {item.options.join(" / ")}
                 </p>
-                <p>
-                  {orderMoney(item.unitPrice)} / món ·{" "}
-                  {orderMoney(item.lineTotal)}
-                </p>
+                </div>
+                </div>
                 {context.scope === 'buyer' && context.fresh && !context.busy && !context.outcomeUnknown && source === 'api' && ['DELIVERED', 'COMPLETED'].includes(order.status) && order.payment?.status === 'PAID' && import.meta.env.VITE_AFTERSALES_ENABLED !== 'false' && <Link to={`/account/aftersales?orderId=${order.id}&itemId=${item.id}`}>Yêu cầu hỗ trợ cho mặt hàng này</Link>}
                 {context.scope === 'buyer' && context.fresh && !context.busy && !context.outcomeUnknown && source === 'api' && order.status === 'COMPLETED' && import.meta.env.VITE_PRODUCT_REVIEWS_ENABLED === 'true' && <p><Link to={`/account/reviews?itemId=${item.id}`}>Đánh giá mặt hàng này</Link></p>}
-              </li>
+                </td>
+                <td>{orderMoney(item.unitPrice)}</td>
+                <td>x{item.quantity}</td>
+                <td>{orderMoney(item.lineTotal)}</td>
+              </tr>
             ))}
-          </ul>
+            </tbody>
+          </table>
+          </div>
           <div className={styles.summary}>
             <p>Tiền hàng: {orderMoney(order.subtotal)}</p>
-            <p>Phí giao mô phỏng: {orderMoney(order.shippingFee)}</p>
-            <p>Giảm giá đã lưu: {orderMoney(order.discountTotal)}</p>
+            <p>Phí vận chuyển: {orderMoney(order.shippingFee)}</p>
+            <p>Giảm giá: {orderMoney(order.discountTotal)}</p>
             <strong className={styles.total}>
-              Tổng đã lưu: {orderMoney(order.total)}
+              Tổng: {orderMoney(order.total)}
             </strong>
           </div>
         </div>

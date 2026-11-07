@@ -36,6 +36,7 @@ describe('Auth email/reset real PostgreSQL', () => {
   beforeAll(async () => {
     const u = new URL(process.env.DATABASE_URL ?? '');
     if (
+      !isFinalDayQaTarget(u) &&
       !(
         u.hostname === '127.0.0.1' &&
         u.port === '5549' &&
@@ -355,3 +356,4 @@ describe('Auth email/reset real PostgreSQL', () => {
     ).rejects.toThrow();
   });
 });
+import { isFinalDayQaTarget } from './helpers/final-day-qa-target.js';

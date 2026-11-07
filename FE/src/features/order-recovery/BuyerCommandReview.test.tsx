@@ -36,7 +36,7 @@ describe("Buyer confirmation UI preparation — unmounted and no HTTP integratio
     fill();
     expect(send()).toBeDisabled();
     expect(p.onConfirm).not.toHaveBeenCalled();
-    expect(screen.getByText(/BẢN CHUẨN BỊ/)).toBeInTheDocument();
+    expect(screen.getByText(/Thao tác đơn hàng hiện chưa khả dụng/)).toBeInTheDocument();
   });
   it("without a callback never executes", () => {
     const p = props(); render(<BuyerCommandReview {...p} onConfirm={undefined} />);

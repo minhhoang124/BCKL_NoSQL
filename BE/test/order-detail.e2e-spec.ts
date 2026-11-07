@@ -227,6 +227,7 @@ describe('Buyer/Seller Order detail HTTP + PostgreSQL', () => {
       unitPrice: '999999999999.00',
       quantity: 1,
       lineTotal: '999999999999.00',
+      imageUrl: '/uploads/detail-fixture.jpg',
     });
     expect(result.shippingAddress).toEqual({
       recipientName: 'Recipient at purchase',
@@ -271,6 +272,41 @@ describe('Buyer/Seller Order detail HTTP + PostgreSQL', () => {
     expect(JSON.stringify(result)).not.toMatch(
       /private-legacy-hash|hidden-json|checkoutId|buyerId|commandId|requestHash|idempotencyKey|passwordHash/,
     );
+  });
+  it('image is current-only: hidden Product gives Buyer null, owner Seller keeps it, snapshots never change', async () => {
+    await prisma.product.update({
+      where: { id: productId },
+      data: { name: 'Renamed after purchase', sellerStatus: 'HIDDEN' },
+    });
+    await prisma.productVariant.update({
+      where: { id: variantId },
+      data: { price: '1' },
+    });
+    try {
+      const buyerItem = (await get(orderId).expect(200)).body.items[0];
+      expect(buyerItem).toMatchObject({
+        productName: 'Purchased name',
+        sku: 'Purchased SKU',
+        options: ['Black'],
+        unitPrice: '999999999999.00',
+        lineTotal: '999999999999.00',
+        imageUrl: null,
+      });
+      const sellerItem = (await get(orderId, seller.token, true).expect(200))
+        .body.items[0];
+      expect(sellerItem.productName).toBe('Purchased name');
+      expect(sellerItem.unitPrice).toBe('999999999999.00');
+      expect(sellerItem.imageUrl).toBe('/uploads/detail-fixture.jpg');
+    } finally {
+      await prisma.product.update({
+        where: { id: productId },
+        data: { name: 'Current catalog name', sellerStatus: 'ACTIVE' },
+      });
+      await prisma.productVariant.update({
+        where: { id: variantId },
+        data: { price: '10000' },
+      });
+    }
   });
   it('wrong ownership and absent IDs return exactly the same safe 404 on both routes', async () => {
     for (const [token, sellerRoute] of [
@@ -494,6 +530,26 @@ describe('Buyer/Seller Order detail HTTP + PostgreSQL', () => {
     const response = await get(row.id).expect(500);
     expect(response.body.code).toBe('INTERNAL_ERROR');
     expect(JSON.stringify(response.body)).not.toContain('broken-private-json');
+    // The list stays readable: only that line's options become null.
+    for (const [url, token] of [
+      ['/orders', buyer.token],
+      ['/seller/orders', seller.token],
+    ] as const) {
+      const list = await http()
+        .get(url)
+        .set('Authorization', token)
+        .expect(200);
+      expect(JSON.stringify(list.body)).not.toContain('broken-private-json');
+      const listed = list.body.items.find(
+        (value: { id: number }) => value.id === row.id,
+      );
+      expect(listed.itemPreview).toHaveLength(1);
+      expect(listed.itemPreview[0]).toMatchObject({
+        productName: 'Purchased name',
+        options: null,
+        unitPrice: '999999999999.00',
+      });
+    }
   });
   it.each(['0', '-1', '01', '1e2', '1.5', '2147483648', 'nope'])(
     'rejects invalid path %s on both routes',
@@ -723,10 +779,21 @@ describe('Buyer/Seller Order detail HTTP + PostgreSQL', () => {
     const outboxBefore = await prisma.searchOutbox.findMany({
       where: { productId },
     });
+    // Every snapshot field is unchanged. Only the current illustrative image
+    // follows today's catalog policy: the Product is no longer approved, so
+    // Buyer scope gets null while the owner Seller still sees its image.
+    expect(first.items[0].imageUrl).toBe('/uploads/detail-fixture.jpg');
+    const withImage = (imageUrl: string | null) => ({
+      ...first,
+      items: first.items.map((item: Record<string, unknown>) => ({
+        ...item,
+        imageUrl,
+      })),
+    });
     for (let n = 0; n < 3; n++) {
-      expect((await get(id).expect(200)).body).toEqual(first);
+      expect((await get(id).expect(200)).body).toEqual(withImage(null));
       expect((await get(id, seller.token, true).expect(200)).body).toEqual(
-        first,
+        withImage('/uploads/detail-fixture.jpg'),
       );
     }
     expect(

@@ -8,6 +8,7 @@ import { configureApp } from '../src/configure-app.js';
 import { PrismaService } from '../src/prisma.service.js';
 import { AuthService } from '../src/auth/auth.service.js';
 import type { App } from './http-test-types.js';
+import { createFaultDdl } from './helpers/qa-fault-ddl.js';
 
 describe('Account profile/password runtime, isolated PostgreSQL', () => {
   let app: INestApplication<App>,
@@ -15,6 +16,8 @@ describe('Account profile/password runtime, isolated PostgreSQL', () => {
     prisma: PrismaService;
   const beforeFlag = process.env.ACCOUNT_SETTINGS_WRITE_ENABLED;
   const password = 'CurrentPassword123!';
+  // Fault-injection triggers go through the fixture-only DDL channel; runtime stays DML-only.
+  const ddl = createFaultDdl();
   let sequence = 0;
   beforeAll(async () => {
     process.env.ACCOUNT_SETTINGS_WRITE_ENABLED = 'true';
@@ -31,6 +34,7 @@ describe('Account profile/password runtime, isolated PostgreSQL', () => {
     prisma = app.get(PrismaService);
   });
   afterAll(async () => {
+    await ddl.close();
     await other?.close();
     await app?.close();
     if (beforeFlag === undefined)
@@ -269,10 +273,10 @@ describe('Account profile/password runtime, isolated PostgreSQL', () => {
     const before = await prisma.user.findUniqueOrThrow({
       where: { id: actor.id },
     });
-    await prisma.$executeRawUnsafe(
+    await ddl.exec(
       `CREATE FUNCTION settings_fault_revoke() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF OLD."userId" = ${actor.id} THEN RAISE EXCEPTION 'QA fixture failure'; END IF; RETURN NEW; END $$`,
     );
-    await prisma.$executeRawUnsafe(
+    await ddl.exec(
       'CREATE TRIGGER settings_fault_revoke BEFORE UPDATE ON refresh_tokens FOR EACH ROW EXECUTE FUNCTION settings_fault_revoke()',
     );
     try {
@@ -282,10 +286,10 @@ describe('Account profile/password runtime, isolated PostgreSQL', () => {
       ).toEqual(before);
       await me(actor.token).expect(200);
     } finally {
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         'DROP TRIGGER settings_fault_revoke ON refresh_tokens',
       );
-      await prisma.$executeRawUnsafe('DROP FUNCTION settings_fault_revoke()');
+      await ddl.exec('DROP FUNCTION settings_fault_revoke()');
     }
   });
   it('login which verified old password cannot mint a new-version token', async () => {
@@ -310,10 +314,10 @@ describe('Account profile/password runtime, isolated PostgreSQL', () => {
     const before = await prisma.user.findUniqueOrThrow({
       where: { id: actor.id },
     });
-    await prisma.$executeRawUnsafe(
+    await ddl.exec(
       `CREATE FUNCTION settings_fault_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW."userId" = ${actor.id} THEN RAISE EXCEPTION 'QA audit failure'; END IF; RETURN NEW; END $$`,
     );
-    await prisma.$executeRawUnsafe(
+    await ddl.exec(
       'CREATE TRIGGER settings_fault_audit BEFORE INSERT ON account_security_events FOR EACH ROW EXECUTE FUNCTION settings_fault_audit()',
     );
     try {
@@ -333,10 +337,10 @@ describe('Account profile/password runtime, isolated PostgreSQL', () => {
       ).toBe(1);
       await me(actor.token).expect(200);
     } finally {
-      await prisma.$executeRawUnsafe(
+      await ddl.exec(
         'DROP TRIGGER settings_fault_audit ON account_security_events',
       );
-      await prisma.$executeRawUnsafe('DROP FUNCTION settings_fault_audit()');
+      await ddl.exec('DROP FUNCTION settings_fault_audit()');
     }
   });
   it('locked account denied; credential max never wraps; default-off gate', async () => {

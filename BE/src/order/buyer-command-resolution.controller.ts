@@ -115,6 +115,7 @@ export class BuyerCommandResolutionController {
       completionOrderId(id),
       req.headers['idempotency-key'],
       body,
+      user.credentialVersion ?? 0,
     );
   }
 }

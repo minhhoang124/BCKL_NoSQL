@@ -8,6 +8,7 @@ import type {
   ProductAttributeValue,
 } from "../../types/marketplace";
 import styles from "../../pages/Marketplace.module.css";
+import { VariantInventoryEditor } from "./VariantInventoryEditor";
 
 type Run = (
   work: () => Promise<unknown>,
@@ -18,10 +19,12 @@ export function ProductDetailsEditor({
   product,
   busy,
   run,
+  onInventoryChanged,
 }: {
   product: Product;
   busy: boolean;
   run: Run;
+  onInventoryChanged?: (product: Product) => void;
 }) {
   const [definitions, setDefinitions] = useState<AttributeDefinition[]>([]);
   const [metadataCategory, setMetadataCategory] = useState<number | null>(null);
@@ -101,12 +104,15 @@ export function ProductDetailsEditor({
     );
   }
   return (
-    <section className={styles.form} aria-label="Thuộc tính và phiên bản bán">
+    <section className={`${styles.form} ${styles.scEditor}`} aria-label="Thuộc tính và phiên bản bán">
+      {import.meta.env.VITE_SELLER_VARIANT_INVENTORY_ENABLED === "true" && product.variants.length > 0 && <VariantInventoryEditor product={product} busy={busy} onChanged={onInventoryChanged} />}
       {!editable && (
         <p role="status">
           Sản phẩm đang chờ duyệt hoặc bị đóng băng. Các trường chỉ đọc.
         </p>
       )}
+      <div className={styles.editorGrid}>
+      <div className={styles.editorCol}>
       <h2>Thuộc tính danh mục</h2>
       {schemaState === "loading" ? (
         <p>Đang tải thuộc tính…</p>
@@ -132,6 +138,7 @@ export function ProductDetailsEditor({
       )}
       <button
         type="button"
+        className={styles.secondary}
         disabled={busy}
         onClick={() => {
           setAttributeState("loading");
@@ -141,9 +148,9 @@ export function ProductDetailsEditor({
         Tải lại thuộc tính
       </button>
       <h2>Phân loại sản phẩm</h2>
-      <p>
-        Khai báo tối đa hai nhóm trước khi tạo SKU đầu tiên, ví dụ Màu sắc và
-        Kích thước. Mỗi SKU chọn một giá trị của từng nhóm.
+      <p className={styles.scRowNote}>
+        Tối đa hai nhóm (ví dụ Màu sắc, Kích thước), khai báo trước khi tạo SKU
+        đầu tiên. Mỗi SKU chọn một giá trị của từng nhóm.
       </p>
       <form onSubmit={group} aria-label="Thêm nhóm phân loại">
         <fieldset
@@ -158,7 +165,7 @@ export function ProductDetailsEditor({
             Tên nhóm phân loại
             <input name="groupName" required maxLength={80} />
           </label>
-          <button>Thêm nhóm phân loại</button>
+          <button className={styles.secondary}>Thêm nhóm phân loại</button>
         </fieldset>
       </form>
       {product.variants.length > 0 && (
@@ -188,19 +195,23 @@ export function ProductDetailsEditor({
         >
           <fieldset disabled={busy || !editable}>
             <legend>{g.name}</legend>
-            <p>
-              {g.values.length
-                ? g.values.map((v) => v.value).join(", ")
-                : "Chưa có giá trị."}
-            </p>
+            {g.values.length ? (
+              <ul className={styles.scChips} aria-label={`Giá trị của ${g.name}`}>
+                {g.values.map((v) => <li key={v.id}>{v.value}</li>)}
+              </ul>
+            ) : (
+              <p className={styles.scRowNote}>Chưa có giá trị.</p>
+            )}
             <label>
               Giá trị mới cho {g.name}
               <input name="value" required maxLength={120} />
             </label>
-            <button>Thêm giá trị {g.name}</button>
+            <button className={styles.secondary}>Thêm giá trị {g.name}</button>
           </fieldset>
         </form>
       ))}
+      </div>
+      <div className={styles.editorCol}>
       <form
         className={styles.form}
         onSubmit={variant}
@@ -264,7 +275,7 @@ export function ProductDetailsEditor({
           {duplicate && (
             <p role="status">Tổ hợp này đã có SKU. Hãy chọn tổ hợp khác.</p>
           )}
-          <button disabled={busy || duplicate || !complete}>
+          <button className={styles.scPrimary} disabled={busy || duplicate || !complete}>
             Thêm phiên bản
           </button>
         </fieldset>
@@ -281,7 +292,7 @@ export function ProductDetailsEditor({
             <thead>
               <tr>
                 <th scope="col">Phân loại</th>
-                <th scope="col">SKU</th>
+                <th scope="col">Mã Seller SKU</th>
                 <th scope="col">Giá</th>
                 <th scope="col">Tồn kho</th>
               </tr>
@@ -302,7 +313,10 @@ export function ProductDetailsEditor({
                 return (
                   <tr key={v.id}>
                     <th scope="row">{label}</th>
-                    <td>{v.sellerSku || v.skuCode || `#${v.id}`}</td>
+                    <td>
+                      {v.sellerSku || "—"}
+                      {v.skuCode && <small className={styles.scSkuCode} title={v.skuCode}>{v.skuCode}</small>}
+                    </td>
                     <td>{formatPrice(v.price)}</td>
                     <td>{v.stock ?? "Chưa xác định"}</td>
                   </tr>
@@ -312,6 +326,8 @@ export function ProductDetailsEditor({
           </table>
         </div>
       )}
+      </div>
+      </div>
     </section>
   );
 }
@@ -341,20 +357,39 @@ function AttributeField({
           : (saved?.textValue ?? saved?.numberValue ?? ""),
   );
   const [custom, setCustom] = useState(saved?.textValue ?? "");
+  const [localError, setLocalError] = useState("");
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (disabled) return;
+    setLocalError("");
     let input: AttributeInput;
-    if (d.dataType === "SINGLE_SELECT")
+    if (d.dataType === "SINGLE_SELECT") {
+      if (value === "custom" && !custom.trim()) {
+        setLocalError(`Nhập giá trị khác cho ${d.name}.`);
+        return;
+      }
       input =
         value === "custom"
-          ? { textValue: custom }
+          ? { textValue: custom.trim() }
           : { optionId: Number(value) };
-    else if (d.dataType === "BOOLEAN")
+    } else if (d.dataType === "BOOLEAN")
       input = { booleanValue: value === "true" };
-    else
-      input =
-        d.dataType === "NUMBER" ? { numberValue: value } : { textValue: value };
+    else if (d.dataType === "NUMBER") {
+      // Accept a Vietnamese decimal comma; the API expects a plain number string.
+      const normalized = String(value).trim().replace(",", ".");
+      // Same shape as the API's IsNumberString: optional sign, optional leading digits before '.'.
+      if (!/^[+-]?(\d*\.)?\d+$/.test(normalized)) {
+        setLocalError(`${d.name} cần là số, ví dụ 6.5.`);
+        return;
+      }
+      input = { numberValue: normalized };
+    } else {
+      if (!String(value).trim()) {
+        setLocalError(`${d.name} không được để trống.`);
+        return;
+      }
+      input = { textValue: String(value).trim() };
+    }
     void run(
       () => marketplaceApi.saveAttribute(productId, d.id, input),
       `Đã lưu thuộc tính ${d.name}.`,
@@ -426,7 +461,8 @@ function AttributeField({
             />
           </label>
         )}
-        <button>Lưu {d.name}</button>
+        <button className={styles.secondary}>Lưu {d.name}</button>
+        {localError && <p role="alert" className={styles.scFieldError}>{localError}</p>}
       </fieldset>
     </form>
   );

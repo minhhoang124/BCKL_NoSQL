@@ -41,6 +41,13 @@ export class CartItemResponseDto {
   currentUnitPrice?: string;
   @ApiPropertyOptional({ type: 'integer', minimum: 0 })
   stock?: number;
+  @ApiPropertyOptional({
+    example: '2580000.00',
+    type: String,
+    description:
+      'currentUnitPrice × quantity at current price; present whenever currentUnitPrice is. Checkout preview remains authoritative.',
+  })
+  lineTotal?: string;
 }
 
 export class CartStoreDto {

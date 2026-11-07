@@ -61,7 +61,7 @@ export function StoreApplicationPage({
       ? user.role !== "ADMIN"
       : !["USER", "SELLER"].includes(user.role))
   )
-    return <p role="alert">Bạn không có quyền truy cập hồ sơ Store.</p>;
+    return <p role="alert">Bạn không có quyền truy cập hồ sơ cửa hàng.</p>;
   const query = new URLSearchParams(location.search);
   let initialId: number | undefined;
   if (scope === "ADMIN" && query.has("storeId")) {
@@ -387,7 +387,7 @@ function Workspace({
       syncJournal();
       setNotice(
         result.outcome === "CLOSED"
-          ? "Server đã đóng mã chưa thực hiện. Mã này không nộp, duyệt hoặc thay đổi Store."
+          ? "Yêu cầu chưa được thực hiện và đã được đóng. Hồ sơ cửa hàng không bị nộp, duyệt hoặc thay đổi."
           : result.receipt?.reauthenticationRequired
             ? "Đã duyệt và cấp quyền bán. Chủ tài khoản cần đăng nhập lại để tiếp tục."
             : "Server đã xác nhận thao tác và ghi lịch sử.",
@@ -463,18 +463,18 @@ function Workspace({
               ? [["resubmit", "Nộp lại hồ sơ đã lưu"]]
               : []),
           ]
-        : [["submit", "Gửi hồ sơ mở Store"]]
+        : [["submit", "Gửi hồ sơ mở cửa hàng"]]
       : view?.store.status === "PENDING"
         ? [
-            ["ACTIVE", "Chấp thuận mở Store"],
+            ["ACTIVE", "Chấp thuận mở cửa hàng"],
             ["REJECTED", "Yêu cầu bổ sung / từ chối"],
           ]
         : view?.store.status === "ACTIVE"
-          ? [["SUSPENDED", "Tạm khóa Store"]]
-          : [["ACTIVE", "Khôi phục Store"]];
+          ? [["SUSPENDED", "Tạm khóa cửa hàng"]]
+          : [["ACTIVE", "Khôi phục cửa hàng"]];
   const fieldLabels: Record<keyof Profile, string> = {
-    name: "Tên Store",
-    description: "Mô tả Store",
+    name: "Tên cửa hàng",
+    description: "Mô tả cửa hàng",
     contactName: "Người liên hệ",
     contactPhone: "Số điện thoại liên hệ",
     pickupAddress: "Địa chỉ lấy hàng",
@@ -484,14 +484,14 @@ function Workspace({
     <section
       className={styles.root}
       aria-label={
-        scope === "ADMIN" ? "Duyệt hồ sơ Store" : "Đăng ký và hồ sơ Store"
+        scope === "ADMIN" ? "Duyệt hồ sơ cửa hàng" : "Đăng ký và hồ sơ cửa hàng"
       }
     >
       <header>
         <p className={styles.eyebrow}>
           {scope === "ADMIN" ? "QUẢN TRỊ NGƯỜI BÁN" : "BẮT ĐẦU BÁN HÀNG"}
         </p>
-        <h1>{scope === "ADMIN" ? "Duyệt hồ sơ mở Store" : "Store của bạn"}</h1>
+        <h1>{scope === "ADMIN" ? "Duyệt hồ sơ mở cửa hàng" : "Cửa hàng của bạn"}</h1>
         <p>
           Tài khoản vẫn dùng để mua hàng. Quyền bán được cấp sau khi hồ sơ được
           chấp thuận.
@@ -516,9 +516,9 @@ function Workspace({
       {journal.error && <p role="alert">{journal.error}</p>}
       {legacy && (
         <p>
-          Store này đang dùng quy trình cũ.{" "}
+          Cửa hàng này đang dùng quy trình cũ.{" "}
           <Link to={scope === "ADMIN" ? "/admin/stores" : "/seller"}>
-            Mở quản lý Store hiện có
+            Mở quản lý cửa hàng hiện có
           </Link>
         </p>
       )}
@@ -529,7 +529,7 @@ function Workspace({
         Tải lại hồ sơ và bỏ bản nháp
       </button>
       {journal.pending && (
-        <aside className={styles.callout} aria-label="Phục hồi yêu cầu Store">
+        <aside className={styles.callout} aria-label="Phục hồi yêu cầu cửa hàng">
           <h2>Yêu cầu trước đang chờ đối chiếu</h2>
           <p>
             Không gửi lại khi chưa rõ kết quả. Đối chiếu chỉ xác nhận đã xử lý
@@ -602,11 +602,11 @@ function Workspace({
               <div className={styles.summary}>
                 <b>{labels[view.store.status]}</b>
                 <span>
-                  Store #{view.store.id} · phiên bản {view.revision}
+                  Hồ sơ cửa hàng · phiên bản {view.revision}
                 </span>
                 {view.grant && (
                   <p>
-                    Quyền bán đã được ghi nhận. Store tạm khóa không được tự mở
+                    Quyền bán đã được ghi nhận. Cửa hàng tạm khóa không được tự mở
                     lại.
                   </p>
                 )}
@@ -631,7 +631,7 @@ function Workspace({
                 }}
                 className={styles.form}
               >
-                <h2>{view ? "Thông tin đã kê khai" : "Thông tin mở Store"}</h2>
+                <h2>{view ? "Thông tin đã kê khai" : "Thông tin mở cửa hàng"}</h2>
                 {(Object.keys(fieldLabels) as Array<keyof Profile>).map(
                   (key) => (
                     <label key={key}>
@@ -686,7 +686,7 @@ function Workspace({
             )}
             {!allowed && (
               <p className={styles.callout}>
-                Trạng thái hiện tại không cho thao tác này. Store tạm khóa chỉ
+                Trạng thái hiện tại không cho thao tác này. Cửa hàng tạm khóa chỉ
                 được Admin khôi phục.
               </p>
             )}

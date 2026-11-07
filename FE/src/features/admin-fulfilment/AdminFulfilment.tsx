@@ -14,7 +14,8 @@ import {
   type Pending,
   type Snapshot,
 } from "./fulfilmentClient";
-import { orderStatusLabels } from "../order-readiness/orderPolicy";
+import { orderMoney, orderStatusLabels } from "../order-readiness/orderPolicy";
+import { paymentText } from "../order-readiness/OrderPanels";
 import styles from "./AdminFulfilment.module.css";
 const labels: Record<Command, string> = {
   ship: "Bàn giao vận chuyển",
@@ -63,6 +64,10 @@ function Workspace({ actorId }: { actorId: number }) {
     [receipt, setReceipt] = useState("");
   const [consent, setConsent] = useState(false),
     [busy, setBusy] = useState(false);
+  const [searchOrd, setSearchOrd] = useState("");
+  const [searchResults, setSearchResults] = useState<Snapshot[]>([]);
+  const [searchSearching, setSearchSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const lock = useRef(false),
     generation = useRef(0),
     mounted = useRef(true),
@@ -213,9 +218,75 @@ function Workspace({ actorId }: { actorId: number }) {
     <section className={styles.workspace} aria-label="Giao hàng mô phỏng">
       <h1>Giao hàng mô phỏng</h1>
       <p>
-        Chỉ dùng cho nghiệm thu. Không gọi hãng vận chuyển hoặc thu tiền thật.
+        Môi trường mô phỏng: không gọi hãng vận chuyển hoặc thu tiền thật.
         Giao thành công ghi nhận COD đã thanh toán trong dữ liệu mô phỏng.
       </p>
+      <div className={styles.searchSection}>
+        <h2>Tra cứu đơn hàng theo mã ORD</h2>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const clean = searchOrd.trim();
+            if (!clean || lock.current || busy) return;
+            setSearchSearching(true);
+            setSearchError("");
+            try {
+              const results = await adminFulfilmentApi.list(clean);
+              setSearchResults(results);
+              if (results.length === 0) {
+                setSearchError("Không tìm thấy đơn hàng với mã này.");
+              }
+            } catch (err) {
+              setSearchError(
+                err instanceof Error ? err.message : "Tìm kiếm không thành công.",
+              );
+            } finally {
+              setSearchSearching(false);
+            }
+          }}
+          className={styles.fields}
+        >
+          <label>
+            Mã hiển thị đơn (ORD-...)
+            <input
+              type="text"
+              placeholder="Nhập mã đơn, ví dụ: ORD-20261031 hoặc 8 ký tự hex"
+              value={searchOrd}
+              disabled={busy || !!pending || searchSearching}
+              onChange={(e) => setSearchOrd(e.target.value)}
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={busy || blocked || searchSearching || !searchOrd.trim()}
+          >
+            {searchSearching ? "Đang tìm..." : "Tìm kiếm theo mã"}
+          </button>
+        </form>
+        {searchError && <p role="alert">{searchError}</p>}
+        {searchResults.length > 0 && (
+          <div className={styles.searchResultsBox}>
+            <p>Kết quả tìm kiếm ({searchResults.length} đơn):</p>
+            <ul>
+              {searchResults.map((res) => (
+                <li key={res.id}>
+                  <strong>{res.orderNumber}</strong>
+                  <span> · {orderStatusLabels[res.status as keyof typeof orderStatusLabels] ?? res.status}</span>
+                  <span> · {orderMoney(res.total)}</span>
+                  <button
+                    type="button"
+                    disabled={busy || !!pending}
+                    onClick={() => void load(res.id)}
+                  >
+                    Xem đơn {res.orderNumber}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       <details>
         <summary>20 đơn cần xử lý khi mở màn hình</summary>
         <ul>
@@ -243,7 +314,7 @@ function Workspace({ actorId }: { actorId: number }) {
         className={styles.fields}
       >
         <label>
-          Mã đơn hàng
+          Mã nội bộ của đơn
           <input
             type="number"
             min="1"
@@ -278,8 +349,10 @@ function Workspace({ actorId }: { actorId: number }) {
             {orderStatusLabels[
               order.status as keyof typeof orderStatusLabels
             ] ?? order.status}{" "}
-            · Tổng {order.total} VND · Thanh toán {order.payment?.provider}:{" "}
-            {order.payment?.status}
+            · Tổng {orderMoney(order.total)} ·{" "}
+            {order.payment
+              ? paymentText(order.payment.provider, order.payment.status)
+              : "Chưa có dữ liệu thanh toán"}
           </p>
           <p>
             Lần giao: {order.currentDeliveryAttempt ?? "Chưa bàn giao"} · Vận

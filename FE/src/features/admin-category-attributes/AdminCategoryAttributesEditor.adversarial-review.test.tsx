@@ -51,7 +51,7 @@ it.each([false, true])('releases the activity latch but retains unknown-write lo
   const save = screen.getByRole('button', { name: 'Lưu thuộc tính' });
   await waitFor(() => expect(save).toBeEnabled());
   fireEvent.click(save);
-  if (unknown) await screen.findByText(/Đã khóa toàn bộ thao tác ghi/);
+  if (unknown) await screen.findByText(/Tạm khóa chỉnh sửa để tránh cập nhật trùng/);
   else await screen.findByText(/stale version/);
   const reload = screen.getByRole('button', { name: 'Tải lại danh sách' });
   await waitFor(() => expect(reload).toBeEnabled());

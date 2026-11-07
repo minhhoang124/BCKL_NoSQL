@@ -80,6 +80,18 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("image query page lifecycle", () => {
+  it("sends the selected top-K level and defaults to 10", async () => {
+    const search = vi.spyOn(api, "searchImage").mockResolvedValue(result());
+    render(view());
+    const select = screen.getByLabelText("Số kết quả");
+    expect(select).toHaveValue("10");
+    expect([...(select as HTMLSelectElement).options].map((o) => o.value)).toEqual(["3", "5", "10"]);
+    choose();
+    fireEvent.change(select, { target: { value: "5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Tìm bằng ảnh" }));
+    await screen.findByRole("link", { name: "Product 1" });
+    expect(search).toHaveBeenLastCalledWith(expect.any(File), expect.any(AbortSignal), 5);
+  });
   it('stops before upload when cancelled during anonymous session preparation',async()=>{
     let release!:()=>void;primer.mockReturnValue(new Promise<void>(r=>{release=r;}));
     const search=vi.spyOn(api,'searchImage');render(view());choose();fireEvent.click(screen.getByRole('button',{name:'Tìm bằng ảnh'}));

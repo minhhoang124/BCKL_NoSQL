@@ -75,8 +75,8 @@ const data: View = {
   nextBeforeRevision: null,
 };
 const labels = {
-  name: "Tên Store",
-  description: "Mô tả Store",
+  name: "Tên cửa hàng",
+  description: "Mô tả cửa hàng",
   contactName: "Người liên hệ",
   contactPhone: "Số điện thoại liên hệ",
   pickupAddress: "Địa chỉ lấy hàng",
@@ -131,7 +131,7 @@ function setup(options: { lost?: boolean; refreshFailure?: boolean } = {}) {
   return { api, requester, posts };
 }
 async function fill() {
-  await waitFor(() => expect(screen.getByLabelText("Tên Store")).toBeEnabled());
+  await waitFor(() => expect(screen.getByLabelText("Tên cửa hàng")).toBeEnabled());
   for (const key of Object.keys(profile) as Array<keyof typeof profile>)
     fireEvent.change(screen.getByLabelText(labels[key]), {
       target: { value: profile[key] },
@@ -219,7 +219,7 @@ describe("Store application consent, unknown outcome and session safety", () => 
     await fill();
     const send = screen.getByRole("button", { name: "Gửi hồ sơ" });
     act(() => {
-      fireEvent.change(screen.getByLabelText("Tên Store"), {
+      fireEvent.change(screen.getByLabelText("Tên cửa hàng"), {
         target: { value: "New target draft after consent" },
       });
       send.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -238,7 +238,7 @@ describe("Store application consent, unknown outcome and session safety", () => 
     await fill();
     fireEvent.click(screen.getByRole("button", { name: "Gửi hồ sơ" }));
     await screen.findByRole("complementary", {
-      name: "Phục hồi yêu cầu Store",
+      name: "Phục hồi yêu cầu cửa hàng",
     });
     await waitFor(() =>
       expect(
@@ -249,7 +249,7 @@ describe("Store application consent, unknown outcome and session safety", () => 
     page.unmount();
     render(ui(f.api));
     await screen.findByRole("complementary", {
-      name: "Phục hồi yêu cầu Store",
+      name: "Phục hồi yêu cầu cửa hàng",
     });
     await waitFor(() =>
       expect(
@@ -298,7 +298,7 @@ describe("Store application consent, unknown outcome and session safety", () => 
     render(ui(createApplicationApi(1, "OWNER", requester as typeof fetchApi)));
     await screen.findByText("unavailable");
     expect(screen.getByRole("button", { name: "Gửi hồ sơ" })).toBeDisabled();
-    expect(screen.getByLabelText("Tên Store")).toBeDisabled();
+    expect(screen.getByLabelText("Tên cửa hàng")).toBeDisabled();
     expect(loadPending(1)).toBeNull();
   });
   it("corrupt journal blocks new writes without deleting metadata", async () => {
@@ -345,7 +345,7 @@ describe("Store application consent, unknown outcome and session safety", () => 
     );
     fireEvent.click(screen.getByRole("button", { name: "Đối chiếu yêu cầu" }));
     await screen.findByText(
-      "Server đã đóng mã chưa thực hiện. Mã này không nộp, duyệt hoặc thay đổi Store.",
+      "Yêu cầu chưa được thực hiện và đã được đóng. Hồ sơ cửa hàng không bị nộp, duyệt hoặc thay đổi.",
     );
     expect(loadPending(1)).toBeNull();
     expect(screen.getByRole("button", { name: "Gửi hồ sơ" })).toBeDisabled();
@@ -372,13 +372,13 @@ describe("Store application consent, unknown outcome and session safety", () => 
       ui(createApplicationApi(2, "OWNER", freshRequest as typeof fetchApi)),
     );
     await waitFor(() =>
-      expect(screen.getByLabelText("Tên Store")).toBeEnabled(),
+      expect(screen.getByLabelText("Tên cửa hàng")).toBeEnabled(),
     );
     await act(async () => {
       resolve({ application: data });
       await Promise.resolve();
     });
-    expect(screen.getByLabelText("Tên Store")).toHaveValue("");
+    expect(screen.getByLabelText("Tên cửa hàng")).toHaveValue("");
     expect(screen.queryByText("Chờ duyệt")).not.toBeInTheDocument();
   });
   it("Admin decision change requires independent fresh consent and clears it on target read", async () => {

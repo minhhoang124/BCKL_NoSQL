@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { assertCurrentWriteEpoch } from '../auth/write-epoch.js';
 import { activateAftersaleAdjustments } from '../aftersales/aftersales-service.js';
 import { assertOrderCommandNotClosed } from './order-command-fence.js';
 import { Logger } from '@nestjs/common';
@@ -64,8 +65,9 @@ export class OrderCompletionService {
     orderId: number,
     key: unknown,
     body: unknown,
+    expectedCredentialVersion?: number,
   ) {
-    return this.execute(completeInput(actorId, orderId, key, body));
+    return this.execute(completeInput(actorId, orderId, key, body), undefined, expectedCredentialVersion);
   }
   // Internal scheduler path only; no SYSTEM identity can be supplied via HTTP.
   async completeJob(id: number, token: string) {
@@ -87,7 +89,7 @@ export class OrderCompletionService {
       { id, token },
     );
   }
-  private async execute(input: Input, jobClaim?: JobClaim) {
+  private async execute(input: Input, jobClaim?: JobClaim, expectedCredentialVersion?: number) {
     const deadline = Date.now() + this.deadlineMs;
     for (let attempt = 0; attempt < 3; attempt++) {
       const remaining = deadline - Date.now();
@@ -102,10 +104,11 @@ export class OrderCompletionService {
               await tx.$queryRaw`SELECT id FROM users WHERE id = ${input.actorId} FOR UPDATE`;
               const actor = await tx.user.findUnique({
                 where: { id: input.actorId },
-                select: { isActive: true, role: true },
+                select: { isActive: true, role: true, credentialVersion: true },
               });
               if (!actor?.isActive)
                 throw orderCommandError(401, 'UNAUTHORIZED');
+              assertCurrentWriteEpoch(actor, expectedCredentialVersion);
               if (!canActAsBuyer(actor.role))
                 throw orderCommandError(403, 'FORBIDDEN');
             }

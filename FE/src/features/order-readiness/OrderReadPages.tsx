@@ -59,53 +59,22 @@ export function OrderReadPage({
     );
   return (
     <div className={styles.page}>
-      <nav aria-label="Điều hướng đơn hàng">
-        <Link to={scope === "buyer" ? "/account" : "/seller"}>
-          {scope === "buyer" ? "Tài khoản" : "Kênh người bán"}
-        </Link>
-        {" · "}
-        <Link to={base(scope)}>Danh sách đơn</Link>
-      </nav>
+      {detail && (
+        <nav aria-label="Điều hướng đơn hàng" className={styles.backNav}>
+          <Link to={base(scope)}>‹ Trở lại danh sách đơn</Link>
+        </nav>
+      )}
       {detail &&
         import.meta.env.VITE_CHAT_ENABLED === "true" &&
         import.meta.env.VITE_CHAT_ORDER_CONTEXT_ENABLED === "true" && (
-          <Link to={`/messages?orderId=${pathId(orderId)}&orderScope=${scope}`}>
+          <Link className={styles.chatLink} to={`/messages?orderId=${pathId(orderId)}&orderScope=${scope}`}>
             Trao đổi về đơn hàng
           </Link>
         )}
-      <p>
-        {scope === "seller" &&
-        detail &&
-        import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED !== "false"
-          ? "Xử lý đơn đã nhận; mỗi bước cần xác nhận riêng, không tự gửi lại yêu cầu."
-          : scope === "buyer" &&
-              detail &&
-              import.meta.env.VITE_BUYER_ORDER_COMMANDS_ENABLED !== "false"
-            ? "Xem đơn đã lưu; hủy hoặc hoàn tất hợp lệ cần xác nhận riêng, không tự gửi lại yêu cầu."
-            : "Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật trên màn này."}
-      </p>
-      <div
-        className={
-          !detail && scope === "buyer" ? styles.accountGrid : undefined
-        }
-      >
-        {!detail && scope === "buyer" && (
-          <aside
-            className={styles.accountSidebar}
-            aria-label="Tài khoản mua hàng"
-          >
-            <h2>Tài khoản</h2>
-            <strong>{user.fullName ?? "Tài khoản của bạn"}</strong>
-            <p>{user.email}</p>
-            <nav aria-label="Điều hướng tài khoản">
-              <Link to="/account">Hồ sơ của tôi</Link>
-              <Link to="/account/addresses">Sổ địa chỉ</Link>
-              <Link to="/account/orders" aria-current="page">
-                Đơn mua
-              </Link>
-            </nav>
-          </aside>
-        )}
+      {scope === "seller" && detail && import.meta.env.VITE_SELLER_ORDER_COMMANDS_ENABLED === "false" && (
+        <p className={styles.scopeIntro}>Chỉ xem đơn và lịch sử; các thao tác xử lý đơn chưa được bật.</p>
+      )}
+      <div>
         <div className={styles.content}>
           {detail ? (
             scope === "seller" &&
@@ -147,27 +116,54 @@ function List({ scope }: { scope: OrderScope }) {
     );
   return (
     <>
-      <label>
-        Trạng thái đơn
-        <select
-          value={status ?? ""}
-          onChange={(event) =>
-            setParams(event.target.value ? { status: event.target.value } : {})
-          }
+      <nav className={styles.statusTabStrip} aria-label="Lọc nhanh theo trạng thái">
+        <button
+          type="button"
+          aria-pressed={!status}
+          onClick={() => setParams({})}
+          className={!status ? `${styles.statusTab} ${styles.statusTabActive}` : styles.statusTab}
         >
-          <option value="">Tất cả trạng thái</option>
-          {ORDER_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {orderStatusLabels[s]}
-            </option>
-          ))}
-        </select>
-      </label>
-      {after !== null && (
-        <button onClick={() => setParams(status ? { status } : {})}>
-          Về trang đầu
+          Tất cả
         </button>
-      )}
+        {ORDER_STATUSES.map((s) => (
+          <button
+            type="button"
+            key={s}
+            aria-pressed={status === s}
+            onClick={() => setParams({ status: s })}
+            className={
+              status === s
+                ? `${styles.statusTab} ${styles.statusTabActive}`
+                : styles.statusTab
+            }
+          >
+            {orderStatusLabels[s]}
+          </button>
+        ))}
+      </nav>
+      <div className={styles.filterToolbar}>
+        {scope === "seller" && <label>
+          Trạng thái đơn
+          <select
+            value={status ?? ""}
+            onChange={(event) =>
+              setParams(event.target.value ? { status: event.target.value } : {})
+            }
+          >
+            <option value="">Tất cả trạng thái</option>
+            {ORDER_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {orderStatusLabels[s]}
+              </option>
+            ))}
+          </select>
+        </label>}
+        {after !== null && (
+          <button onClick={() => setParams(status ? { status } : {})}>
+            Về trang đầu
+          </button>
+        )}
+      </div>
       <ListData
         scope={scope}
         status={status as OrderStatus | null}
@@ -203,7 +199,7 @@ function ListData({
   });
   return (
     <>
-      <button disabled={state.status === "loading"} onClick={reload}>
+      <button className={styles.quietRefresh} disabled={state.status === "loading"} onClick={reload}>
         Làm mới trang đơn
       </button>
       <OrderListPanel
@@ -223,8 +219,8 @@ function Detail({ scope, orderId }: { scope: OrderScope; orderId: number }) {
   const { state, reload, readKey } = useOrderDetail(scope, orderId);
   return (
     <>
-      {scope==='buyer'&&state.status==='ready'&&state.data.payment?.provider==='VNPAY'&&<VnpayPayment orderId={orderId} amount={state.data.total}/>}
-      <button disabled={state.status === "loading"} onClick={reload}>
+      {scope==='buyer'&&state.status==='ready'&&state.data.payment?.provider==='VNPAY'&&<VnpayPayment orderId={orderId} amount={state.data.total} knownPaymentStatus={state.data.payment.status} onPaymentChanged={reload}/>}
+      <button className={styles.quietRefresh} disabled={state.status === "loading"} onClick={reload}>
         Làm mới chi tiết đơn
       </button>
       <OrderDetailPanel

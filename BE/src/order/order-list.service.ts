@@ -4,6 +4,11 @@ import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma.service.js';
 import type { OrderListResponseDto } from './order-list.dto.js';
 import { orderError, parseOrderListQuery } from './order-list.http.js';
+import { loadOrderItemImages } from './order-item-image.js';
+import {
+  buildOrderItemSummaries,
+  loadOrderItemPreviewRows,
+} from './order-item-preview.js';
 
 @Injectable()
 export class OrderListService {
@@ -67,6 +72,16 @@ export class OrderListService {
           },
         });
         const page = rows.slice(0, query.limit);
+        // Only IDs of the authorized page actually returned (not the +1 probe).
+        const pageIds = page.map((row) => row.id);
+        const previewRows = await loadOrderItemPreviewRows(tx, pageIds);
+        const images = await loadOrderItemImages(
+          tx,
+          previewRows.map((row) => row.productId),
+          role === Role.USER ? 'BUYER' : 'SELLER',
+          actorId,
+        );
+        const summaries = buildOrderItemSummaries(pageIds, previewRows, images);
         return {
           items: page.map((row) => ({
             id: row.id,
@@ -85,6 +100,7 @@ export class OrderListService {
               : null,
             createdAt: row.createdAt.toISOString(),
             updatedAt: row.updatedAt.toISOString(),
+            ...summaries.get(row.id)!,
           })),
           nextCursor:
             rows.length > query.limit ? page[page.length - 1]!.id : null,

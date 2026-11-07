@@ -84,7 +84,9 @@ describe("Order routes + merged GET client/validators (mock HTTP boundary, not l
     const nav = screen.getByRole("navigation", {
       name: "Điều hướng tài khoản",
     });
-    expect(nav.querySelectorAll("a")).toHaveLength(3);
+    // Shared AccountLayout: only implemented account sections (profile, addresses, orders, ...).
+    expect(nav.querySelectorAll("a").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByRole("link", { name: "Hồ sơ của tôi" })).toHaveAttribute("href", "/account");
     expect(screen.getByRole("link", { name: "Đơn mua" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -115,16 +117,13 @@ describe("Order routes + merged GET client/validators (mock HTTP boundary, not l
       "/orders?limit=20&afterId=20",
       expect.objectContaining({ cache: "no-store" }),
     );
-    fireEvent.change(screen.getByLabelText("Trạng thái đơn"), {
-      target: { value: "CONFIRMED" },
-    });
+    expect(screen.queryByLabelText("Trạng thái đơn")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Đã xác nhận" }));
     await screen.findByText("Chưa có đơn trong bộ lọc này.");
     expect(api.mock.calls.at(-1)?.[0]).toBe(
       "/orders?limit=20&status=CONFIRMED",
     );
-    fireEvent.change(screen.getByLabelText("Trạng thái đơn"), {
-      target: { value: "" },
-    });
+    fireEvent.click(screen.getByRole("button", { name: "Tất cả" }));
     fireEvent.click(
       await screen.findByRole("button", { name: "Trang tiếp theo" }),
     );
@@ -269,7 +268,40 @@ describe("Order routes + merged GET client/validators (mock HTTP boundary, not l
   it("shows Account entry point", () => {
     render(tree("/account"));
     expect(
-      screen.getByRole("link", { name: "Đơn mua của tôi" }),
+      screen.getByRole("link", { name: "Đơn mua" }),
     ).toHaveAttribute("href", "/account/orders");
   });
+  it('renders item preview with product details and hasMoreItems note in list panel', async () => {
+    api.mockResolvedValueOnce({
+      items: [
+        {
+          ...summaryFixture(19),
+          itemPreview: [
+            {
+              orderItemId: 501,
+              productId: 88,
+              variantId: 301,
+              productName: 'Tai nghe Bluetooth XYZ',
+              options: ['Đen', 'Pro'],
+              quantity: 2,
+              unitPrice: '20000.00',
+              lineTotal: '40000.00',
+              imageUrl: '/uploads/products/88/main.webp',
+            },
+          ],
+          itemCount: 3,
+          totalQuantity: 4,
+          hasMoreItems: true,
+        },
+      ],
+      nextCursor: null,
+    });
+    render(tree('/account/orders'));
+    expect(await screen.findByText('Tai nghe Bluetooth XYZ')).toBeInTheDocument();
+    expect(screen.getByText('Phân loại: Đen / Pro')).toBeInTheDocument();
+    expect(screen.getByText('x2')).toBeInTheDocument();
+    expect(screen.getByText('40.000 đ')).toBeInTheDocument();
+    expect(screen.getByText('và 2 sản phẩm khác...')).toBeInTheDocument();
+  });
+
 });

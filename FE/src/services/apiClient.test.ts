@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ApiError, AuthSessionChangedError, fetchApi, getAccessToken, getAuthSessionVersion,
-  refreshSession, setAccessToken, setOnAuthFailure,
+  refreshSession, setAccessToken, setOnAuthFailure, fallbackErrorMessage,
 } from './apiClient';
 import type { SessionResponse } from '../types/auth';
 
@@ -36,7 +36,7 @@ describe('API session isolation', () => {
   it.each([null, { message: null, code: { unsafe: true } }])('handles malformed error envelopes safely (%j)', async body => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(json(body, 503)));
     await expect(fetchApi('/checkout/preview', { method: 'POST', body: '{}' })).rejects.toMatchObject({
-      status: 503, code: undefined, message: 'Yêu cầu thất bại (503)',
+      status: 503, code: undefined, message: 'Dịch vụ tạm thời chưa sẵn sàng. Vui lòng thử lại sau (mã 503).',
     });
   });
 
@@ -212,5 +212,16 @@ describe('API session isolation', () => {
     fetch.mockClear().mockResolvedValueOnce(json({}, 401));
     await expect(fetchApi('/auth/login', { retryOnUnauthorized: false })).rejects.toMatchObject({ status: 401 });
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('fallbackErrorMessage', () => {
+  it.each([
+    [429, 'Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút (mã 429).'],
+    [503, 'Dịch vụ tạm thời chưa sẵn sàng. Vui lòng thử lại sau (mã 503).'],
+    [500, 'Đã có lỗi xảy ra. Vui lòng thử lại sau (mã 500).'],
+    [404, 'Yêu cầu thất bại (mã 404).'],
+  ])('maps %s without hiding the status', (status, text) => {
+    expect(fallbackErrorMessage(status)).toBe(text);
   });
 });

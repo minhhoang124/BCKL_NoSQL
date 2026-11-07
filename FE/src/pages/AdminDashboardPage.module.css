@@ -1,12 +1,12 @@
 .adminShell {
   color-scheme: light;
-  --orange: #d63b0b;
-  --orange-dark: #b83208;
-  --ink: #20242b;
-  --muted: #737985;
-  --line: #e9ebef;
+  --orange: var(--market-brand);
+  --orange-dark: var(--market-brand-hover);
+  --ink: var(--market-ink);
+  --muted: var(--market-muted);
+  --line: var(--market-line);
   --surface: #fff;
-  --canvas: #f6f7f8;
+  --canvas: var(--market-bg);
   display: flex;
   min-height: 100vh;
   background: var(--canvas);
@@ -24,8 +24,9 @@
 .sidebar {
   width: 258px;
   flex: 0 0 258px;
-  background: #fff;
+  background: #ffffff;
   border-right: 1px solid var(--line);
+  color: var(--ink);
   padding: 24px 16px 16px;
   display: flex;
   flex-direction: column;
@@ -64,13 +65,13 @@
 .brand small {
   font-size: 9px;
   letter-spacing: 1.15px;
-  color: #959aa3;
+  color: var(--muted);
   margin-top: 1px;
 }
 .sideSection {
   font-size: 10px;
   font-weight: 700;
-  color: #a1a5ad;
+  color: var(--muted);
   letter-spacing: 1.15px;
   padding: 4px 12px 10px;
 }
@@ -86,8 +87,8 @@
   padding: 0 12px;
   border-radius: 9px;
   text-decoration: none;
-  color: #606670;
-  font-size: 13px;
+  color: var(--ink);
+  font-size: 14px;
   font-weight: 550;
   transition: 0.16s;
 }
@@ -95,24 +96,24 @@
   width: 20px;
   text-align: center;
   font-size: 17px;
-  color: #91959c;
+  color: var(--muted);
 }
 .navItem:hover {
-  background: #fff6f2;
-  color: var(--orange);
+  background: var(--canvas);
+  color: var(--market-brand);
 }
 .navActive,
 .navActive:hover {
-  background: #fff0e9;
-  color: var(--orange);
+  background: var(--market-soft);
+  color: var(--market-brand);
   font-weight: 700;
 }
 .navActive > span {
-  color: var(--orange);
+  color: var(--market-brand);
 }
 .navDisabled {
   cursor: not-allowed;
-  color: #a8abb0;
+  color: var(--market-subtle);
 }
 .navDisabled i {
   margin-left: auto;
@@ -129,9 +130,10 @@
 .helpCard {
   padding: 15px 13px;
   margin: 18px 2px;
-  background: linear-gradient(140deg, #fff4ed, #fff9f5);
-  border: 1px solid #ffe0cf;
+  background: var(--canvas);
+  border: 1px solid var(--line);
   border-radius: 12px;
+  color: var(--ink);
 }
 .helpCard > span {
   color: var(--orange);
@@ -146,8 +148,8 @@
   margin-top: 8px;
 }
 .helpCard small {
-  color: #777e88;
-  font-size: 10px;
+  color: var(--muted);
+  font-size: 11px;
   margin: 5px 0 10px;
 }
 .helpCard button {
@@ -164,6 +166,7 @@
   align-items: center;
   gap: 10px;
   border-top: 1px solid var(--line);
+  color: var(--ink);
   padding: 16px 4px 0;
 }
 .avatar,
@@ -360,7 +363,7 @@
   place-items: center;
   border-radius: 9px;
   color: #c94619;
-  background: #fff0e9;
+  background: var(--market-soft);
   font-size: 18px;
   margin-bottom: 14px;
 }
@@ -453,7 +456,7 @@
   display: grid;
   place-items: center;
   border-radius: 9px;
-  background: #fff0e9;
+  background: var(--market-soft);
   color: var(--orange);
   font-size: 17px;
 }
@@ -629,7 +632,7 @@
   background: #fff8f4;
 }
 .primarySmall:hover {
-  background: #fff0e9;
+  background: var(--market-soft);
 }
 .emptyState {
   min-height: 180px;
@@ -839,11 +842,11 @@
   cursor: pointer;
 }
 .approveButton {
-  background: var(--orange);
+  background: var(--market-pine);
   color: #fff;
 }
 .approveButton:hover {
-  background: var(--orange-dark);
+  background: var(--market-pine-hover);
 }
 .rejectButton {
   background: #fff;
@@ -944,7 +947,7 @@
   font-weight: 700;
 }
 .filterTabs button.activeTab span {
-  background: #fff0e9;
+  background: var(--market-soft);
   color: var(--orange);
 }
 .storeGrid {
@@ -969,7 +972,7 @@
   display: grid;
   place-items: center;
   flex: 0 0 36px;
-  background: #fff0e9;
+  background: var(--market-soft);
   color: var(--orange);
   border-radius: 9px;
   font-size: 15px;
@@ -1377,4 +1380,151 @@
   .table {
     min-width: 650px;
   }
+}
+
+.topUserWrapper {
+  position: relative;
+}
+
+.userMenuDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid var(--line, #e3e6e9);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(32, 36, 43, 0.16);
+  z-index: 1000;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.userMenuHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 6px 10px;
+}
+
+.userMenuAvatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffe2d3;
+  color: #a73815;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.userMenuMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.userMenuMeta strong {
+  font-size: 13px;
+  color: #20242b;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userMenuMeta span {
+  font-size: 11px;
+  color: #69717c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adminRoleTag {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 2px 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.userMenuDivider {
+  height: 1px;
+  background: #eef0f2;
+  margin: 6px 0;
+}
+
+.userMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: #20242b;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.userMenuItem:hover,
+.userMenuItem:focus-visible {
+  background: #f6f7f8;
+  color: #20242b;
+  outline: none;
+}
+
+.userMenuLogout {
+  color: #dc2626;
+}
+
+.userMenuLogout:hover,
+.userMenuLogout:focus-visible {
+  background: #fef2f2;
+  color: var(--market-brand-hover);
+}
+
+
+.primaryButton {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--market-brand);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.primaryButton:hover:not(:disabled) {
+  background: var(--market-brand-hover);
+}
+.primaryButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }

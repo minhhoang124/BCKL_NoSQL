@@ -1,59 +1,307 @@
 .inbox {
-  max-width: 900px;
-  margin: 24px auto;
-  padding: 20px;
-  color: var(--text-primary, #202b39);
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  border: 1px solid #e3e6e9;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #20242b;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }
+
+.inbox h1 {
+  margin: 0 0 0.35rem;
+  font-size: 18px;
+  font-weight: 600;
+  color: #20242b;
+}
+
+.inbox > p {
+  margin: 0.4rem 0;
+  color: #4b525c;
+  font-size: 0.92rem;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  margin: 12px 0;
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid #e3e6e9;
+  border-radius: 4px;
+  background: #f6f7f8;
 }
+
+.toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  color: #20242b;
+}
+
 .toolbar button,
-.toolbar select {
-  padding: 10px;
+.toolbar select,
+.inbox > button {
+  padding: 0.58rem 0.95rem;
   font: inherit;
-  border-radius: 6px;
+  font-weight: 650;
+  border-radius: 4px;
+  border: 1px solid #cfd4d9;
+  background: #ffffff;
+  color: #20242b;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
+
+.toolbar button:hover:not(:disabled),
+.inbox > button:hover:not(:disabled) {
+  border-color: var(--market-brand);
+  background: var(--market-soft);
+  color: var(--market-brand);
+}
+
+.toolbar a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  border-radius: 4px;
+  background: var(--market-brand);
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.toolbar a:hover {
+  background: var(--market-brand-hover);
+}
+
 .list {
   list-style: none;
   padding: 0;
+  margin: 16px 0;
   display: grid;
-  gap: 16px;
+  gap: 0;
 }
+
 .list li {
-  border: 1px solid #a4adb7;
-  border-radius: 10px;
-  padding: 16px;
+  position: relative;
+  border: 1px solid #e3e6e9;
+  border-radius: 4px;
+  padding: 12px 16px;
+  background: #ffffff;
   overflow-wrap: anywhere;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }
+
 .list h2 {
-  font-size: 1.15rem;
-  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #20242b;
+  margin: 0 0 6px;
 }
+
+.list li > span {
+  display: inline-block;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
 .unread {
-  border-left: 5px solid #00897b !important;
+  border-left: 3px solid #ffb38f !important;
+  background: #fff7f2 !important;
 }
+
+.unread > span {
+  background: var(--market-soft);
+  border: 1px solid var(--market-soft-border);
+  color: var(--market-brand);
+}
+
 .read {
-  border-left: 5px solid #88939e !important;
+  border-left: 3px solid transparent !important;
 }
+
+.read > span {
+  background: #eef0f2;
+  color: #69717c;
+}
+
+.list time {
+  display: block;
+  margin-top: 6px;
+  color: #69717c;
+  font-size: 0.8rem;
+}
+
 .inbox button:disabled {
   opacity: 0.6;
   cursor: wait;
 }
+
 .inbox :focus-visible {
-  outline: 3px solid #00897b;
+  outline: 3px solid var(--market-brand);
   outline-offset: 3px;
 }
+
 @media (max-width: 600px) {
   .inbox {
-    margin: 8px;
-    padding: 12px;
+    margin: 0;
+    padding: 0;
   }
   .toolbar {
     align-items: stretch;
     flex-direction: column;
   }
 }
+
+.badgeDropdownWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.badgeLink {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.noticeDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 360px;
+  max-width: 90vw;
+  background: #ffffff;
+  border: 1px solid #e3e6e9;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  overflow: hidden;
+  margin-top: 8px;
+  text-align: left;
+}
+
+.dropdownHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f6f7f8;
+  border-bottom: 1px solid #e3e6e9;
+  font-size: 0.9rem;
+  color: #20242b;
+}
+
+.unreadTag {
+  background: #fff1e8;
+  color: var(--market-brand-hover);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.dropdownList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.dropdownItem,
+.dropdownItemUnread {
+  border-bottom: 1px solid #eef0f2;
+  transition: background-color 0.15s ease;
+}
+
+.dropdownItemUnread {
+  background-color: #fff7f2;
+}
+
+.dropdownItem:hover,
+.dropdownItemUnread:hover {
+  background-color: #f6f7f8;
+}
+
+.dropdownItemLink {
+  display: block;
+  padding: 10px 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.itemTitle {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #20242b;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.itemText {
+  font-size: 0.8rem;
+  color: #4b525c;
+  margin: 0 0 4px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.itemTime {
+  font-size: 0.75rem;
+  color: #69717c;
+}
+
+.emptyNotice {
+  padding: 24px;
+  text-align: center;
+  color: #69717c;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.dropdownFooter {
+  padding: 10px 16px;
+  background: #f6f7f8;
+  border-top: 1px solid #e3e6e9;
+  text-align: center;
+}
+
+.viewAllBtn {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--market-brand);
+  text-decoration: none;
+}
+
+.viewAllBtn:hover {
+  text-decoration: underline;
+}
+
+.inbox button { border: 0; background: transparent; color: var(--market-brand); font: inherit; font-size: 13px; padding: 6px 0; cursor: pointer; }
+.inbox button:hover:not(:disabled) { background: transparent; text-decoration: underline; }
+.list li { border-width: 0 0 1px; border-radius: 0; box-shadow: none; }
+.list p { margin: 4px 0; }
+.toolbar { background: #fff; border-width: 0 0 1px; border-radius: 0; padding: 0 0 12px; }
+
+.inbox h1 { padding: 16px 16px 0; }
+.inbox > p, .inbox > button { margin-left: 16px; margin-right: 16px; }
+.inbox .toolbar { margin: 12px 16px; }
+.list a { color: var(--market-brand); font-size: 13px; }
+/* Per-notification "Xem chi tiết": the only solid action in the row, white text on brand. */
+.list .toolbar a { padding: 6px 14px; background: var(--market-brand); color: #fff; font-weight: 500; }
+.list .toolbar a:hover { background: var(--market-brand-hover); color: #fff; }
+.dropdownItemUnread { border-left: 3px solid #ffb38f; }

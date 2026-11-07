@@ -9,7 +9,7 @@ import {
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Prisma, Role } from '@prisma/client';
 import type { Request } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
@@ -25,6 +25,10 @@ import {
   orderError,
   OrderListExceptionFilter,
 } from './order-list.http.js';
+import {
+  ADMIN_ORDER_LOOKUP_LIMIT,
+  parseAdminOrderLookupQuery,
+} from './admin-order-lookup.js';
 
 // Minimal operational projection: no buyer, address, phone, reason or command keys.
 const select = {
@@ -59,7 +63,11 @@ function project(row: Prisma.OrderGetPayload<{ select: typeof select }>) {
 export class AdminFulfilmentController {
   constructor(private readonly db: PrismaService) {}
 
-  private async read(actor: AuthenticatedUser, id?: number) {
+  private async read(
+    actor: AuthenticatedUser,
+    id?: number,
+    orderNumber?: string,
+  ) {
     return this.db
       .$transaction(
         async (tx) => {
@@ -90,6 +98,18 @@ export class AdminFulfilmentController {
               );
             return project(order);
           }
+          if (orderNumber !== undefined)
+            // Displayed-code lookup across every status, same minimal projection.
+            return {
+              items: (
+                await tx.order.findMany({
+                  where: { orderNumber: { startsWith: orderNumber } },
+                  select,
+                  orderBy: { id: 'desc' },
+                  take: ADMIN_ORDER_LOOKUP_LIMIT,
+                })
+              ).map(project),
+            };
           return {
             items: (
               await tx.order.findMany({
@@ -119,15 +139,19 @@ export class AdminFulfilmentController {
 
   @Get()
   @Header('Cache-Control', 'no-store')
+  @ApiQuery({
+    name: 'orderNumber',
+    required: false,
+    description:
+      'Displayed code ORD-<uuid> or a prefix with at least 8 hex characters; searches every status, max 20. Omit for the delivery queue.',
+  })
   list(
     @CurrentUser() actor: AuthenticatedUser,
     @Query() query: unknown,
     @Req() req: Request,
   ) {
     assertOrderListHasNoBody(req);
-    if (!query || Object.keys(query as object).length)
-      throw orderError(400, 'VALIDATION_ERROR', 'Không nhận bộ lọc.');
-    return this.read(actor);
+    return this.read(actor, undefined, parseAdminOrderLookupQuery(query));
   }
 
   @Get(':orderId')

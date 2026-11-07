@@ -202,7 +202,7 @@ describe("Seller QA route + confirmation/recovery", () => {
       screen.getByRole("button", { name: "Bắt đầu đóng gói" }),
     ).toBeEnabled();
     expect(writes()).toHaveLength(1);
-    expect(screen.getByRole("button", { name: "Hủy đơn" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Hủy đơn" })).toHaveAttribute('href','/seller/orders/19/close');
   });
   it("reload sees pending, never POSTs automatically, and resolver consent uses original key", async () => {
     const pending = createOrderIntentJournal(sessionStorage).prepare(

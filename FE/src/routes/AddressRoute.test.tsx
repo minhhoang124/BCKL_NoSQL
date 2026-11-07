@@ -25,7 +25,7 @@ describe('Address route approved by Hoàng', () => {
   });
   it('links Account to the agreed Address route', () => {
     render(page(buyer, '/account'));
-    expect(screen.getByRole('link', { name: 'Quản lý địa chỉ nhận hàng' })).toHaveAttribute('href', '/account/addresses');
+    expect(screen.getByRole('link', { name: 'Sổ địa chỉ' })).toHaveAttribute('href', '/account/addresses');
   });
   it.each(['SELLER', 'ADMIN'] as const)('rejects %s without reading addresses', (role) => {
     render(page({ ...buyer, role }));

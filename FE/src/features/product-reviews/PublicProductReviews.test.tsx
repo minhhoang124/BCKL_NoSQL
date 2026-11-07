@@ -67,18 +67,29 @@ describe("Public Review display and stale Product isolation", () => {
     });
     expect(screen.queryByText("Old product review")).not.toBeInTheDocument();
   });
-  it("failed public refresh clears old content and offers a read retry", async () => {
+  it("offers a quiet retry only after a failed read", async () => {
     vi.spyOn(client, "readPublic")
-      .mockResolvedValueOnce(data(3))
-      .mockRejectedValueOnce(Error("Public read denied"));
+      .mockRejectedValueOnce(Error("Public read denied"))
+      .mockResolvedValueOnce(data(3));
     render(<PublicProductReviews productId={3} />);
-    await screen.findByText("Synthetic public review");
+    await screen.findByRole("alert");
     fireEvent.click(
       screen.getByRole("button", { name: "Tải lại đánh giá sản phẩm" }),
     );
-    await screen.findByRole("alert");
+    await screen.findByText("Synthetic public review");
     expect(
-      screen.queryByText("Synthetic public review"),
+      screen.queryByRole("button", { name: "Tải lại đánh giá sản phẩm" }),
     ).not.toBeInTheDocument();
+  });
+  it("filters loaded reviews by star without changing read requests", async () => {
+    const read = vi.spyOn(client, "readPublic").mockResolvedValue(data(3));
+    render(<PublicProductReviews productId={3} />);
+    await screen.findByText("Synthetic public review");
+    fireEvent.click(screen.getByRole("button", { name: "4 sao (0)" }));
+    expect(screen.queryByText("Synthetic public review")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("4 sao");
+    fireEvent.click(screen.getByRole("button", { name: "5 sao (1)" }));
+    expect(screen.getByText("Synthetic public review")).toBeInTheDocument();
+    expect(read).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
   isPublicListing,
@@ -6,6 +6,7 @@ import {
   type ListingProduct,
 } from '../product/product-public-policy.js';
 import { PrismaService } from '../prisma.service.js';
+import { defaultSearchMediaOrigin, normalizeSearchImageUrl } from './search-image-url-policy.js';
 
 type CategoryNode = { id: number; parentId: number | null; isActive: boolean };
 
@@ -17,6 +18,7 @@ type CategoryNode = { id: number; parentId: number | null; isActive: boolean };
 export function buildUpsertPayload(
   product: ListingProduct,
   categories: CategoryNode[],
+  mediaOrigin = defaultSearchMediaOrigin(),
 ): Prisma.InputJsonValue {
   const pub = publicProduct(product);
   const categoryPathIds: number[] = [];
@@ -38,7 +40,22 @@ export function buildUpsertPayload(
     .filter((img) => img.isPrimary)
     .map((img) => img.url)
     .concat(pub.images.filter((img) => !img.isPrimary).map((img) => img.url))
-    .slice(0, 10);
+    .slice(0, 10)
+    .map((url, imageIndex) => {
+      try {
+        return normalizeSearchImageUrl(url, mediaOrigin);
+      } catch (error) {
+        if (error instanceof BadRequestException) {
+          throw new BadRequestException({
+            code: 'SEARCH_IMAGE_URL_INVALID',
+            message: `Ảnh ${imageIndex + 1} của sản phẩm #${product.id} không hợp lệ để đồng bộ tìm kiếm.`,
+            productId: product.id,
+            imageIndex,
+          });
+        }
+        throw error;
+      }
+    });
   return {
     productId: product.id,
     version: product.version,
@@ -73,12 +90,17 @@ export function buildUpsertPayload(
  *   the tx client passed by the caller.
  */
 @Injectable()
-export class SearchOutboxService {
+export class SearchOutboxService implements OnModuleInit {
   private readonly logger = new Logger(SearchOutboxService.name);
 
   // Inject PrismaService to satisfy NestJS DI. The injected prisma is not
   // used in writeOutboxEvent; callers must pass their tx client.
   constructor(private readonly prisma: PrismaService) {}
+
+  onModuleInit(): void {
+    // Reject bad server configuration during startup, before accepting writes.
+    defaultSearchMediaOrigin();
+  }
 
   /**
    * Write an immutable SearchOutbox event for a product whose state has
